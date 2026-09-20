@@ -7,9 +7,34 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "ios": { "supportsTablet": false, "bundleIdentifier": "com.reelspot.app" },
-    "android": { "package": "com.reelspot.app" },
-    "plugins": ["expo-router", "expo-web-browser"],
-    "experiments": { "typedRoutes": true, "tsconfigPaths": true }
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.reelspot.app",
+      "icon": "./assets/icon.png"
+    },
+    "android": {
+      "package": "com.reelspot.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "tsconfigPaths": true
+    },
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
   }
 }

@@ -1,25 +1,19 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/Button';
+import { TextField } from '@/components/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { createTrip } from '@/features/trips/api';
-import { MIN_TOUCH, colors, font, radius, spacing } from '@/theme/theme';
+import { GUTTER, colors, spacing, type } from '@/theme/theme';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export default function NewTripScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [destination, setDestination] = useState('');
@@ -28,8 +22,10 @@ export default function NewTripScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const bothDatesTyped = startDate.length === 10 && endDate.length === 10;
   const datesValid =
     DATE_PATTERN.test(startDate) && DATE_PATTERN.test(endDate) && endDate >= startDate;
+  const dateError = bothDatesTyped && !datesValid ? '종료일이 시작일보다 빠릅니다.' : null;
   const canSubmit = title.trim().length > 0 && destination.trim().length > 0 && datesValid;
 
   const submit = async () => {
@@ -58,105 +54,66 @@ export default function NewTripScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: '여행 만들기',
-          headerTitleStyle: { fontSize: font.heading, fontWeight: '700' },
+          title: '',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: colors.bg },
+          headerTintColor: colors.text,
         }}
       />
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Field label="여행 이름" value={title} onChange={setTitle} placeholder="제주 3박 4일" />
-        <Field label="여행지" value={destination} onChange={setDestination} placeholder="제주도" />
-        <Field
+        <View style={styles.intro}>
+          <Text style={styles.headline}>어떤 여행인가요?</Text>
+          <Text style={styles.sub}>나중에 언제든 바꿀 수 있어요.</Text>
+        </View>
+
+        <TextField label="여행 이름" value={title} onChangeText={setTitle} placeholder="제주 3박 4일" />
+        <TextField
+          label="여행지"
+          value={destination}
+          onChangeText={setDestination}
+          placeholder="제주도"
+        />
+        <TextField
           label="시작일"
           value={startDate}
-          onChange={setStartDate}
+          onChangeText={setStartDate}
           placeholder="2026-10-02"
+          hint="연도-월-일 순서로 적어 주세요."
           keyboardType="numbers-and-punctuation"
+          maxLength={10}
         />
-        <Field
+        <TextField
           label="종료일"
           value={endDate}
-          onChange={setEndDate}
+          onChangeText={setEndDate}
           placeholder="2026-10-05"
+          error={dateError}
           keyboardType="numbers-and-punctuation"
+          maxLength={10}
         />
 
-        {startDate.length > 0 && endDate.length > 0 && !datesValid && (
-          <Text style={styles.hint}>날짜는 2026-10-02 형식으로, 종료일이 시작일보다 빠르지 않게 적어 주세요.</Text>
-        )}
         {error && <Text style={styles.error}>{error}</Text>}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Pressable
-          style={[styles.primary, (!canSubmit || busy) && styles.disabled]}
-          disabled={!canSubmit || busy}
+      <View style={[styles.footer, { paddingBottom: spacing(4) + insets.bottom }]}>
+        <Button
+          label="만들고 스팟원 부르기"
           onPress={submit}
-        >
-          {busy ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.primaryText}>만들고 스팟원 부르기</Text>
-          )}
-        </Pressable>
+          disabled={!canSubmit}
+          loading={busy}
+        />
       </View>
     </KeyboardAvoidingView>
   );
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  keyboardType,
-}: {
-  label: string;
-  value: string;
-  onChange: (next: string) => void;
-  placeholder: string;
-  keyboardType?: 'numbers-and-punctuation';
-}) {
-  return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChange}
-        placeholder={placeholder}
-        placeholderTextColor={colors.textMuted}
-        keyboardType={keyboardType}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: spacing(5), gap: spacing(5) },
-  field: { gap: spacing(2) },
-  label: { color: colors.text, fontSize: font.body, fontWeight: '700' },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    color: colors.text,
-    fontSize: font.heading,
-    minHeight: MIN_TOUCH,
-    paddingHorizontal: spacing(4),
-  },
-  hint: { color: colors.textMuted, fontSize: font.label, lineHeight: 22 },
-  error: { color: colors.danger, fontSize: font.body, lineHeight: 24 },
-  footer: { padding: spacing(5), borderTopWidth: 1, borderTopColor: colors.border },
-  primary: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.md,
-    minHeight: MIN_TOUCH,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryText: { color: '#FFFFFF', fontSize: font.heading, fontWeight: '700' },
-  disabled: { opacity: 0.4 },
+  content: { paddingHorizontal: GUTTER, paddingBottom: spacing(8), gap: spacing(5) },
+  intro: { gap: spacing(2), marginBottom: spacing(2) },
+  headline: { ...type.display, color: colors.text },
+  sub: { ...type.label, color: colors.textMuted },
+  error: { ...type.label, color: colors.danger },
+  footer: { paddingHorizontal: GUTTER, paddingTop: spacing(3) },
 });

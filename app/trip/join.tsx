@@ -1,21 +1,24 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/Button';
 import { joinTripByCode } from '@/features/trips/api';
-import { MIN_TOUCH, colors, font, radius, spacing } from '@/theme/theme';
+import { GUTTER, colors, radius, spacing, type } from '@/theme/theme';
+
+const CODE_LENGTH = 6;
 
 export default function JoinTripScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,40 +44,44 @@ export default function JoinTripScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: '초대 코드로 참여',
-          headerTitleStyle: { fontSize: font.heading, fontWeight: '700' },
+          title: '',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: colors.bg },
+          headerTintColor: colors.text,
         }}
       />
 
       <View style={styles.content}>
-        <Text style={styles.guide}>친구에게 받은 6자리 코드를 적어 주세요.</Text>
+        <View style={styles.intro}>
+          <Text style={styles.headline}>초대 코드를{'\n'}입력해 주세요</Text>
+          <Text style={styles.sub}>친구에게 받은 6자리 코드예요.</Text>
+        </View>
 
         <TextInput
-          style={styles.input}
+          style={[styles.code, Boolean(error) && styles.codeError]}
           value={code}
-          onChangeText={(next) => setCode(next.toUpperCase())}
-          placeholder="K7M2QD"
+          onChangeText={(next) => {
+            setCode(next.toUpperCase());
+            if (error) setError(null);
+          }}
+          placeholder="------"
           placeholderTextColor={colors.textMuted}
           autoCapitalize="characters"
           autoCorrect={false}
-          maxLength={6}
+          autoFocus
+          maxLength={CODE_LENGTH}
         />
 
         {error && <Text style={styles.error}>{error}</Text>}
       </View>
 
-      <View style={styles.footer}>
-        <Pressable
-          style={[styles.primary, (code.length !== 6 || busy) && styles.disabled]}
-          disabled={code.length !== 6 || busy}
+      <View style={[styles.footer, { paddingBottom: spacing(4) + insets.bottom }]}>
+        <Button
+          label="참여하기"
           onPress={submit}
-        >
-          {busy ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.primaryText}>참여하기</Text>
-          )}
-        </Pressable>
+          disabled={code.length !== CODE_LENGTH}
+          loading={busy}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -82,29 +89,25 @@ export default function JoinTripScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: spacing(5), gap: spacing(5) },
-  guide: { color: colors.textMuted, fontSize: font.body, lineHeight: 26 },
-  input: {
+  content: { flex: 1, paddingHorizontal: GUTTER, gap: spacing(8) },
+  intro: { gap: spacing(2) },
+  headline: { ...type.display, color: colors.text },
+  sub: { ...type.label, color: colors.textMuted },
+  code: {
     backgroundColor: colors.surface,
     borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: 'transparent',
+    borderRadius: radius.lg,
     color: colors.text,
-    fontSize: 34,
+    fontSize: 36,
     fontWeight: '700',
-    letterSpacing: 8,
+    letterSpacing: 12,
     textAlign: 'center',
-    paddingVertical: spacing(4),
+    paddingVertical: spacing(5),
+    // 자간 때문에 오른쪽으로 쏠려 보이는 걸 보정한다.
+    paddingLeft: 12,
   },
-  error: { color: colors.danger, fontSize: font.body, lineHeight: 24 },
-  footer: { padding: spacing(5), borderTopWidth: 1, borderTopColor: colors.border },
-  primary: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.md,
-    minHeight: MIN_TOUCH,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryText: { color: '#FFFFFF', fontSize: font.heading, fontWeight: '700' },
-  disabled: { opacity: 0.4 },
+  codeError: { borderColor: colors.danger, backgroundColor: colors.bg },
+  error: { ...type.label, color: colors.danger, textAlign: 'center' },
+  footer: { paddingHorizontal: GUTTER, paddingTop: spacing(3) },
 });
