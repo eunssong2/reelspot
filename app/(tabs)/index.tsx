@@ -5,7 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { signOut } from '@/features/auth/api';
-import { MAX_MEMBERS, fetchMyTrips, type TripSummary } from '@/features/trips/api';
+import { LayoutPreview } from '@/components/LayoutPreview';
+import { fetchMyTrips, type TripSummary } from '@/features/trips/api';
+import { findLayout } from '@/features/trips/layouts';
 import { GUTTER, colors, palette, radius, spacing, type } from '@/theme/theme';
 
 function formatRange(start: string, end: string) {
@@ -66,17 +68,20 @@ export default function TripsScreen() {
             onPress={() => router.push(`/trip/${item.id}`)}
             style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
           >
-            <View style={styles.cardTop}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.chevron}>›</Text>
-            </View>
-            <Text style={styles.cardMeta}>
-              {item.destination} · {formatRange(item.start_date, item.end_date)}
-            </Text>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                스팟원 {item.member_count}/{MAX_MEMBERS}
-              </Text>
+            <View style={styles.cardBody}>
+              <View style={styles.cardText}>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardMeta}>
+                  {item.destination} · {formatRange(item.start_date, item.end_date)}
+                </Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    스팟원 {item.member_count}/{item.capacity}
+                  </Text>
+                </View>
+              </View>
+
+              <LayoutPreview layout={findLayout(item.layout)} width={52} numbered={false} />
             </View>
           </Pressable>
         )}
@@ -124,9 +129,9 @@ const styles = StyleSheet.create({
     gap: spacing(2),
   },
   cardPressed: { backgroundColor: palette.gray200 },
-  cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cardTitle: { ...type.heading, color: colors.text, flex: 1 },
-  chevron: { ...type.heading, color: colors.textMuted, marginLeft: spacing(2) },
+  cardBody: { flexDirection: 'row', alignItems: 'center', gap: spacing(4) },
+  cardText: { flex: 1, gap: spacing(2) },
+  cardTitle: { ...type.heading, color: colors.text },
   cardMeta: { ...type.label, color: colors.textBody },
   badge: {
     alignSelf: 'flex-start',

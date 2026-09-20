@@ -16,6 +16,10 @@ export type Trip = {
   destination: string;
   start_date: string;
   end_date: string;
+  /** 방장 포함 스팟원 정원 (1~5). */
+  capacity: number;
+  /** 분할 화면 템플릿 id — src/features/trips/layouts.ts 참고. */
+  layout: string;
   /** 스팟원을 부를 때 쓰는 6자리 코드. */
   invite_code: string;
   created_at: string;

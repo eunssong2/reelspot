@@ -4,9 +4,12 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
+import { CapacityPicker } from '@/components/CapacityPicker';
+import { LayoutPicker } from '@/components/LayoutPicker';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { createTrip } from '@/features/trips/api';
+import { layoutForCapacity, layoutsFor } from '@/features/trips/layouts';
 import { GUTTER, colors, spacing, type } from '@/theme/theme';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -19,6 +22,8 @@ export default function NewTripScreen() {
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [capacity, setCapacity] = useState(3);
+  const [layout, setLayout] = useState(() => layoutsFor(3)[0].id);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,13 +33,26 @@ export default function NewTripScreen() {
   const dateError = bothDatesTyped && !datesValid ? '종료일이 시작일보다 빠릅니다.' : null;
   const canSubmit = title.trim().length > 0 && destination.trim().length > 0 && datesValid;
 
+  // 정원이 바뀌면 칸 수가 안 맞는 배치는 그 정원의 첫 배치로 갈아탄다.
+  const changeCapacity = (next: number) => {
+    setCapacity(next);
+    setLayout((current) => layoutForCapacity(next, current));
+  };
+
   const submit = async () => {
     if (!user) return;
     setError(null);
     setBusy(true);
     try {
       const trip = await createTrip(
-        { title: title.trim(), destination: destination.trim(), startDate, endDate },
+        {
+          title: title.trim(),
+          destination: destination.trim(),
+          startDate,
+          endDate,
+          capacity,
+          layout,
+        },
         user.id,
       );
       // 방을 만들면 바로 스팟원 부르는 화면으로 보낸다.
@@ -93,6 +111,20 @@ export default function NewTripScreen() {
           maxLength={10}
         />
 
+        <View style={styles.block}>
+          <Text style={styles.blockTitle}>스팟원 몇 명인가요?</Text>
+          <Text style={styles.blockSub}>방장인 나를 포함한 인원이에요. 나중에 늘릴 수 있어요.</Text>
+          <CapacityPicker value={capacity} onChange={changeCapacity} />
+        </View>
+
+        <View style={styles.block}>
+          <Text style={styles.blockTitle}>화면 배치</Text>
+          <Text style={styles.blockSub}>
+            여행 영상에서 스팟원 {capacity}명의 기록이 놓일 자리예요.
+          </Text>
+          <LayoutPicker capacity={capacity} value={layout} onChange={setLayout} />
+        </View>
+
         {error && <Text style={styles.error}>{error}</Text>}
       </ScrollView>
 
@@ -114,6 +146,9 @@ const styles = StyleSheet.create({
   intro: { gap: spacing(2), marginBottom: spacing(2) },
   headline: { ...type.display, color: colors.text },
   sub: { ...type.label, color: colors.textMuted },
+  block: { gap: spacing(2) },
+  blockTitle: { ...type.heading, color: colors.text },
+  blockSub: { ...type.caption, color: colors.textMuted, marginBottom: spacing(2) },
   error: { ...type.label, color: colors.danger },
   footer: { paddingHorizontal: GUTTER, paddingTop: spacing(3) },
 });

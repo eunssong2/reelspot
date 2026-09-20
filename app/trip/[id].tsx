@@ -14,15 +14,19 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
+import { CapacityPicker } from '@/components/CapacityPicker';
+import { LayoutPicker } from '@/components/LayoutPicker';
+import { LayoutPreview } from '@/components/LayoutPreview';
 import { useAuth } from '@/features/auth/AuthProvider';
 import {
-  MAX_MEMBERS,
   fetchMembers,
   fetchTrip,
   leaveTrip,
+  updateTripSetup,
   type TripMemberRow,
   type TripSummary,
 } from '@/features/trips/api';
+import { findLayout, layoutForCapacity } from '@/features/trips/layouts';
 import { GUTTER, MIN_TOUCH, colors, radius, spacing, type } from '@/theme/theme';
 
 export default function TripDetailScreen() {
@@ -35,6 +39,10 @@ export default function TripDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draftCapacity, setDraftCapacity] = useState(5);
+  const [draftLayout, setDraftLayout] = useState('single');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -45,6 +53,10 @@ export default function TripDetailScreen() {
         if (!active) return;
         setTrip(tripData);
         setMembers(memberData);
+        if (tripData) {
+          setDraftCapacity(tripData.capacity);
+          setDraftLayout(tripData.layout);
+        }
       })
       .catch((e: unknown) => {
         if (active) setError(e instanceof Error ? e.message : '여행을 불러오지 못했습니다.');
@@ -72,6 +84,25 @@ export default function TripDetailScreen() {
     // 별도 토스트 없이 라벨만 잠깐 바꿔 알린다.
     setTimeout(() => setCopied(false), 1500);
   }, [trip]);
+
+  const changeDraftCapacity = (next: number) => {
+    setDraftCapacity(next);
+    setDraftLayout((current) => layoutForCapacity(next, current));
+  };
+
+  const saveSetup = async () => {
+    if (!trip) return;
+    setSaving(true);
+    try {
+      await updateTripSetup(trip.id, draftCapacity, draftLayout);
+      setTrip({ ...trip, capacity: draftCapacity, layout: draftLayout });
+      setEditing(false);
+    } catch (e) {
+      Alert.alert('저장 실패', e instanceof Error ? e.message : '다시 시도해 주세요.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const leave = useCallback(() => {
     if (!trip || !user) return;
@@ -110,7 +141,8 @@ export default function TripDetailScreen() {
   }
 
   const isOwner = trip.owner_id === user?.id;
-  const openSlots = MAX_MEMBERS - members.length;
+  const openSlots = trip.capacity - members.length;
+  const layout = findLayout(trip.layout);
 
   return (
     <View style={styles.container}>
@@ -134,7 +166,7 @@ export default function TripDetailScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            스팟원 {members.length}/{MAX_MEMBERS}
+            스팟원 {members.length}/{trip.capacity}
           </Text>
 
           <View style={styles.memberCard}>
@@ -171,6 +203,54 @@ export default function TripDetailScreen() {
         </View>
 
         <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>화면 배치</Text>
+            {isOwner && (
+              <Pressable
+                onPress={() => {
+                  setDraftCapacity(trip.capacity);
+                  setDraftLayout(trip.layout);
+                  setEditing((on) => !on);
+                }}
+                hitSlop={spacing(3)}
+              >
+                <Text style={styles.sectionAction}>{editing ? '취소' : '변경'}</Text>
+              </Pressable>
+            )}
+          </View>
+
+          {editing ? (
+            <View style={styles.editor}>
+              <Text style={styles.editorLabel}>스팟원 정원</Text>
+              <CapacityPicker
+                value={draftCapacity}
+                onChange={changeDraftCapacity}
+                min={members.length}
+              />
+
+              <Text style={styles.editorLabel}>배치</Text>
+              <LayoutPicker
+                capacity={draftCapacity}
+                value={draftLayout}
+                onChange={setDraftLayout}
+              />
+
+              <Button label="저장" onPress={saveSetup} loading={saving} />
+            </View>
+          ) : (
+            <View style={styles.layoutRow}>
+              <LayoutPreview layout={layout} width={84} />
+              <View style={styles.layoutText}>
+                <Text style={styles.layoutName}>{layout.name}</Text>
+                <Text style={styles.layoutHint}>
+                  같은 장소에서 스팟원 {trip.capacity}명이 남긴 기록이 이렇게 한 화면에 놓여요.
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>초대 코드</Text>
 
           <Pressable
@@ -184,7 +264,7 @@ export default function TripDetailScreen() {
           <Text style={styles.codeGuide}>
             {openSlots > 0
               ? `이 코드를 친구에게 보내면 스팟원으로 참여해요. ${openSlots}자리 남았어요.`
-              : '스팟원 5명이 모두 찼어요.'}
+              : '스팟원 자리가 모두 찼어요.'}
           </Text>
         </View>
 
@@ -212,7 +292,15 @@ const styles = StyleSheet.create({
   headline: { ...type.display, color: colors.text },
   sub: { ...type.label, color: colors.textBody },
   section: { gap: spacing(3) },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionTitle: { ...type.heading, color: colors.text },
+  sectionAction: { ...type.label, color: colors.accent, fontWeight: '700' },
+  editor: { gap: spacing(3) },
+  editorLabel: { ...type.label, color: colors.textBody },
+  layoutRow: { flexDirection: 'row', gap: spacing(4), alignItems: 'center' },
+  layoutText: { flex: 1, gap: spacing(1) },
+  layoutName: { ...type.bodyStrong, color: colors.text },
+  layoutHint: { ...type.caption, color: colors.textMuted },
   memberCard: { backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: spacing(4) },
   memberRow: {
     flexDirection: 'row',

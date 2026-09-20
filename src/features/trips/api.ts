@@ -4,8 +4,6 @@ import type { Trip, TripRole } from '@/types/database';
 
 import { demoMembers, demoTrip, DEMO_TRIPS } from './mock';
 
-export const MAX_MEMBERS = 5;
-
 export type TripSummary = Trip & { member_count: number };
 
 export type TripMemberRow = {
@@ -72,6 +70,8 @@ export type NewTrip = {
   destination: string;
   startDate: string;
   endDate: string;
+  capacity: number;
+  layout: string;
 };
 
 export async function createTrip(input: NewTrip, ownerId: string): Promise<TripSummary> {
@@ -83,6 +83,8 @@ export async function createTrip(input: NewTrip, ownerId: string): Promise<TripS
       destination: input.destination,
       start_date: input.startDate,
       end_date: input.endDate,
+      capacity: input.capacity,
+      layout: input.layout,
       invite_code: 'DEMO24',
       created_at: new Date().toISOString(),
       member_count: 1,
@@ -98,6 +100,8 @@ export async function createTrip(input: NewTrip, ownerId: string): Promise<TripS
       destination: input.destination,
       start_date: input.startDate,
       end_date: input.endDate,
+      capacity: input.capacity,
+      layout: input.layout,
     })
     .select('*')
     .single();
@@ -116,12 +120,29 @@ export async function joinTripByCode(code: string): Promise<string> {
 
   if (error) {
     if (error.message.includes('초대 코드')) throw new Error('초대 코드를 찾을 수 없습니다.');
-    if (error.message.includes('최대 5명')) {
-      throw new Error('이 여행은 스팟원 5명이 모두 찼습니다.');
+    if (error.message.includes('정원')) {
+      throw new Error('이 여행은 스팟원 자리가 모두 찼습니다.');
     }
     throw error;
   }
   return data as string;
+}
+
+/** 정원·배치는 방장만 바꿀 수 있다 (RLS 의 update 정책). */
+export async function updateTripSetup(tripId: string, capacity: number, layout: string) {
+  if (isDemo) return;
+
+  const { error } = await supabase
+    .from('trips')
+    .update({ capacity, layout })
+    .eq('id', tripId);
+
+  if (error) {
+    if (error.message.includes('줄일 수 없습니다')) {
+      throw new Error('이미 들어온 스팟원 수보다 적게는 줄일 수 없습니다.');
+    }
+    throw error;
+  }
 }
 
 export async function leaveTrip(tripId: string, userId: string) {
