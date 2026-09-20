@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Logo } from '@/components/Logo';
 import { signInWithKakao } from '@/features/auth/api';
 import { isDemo } from '@/lib/env';
-import { GUTTER, MIN_TOUCH, colors, spacing, type } from '@/theme/theme';
+import { GUTTER, MIN_TOUCH, colors, palette, spacing, type } from '@/theme/theme';
 
 const KAKAO_YELLOW = '#FEE500';
 const KAKAO_PRESSED = '#F0D800';
@@ -34,8 +34,15 @@ export default function LoginScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={styles.header}>
-        <Logo size={72} />
-        <Text style={styles.logo}>릴스팟</Text>
+        <Logo size={128} />
+
+        <View>
+          <Text style={styles.wordmark}>
+            <Text style={styles.wordmarkReel}>Reel</Text>
+            <Text style={styles.wordmarkSpot}>Spot</Text>
+          </Text>
+          <Text style={styles.tag}>SPOT THE WORLD, IN REELS</Text>
+        </View>
         <Text style={styles.tagline}>
           같이 간 여행,{'\n'}각자 찍은 순간을 한곳에.
         </Text>
@@ -80,9 +87,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: GUTTER,
     justifyContent: 'space-between',
   },
-  header: { flex: 1, justifyContent: 'center', gap: spacing(5) },
-  logo: { ...type.display, fontSize: 40, lineHeight: 52, color: colors.text, marginTop: spacing(1) },
-  tagline: { ...type.title, fontWeight: '600', color: colors.textMuted, marginTop: -spacing(2) },
+  header: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing(6) },
+  wordmark: { fontSize: 46, fontWeight: '800', letterSpacing: -1.5, textAlign: 'center' },
+  wordmarkReel: { color: palette.ink },
+  wordmarkSpot: { color: colors.accent },
+  // 로고의 영문 태그라인. 자간을 넓혀 원본 느낌을 살린다.
+  tag: {
+    ...type.caption,
+    color: colors.textMuted,
+    letterSpacing: 3,
+    textAlign: 'center',
+    marginTop: spacing(2),
+  },
+  tagline: {
+    ...type.title,
+    fontWeight: '600',
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing(2),
+  },
   bottom: { gap: spacing(4), paddingBottom: spacing(8) },
   error: { ...type.label, color: colors.danger },
   kakao: {
