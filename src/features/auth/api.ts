@@ -20,6 +20,10 @@ export async function signInWithKakao() {
     provider: 'kakao',
     options: {
       redirectTo,
+      // scopes 는 지정하지 않는다. Supabase 는 넘긴 값을 기본값에 "덧붙일" 뿐
+      // 대체하지 않아서, 무엇을 넘기든 account_email 이 항상 따라간다.
+      // 따라서 카카오 앱의 동의항목에 '카카오계정(이메일)' 이 켜져 있어야 한다.
+      // 켜져 있지 않으면 인가 단계에서 KOE205 로 막힌다.
       // 브라우저는 우리가 직접 연다 — 웹용 자동 리다이렉트를 막는다.
       skipBrowserRedirect: true,
     },
