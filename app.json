@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "릴스팟",
+    "slug": "reelspot",
+    "version": "0.1.0",
+    "scheme": "reelspot",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.reelspot.app" },
+    "android": { "package": "com.reelspot.app" },
+    "plugins": ["expo-router", "expo-web-browser"],
+    "experiments": { "typedRoutes": true, "tsconfigPaths": true }
+  }
+}
