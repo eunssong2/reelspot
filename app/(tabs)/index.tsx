@@ -1,10 +1,12 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/Button';
 import { signOut } from '@/features/auth/api';
 import { MAX_MEMBERS, fetchMyTrips, type TripSummary } from '@/features/trips/api';
-import { MIN_TOUCH, colors, font, radius, spacing } from '@/theme/theme';
+import { GUTTER, colors, palette, radius, spacing, type } from '@/theme/theme';
 
 function formatRange(start: string, end: string) {
   const [, sm, sd] = start.split('-');
@@ -14,6 +16,7 @@ function formatRange(start: string, end: string) {
 
 export default function TripsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [trips, setTrips] = useState<TripSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,11 +47,12 @@ export default function TripsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <FlatList
         contentContainerStyle={styles.content}
         data={trips}
         keyExtractor={(trip) => trip.id}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.title}>내 여행</Text>
@@ -58,30 +62,43 @@ export default function TripsScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <Pressable style={styles.card} onPress={() => router.push(`/trip/${item.id}`)}>
-            <Text style={styles.cardTitle}>{item.title}</Text>
+          <Pressable
+            onPress={() => router.push(`/trip/${item.id}`)}
+            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+          >
+            <View style={styles.cardTop}>
+              <Text style={styles.cardTitle}>{item.title}</Text>
+              <Text style={styles.chevron}>›</Text>
+            </View>
             <Text style={styles.cardMeta}>
               {item.destination} · {formatRange(item.start_date, item.end_date)}
             </Text>
-            <Text style={styles.cardMembers}>
-              스팟원 {item.member_count} / {MAX_MEMBERS}명
-            </Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                스팟원 {item.member_count}/{MAX_MEMBERS}
+              </Text>
+            </View>
           </Pressable>
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>
-            {error ?? '아직 여행이 없습니다.\n아래에서 여행을 만들고 스팟원을 불러 보세요.'}
-          </Text>
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>{error ?? '아직 여행이 없어요'}</Text>
+            {!error && (
+              <Text style={styles.emptyBody}>
+                여행을 만들고 스팟원을 부르면{'\n'}각자 찍은 사진을 한곳에 모을 수 있어요.
+              </Text>
+            )}
+          </View>
         }
       />
 
-      <View style={styles.actions}>
-        <Pressable style={styles.primary} onPress={() => router.push('/trip/new')}>
-          <Text style={styles.primaryText}>여행 만들기</Text>
-        </Pressable>
-        <Pressable style={styles.secondary} onPress={() => router.push('/trip/join')}>
-          <Text style={styles.secondaryText}>초대 코드로 참여</Text>
-        </Pressable>
+      <View style={[styles.actions, { paddingBottom: spacing(4) + insets.bottom }]}>
+        <Button label="여행 만들기" onPress={() => router.push('/trip/new')} />
+        <Button
+          label="초대 코드로 참여"
+          variant="secondary"
+          onPress={() => router.push('/trip/join')}
+        />
       </View>
     </View>
   );
@@ -90,53 +107,38 @@ export default function TripsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  content: { padding: spacing(5), gap: spacing(3), paddingBottom: spacing(10) },
+  content: { paddingHorizontal: GUTTER, paddingBottom: spacing(6), gap: spacing(3) },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing(2),
+    paddingTop: spacing(4),
+    paddingBottom: spacing(4),
   },
-  title: { color: colors.text, fontSize: font.title, fontWeight: '800' },
-  logout: { color: colors.textMuted, fontSize: font.label, fontWeight: '600' },
+  title: { ...type.display, color: colors.text },
+  logout: { ...type.label, color: colors.textMuted },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: spacing(5),
-    gap: spacing(1.5),
+    gap: spacing(2),
   },
-  cardTitle: { color: colors.text, fontSize: font.heading, fontWeight: '700' },
-  cardMeta: { color: colors.textMuted, fontSize: font.body },
-  cardMembers: { color: colors.accent, fontSize: font.label, fontWeight: '700' },
-  empty: {
-    color: colors.textMuted,
-    fontSize: font.body,
-    lineHeight: 26,
-    textAlign: 'center',
-    marginTop: spacing(12),
+  cardPressed: { backgroundColor: palette.gray200 },
+  cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cardTitle: { ...type.heading, color: colors.text, flex: 1 },
+  chevron: { ...type.heading, color: colors.textMuted, marginLeft: spacing(2) },
+  cardMeta: { ...type.label, color: colors.textBody },
+  badge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing(3),
+    paddingVertical: spacing(1.5),
+    marginTop: spacing(1),
   },
-  actions: {
-    padding: spacing(5),
-    gap: spacing(3),
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.bg,
-  },
-  primary: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.md,
-    minHeight: MIN_TOUCH,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryText: { color: '#FFFFFF', fontSize: font.heading, fontWeight: '700' },
-  secondary: {
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    minHeight: MIN_TOUCH,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryText: { color: colors.text, fontSize: font.heading, fontWeight: '600' },
+  badgeText: { ...type.caption, fontWeight: '700', color: colors.accent },
+  empty: { alignItems: 'center', paddingTop: spacing(20), gap: spacing(3) },
+  emptyTitle: { ...type.heading, color: colors.text },
+  emptyBody: { ...type.label, color: colors.textMuted, textAlign: 'center' },
+  actions: { paddingHorizontal: GUTTER, paddingTop: spacing(3), gap: spacing(2) },
 });
