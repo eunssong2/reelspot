@@ -1,18 +1,26 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { CapacityPicker } from '@/components/CapacityPicker';
+import { DateRangeSheet } from '@/components/DateRangeSheet';
 import { LayoutPicker } from '@/components/LayoutPicker';
 import { TextField } from '@/components/TextField';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { createTrip } from '@/features/trips/api';
+import { formatRange, type DateString } from '@/features/trips/dates';
 import { layoutForCapacity, layoutsFor } from '@/features/trips/layouts';
-import { GUTTER, colors, spacing, type } from '@/theme/theme';
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+import { GUTTER, MIN_TOUCH, colors, radius, spacing, type } from '@/theme/theme';
 
 export default function NewTripScreen() {
   const router = useRouter();
@@ -20,18 +28,17 @@ export default function NewTripScreen() {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [destination, setDestination] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<DateString | null>(null);
+  const [endDate, setEndDate] = useState<DateString | null>(null);
+  const [pickingDates, setPickingDates] = useState(false);
   const [capacity, setCapacity] = useState(3);
   const [layout, setLayout] = useState(() => layoutsFor(3)[0].id);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const bothDatesTyped = startDate.length === 10 && endDate.length === 10;
-  const datesValid =
-    DATE_PATTERN.test(startDate) && DATE_PATTERN.test(endDate) && endDate >= startDate;
-  const dateError = bothDatesTyped && !datesValid ? '종료일이 시작일보다 빠릅니다.' : null;
-  const canSubmit = title.trim().length > 0 && destination.trim().length > 0 && datesValid;
+  // 달력에서만 고르므로 순서가 뒤집힐 일이 없다 — 채워졌는지만 본다.
+  const datesPicked = Boolean(startDate && endDate);
+  const canSubmit = title.trim().length > 0 && destination.trim().length > 0 && datesPicked;
 
   // 정원이 바뀌면 칸 수가 안 맞는 배치는 그 정원의 첫 배치로 갈아탄다.
   const changeCapacity = (next: number) => {
@@ -40,7 +47,7 @@ export default function NewTripScreen() {
   };
 
   const submit = async () => {
-    if (!user) return;
+    if (!user || !startDate || !endDate) return;
     setError(null);
     setBusy(true);
     try {
@@ -92,24 +99,19 @@ export default function NewTripScreen() {
           onChangeText={setDestination}
           placeholder="제주도"
         />
-        <TextField
-          label="시작일"
-          value={startDate}
-          onChangeText={setStartDate}
-          placeholder="2026-10-02"
-          hint="연도-월-일 순서로 적어 주세요."
-          keyboardType="numbers-and-punctuation"
-          maxLength={10}
-        />
-        <TextField
-          label="종료일"
-          value={endDate}
-          onChangeText={setEndDate}
-          placeholder="2026-10-05"
-          error={dateError}
-          keyboardType="numbers-and-punctuation"
-          maxLength={10}
-        />
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>여행 기간</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="여행 기간 고르기"
+            onPress={() => setPickingDates(true)}
+            style={({ pressed }) => [styles.dateField, pressed && styles.dateFieldPressed]}
+          >
+            <Text style={[styles.dateValue, !datesPicked && styles.datePlaceholder]}>
+              {startDate && endDate ? formatRange(startDate, endDate) : '달력에서 고르기'}
+            </Text>
+          </Pressable>
+        </View>
 
         <View style={styles.block}>
           <Text style={styles.blockTitle}>스팟원 몇 명인가요?</Text>
@@ -127,6 +129,18 @@ export default function NewTripScreen() {
 
         {error && <Text style={styles.error}>{error}</Text>}
       </ScrollView>
+
+      <DateRangeSheet
+        visible={pickingDates}
+        start={startDate}
+        end={endDate}
+        onCancel={() => setPickingDates(false)}
+        onConfirm={(from, to) => {
+          setStartDate(from);
+          setEndDate(to);
+          setPickingDates(false);
+        }}
+      />
 
       <View style={[styles.footer, { paddingBottom: spacing(4) + insets.bottom }]}>
         <Button
@@ -146,6 +160,20 @@ const styles = StyleSheet.create({
   intro: { gap: spacing(2), marginBottom: spacing(2) },
   headline: { ...type.display, color: colors.text },
   sub: { ...type.label, color: colors.textMuted },
+  field: { gap: spacing(2) },
+  fieldLabel: { ...type.label, color: colors.textBody },
+  dateField: {
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    borderRadius: radius.md,
+    minHeight: MIN_TOUCH,
+    paddingHorizontal: spacing(4),
+    justifyContent: 'center',
+  },
+  dateFieldPressed: { borderColor: colors.accent, backgroundColor: colors.bg },
+  dateValue: { ...type.body, color: colors.text },
+  datePlaceholder: { color: colors.textMuted },
   block: { gap: spacing(2) },
   blockTitle: { ...type.heading, color: colors.text },
   blockSub: { ...type.caption, color: colors.textMuted, marginBottom: spacing(2) },
