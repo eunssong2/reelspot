@@ -1,37 +1,52 @@
+import { colors as team, palette } from '@/theme/theme';
+
 /**
- * 프로토타입 디자인 토큰: 밝은 하늘색 + 흰색, 둥근 카드, 부드러운 그림자.
- * 흰 글자를 올리는 primary 는 굵은 16px 이상 텍스트에서만 쓴다(대비 약 4:1).
+ * 프로토타입 디자인 토큰. 팀 앱의 디자인 시스템(src/theme/theme.ts, 토스 UI 기준)에서 색을 가져와
+ * 같은 톤을 쓴다: 흰 배경 + 회색 면 카드 + 코랄 포인트, 그림자 대신 면 구분.
+ * 팀 팔레트가 바뀌면 프로토타입도 함께 바뀐다.
  */
 export const colors = {
-  /** 앱 전체 배경(아주 연한 하늘색) */
-  bg: '#EAF6FD',
-  surface: '#FFFFFF',
-  /** 주요 버튼, 선택 상태 */
-  primary: '#2487DC',
-  onPrimary: '#FFFFFF',
-  /** 연한 파랑 배경(비선택 탭, + 추가 버튼, Day 카드) */
-  primarySoft: '#DCEEFB',
-  primaryBorder: '#B5D9F5',
-  text: '#1E2B3A',
-  textSub: '#566B80',
-  line: '#D6E8F5',
-  /** 배지·핀 강조(따뜻한 포인트) */
-  accent: '#FF8A5B',
+  /** 화면 배경 (흰색) */
+  bg: team.bg,
+  /** 카드·입력창·비선택 칩처럼 배경에서 한 단 들어간 회색 면 */
+  surface: team.surface,
+  /** 회색 면 위에 얹는 한 단계 더 진한 면 */
+  surfaceStrong: palette.gray200,
+  /** 주요 버튼, 선택 상태 (팀 accent) */
+  primary: team.accent,
+  primaryPressed: team.accentPressed,
+  onPrimary: team.onAccent,
+  /** 연한 코랄 배경(선택 항목, + 추가 버튼, 배지) */
+  primarySoft: team.accentSoft,
+  /** 코랄 계열 옅은 테두리·선택 표시 */
+  primaryBorder: '#F9C9C6',
+  text: team.text,
+  textSub: palette.gray600,
+  textMuted: team.textMuted,
+  line: team.border,
+  danger: team.danger,
+  /** 어두운 반투명 안내(토스트·힌트)용 */
+  ink: palette.ink,
+  /** 보조 포인트(주황) */
+  accent: palette.orange500,
 } as const;
 
 export const radius = {
   card: 20,
   item: 16,
-  button: 16,
+  /** 팀 Button 과 같은 곡률 */
+  button: 14,
   pill: 999,
 } as const;
 
-/** RN 0.76+ 의 boxShadow 문자열. 네이티브·웹 모두 같은 값을 쓴다. */
+/** 팀 앱은 그림자 대신 면으로 구분한다. 화면 위에 뜨는 요소(시트·토스트)만 옅은 중립 그림자를 쓴다. */
 export const shadow = {
-  card: '0px 6px 16px rgba(36, 100, 160, 0.12)',
-  soft: '0px 3px 10px rgba(36, 100, 160, 0.10)',
-  float: '0px 8px 22px rgba(20, 60, 110, 0.22)',
+  card: undefined,
+  soft: undefined,
+  float: '0px 6px 20px rgba(25, 31, 40, 0.16)',
 } as const;
 
-/** 화면 좌우 여백 */
+/** 화면 좌우 여백 (팀 GUTTER 와 동일) */
 export const GUTTER = 20;
+/** 팀 Button 최소 터치 높이 */
+export const MIN_TOUCH = 56;

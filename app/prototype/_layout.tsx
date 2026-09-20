@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 
+import { colors } from '@/prototype/styles/tokens';
 import { PhoneFrame } from '@/prototype/components/ScreenFrame';
 import { PrototypeProvider } from '@/prototype/state/PrototypeProvider';
 
@@ -12,7 +13,7 @@ export default function PrototypeLayout() {
   return (
     <PrototypeProvider>
       <PhoneFrame>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#EAF6FD' } }} />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
       </PhoneFrame>
     </PrototypeProvider>
   );

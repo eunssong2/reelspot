@@ -3,9 +3,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { CoverKind } from '../mock/tripData';
 
 const SCENES: Record<CoverKind, { sky: string; ground: string; emoji: string }> = {
-  beach: { sky: '#9ADBF7', ground: '#4FC3D9', emoji: '🏝️' },
-  sunset: { sky: '#FFB58A', ground: '#C0556B', emoji: '🌴' },
-  town: { sky: '#F1D6B8', ground: '#C98F6B', emoji: '🏘️' },
+  beach: { sky: '#FDEDEB', ground: '#F1706B', emoji: '🏝️' },
+  sunset: { sky: '#FBD9B5', ground: '#E8517E', emoji: '🌴' },
+  town: { sky: '#E5E8EB', ground: '#B0B8C1', emoji: '🏘️' },
 };
 
 /** 모임 카드 대표 이미지: 하늘 + 바닥 색 띠 + 이모지로 만든 여행 풍경 썸네일. */

@@ -22,10 +22,10 @@ export const CATEGORY_RULES: CategoryRule[] = [
   { pattern: '숙박', label: '숙소', emoji: '🛏️', tint: '#F5D0C4' },
   { pattern: '^음식점', label: '맛집', emoji: '🍽️', tint: '#FBD9B5' },
   { pattern: '고궁|문화재|관광|명소|공원', label: '관광지', emoji: '🏯', tint: '#F6D9A8' },
-  { pattern: '미술관|박물관|문화|예술', label: '관광지', emoji: '🖼️', tint: '#CFE3F8' },
+  { pattern: '미술관|박물관|문화|예술', label: '관광지', emoji: '🖼️', tint: '#E5E8EB' },
 ];
 
-export const FALLBACK_STYLE: CategoryStyle = { label: '장소', emoji: '📍', tint: '#D6E8F5' };
+export const FALLBACK_STYLE: CategoryStyle = { label: '장소', emoji: '📍', tint: '#E5E8EB' };
 
 export function styleForCategory(category: string): CategoryStyle {
   const rule = CATEGORY_RULES.find((r) => new RegExp(r.pattern).test(category));

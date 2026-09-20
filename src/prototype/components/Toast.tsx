@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { shadow } from '../styles/tokens';
+import { colors, shadow } from '../styles/tokens';
 
 /** 잠깐 떴다 사라지는 안내 메시지. 아직 구현하지 않은 버튼을 눌렀을 때도 쓴다. */
 export function useToast(durationMs = 1800) {
@@ -42,11 +42,11 @@ export function Toast({ message, bottom = 100 }: { message: string | null; botto
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', pointerEvents: 'none', left: 20, right: 20, alignItems: 'center', zIndex: 50 },
   pill: {
-    backgroundColor: 'rgba(30,43,58,0.92)',
+    backgroundColor: 'rgba(35,39,47,0.92)',
     borderRadius: 999,
     paddingHorizontal: 18,
     paddingVertical: 11,
     boxShadow: shadow.float,
   },
-  text: { color: '#fff', fontSize: 14, fontWeight: '600', textAlign: 'center' },
+  text: { color: colors.onPrimary, fontSize: 14, fontWeight: '600', textAlign: 'center' },
 });

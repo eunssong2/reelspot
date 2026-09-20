@@ -34,6 +34,6 @@ export function TemplatePreview({ rects, width, height, selected }: Props) {
 }
 
 const styles = StyleSheet.create({
-  cell: { flex: 1, borderRadius: 4, backgroundColor: '#D3E4F2' },
-  cellSelected: { backgroundColor: colors.primaryBorder },
+  cell: { flex: 1, borderRadius: 4, backgroundColor: colors.surfaceStrong },
+  cellSelected: { backgroundColor: colors.primary },
 });

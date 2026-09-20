@@ -148,8 +148,8 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 },
   slotBox: { padding: 4 },
   slot: { aspectRatio: 0.52, borderRadius: radius.item, overflow: 'hidden' },
-  slotEmpty: { backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 2, borderColor: colors.primaryBorder, borderStyle: 'dashed' },
-  slotFilled: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
+  slotEmpty: { backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primaryBorder, borderStyle: 'dashed' },
+  slotFilled: { backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.line },
   pressed: { opacity: 0.85 },
   addWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
   addCircle: {
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   addPlus: { fontSize: 24, lineHeight: 27, color: colors.primary, fontWeight: '500' },
   addText: { fontSize: 12, fontWeight: '600', color: colors.textSub },
   preview: { flex: 1, width: '100%', height: '100%' },
-  videoTile: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6, padding: 8, backgroundColor: '#DCEAF6' },
+  videoTile: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6, padding: 8, backgroundColor: colors.surfaceStrong },
   videoIcon: { fontSize: 30 },
   videoName: { fontSize: 11, color: colors.textSub, textAlign: 'center' },
   remove: {
@@ -174,11 +174,11 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: 'rgba(30,43,58,0.72)',
+    backgroundColor: 'rgba(35,39,47,0.72)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  removeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  removeText: { color: colors.onPrimary, fontSize: 12, fontWeight: '700' },
   progress: { textAlign: 'center', fontSize: 13, color: colors.textSub, fontWeight: '600' },
   footer: { paddingHorizontal: GUTTER, paddingTop: 8, paddingBottom: 16 },
 });

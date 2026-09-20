@@ -83,14 +83,14 @@ export const INITIAL_DAYS: TripDay[] = [
     places: [
       { id: 'mock-gyeongbok', name: '경복궁', address: '서울 종로구 사직로 161', categoryLabel: '관광지', emoji: '🏯', tint: '#F6D9A8' },
       { id: 'mock-hanbok', name: '빛나라한복', address: '서울 종로구 효자로 12', categoryLabel: '관광지', emoji: '👘', tint: '#F7C6D9' },
-      { id: 'mock-moca', name: '국립현대미술관', address: '서울 종로구 삼청로 30', categoryLabel: '관광지', emoji: '🖼️', tint: '#CFE3F8' },
+      { id: 'mock-moca', name: '국립현대미술관', address: '서울 종로구 삼청로 30', categoryLabel: '관광지', emoji: '🖼️', tint: '#E5E8EB' },
     ],
   },
   {
     day: 2,
     dateLabel: '5월 13일 (화)',
     places: [
-      { id: 'mock-gwanghwamun', name: '광화문광장', address: '서울 종로구 세종대로 172', categoryLabel: '관광지', emoji: '⛲', tint: '#BFE3F5' },
+      { id: 'mock-gwanghwamun', name: '광화문광장', address: '서울 종로구 세종대로 172', categoryLabel: '관광지', emoji: '⛲', tint: '#FDEDEB' },
       { id: 'mock-hanok-spa', name: '온천한옥', address: '서울 종로구 북촌로 15', categoryLabel: '숙소', emoji: '♨️', tint: '#F5D0C4' },
     ],
   },

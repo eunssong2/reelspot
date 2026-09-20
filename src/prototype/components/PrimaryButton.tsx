@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, radius, shadow } from '../styles/tokens';
+import { colors, MIN_TOUCH, radius } from '../styles/tokens';
 
 interface Props {
   label: string;
@@ -15,7 +15,7 @@ export function PrimaryButton({ label, onPress, disabled }: Props) {
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.button, pressed && styles.pressed, disabled && styles.disabled]}
+      style={({ pressed }) => [styles.button, pressed && !disabled && styles.pressed, disabled && styles.disabled]}
     >
       <Text style={styles.label}>{label}</Text>
     </Pressable>
@@ -26,11 +26,13 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.primary,
     borderRadius: radius.button,
-    paddingVertical: 16,
+    minHeight: MIN_TOUCH,
     alignItems: 'center',
-    boxShadow: shadow.float,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  pressed: { opacity: 0.88 },
-  disabled: { backgroundColor: colors.primaryBorder, boxShadow: 'none' },
-  label: { color: colors.onPrimary, fontSize: 17, fontWeight: '700' },
+  // 팀 Button 처럼 눌린 동안 한 단 어두워진다.
+  pressed: { backgroundColor: colors.primaryPressed },
+  disabled: { opacity: 0.45 },
+  label: { color: colors.onPrimary, fontSize: 19, fontWeight: '700', letterSpacing: -0.4 },
 });

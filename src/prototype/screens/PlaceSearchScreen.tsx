@@ -221,7 +221,7 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
             value={keyword}
             onChangeText={setKeyword}
             placeholder="장소를 검색하세요 (예: 경복궁)"
-            placeholderTextColor="#8A9BAD"
+            placeholderTextColor={colors.textMuted}
             returnKeyType="search"
             onSubmitEditing={searchKeyword}
             editable={ready}
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: 'transparent',
   },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipDisabled: { opacity: 0.5 },
@@ -349,7 +349,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     overflow: 'hidden',
     backgroundColor: '#F1EFE7',
-    boxShadow: '0px -2px 12px rgba(36, 100, 160, 0.10)',
   },
 
   notice: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, gap: 10 },
@@ -376,18 +375,18 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderRadius: radius.card,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bg,
     boxShadow: shadow.float,
     zIndex: 10,
   },
   errorScroll: { maxHeight: 200 },
-  errorTitle: { fontSize: 14, fontWeight: '700', color: '#B91C1C', lineHeight: 20 },
+  errorTitle: { fontSize: 14, fontWeight: '700', color: colors.danger, lineHeight: 20 },
   errorBody: { fontSize: 13, color: colors.textSub, lineHeight: 20 },
 
   hint: { position: 'absolute', pointerEvents: 'none', left: 0, right: 0, bottom: 20, alignItems: 'center', zIndex: 10 },
   hintText: {
-    backgroundColor: 'rgba(30,43,58,0.78)',
-    color: '#fff',
+    backgroundColor: 'rgba(35,39,47,0.82)',
+    color: colors.onPrimary,
     fontSize: 13,
     fontWeight: '600',
     paddingHorizontal: 16,

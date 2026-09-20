@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: 'transparent',
   },
   cutActive: { backgroundColor: colors.primary, borderColor: colors.primary, boxShadow: shadow.soft },
   cutText: { fontSize: 14, fontWeight: '700', color: colors.textSub },
