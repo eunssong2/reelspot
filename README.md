@@ -84,7 +84,9 @@ supabase db push
 
 ### 로고
 
-`assets/logo.svg` 가 원본입니다. 고친 뒤 아이콘을 다시 뽑습니다.
+`assets/logo.svg` 가 원본입니다 — 클래퍼가 얹힌 핀, 재생 버튼, 비행기 궤적.
+브랜드 색(핑크 `#E8517E` → 코랄 `#F1706B` → 오렌지 `#F8A85B`)도 여기서 가져왔습니다.
+고친 뒤 아이콘을 다시 뽑습니다.
 
 ```bash
 node scripts/build-icons.mjs
