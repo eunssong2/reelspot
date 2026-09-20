@@ -7,14 +7,9 @@ import { Button } from '@/components/Button';
 import { signOut } from '@/features/auth/api';
 import { LayoutPreview } from '@/components/LayoutPreview';
 import { fetchMyTrips, type TripSummary } from '@/features/trips/api';
+import { formatRangeShort } from '@/features/trips/dates';
 import { findLayout } from '@/features/trips/layouts';
 import { GUTTER, colors, palette, radius, spacing, type } from '@/theme/theme';
-
-function formatRange(start: string, end: string) {
-  const [, sm, sd] = start.split('-');
-  const [, em, ed] = end.split('-');
-  return `${Number(sm)}월 ${Number(sd)}일 – ${Number(em)}월 ${Number(ed)}일`;
-}
 
 export default function TripsScreen() {
   const router = useRouter();
@@ -72,7 +67,7 @@ export default function TripsScreen() {
               <View style={styles.cardText}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.cardMeta}>
-                  {item.destination} · {formatRange(item.start_date, item.end_date)}
+                  {item.destination} · {formatRangeShort(item.start_date, item.end_date)}
                 </Text>
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>

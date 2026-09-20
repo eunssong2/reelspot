@@ -26,6 +26,7 @@ import {
   type TripMemberRow,
   type TripSummary,
 } from '@/features/trips/api';
+import { formatRange } from '@/features/trips/dates';
 import { findLayout, layoutForCapacity } from '@/features/trips/layouts';
 import { GUTTER, MIN_TOUCH, colors, radius, spacing, type } from '@/theme/theme';
 
@@ -159,9 +160,8 @@ export default function TripDetailScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.intro}>
           <Text style={styles.headline}>{trip.title}</Text>
-          <Text style={styles.sub}>
-            {trip.destination} · {trip.start_date} ~ {trip.end_date}
-          </Text>
+          <Text style={styles.sub}>{trip.destination}</Text>
+          <Text style={styles.sub}>{formatRange(trip.start_date, trip.end_date)}</Text>
         </View>
 
         <View style={styles.section}>
