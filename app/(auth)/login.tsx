@@ -1,3 +1,5 @@
+import * as Clipboard from 'expo-clipboard';
+import * as Linking from 'expo-linking';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,8 +13,13 @@ const KAKAO_YELLOW = '#FEE500';
 const KAKAO_PRESSED = '#F0D800';
 const KAKAO_LABEL = '#191600';
 
+// Supabase 의 Redirect URLs 허용 목록에 이 주소가 그대로 들어가 있어야
+// 카카오 인증 후 앱으로 돌아온다. Expo Go 와 빌드본이 서로 다른 주소를 쓴다.
+const REDIRECT_URL = Linking.createURL('auth/callback');
+
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
+  const [copiedRedirect, setCopiedRedirect] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,6 +81,22 @@ export default function LoginScreen() {
             지금은 데모 모드입니다. Supabase 자격증명이 없어 목 데이터로 동작하며, 버튼을 누르면
             바로 입장합니다.
           </Text>
+        )}
+
+        {__DEV__ && !isDemo && (
+          <Pressable
+            onPress={async () => {
+              await Clipboard.setStringAsync(REDIRECT_URL);
+              setCopiedRedirect(true);
+              setTimeout(() => setCopiedRedirect(false), 1500);
+            }}
+          >
+            <Text style={styles.demoNote}>
+              {copiedRedirect ? '복사했어요 · ' : '눌러서 복사 · '}
+              Supabase Redirect URLs 에 넣을 주소{'\n'}
+              {REDIRECT_URL}
+            </Text>
+          </Pressable>
         )}
       </View>
     </View>
