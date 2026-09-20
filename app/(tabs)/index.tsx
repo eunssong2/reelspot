@@ -94,6 +94,7 @@ export default function TripsScreen() {
 
       <View style={[styles.actions, { paddingBottom: spacing(4) + insets.bottom }]}>
         <Button label="여행 만들기" onPress={() => router.push('/trip/new')} />
+        <Button label="UI 프로토타입(임시)" variant="secondary" onPress={() => router.push('/prototype')} />
         <Button
           label="초대 코드로 참여"
           variant="secondary"
