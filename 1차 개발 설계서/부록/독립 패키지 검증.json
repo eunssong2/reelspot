@@ -1,0 +1,26 @@
+{
+  "scope": "상위 원본·DayLog·APK 없는 복사본에서 핵심 설계서와 기존 실행 근거 유지 확인. 앱 빌드/서버 실행 검수 아님.",
+  "passed": true,
+  "checks": [
+    {
+      "check": "build_design.py 독립 실행",
+      "passed": true,
+      "output": "{\"screens\": 33, \"operations\": 73, \"tables\": 27, \"functional_cases\": 112, \"native_ui_pptx\": \"/tmp/atp-design-standalone-26t1kh6s/package/UI/05 UI 설계.pptx\"}\n",
+      "error": ""
+    },
+    {
+      "check": "build_evidence.py 독립 실행",
+      "passed": true,
+      "output": "외부 APK가 없어 패키지에 보관된 실제 실행 근거를 유지합니다. 새 실행 결과를 생성하지 않았습니다.\n",
+      "error": ""
+    },
+    {
+      "check": "실제 APK 관찰 이력 보존",
+      "passed": true
+    },
+    {
+      "check": "기준 사본과 패키지 내부 참조",
+      "passed": true
+    }
+  ]
+}

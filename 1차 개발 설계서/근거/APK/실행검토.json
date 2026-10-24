@@ -1,0 +1,148 @@
+{
+  "review_date": "2026-10-17",
+  "apk": "기능 명세서 자료/ReelSpot-Demo.apk",
+  "apk_sha256": "97ffbb36feee848c12efe3cc75faf15b1370b94b62e4da3741c881be98897e9a",
+  "package": "com.reelspot.app.demo",
+  "version_name": "0.1.0",
+  "version_code": 1,
+  "environment": {
+    "avd": "daylog35",
+    "android": "15",
+    "api": 35,
+    "abi": "x86_64",
+    "resolution": "1080x2400",
+    "mode": "no-window Android emulator, ADB screen capture"
+  },
+  "launch_command": "adb -s emulator-5554 shell am start --user 0 -n com.reelspot.app.demo/.MainActivity",
+  "observed": [
+    "일정 선택",
+    "서울 여행 개요·날짜 선택",
+    "날짜별 장소 목록",
+    "장소별 사진/영상 카드·작성자·시각·설명",
+    "업로드 후보 시트",
+    "기기 가져오기·사진/영상 촬영 메뉴",
+    "예시 지도 카페 분류·결과",
+    "날짜 제목·방문 시각·순서 편집"
+  ],
+  "verified_mutations": [
+    {
+      "action": "서울숲 산책길 아래로 이동 후 변경 저장",
+      "before": "서울숲 산책길→오후의 커피",
+      "after": "오후의 커피→서울숲 산책길",
+      "evidence": [
+        "09-plan",
+        "10-order-edited",
+        "11-order-saved"
+      ]
+    },
+    {
+      "action": "예시 결과의 한남 브런치 카페 추가",
+      "before": "10월17일 장소4개",
+      "after": "장소5개·한남 브런치 카페·시간미정",
+      "evidence": [
+        "13-add-candidate",
+        "14-place-added"
+      ]
+    }
+  ],
+  "not_verified": [
+    "실제 카카오/Google 인증",
+    "실제 서버 파일 업로드와 여러 기기 동기화",
+    "실제 카카오 지도 검색",
+    "카메라 실제 파일 생성·저장",
+    "서버 위치 제거·콘텐츠 검사",
+    "보관 만료·운영·종료 후 권한",
+    "Android12 최저 실기기·성능목표"
+  ],
+  "observed_differences": [
+    "업로드 시트 최대10개→최신명세120개",
+    "날짜 화면을 경유→최신명세일정전체직접상세",
+    "날짜 전체 메모→최신명세제외"
+  ],
+  "captures": [
+    {
+      "id": "01-entry",
+      "captured_at": "2026-10-17T13:50:46.914309+09:00",
+      "action": "앱 시작 후 일정 선택 화면",
+      "sha256": "5ccb9d08483fd86dfcac5bff9ffe9097f5cc9e4dc38ef2cf0a3bb8a501760b4f"
+    },
+    {
+      "id": "02-schedule",
+      "captured_at": "2026-10-17T13:55:16.764717+09:00",
+      "action": "일정 선택 → 우리의 서울 여행 개요",
+      "sha256": "a9709c817803123db7dc6026b1cec4dc7d519592aba61183957182a212e89a81"
+    },
+    {
+      "id": "03-day",
+      "captured_at": "2026-10-17T13:55:21.183702+09:00",
+      "action": "서울 여행 → 10월17일 날짜 선택",
+      "sha256": "66502935e4cd44c6dc1595e0f196213f9e682874c168219055c91af5dfbc8540"
+    },
+    {
+      "id": "04-place",
+      "captured_at": "2026-10-17T13:56:46.854703+09:00",
+      "action": "10월17일 → 서울숲 산책길 기록",
+      "sha256": "69820393bd6b4a82325081625450817470e18bf7e35b844b5f31dd2748467543"
+    },
+    {
+      "id": "05-upload",
+      "captured_at": "2026-10-17T13:56:58.277306+09:00",
+      "action": "장소 기록 → 사진·동영상 올리기",
+      "sha256": "49ed53922c66e08975c029255ee0f50593dec355381dc6ca7fd0da0c8f06d55b"
+    },
+    {
+      "id": "06-media-source",
+      "captured_at": "2026-10-17T13:59:12.890150+09:00",
+      "action": "업로드 시트 → 추가 버튼 → 파일/촬영 선택",
+      "sha256": "569c08e0224e045e89fbae6320939351d157567db10714bdf195af1ffb8df05d"
+    },
+    {
+      "id": "07-place-search",
+      "captured_at": "2026-10-17T14:00:34.555451+09:00",
+      "action": "날짜 목록 → 장소 추가",
+      "sha256": "f38ae415f8ef1dfc1ca66da16fd47045f69f4859e032d172a977cedea61c0f11"
+    },
+    {
+      "id": "08-cafe-results",
+      "captured_at": "2026-10-17T14:01:22.465254+09:00",
+      "action": "예시 지도 → 카페 분류 선택 (실제 지도 검색 아님)",
+      "sha256": "40ee1d397e45af2dbe283820853e6b8a1e63582445fa891d4e9e53e1855652ed"
+    },
+    {
+      "id": "09-plan",
+      "captured_at": "2026-10-17T14:04:53.176010+09:00",
+      "action": "날짜 장소 목록 → 순서 편집",
+      "sha256": "0c867b9cf6bd45bf0991839db2bba718fca922586d624c8e51631676412c30af"
+    },
+    {
+      "id": "10-order-edited",
+      "captured_at": "2026-10-17T14:05:05.889091+09:00",
+      "action": "서울숲 아래로 버튼으로 방문 순서 변경 (저장 전)",
+      "sha256": "da5a0888dcb883da3c443e0ca325ef492750c6a51885d46ddac1947f7a0ae1d6"
+    },
+    {
+      "id": "11-order-saved",
+      "captured_at": "2026-10-17T14:05:10.251630+09:00",
+      "action": "변경 저장 → 날짜 목록에서 오후의 커피가 첫 번째인지 확인",
+      "sha256": "48c680ba25b29822113f8e6f29a7935d40161ef423d7f446c4a75867a09f48b4"
+    },
+    {
+      "id": "12-search-add",
+      "captured_at": "2026-10-17T14:07:10.984035+09:00",
+      "action": "장소 추가 → 카페 분류 선택",
+      "sha256": "b9241e9109c6329e9dd65ad6c418a91571755f322f2b3033f43a35b23350273e"
+    },
+    {
+      "id": "13-add-candidate",
+      "captured_at": "2026-10-17T14:07:16.093911+09:00",
+      "action": "예시 장소 결과 스크롤 → 한남 브런치 카페 추가 후보 확인",
+      "sha256": "edbcacd94c770f904ceb762d57095b94f36a7f1af671a4d83b1131ab3cac3ccb"
+    },
+    {
+      "id": "14-place-added",
+      "captured_at": "2026-10-17T14:07:30.861131+09:00",
+      "action": "한남 브런치 카페 추가 → 날짜 목록 반영 확인",
+      "sha256": "cb2d89275fd3f249bdd337fd6c479774ab59d0be6a0b726ec82a54cd7e702ca5"
+    }
+  ]
+}

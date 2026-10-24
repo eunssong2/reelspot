@@ -1,0 +1,20 @@
+stateDiagram-v2
+ [*] --> queued
+ queued --> uploading
+ uploading --> verifying
+ verifying --> review: 장애/의심/판정불가
+ verifying --> complete: 검사통과+현재권한+기한유효
+ review --> verifying: 재검사
+ review --> complete: 수동승인+필수처리+재검증
+ queued --> failed
+ uploading --> failed
+ verifying --> failed
+ review --> failed
+ failed --> queued: 동일파일+재권한+재예약
+ queued --> cancelled
+ uploading --> cancelled
+ verifying --> cancelled
+ review --> cancelled
+ failed --> cancelled
+ complete --> [*]
+ cancelled --> [*]

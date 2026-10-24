@@ -1,0 +1,25 @@
+✔ 앱·서버 공통 입력 벡터: NFC, grapheme, 공백, 줄바꿈, 기간·5분 시각 (23.766791ms)
+(node:681062) [FSTDEP023] FastifyDeprecation: disableRequestLogging option is deprecated. Use the logController option with disableRequestLogging or isLogDisabled override instead. The disableRequestLogging top-level option will be removed in `fastify@6`.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ 지도 좌표 검증과 검색 중심 거리: 없는 좌표·잘못된 영역을 지어내지 않음 (27.882252ms)
+✔ 이의 검토 기한은 한국 날짜 기준 3영업일: 주말·설정 휴일 제외 (9.27612ms)
+✔ Google 장소 검색 요청·영역·필드·거리 정렬과 공급자 오류 매핑 (82.953718ms)
+▶ 실제 PostgreSQL: 인증 외 누락 기능과 복구 경계
+  ✔ 방문 없는 날짜 계획의 생성·수정·충돌과 전체 기간 표시 (260.77961ms)
+  ✔ 수기 장소·중복 및 좌표 검증 (174.569541ms)
+  ✔ Google 검색 결과를 방문으로 선택하고 같은 날짜 중복 차단 (268.921338ms)
+  ✔ 남은 업로드 개수: 예약·취소·다른 날짜·권한 반영 (580.011544ms)
+(node:681062) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+  ✔ 묶음 전송 조회: 본인만, 최대 120개, 서버 상태 복원 (109.505406ms)
+  ✔ 문의 유형·관련 번호·3영업일 기한·운영 답변 조회 (246.582691ms)
+  ✔ 방장 부재: 후보 동의·통지·7일·이의·오래된 승인 거부 (839.865956ms)
+  ✔ 정리 실패·24시간 초과 운영 지표 조회 (32.587421ms)
+✔ 실제 PostgreSQL: 인증 외 누락 기능과 복구 경계 (4010.735901ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12453.791981

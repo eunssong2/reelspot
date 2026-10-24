@@ -1,0 +1,3 @@
+MEDIA_DIAGNOSTIC 401 /v1/media/6be7b247-38da-499a-b9f1-ffafb22db7e8/content?variant=view&context=shared&cacheScope=56f3de61-d83c-41a2-80d3-6992ad537fab&cacheVersion=2 false
+MEDIA_DIAGNOSTIC 200 /v1/media/aa541e2d-7d72-4aeb-865a-3cbd4345afa6/content?variant=view&context=shared&cacheScope=56f3de61-d83c-41a2-80d3-6992ad537fab&cacheVersion=1 true
+MEDIA_DIAGNOSTIC 200 /v1/media/aa9c427d-0ccc-4d76-9356-0544fa9845be/content?variant=view&context=shared&cacheScope=56f3de61-d83c-41a2-80d3-6992ad537fab&cacheVersion=1 true

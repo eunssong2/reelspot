@@ -1,0 +1,5 @@
+
+> at-that-place@0.1.0 db:migrate
+> tsx server/db/migrate.ts
+
+Applied 007_inquiry_reference.sql

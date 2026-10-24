@@ -1,0 +1,4 @@
+10-24 13:14:28.318 11811 12339 I TransformerInternal: Release a1841d0 [AndroidXMedia3/1.9.0] [emulator64_x86_64_arm64, sdk_gphone64_x86_64, Google, 31] [media3.common, media3.database, media3.transformer, media3.exoplayer, media3.decoder, media3.datasource, media3.extractor]
+10-24 13:14:28.325 11811 12339 I ExoPlayerImpl: Release 74195c9 [AndroidXMedia3/1.9.0] [emulator64_x86_64_arm64, sdk_gphone64_x86_64, Google, 31] [media3.common, media3.database, media3.transformer, media3.exoplayer, media3.decoder, media3.datasource, media3.extractor]
+10-24 13:14:49.931 11811 11871 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=f21453fb-a623-4694-84d6-09016bec015a, tags={ expo.modules.atptransfer.TransferWorker,atp:56f3de61-d83c-41a2-80d3-6992ad537fab } ]
+10-24 13:15:10.641 11811 11906 I ExoPlayerImpl: Init 52730d3 [AndroidXMedia3/1.9.0] [emulator64_x86_64_arm64, sdk_gphone64_x86_64, Google, 31]

@@ -1,0 +1,127 @@
+--------- beginning of main
+10-24 16:06:03.492  5972  6036 E ReactNativeJS: { [Error: Call to function 'VideoPlayer.pause' has been rejected.
+10-24 16:06:03.492  5972  6036 E ReactNativeJS: → Caused by: The 1st argument cannot be cast to type class expo.modules.video.player.VideoPlayer (received class java.lang.Integer)
+10-24 16:06:03.492  5972  6036 E ReactNativeJS: → Caused by: Cannot use shared object that was already released]
+10-24 16:06:03.492  5972  6036 E ReactNativeJS:   code: 'ERR_USING_RELEASED_SHARED_OBJECT',
+10-24 16:06:03.492  5972  6036 E ReactNativeJS:   componentStack: '\n    at Video (address at index.android.bundle:1:1072756)',
+10-24 16:06:03.492  5972  6036 E ReactNativeJS:   isComponentError: true }
+--------- beginning of crash
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: FATAL EXCEPTION: mqt_v_native
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: Process: kr.atthatplace.app, PID: 5972
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: com.facebook.react.common.JavascriptException: Error: Call to function 'VideoPlayer.pause' has been rejected.
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: → Caused by: The 1st argument cannot be cast to type class expo.modules.video.player.VideoPlayer (received class java.lang.Integer)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: → Caused by: Cannot use shared object that was already released
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: This error is located at:
+10-24 16:06:03.512  5972  6037 E AndroidRuntime:     at Video (address at index.android.bundle:1:1072756), stack:
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: CodedError@1:641891
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: anonymous@1:1498653
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitHookEffectListUnmount@1:519072
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountEffectsInsideOfDeletedTree_begin@1:528333
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526868
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527207
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527207
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:526969
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527772
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitPassiveUnmountOnFiber@1:527600
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: flushPassiveEffects@1:543628
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: flushPendingEffects@1:543437
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: flushSpawnedWork@1:543173
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: commitRoot@1:542350
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: performWorkOnRoot@1:530114
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: flushSyncWorkAcrossRoots_impl@1:479102
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: anonymous@1:1117769
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at com.facebook.react.modules.core.ExceptionsManagerModule.reportException(ExceptionsManagerModule.kt:52)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at com.facebook.jni.NativeRunnable.run(Native Method)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:959)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:100)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at com.facebook.react.bridge.queue.MessageQueueThreadHandler.dispatchMessage(MessageQueueThreadHandler.kt:21)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:232)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:317)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at com.facebook.react.bridge.queue.MessageQueueThreadImpl$Companion.startNewBackgroundThread$lambda$0(MessageQueueThreadImpl.kt:152)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at com.facebook.react.bridge.queue.MessageQueueThreadImpl$Companion.$r8$lambda$YYXYCFexeoKtAeDpeNYkxZZlpbA(Unknown Source:0)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at com.facebook.react.bridge.queue.MessageQueueThreadImpl$Companion$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+10-24 16:06:03.512  5972  6037 E AndroidRuntime: 	at java.lang.Thread.run(Thread.java:1012)

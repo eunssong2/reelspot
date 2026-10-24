@@ -1,0 +1,58 @@
+{
+  "id": "01-entry",
+  "captured_at": "2026-10-17T13:50:46.914309+09:00",
+  "action": "앱 시작 후 일정 선택 화면",
+  "sha256": "5ccb9d08483fd86dfcac5bff9ffe9097f5cc9e4dc38ef2cf0a3bb8a501760b4f",
+  "nodes": [
+    {
+      "text": "TEST",
+      "description": "",
+      "bounds": "[68,157][138,194]"
+    },
+    {
+      "text": "예시 데이터로 체험 중이에요",
+      "description": "",
+      "bounds": "[175,151][1028,199]"
+    },
+    {
+      "text": "AT THAT PLACE",
+      "description": "",
+      "bounds": "[52,903][1027,946]"
+    },
+    {
+      "text": "어떤 일정을 볼까요?",
+      "description": "",
+      "bounds": "[52,982][1027,1075]"
+    },
+    {
+      "text": "",
+      "description": "우리의 서울 여행 열기",
+      "bounds": "[53,1139][1028,1377]"
+    },
+    {
+      "text": "우리의 서울 여행",
+      "description": "",
+      "bounds": "[105,1191][975,1261]"
+    },
+    {
+      "text": "3일 일정 · 2026.10.17 - 10.19",
+      "description": "",
+      "bounds": "[105,1272][975,1324]"
+    },
+    {
+      "text": "",
+      "description": "성수 당일치기 열기",
+      "bounds": "[53,1413][1028,1650]"
+    },
+    {
+      "text": "성수 당일치기",
+      "description": "",
+      "bounds": "[105,1465][975,1535]"
+    },
+    {
+      "text": "하루 일정 · 2026.10.24 토요일",
+      "description": "",
+      "bounds": "[105,1546][975,1598]"
+    }
+  ]
+}

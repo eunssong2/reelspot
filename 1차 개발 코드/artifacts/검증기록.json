@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-10-24T12:56:40.822065+09:00",
+  "baselineUnchanged": true,
+  "designOpenApiUnchanged": true,
+  "initialDdlUnchanged": true,
+  "automatedTests": {
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0
+  },
+  "nativeBuild": "Android debug / JDK 21 / minSdk31 / all default ABIs",
+  "emulatorChecks": [
+    "development login",
+    "consent",
+    "group + first schedule",
+    "calendar + schedule",
+    "camera permission + photo",
+    "WorkManager upload + server processing complete",
+    "MediaStore Pictures/At that place/ JPEG"
+  ],
+  "notVerified": [
+    "real OAuth/map/moderation/OIDC providers",
+    "real Android devices",
+    "p95 performance",
+    "HDR and rotation matrix",
+    "store release signing",
+    "production infrastructure"
+  ],
+  "apkSha256": "88be882e085e6a465cd5d3fbc0514664631f3916fe81ddadd7584348f540dc0b",
+  "followupEmulator": {
+    "checkedAt": "2026-10-24T13:17:32.839887+09:00",
+    "report": "docs/에뮬레이터_추가검증.md",
+    "fixedIssues": [
+      "Korean validation and upload error guidance",
+      "Raw Text whitespace in metadata editor",
+      "CameraX AMR capture normalized to H264/AAC"
+    ],
+    "completedVideoMediaId": "aa9c427d-0ccc-4d76-9356-0544fa9845be",
+    "videoDurationMs": 2984,
+    "mediaStorePath": "Movies/At that place/",
+    "nativeBuild": "assembleDebug all default ABIs, 2m9s"
+  }
+}

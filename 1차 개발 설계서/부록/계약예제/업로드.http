@@ -1,0 +1,37 @@
+# ATP-Upload/1 설계 예제. 실제 서버/토큰/바이너리 파일로 바꾼 뒤 사용한다.
+# OpenAPI와 09 문서의 계약을 함께 적용한다. API 구현이 제공된 것은 아니다.
+@base = https://api.example.invalid/v1
+@task = 00000000-0000-0000-0000-000000000001
+@token = REPLACE_WITH_SESSION_TOKEN
+
+### 확정 offset 확인. 204, 본문 없음.
+HEAD {{base}}/upload-tasks/{{task}}/content
+Authorization: Bearer {{token}}
+Upload-Generation: 1
+
+### 1MiB 청크. 실제 파일의 크기와 SHA256으로 헤더를 대체한다.
+PATCH {{base}}/upload-tasks/{{task}}/content
+Authorization: Bearer {{token}}
+Content-Type: application/offset+octet-stream
+Content-Length: 1048576
+Upload-Offset: 0
+Upload-Generation: 1
+Upload-Checksum: sha256 REPLACE_WITH_64_HEX_CHUNK_SHA256
+
+< ./chunk.bin
+
+### transport 재발급. 같은 요청 키 재전송은 같은 generation.
+POST {{base}}/upload-tasks/{{task}}/retries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Idempotency-Key: 00000000-retry-0001
+
+{"sameFileFingerprint":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+
+### 전송 100% 후 필수 서버 처리 접수. 신규202 Operation, 공개 완료 아님.
+POST {{base}}/upload-tasks/{{task}}/commit
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Idempotency-Key: 00000000-commit-001
+
+{"checksum":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","actualBytes":1048576}

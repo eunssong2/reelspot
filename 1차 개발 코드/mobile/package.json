@@ -1,0 +1,60 @@
+{
+  "name": "at-that-place-mobile",
+  "private": true,
+  "version": "0.1.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "preview:android": "node scripts/build-preview.mjs",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "lint": "expo lint",
+    "export": "expo export --platform android"
+  },
+  "dependencies": {
+    "@formatjs/intl-segmenter": "^12.2.15",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "~57.0.27",
+    "expo-auth-session": "~57.0.16",
+    "expo-build-properties": "~57.0.22",
+    "expo-camera": "~57.0.6",
+    "expo-clipboard": "~57.0.2",
+    "expo-constants": "~57.0.22",
+    "expo-crypto": "~57.0.4",
+    "expo-dev-client": "~57.0.20",
+    "expo-document-picker": "~57.0.3",
+    "expo-file-system": "~57.0.7",
+    "expo-font": "~57.0.4",
+    "expo-image-picker": "~57.0.20",
+    "expo-linking": "~57.0.13",
+    "expo-location": "~57.0.22",
+    "expo-router": "~57.0.29",
+    "expo-secure-store": "~57.0.4",
+    "expo-status-bar": "~57.0.1",
+    "expo-video": "~57.0.5",
+    "expo-web-browser": "~57.0.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-maps": "1.27.2",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-webview": "13.16.1",
+    "react-native-worklets": "0.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.2",
+    "typescript": "~6.0.3"
+  },
+  "expo": {
+    "doctor": {
+      "appConfigFieldsNotSyncedCheck": {
+        "enabled": false
+      }
+    }
+  }
+}

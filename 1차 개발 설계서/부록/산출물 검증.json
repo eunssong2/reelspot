@@ -1,0 +1,415 @@
+{
+  "scope": "설계 산출물 검증. 실제 앱 F01~F28 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.",
+  "passed": true,
+  "checks": [
+    {
+      "check": "OpenAPI3.1 스키마와 operation 고유성",
+      "passed": true,
+      "detail": 73
+    },
+    {
+      "check": "28개 기능의 UI 연결",
+      "passed": true,
+      "detail": 28
+    },
+    {
+      "check": "서버 기능의 API 연결과 로컬 촬영 경계",
+      "passed": true,
+      "detail": {
+        "server_features": 27,
+        "F12": "Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결"
+      }
+    },
+    {
+      "check": "화면 API 참조",
+      "passed": true,
+      "detail": 33
+    },
+    {
+      "check": "패키지 내부 기능명세 SHA256",
+      "passed": true,
+      "detail": "f0bf6e3d1bdf0a71370ea6c0a1f5ed55b8c1b4b7dbfeaab8605609f96d5ffcd3"
+    },
+    {
+      "check": "업무 결과 키 operationId 통일",
+      "passed": true,
+      "detail": [
+        "operationId",
+        "kind",
+        "state",
+        "result",
+        "itemErrors"
+      ]
+    },
+    {
+      "check": "HEAD/PATCH 전송 계약",
+      "passed": true,
+      "detail": [
+        "head",
+        "patch"
+      ]
+    },
+    {
+      "check": "현재 OpenAPI 예제 검증 결과",
+      "passed": true,
+      "detail": 19
+    },
+    {
+      "check": "현재 DDL의 실제 DB 검증 결과",
+      "passed": true,
+      "detail": {
+        "checks": 8,
+        "database": "PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit"
+      }
+    },
+    {
+      "check": "컬럼 사전과 실제 DB 컬럼 일치",
+      "passed": true,
+      "detail": {
+        "tables": 27,
+        "columns": 269
+      }
+    },
+    {
+      "check": "상위 원본과 DayLog 없는 패키지 재생성",
+      "passed": true,
+      "detail": {
+        "scope": "상위 원본·DayLog·APK 없는 복사본에서 핵심 설계서와 기존 실행 근거 유지 확인. 앱 빌드/서버 실행 검수 아님.",
+        "passed": true,
+        "checks": [
+          {
+            "check": "build_design.py 독립 실행",
+            "passed": true,
+            "output": "{\"screens\": 33, \"operations\": 73, \"tables\": 27, \"functional_cases\": 112, \"native_ui_pptx\": \"/tmp/atp-design-standalone-26t1kh6s/package/UI/05 UI 설계.pptx\"}\n",
+            "error": ""
+          },
+          {
+            "check": "build_evidence.py 독립 실행",
+            "passed": true,
+            "output": "외부 APK가 없어 패키지에 보관된 실제 실행 근거를 유지합니다. 새 실행 결과를 생성하지 않았습니다.\n",
+            "error": ""
+          },
+          {
+            "check": "실제 APK 관찰 이력 보존",
+            "passed": true
+          },
+          {
+            "check": "기준 사본과 패키지 내부 참조",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "check": "112개 기능 검수 시나리오",
+      "passed": true,
+      "detail": 112
+    },
+    {
+      "check": "33개 SVG의 독립 텍스트/도형",
+      "passed": true,
+      "detail": 33
+    },
+    {
+      "check": "SVG 텍스트 화면경계",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "check": "PPTX 33개 화면의 네이티브 텍스트",
+      "passed": true,
+      "detail": [
+        [
+          "UI01",
+          25
+        ],
+        [
+          "UI02",
+          30
+        ],
+        [
+          "UI03",
+          30
+        ],
+        [
+          "UI04",
+          29
+        ],
+        [
+          "UI05",
+          71
+        ],
+        [
+          "UI06",
+          29
+        ],
+        [
+          "UI08",
+          32
+        ],
+        [
+          "UI09",
+          33
+        ],
+        [
+          "UI10",
+          37
+        ],
+        [
+          "UI11",
+          33
+        ],
+        [
+          "UI12",
+          29
+        ],
+        [
+          "UI13",
+          31
+        ],
+        [
+          "UI14",
+          27
+        ],
+        [
+          "UI15",
+          28
+        ],
+        [
+          "UI16",
+          32
+        ],
+        [
+          "UI17",
+          29
+        ],
+        [
+          "UI18",
+          31
+        ],
+        [
+          "UI20",
+          32
+        ],
+        [
+          "UI21",
+          26
+        ],
+        [
+          "UI22",
+          34
+        ],
+        [
+          "UI23",
+          30
+        ],
+        [
+          "UI24",
+          27
+        ],
+        [
+          "UI25",
+          29
+        ],
+        [
+          "UI26",
+          29
+        ],
+        [
+          "UI27",
+          29
+        ],
+        [
+          "UI28",
+          32
+        ],
+        [
+          "UI29",
+          26
+        ],
+        [
+          "UI30",
+          26
+        ],
+        [
+          "UI31",
+          28
+        ],
+        [
+          "UI32",
+          29
+        ],
+        [
+          "UI33",
+          27
+        ],
+        [
+          "UI34",
+          30
+        ],
+        [
+          "UI35",
+          27
+        ]
+      ]
+    },
+    {
+      "check": "PPTX 도형 슬라이드 경계",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "check": "Word 열기 02 데이터베이스 설계",
+      "passed": true,
+      "detail": {
+        "paragraphs": 140,
+        "tables": 29
+      }
+    },
+    {
+      "check": "Word 열기 01 시스템 설계",
+      "passed": true,
+      "detail": {
+        "paragraphs": 42,
+        "tables": 1
+      }
+    },
+    {
+      "check": "Word 열기 03 API 연동 설계",
+      "passed": true,
+      "detail": {
+        "paragraphs": 79,
+        "tables": 76
+      }
+    },
+    {
+      "check": "Word 열기 09 구현 계약 보완",
+      "passed": true,
+      "detail": {
+        "paragraphs": 59,
+        "tables": 2
+      }
+    },
+    {
+      "check": "Word 열기 04 업무 흐름 상태 설계",
+      "passed": true,
+      "detail": {
+        "paragraphs": 55,
+        "tables": 1
+      }
+    },
+    {
+      "check": "Word 열기 08 APK 실행 검토",
+      "passed": true,
+      "detail": {
+        "paragraphs": 67,
+        "tables": 4
+      }
+    },
+    {
+      "check": "Excel 열기 06 검수 및 추적",
+      "passed": true,
+      "detail": [
+        "요구사항추적",
+        "공통정책추적",
+        "기능검수",
+        "계약통합검수",
+        "보완개발순서",
+        "비기능검수",
+        "검수계획",
+        "검증된데모범위"
+      ]
+    },
+    {
+      "check": "Excel 열기 07 결정 및 자료 차이",
+      "passed": true,
+      "detail": [
+        "자료차이와반영",
+        "기술결정",
+        "출시준비",
+        "구현과외부준비구분",
+        "자료목록"
+      ]
+    },
+    {
+      "check": "Excel 열기 05 화면 명세",
+      "passed": true,
+      "detail": [
+        "화면목록",
+        "구성요소명세",
+        "화면API연결",
+        "화면상태",
+        "화면전환",
+        "디자인토큰"
+      ]
+    },
+    {
+      "check": "Excel 열기 컬럼 및 제약",
+      "passed": true,
+      "detail": [
+        "컬럼",
+        "제약과인덱스",
+        "서비스강제"
+      ]
+    },
+    {
+      "check": "기능검수 결과 미실행 유지",
+      "passed": true,
+      "detail": 112
+    },
+    {
+      "check": "로컬 HTML 링크/이미지",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "check": "APK 캡처/메타/XML 무결성",
+      "passed": true,
+      "detail": {
+        "count": 14,
+        "errors": []
+      }
+    },
+    {
+      "check": "PDF 열기 09 구현 계약 보완",
+      "passed": true,
+      "detail": 6
+    },
+    {
+      "check": "PDF 열기 03 API 연동 설계",
+      "passed": true,
+      "detail": 20
+    },
+    {
+      "check": "PDF 열기 01 시스템 설계",
+      "passed": true,
+      "detail": 5
+    },
+    {
+      "check": "PDF 열기 04 업무 흐름 상태 설계",
+      "passed": true,
+      "detail": 5
+    },
+    {
+      "check": "PDF 열기 02 데이터베이스 설계",
+      "passed": true,
+      "detail": 24
+    },
+    {
+      "check": "PDF 열기 05 UI 설계",
+      "passed": true,
+      "detail": 33
+    },
+    {
+      "check": "UI PDF 화면수",
+      "passed": true,
+      "detail": 33
+    },
+    {
+      "check": "PDF 열기 08 APK 실행 검토",
+      "passed": true,
+      "detail": 17
+    }
+  ],
+  "errors": []
+}

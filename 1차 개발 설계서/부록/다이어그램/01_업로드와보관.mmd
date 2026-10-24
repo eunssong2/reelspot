@@ -1,0 +1,22 @@
+sequenceDiagram
+ participant A as Android
+ participant B as 업무 API
+ participant D as PostgreSQL
+ participant S as Private Storage
+ participant W as 미디어 작업자
+ A->>B: 제출(멱등키, 파일정보1~120)
+ B->>D: 권한/일정잠금·검증·파일별task·용량예약
+ D-->>B: submissionId/tasks
+ B-->>A: 작업별 전송경로
+ A->>S: 격리 원본 전송
+ A->>B: commit(checksum)
+ B->>D: verifying + outbox
+ W->>S: 원본 probe·위치제거·호환본
+ W->>W: 제거검증·콘텐츠검사
+ alt 통과
+ W->>D: 재권한검사·일정잠금·기한고정·완료단일커밋
+ else 장애/판정불가
+ W->>D: 비공개 검토대기
+ end
+ A->>B: task 상태 조회
+ B-->>A: 완료/검토/실패

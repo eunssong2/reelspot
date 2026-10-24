@@ -1,0 +1,18 @@
+sequenceDiagram
+ participant U as 참여 사용자
+ participant A as 업무 API
+ participant D as DB
+ participant O as 마지막 방장
+ U->>A: 초대 확인
+ A->>D: 초대행 잠금·기한/취소/소진 검사·use_count+1 (50회 소진)
+ A-->>U: 모임명·일정요약·남은 횟수
+ U->>A: 로그인/가입 후 참여하기
+ A->>D: user/group 잠금·정원/초대(기한·소진·취소)/차단 재검증 (횟수 미소모)
+ par 참여 확정
+ D->>D: 활성 membership 생성
+ and 종료 경합
+ O->>A: 마지막방장 종료
+ A->>D: 같은 group 잠금 대기
+ end
+ D-->>A: 참여 먼저면 종료 거부 / 종료 먼저면 참여 거부
+ A-->>U: 최종 참여 결과

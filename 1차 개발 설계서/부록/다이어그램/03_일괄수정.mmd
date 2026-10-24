@@ -1,0 +1,19 @@
+sequenceDiagram
+ participant A as Android
+ participant B as 업무 API
+ participant D as DB
+ participant M as 검사기
+ A->>B: targets+versions·필드별apply/value
+ B->>D: 전체 사전검증·proposal 저장
+ B-->>A: operationId(pending)
+ B->>M: 변경 설명 검사
+ Note over D: 검사 동안 기존 공개값 유지·DB잠금 없음
+ M-->>B: 통과/거부
+ B->>D: 전체대상 재잠금·권한/버전 재검증
+ alt 모두 유효
+ D->>D: 정보·버전·집계 단일커밋
+ else 하나라도 오류
+ D->>D: 전체 미적용·대상별 사유
+ end
+ A->>B: operation 조회
+ B-->>A: 전체성공 또는 전체미적용

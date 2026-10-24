@@ -1,0 +1,29 @@
+{
+    "programs": [
+
+    ],
+    "streams": [
+        {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1280,
+            "height": 720,
+            "side_data_list": [
+                {
+
+                }
+            ]
+        },
+        {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "sample_rate": "8000"
+        }
+    ],
+    "format": {
+        "duration": "2.984000",
+        "tags": {
+            "creation_time": "2026-10-24T04:14:23.000000Z"
+        }
+    }
+}

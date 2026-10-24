@@ -1,0 +1,1885 @@
+[
+  {
+    "table_name": "account_notifications",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "account_notifications",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "account_notifications",
+    "column_name": "case_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "account_notifications",
+    "column_name": "recovery_request_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "account_notifications",
+    "column_name": "kind",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "account_notifications",
+    "column_name": "payload",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "account_notifications",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "account_notifications",
+    "column_name": "read_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "assets",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "assets",
+    "column_name": "media_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "assets",
+    "column_name": "cover_group_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "assets",
+    "column_name": "variant",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "assets",
+    "column_name": "object_key",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "assets",
+    "column_name": "bytes",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "assets",
+    "column_name": "checksum",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "assets",
+    "column_name": "location_verified_absent",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
+    "table_name": "assets",
+    "column_name": "probe_result",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "assets",
+    "column_name": "state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'staged'::text"
+  },
+  {
+    "table_name": "assets",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "target_type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "target_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'queued'::text"
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "attempts",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "generation",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "due_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "finished_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "error_code",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "cleanup_jobs",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "item_key",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "version",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "required",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "content_ref",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "content_hash",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "effective_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "consent_events",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "consent_events",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_events",
+    "column_name": "document_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_events",
+    "column_name": "agreed",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_events",
+    "column_name": "occurred_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "consent_events",
+    "column_name": "operation_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "day_plans",
+    "column_name": "schedule_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "day_plans",
+    "column_name": "plan_date",
+    "data_type": "date",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "day_plans",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "day_plans",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "day_plans",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "export_jobs",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "export_jobs",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "export_jobs",
+    "column_name": "purpose",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "export_jobs",
+    "column_name": "state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'preparing'::text"
+  },
+  {
+    "table_name": "export_jobs",
+    "column_name": "targets",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "export_jobs",
+    "column_name": "results",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": "'[]'::jsonb"
+  },
+  {
+    "table_name": "export_jobs",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "export_jobs",
+    "column_name": "expires_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "groups",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "groups",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "groups",
+    "column_name": "owner_user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "groups",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'active'::text"
+  },
+  {
+    "table_name": "groups",
+    "column_name": "cover_asset_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "groups",
+    "column_name": "activity_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "groups",
+    "column_name": "completed_bytes",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "groups",
+    "column_name": "reserved_bytes",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "groups",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "groups",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "groups",
+    "column_name": "closed_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "identities",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "identities",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "identities",
+    "column_name": "provider",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "identities",
+    "column_name": "provider_subject",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "identities",
+    "column_name": "linked_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "identities",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "group_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "issuer_user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "code_hash",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "token_hash",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "code_ciphertext",
+    "data_type": "bytea",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "token_ciphertext",
+    "data_type": "bytea",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "issued_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "expires_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "revoked_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "use_count",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "max_uses",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "50"
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "exhausted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "invitations",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "media",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "media",
+    "column_name": "task_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "submission_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "schedule_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "author_user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "record_date",
+    "data_type": "date",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "visit_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "''::text"
+  },
+  {
+    "table_name": "media",
+    "column_name": "kind",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "mime",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "original_bytes",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "captured_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "completed_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "selection_index",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "access_state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'available'::text"
+  },
+  {
+    "table_name": "media",
+    "column_name": "moderation_state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "deleted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "purged_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "media",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "media",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "memberships",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "memberships",
+    "column_name": "group_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "memberships",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "memberships",
+    "column_name": "joined_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "memberships",
+    "column_name": "ended_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "memberships",
+    "column_name": "end_reason",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "memberships",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "metadata_operations",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "metadata_operations",
+    "column_name": "author_user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "metadata_operations",
+    "column_name": "schedule_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "metadata_operations",
+    "column_name": "targets",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "metadata_operations",
+    "column_name": "fields",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "metadata_operations",
+    "column_name": "state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'pending_check'::text"
+  },
+  {
+    "table_name": "metadata_operations",
+    "column_name": "item_errors",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "metadata_operations",
+    "column_name": "result",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "metadata_operations",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "operations",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "operations",
+    "column_name": "actor_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operations",
+    "column_name": "idempotency_key",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operations",
+    "column_name": "route",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operations",
+    "column_name": "request_hash",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operations",
+    "column_name": "kind",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operations",
+    "column_name": "state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'pending'::text"
+  },
+  {
+    "table_name": "operations",
+    "column_name": "response_snapshot",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "operations",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "operations",
+    "column_name": "finished_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "operator_id",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "case_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "recovery_request_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "target_type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "target_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "action",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "reason",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "before_state",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "after_state",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "operator_audit",
+    "column_name": "occurred_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "outbox_events",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "outbox_events",
+    "column_name": "operation_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "outbox_events",
+    "column_name": "event_type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "outbox_events",
+    "column_name": "target_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "outbox_events",
+    "column_name": "generation",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "outbox_events",
+    "column_name": "payload",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "outbox_events",
+    "column_name": "published_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "outbox_events",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "personal_blocks",
+    "column_name": "blocker_user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "personal_blocks",
+    "column_name": "blocked_user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "personal_blocks",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "places",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "places",
+    "column_name": "group_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "places",
+    "column_name": "provider",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "places",
+    "column_name": "provider_place_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "places",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "places",
+    "column_name": "address",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "places",
+    "column_name": "latitude",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "places",
+    "column_name": "longitude",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "places",
+    "column_name": "normalized_fingerprint",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "places",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "group_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "requester_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "candidate_membership_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "owner_snapshot",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "group_version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "candidate_consent_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "notified_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "response_due_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "reason",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "evidence_refs",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": "'[]'::jsonb"
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'received'::text"
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "decision_reason",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "recovery_requests",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "reentry_blocks",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "reentry_blocks",
+    "column_name": "group_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "reentry_blocks",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "reentry_blocks",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "reentry_blocks",
+    "column_name": "cleared_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "reentry_blocks",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "reentry_blocks",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "reporter_user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "target_type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "target_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "reason",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'received'::text"
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "evidence_ref",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "review_due_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "closed_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "evidence_delete_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "reports_and_cases",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "group_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "start_date",
+    "data_type": "date",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "end_date",
+    "data_type": "date",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'active'::text"
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "cancelled_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "cancelled_end_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "retention_fixed_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "retention_last_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "expires_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "schedules",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "sessions",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "sessions",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "sessions",
+    "column_name": "device_id",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "sessions",
+    "column_name": "refresh_hash",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "sessions",
+    "column_name": "expires_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "sessions",
+    "column_name": "revoked_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "sessions",
+    "column_name": "reauthenticated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "sessions",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "submissions",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "submissions",
+    "column_name": "schedule_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "submissions",
+    "column_name": "author_user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "submissions",
+    "column_name": "first_completed_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "submissions",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "submission_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "schedule_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "author_user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "cover_group_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "client_file_id",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "selection_index",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "kind",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "fingerprint",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "checksum",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "record_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "visit_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "''::text"
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "accepted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'queued'::text"
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "reserved_bytes",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "declared_bytes",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "actual_bytes",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "quarantine_key",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "upload_offset",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "upload_generation",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "transport_expires_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "chunk_manifest",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": "'[]'::jsonb"
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "error_code",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "cancel_requested_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "upload_tasks",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "users",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "users",
+    "column_name": "display_name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "users",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'onboarding'::text"
+  },
+  {
+    "table_name": "users",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "users",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "users",
+    "column_name": "deleted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "visits",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "visits",
+    "column_name": "schedule_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "visits",
+    "column_name": "place_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "visits",
+    "column_name": "visit_date",
+    "data_type": "date",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "visits",
+    "column_name": "position",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "visits",
+    "column_name": "planned_time",
+    "data_type": "time without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "visits",
+    "column_name": "dedupe_key",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "visits",
+    "column_name": "deleted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "visits",
+    "column_name": "version",
+    "data_type": "bigint",
+    "is_nullable": "NO",
+    "column_default": "1"
+  },
+  {
+    "table_name": "visits",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  }
+]

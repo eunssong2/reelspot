@@ -1,0 +1,46 @@
+{
+  "apk": "ReelSpot-Demo.apk",
+  "sha256": "97ffbb36feee848c12efe3cc75faf15b1370b94b62e4da3741c881be98897e9a",
+  "app_name": "AT THAT PLACE 테스트(데모)",
+  "package": "com.reelspot.app.demo",
+  "version": "0.1.0",
+  "execution_environment": "Android 15 emulator (daylog35), x86_64",
+  "observed_flow": [
+    "일정 선택",
+    "여행 개요와 날짜 선택",
+    "날짜별 장소 목록",
+    "장소별 사진·영상과 작성자·시각·설명 보기",
+    "미디어 업로드 시트와 가져오기·촬영 선택지",
+    "예시 지도에서 카페 검색",
+    "성수 로스터리 카페 추가 후 날짜 목록 반영",
+    "방문 순서 변경 및 저장 후 목록 반영",
+    "동영상 이어붙이기 실험 화면 진입"
+  ],
+  "verified_mutations": [
+    "예시 장소 추가",
+    "방문 순서 변경 및 저장"
+  ],
+  "limitations": [
+    "예시 데이터를 이용한 데모 모드",
+    "실제 서버 업로드 및 여러 기기 간 동기화는 검증하지 않음",
+    "참여자 초대·로그인 흐름은 실제 실행 화면에서 검증하지 않음",
+    "영상 이어붙이기는 앱에서 지원되지 않는다는 화면 안내 확인; 렌더링 실행하지 않음",
+    "영상 실험 화면은 딥링크로 직접 진입",
+    "실제 지도 검색은 검증하지 않음"
+  ],
+  "evidence": [
+    "04-entry",
+    "06-seoul",
+    "07-day",
+    "08-place",
+    "09-upload",
+    "10-media-source",
+    "12-add-place",
+    "13-search-cafe",
+    "14-place-added",
+    "15-order",
+    "16-order-saved",
+    "18-video-merge",
+    "22-day-trip"
+  ]
+}

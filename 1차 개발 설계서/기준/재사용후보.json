@@ -1,0 +1,140 @@
+{
+  "app": "DayLog",
+  "declared_dependencies": {
+    "expo": "~57.0.27",
+    "react-native": "0.86.3",
+    "react": "19.2.3",
+    "expo-camera": "~57.0.6",
+    "expo-image-picker": "~57.0.20",
+    "expo-video": "~57.0.5"
+  },
+  "package_sha256": "cdf36d9c055b9e5b90f4a7614e0fbff5ec8add0c27c2f08115ceb520e48e7026",
+  "locks": [
+    {
+      "path": "기능 명세서 자료/mobile/package-lock.json",
+      "sha256": "e6ce5502f0988d21c4991d40800c4ffe45a15ec6e72b59cbd7063acb72385a76"
+    }
+  ],
+  "reuse_is_optional": true,
+  "candidates": [
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/CameraScreen.tsx",
+      "sha256": "2d07df8eeac5d72edd2f7f6dd40457a8fac2cadcb202a3f089f0b615cc0c8d76",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/CameraXScreen.tsx",
+      "sha256": "5b4bcb7d2720e8b48fa9619aacae626b3836a9a0fe5dc5139bd3342575bc0000",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/ReviewScreen.tsx",
+      "sha256": "8cb8fa127b76b127a5b615d8a77e0ac2f2ca70d0bb7d5f5aaeaef58a61d32234",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/aspect.ts",
+      "sha256": "c0199153675e4d1b499e41b5d38d6ddeffaa9c55c262f2822c7e574db70010de",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/cameraStateMachine.ts",
+      "sha256": "9f249ac1f2cbefecfe95e643484caffd1c3ff11d3ead081bf66648c7bd998023",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/captureStore.ts",
+      "sha256": "12c1912df521041be81bec1bc6179f3dbc2c47cb2de95687cdb79d6521e74b0c",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/components/AspectMask.tsx",
+      "sha256": "c2c783a950ee6855e24fc316fabb021b609b8dd0627626ba7130e5a37fcb926b",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/components/GridOverlay.tsx",
+      "sha256": "82a6fd34805cea11b36dadfd1f603b15e4a878c85b0405abdc0158da05a62cab",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/components/LevelIndicator.tsx",
+      "sha256": "1ecf9b037578565dc6e11638e7a702af5d63c9e73f9f1b03040617183d1637bb",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/components/ShutterButton.tsx",
+      "sha256": "7a856e0b2d1c087c801898b6fd728faf8cfd56d8c923be068d5757074b85ef65",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/useCameraController.ts",
+      "sha256": "f015b31c015e43937b29f46947b2d977f1091a4e25173a85f77098bbd93b1b3f",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/features/camera/useThermal.ts",
+      "sha256": "4d857e6c4ebfd8eedfb5324de39820b83dacb3ff918f1788bc66a7039777cb62",
+      "scope": "촬영 상태/권한 흐름",
+      "acceptance": "1~5초·0.5초·무음·API31 재검증",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/services/media/ingest.ts",
+      "sha256": "81268c3b13ccac0f7e955c878386d395e7e05c2da00579435209bd179f5fd0e9",
+      "scope": "파일 ingest/probe",
+      "acceptance": "선택 URI 유지·계정별 큐·혼합120개 재설계",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/services/media/paths.ts",
+      "sha256": "2dfc01fead8e7fe92a142cc8eecc7eb7c56b17ffb9fbdbbce0745c485cfbceb0",
+      "scope": "파일 ingest/probe",
+      "acceptance": "선택 URI 유지·계정별 큐·혼합120개 재설계",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/services/media/probe.ts",
+      "sha256": "04cf159d6ec4c1d8a1e4c48c41a23dc4399b68edde35edcc647d18c1f671c06d",
+      "scope": "파일 ingest/probe",
+      "acceptance": "선택 URI 유지·계정별 큐·혼합120개 재설계",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/native/android.ts",
+      "sha256": "b840d9f9ae99901d00d7dce3dc9b39d8f56c185bc5b43690dbac337fa39f33a4",
+      "scope": "Android 네이티브 래퍼",
+      "acceptance": "커스텀 CameraX 모듈 존재·빌드/권한 확인",
+      "status": "후보, 채택/빌드검증 전"
+    },
+    {
+      "source": "기능 명세서 자료/mobile/src/native/videoComposer.ts",
+      "sha256": "211fe02951c540475aae324215a4ba41641be4c0a48e8560b07af46aec6f6b57",
+      "scope": "Android 네이티브 래퍼",
+      "acceptance": "커스텀 CameraX 모듈 존재·빌드/권한 확인",
+      "status": "후보, 채택/빌드검증 전"
+    }
+  ]
+}

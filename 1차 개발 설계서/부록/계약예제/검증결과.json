@@ -1,0 +1,165 @@
+{
+  "scope": "OpenAPI 3.1 JSON Schema 예제 검증. 서버의 권한·경쟁·파일 실제 전송 검수는 별도.",
+  "openapi_canonical_sha256": "e803b54030b85b2764915ea33c38f87b896efc87caffda733613761d6342d406",
+  "passed": true,
+  "checks": [
+    {
+      "name": "일괄수정 대기",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "일괄수정 전체 성공",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "일괄수정 전체 미적용",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "구형 id 필드 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'operationId' is a required property",
+        "Additional properties are not allowed ('id' was unexpected)"
+      ]
+    },
+    {
+      "name": "대기 중 결과 노출 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "{'appliedIds': ['00000000-0000-0000-0000-000000000001'], 'versions': [{'id': '00000000-0000-0000-0000-000000000001', 'version': 2}]} is not of type 'null'"
+      ]
+    },
+    {
+      "name": "성공 결과 누락 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "None should not be valid under {'type': 'null'}",
+        "None is not of type 'object'"
+      ]
+    },
+    {
+      "name": "실패 사유 누락 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "[] should be non-empty"
+      ]
+    },
+    {
+      "name": "kind와 결과 타입 불일치 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'taskId' is a required property",
+        "'mediaId' is a required property",
+        "'coverAssetId' is a required property"
+      ]
+    },
+    {
+      "name": "파일 완료 결과",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "기록 전송 작업",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "대표사진 전송 작업",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "재개 offset 누락 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "{'protocol': 'ATP-Upload/1', 'uploadEndpoint': '/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content', 'generation': 1, 'length': 1048577, 'expiresAt': '2026-10-17T15:00:00+09:00', 'alignmentBytes': 1048576, 'maxChunkBytes': 4194304} is not valid under any of the given schemas"
+      ]
+    },
+    {
+      "name": "기록과 대표사진 혼합 대상 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "{'id': '00000000-0000-0000-0000-000000000001', 'targetType': 'record', 'submissionId': '00000000-0000-0000-0000-000000000001', 'state': 'queued', 'transferredBytes': 0, 'actualBytes': None, 'retryable': True, 'reason': None, 'version': 1, 'mediaId': None, 'coverAssetId': None, 'transport': {'protocol': 'ATP-Upload/1', 'uploadEndpoint': '/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content', 'generation': 1, 'resumeOffset': 0, 'length': 1048577, 'expiresAt': '2026-10-17T15:00:00+09:00', 'alignmentBytes': 1048576, 'maxChunkBytes': 4194304}, 'coverGroupId': '00000000-0000-0000-0000-000000000001'} is not valid under any of the given schemas"
+      ]
+    },
+    {
+      "name": "완료 뒤 전송 권한 제거",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "완료 뒤 전송 권한 잔존 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "{'protocol': 'ATP-Upload/1', 'uploadEndpoint': '/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content', 'generation': 1, 'resumeOffset': 0, 'length': 1048577, 'expiresAt': '2026-10-17T15:00:00+09:00', 'alignmentBytes': 1048576, 'maxChunkBytes': 4194304} is not of type 'null'",
+        "None is not of type 'string'"
+      ]
+    },
+    {
+      "name": "일괄삭제 부분 결과",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "삭제 결과에 잘못된 상태 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'pending' is not one of ['deleted', 'already_deleted', 'failed']"
+      ]
+    },
+    {
+      "name": "원본 SHA256 후보",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "가짜 파일 해시 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'filename:size' does not match '^[0-9a-f]{64}$'"
+      ]
+    }
+  ]
+}

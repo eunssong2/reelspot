@@ -1,0 +1,6 @@
+
+> at-that-place-mobile@0.1.0 lint
+> expo lint
+
+env: load .env
+env: export EXPO_PUBLIC_API_URL

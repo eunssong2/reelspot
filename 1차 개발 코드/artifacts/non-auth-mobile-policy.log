@@ -1,0 +1,13 @@
+
+> at-that-place@0.1.0 test:mobile-policy
+> tsx --test mobile/tests/*.test.ts
+
+✔ 앱·서버 공통 입력 벡터: NFC, grapheme, 공백, 줄바꿈, 기간·5분 시각 (5.284274ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 415.186917

@@ -1,0 +1,374 @@
+[
+  {
+    "name": "일괄수정 대기",
+    "component": "Operation",
+    "expected_valid": true,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "metadata_change",
+      "state": "pending",
+      "result": null,
+      "itemErrors": []
+    }
+  },
+  {
+    "name": "일괄수정 전체 성공",
+    "component": "Operation",
+    "expected_valid": true,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "metadata_change",
+      "state": "succeeded",
+      "result": {
+        "appliedIds": [
+          "00000000-0000-0000-0000-000000000001"
+        ],
+        "versions": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "version": 2
+          }
+        ]
+      },
+      "itemErrors": []
+    }
+  },
+  {
+    "name": "일괄수정 전체 미적용",
+    "component": "Operation",
+    "expected_valid": true,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "metadata_change",
+      "state": "failed",
+      "result": null,
+      "itemErrors": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "code": "VERSION_CONFLICT",
+          "message": "전체 미적용"
+        }
+      ]
+    }
+  },
+  {
+    "name": "구형 id 필드 거부",
+    "component": "Operation",
+    "expected_valid": false,
+    "value": {
+      "kind": "metadata_change",
+      "state": "pending",
+      "result": null,
+      "itemErrors": [],
+      "id": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  {
+    "name": "대기 중 결과 노출 거부",
+    "component": "Operation",
+    "expected_valid": false,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "metadata_change",
+      "state": "pending",
+      "result": {
+        "appliedIds": [
+          "00000000-0000-0000-0000-000000000001"
+        ],
+        "versions": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "version": 2
+          }
+        ]
+      },
+      "itemErrors": []
+    }
+  },
+  {
+    "name": "성공 결과 누락 거부",
+    "component": "Operation",
+    "expected_valid": false,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "metadata_change",
+      "state": "succeeded",
+      "result": null,
+      "itemErrors": []
+    }
+  },
+  {
+    "name": "실패 사유 누락 거부",
+    "component": "Operation",
+    "expected_valid": false,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "metadata_change",
+      "state": "failed",
+      "result": null,
+      "itemErrors": []
+    }
+  },
+  {
+    "name": "kind와 결과 타입 불일치 거부",
+    "component": "Operation",
+    "expected_valid": false,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "media_commit",
+      "state": "succeeded",
+      "result": {
+        "appliedIds": [
+          "00000000-0000-0000-0000-000000000001"
+        ],
+        "versions": [
+          {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "version": 2
+          }
+        ]
+      },
+      "itemErrors": []
+    }
+  },
+  {
+    "name": "파일 완료 결과",
+    "component": "Operation",
+    "expected_valid": true,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "media_commit",
+      "state": "succeeded",
+      "result": {
+        "taskId": "00000000-0000-0000-0000-000000000001",
+        "mediaId": "00000000-0000-0000-0000-000000000001",
+        "coverAssetId": null
+      },
+      "itemErrors": []
+    }
+  },
+  {
+    "name": "기록 전송 작업",
+    "component": "UploadTask",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "record",
+      "submissionId": "00000000-0000-0000-0000-000000000001",
+      "state": "queued",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": true,
+      "reason": null,
+      "version": 1,
+      "mediaId": null,
+      "coverAssetId": null,
+      "transport": {
+        "protocol": "ATP-Upload/1",
+        "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
+        "generation": 1,
+        "resumeOffset": 0,
+        "length": 1048577,
+        "expiresAt": "2026-10-17T15:00:00+09:00",
+        "alignmentBytes": 1048576,
+        "maxChunkBytes": 4194304
+      }
+    }
+  },
+  {
+    "name": "대표사진 전송 작업",
+    "component": "UploadTask",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "cover",
+      "state": "queued",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": true,
+      "reason": null,
+      "version": 1,
+      "mediaId": null,
+      "coverAssetId": null,
+      "transport": {
+        "protocol": "ATP-Upload/1",
+        "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
+        "generation": 1,
+        "resumeOffset": 0,
+        "length": 1048577,
+        "expiresAt": "2026-10-17T15:00:00+09:00",
+        "alignmentBytes": 1048576,
+        "maxChunkBytes": 4194304
+      },
+      "coverGroupId": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  {
+    "name": "재개 offset 누락 거부",
+    "component": "UploadTask",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "record",
+      "submissionId": "00000000-0000-0000-0000-000000000001",
+      "state": "queued",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": true,
+      "reason": null,
+      "version": 1,
+      "mediaId": null,
+      "coverAssetId": null,
+      "transport": {
+        "protocol": "ATP-Upload/1",
+        "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
+        "generation": 1,
+        "length": 1048577,
+        "expiresAt": "2026-10-17T15:00:00+09:00",
+        "alignmentBytes": 1048576,
+        "maxChunkBytes": 4194304
+      }
+    }
+  },
+  {
+    "name": "기록과 대표사진 혼합 대상 거부",
+    "component": "UploadTask",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "record",
+      "submissionId": "00000000-0000-0000-0000-000000000001",
+      "state": "queued",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": true,
+      "reason": null,
+      "version": 1,
+      "mediaId": null,
+      "coverAssetId": null,
+      "transport": {
+        "protocol": "ATP-Upload/1",
+        "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
+        "generation": 1,
+        "resumeOffset": 0,
+        "length": 1048577,
+        "expiresAt": "2026-10-17T15:00:00+09:00",
+        "alignmentBytes": 1048576,
+        "maxChunkBytes": 4194304
+      },
+      "coverGroupId": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  {
+    "name": "완료 뒤 전송 권한 제거",
+    "component": "UploadTask",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "record",
+      "submissionId": "00000000-0000-0000-0000-000000000001",
+      "state": "complete",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": false,
+      "reason": null,
+      "version": 1,
+      "mediaId": "00000000-0000-0000-0000-000000000001",
+      "coverAssetId": null,
+      "transport": null
+    }
+  },
+  {
+    "name": "완료 뒤 전송 권한 잔존 거부",
+    "component": "UploadTask",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "record",
+      "submissionId": "00000000-0000-0000-0000-000000000001",
+      "state": "complete",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": true,
+      "reason": null,
+      "version": 1,
+      "mediaId": null,
+      "coverAssetId": null,
+      "transport": {
+        "protocol": "ATP-Upload/1",
+        "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
+        "generation": 1,
+        "resumeOffset": 0,
+        "length": 1048577,
+        "expiresAt": "2026-10-17T15:00:00+09:00",
+        "alignmentBytes": 1048576,
+        "maxChunkBytes": 4194304
+      }
+    }
+  },
+  {
+    "name": "일괄삭제 부분 결과",
+    "component": "DeleteResult",
+    "expected_valid": true,
+    "value": {
+      "results": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "status": "deleted",
+          "reason": null
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "status": "failed",
+          "reason": "DELETE_RETRYABLE"
+        }
+      ]
+    }
+  },
+  {
+    "name": "삭제 결과에 잘못된 상태 거부",
+    "component": "DeleteResult",
+    "expected_valid": false,
+    "value": {
+      "results": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "status": "pending",
+          "reason": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "원본 SHA256 후보",
+    "component": "FileInput",
+    "expected_valid": true,
+    "value": {
+      "clientFileId": "f1",
+      "selectionIndex": 0,
+      "name": "one.jpg",
+      "mime": "image/jpeg",
+      "declaredBytes": 100,
+      "fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "checksum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind": "photo",
+      "recordDate": "2026-10-17"
+    }
+  },
+  {
+    "name": "가짜 파일 해시 거부",
+    "component": "FileInput",
+    "expected_valid": false,
+    "value": {
+      "clientFileId": "f1",
+      "selectionIndex": 0,
+      "name": "one.jpg",
+      "mime": "image/jpeg",
+      "declaredBytes": 100,
+      "fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "checksum": "filename:size",
+      "kind": "photo",
+      "recordDate": "2026-10-17"
+    }
+  }
+]

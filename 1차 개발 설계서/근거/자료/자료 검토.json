@@ -1,0 +1,124 @@
+{
+  "sources": [
+    {
+      "path": "기능명세서.md",
+      "bytes": 1428027,
+      "sha256": "60f2c98a6473287b2641640af5ce41c0f7b3d8b0fbb8d9bee63dacade59a3317"
+    },
+    {
+      "path": "설계 자료/프로젝트 소개.pdf",
+      "bytes": 3620711,
+      "sha256": "078b2a880c0d427e09d34169cd337437069e0d6f82814400fc591adaf40af793"
+    },
+    {
+      "path": "설계 자료/화면 명세 데이터.xlsx",
+      "bytes": 2045063,
+      "sha256": "0b0645fb2d9bd32db94185ee75729c55e4cb49ae66cc2eb9f35a6e29aaa617de"
+    },
+    {
+      "path": "기능 명세서 자료/ReelSpot-Demo.apk",
+      "bytes": 48232943,
+      "sha256": "97ffbb36feee848c12efe3cc75faf15b1370b94b62e4da3741c881be98897e9a"
+    }
+  ],
+  "pdf_pages": 14,
+  "pdf_review": "텍스트 추출에서 한글 누락을 확인하여 14페이지를 렌더링해 시각 검토",
+  "workbook_sheets": [
+    {
+      "sheet": "문서정보",
+      "rows": 36,
+      "columns": 4,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "화면흐름",
+      "rows": 66,
+      "columns": 8,
+      "embedded_images": 1
+    },
+    {
+      "sheet": "화면목록",
+      "rows": 19,
+      "columns": 9,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "화면설계",
+      "rows": 481,
+      "columns": 5,
+      "embedded_images": 27
+    },
+    {
+      "sheet": "화면명세서",
+      "rows": 117,
+      "columns": 15,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "기능명세서",
+      "rows": 40,
+      "columns": 15,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "API·연동",
+      "rows": 18,
+      "columns": 10,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "데이터·정책",
+      "rows": 40,
+      "columns": 7,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "검증·상태",
+      "rows": 59,
+      "columns": 8,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "메시지·문구",
+      "rows": 54,
+      "columns": 5,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "디자인토큰",
+      "rows": 39,
+      "columns": 6,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "선택·근거",
+      "rows": 27,
+      "columns": 9,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "범위·반영현황",
+      "rows": 25,
+      "columns": 8,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "권한매트릭스",
+      "rows": 47,
+      "columns": 8,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "개인정보",
+      "rows": 33,
+      "columns": 9,
+      "embedded_images": 0
+    },
+    {
+      "sheet": "비기능요건",
+      "rows": 24,
+      "columns": 8,
+      "embedded_images": 0
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-24T05:12:14.611Z",
+  "base": "http://sphan0325.ddns.net:8081",
+  "checks": [
+    {
+      "kind": "photo",
+      "status": 206,
+      "bytes": 1024,
+      "contentType": "image/jpeg",
+      "contentRange": "bytes 0-1023/20034"
+    },
+    {
+      "kind": "video",
+      "status": 206,
+      "bytes": 1024,
+      "contentType": "video/mp4",
+      "contentRange": "bytes 0-1023/26799"
+    }
+  ]
+}

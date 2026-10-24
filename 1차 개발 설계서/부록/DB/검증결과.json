@@ -1,0 +1,50 @@
+{
+  "scope": "초기 DDL·DB 제약·단일 정원 경쟁 검증. F01~F28 서버 구현 검수 아님. 데이터는 전용 임시 컨테이너에만 생성.",
+  "time": "2026-10-22T16:46:18.949133+09:00",
+  "database": "PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "ddl_sha256": "2b46d99f1634ff6554346cb6167dac39c9844d36c26d13a5d2b609591c67882b",
+  "passed": true,
+  "checks": [
+    {
+      "check": "초기 SQL+마이그레이션 hash 원자 적용",
+      "passed": true,
+      "detail": "R\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nINSERT 0 1\nCOMMIT\nt\n"
+    },
+    {
+      "check": "동일 hash 재실행은 변경 없이 건너뜀",
+      "passed": true,
+      "detail": "\nCREATE SCHEMA\nREVOKE\nCREATE TABLE\nDO\n001_initial already applied with matching checksum\nt\n"
+    },
+    {
+      "check": "이미 적용된 migration hash 변경 거부",
+      "passed": true
+    },
+    {
+      "check": "컬럼/FK/보관/정원/위치/감사 제약 회귀",
+      "passed": true,
+      "detail": "SERT 0 10\nSET CONSTRAINTS\n\n\n\n\nINSERT 0 1\n\nINSERT 0 1\nUPDATE 1\n\n\nUPDATE 1\nDO\n\nINSERT 0 1\n\nINSERT 0 1\n\nINSERT 0 1\nINSERT 0 1\nINSERT 0 4\n\nINSERT 0 2\n\nUPDATE 1\nINSERT 0 1\nINSERT 0 1\nINSERT 0 1\nINSERT 0 15\nINSERT 0 14\n\nUPDATE 1\nINSERT 0 1\nDO\nINSERT 0 1\nUPDATE 1\nDO\n\n\n\n\n\n\n\nINSERT 0 1\nINSERT 0 1\n\n\nROLLBACK\n"
+    },
+    {
+      "check": "서버 역할 템플릿 적용",
+      "passed": true,
+      "detail": "BEGIN\nDO\nREVOKE\nREVOKE\nGRANT\nGRANT\nGRANT\nGRANT\nGRANT\nGRANT\nGRANT\nGRANT\nGRANT\nGRANT\nGRANT\nCOMMIT\n"
+    },
+    {
+      "check": "API/운영 역할에 감사 수정·삭제 권한 없음",
+      "passed": true
+    },
+    {
+      "check": "정원 경쟁 전용 fixture 9명",
+      "passed": true,
+      "detail": "BEGIN\nSET\nINSERT 0 11\nINSERT 0 1\nINSERT 0 9\nCOMMIT\n"
+    },
+    {
+      "check": "9명에서 동시2참여 → 성공1·거부1·최종10명",
+      "passed": true,
+      "detail": [
+        "ERROR:  CAPACITY_FULL\nCONTEXT:  PL/pgSQL function guard_membership_capacity() line 12 at RAISE\n",
+        ""
+      ]
+    }
+  ]
+}
