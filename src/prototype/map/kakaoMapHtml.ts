@@ -214,6 +214,26 @@ export function buildKakaoMapHtml(jsKey: string): string {
         },
         setPadding: function (bottom) {
           padBottom = Number(bottom) || 0;
+        },
+        locate: function () {
+          if (!navigator.geolocation) {
+            post({ type: 'locateError', message: '이 환경은 위치 기능을 지원하지 않아요.' });
+            return;
+          }
+          navigator.geolocation.getCurrentPosition(
+            function (pos) {
+              var here = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+              map.panTo(here);
+              post({ type: 'locateResult', lat: pos.coords.latitude, lng: pos.coords.longitude });
+            },
+            function (err) {
+              var message = err && err.code === 1
+                ? '위치 권한이 꺼져 있어요. 지도 위치 기준으로 검색할 수 있어요.'
+                : '현재 위치를 가져오지 못했어요.';
+              post({ type: 'locateError', message: message });
+            },
+            { enableHighAccuracy: true, timeout: 8000 }
+          );
         }
       };
 
@@ -253,3 +273,5 @@ export function selectScript(id: string | null): string {
 export function paddingScript(bottom: number): string {
   return `window.reelspot && window.reelspot.setPadding(${Number.isFinite(bottom) ? Math.max(0, Math.round(bottom)) : 0}); true;`;
 }
+
+export const locateScript = 'window.reelspot && window.reelspot.locate(); true;';

@@ -8,6 +8,8 @@ import { colors as team, palette } from '@/theme/theme';
 export const colors = {
   /** 화면 배경 (흰색) */
   bg: team.bg,
+  /** 아주 연한 회색 배경. 화면 전체를 흰 카드들과 구분해야 할 때만 쓴다(장소 기록 화면 등). */
+  pageBg: palette.gray50,
   /** 카드·입력창·비선택 칩처럼 배경에서 한 단 들어간 회색 면 */
   surface: team.surface,
   /** 회색 면 위에 얹는 한 단계 더 진한 면 */

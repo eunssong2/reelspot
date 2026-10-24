@@ -4,18 +4,18 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CoverThumb } from '../components/CoverThumb';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { Toast, useToast } from '../components/Toast';
-import { TRIPS } from '../mock/tripData';
+import { itinerariesForTrip, TRIPS } from '../mock/tripData';
 import type { Nav } from '../navigation/routes';
-import { colors, GUTTER, radius, shadow } from '../styles/tokens';
+import { colors, GUTTER, radius } from '../styles/tokens';
 
 const TABS = [
-  { key: 'trips', label: '내 모임', icon: '🏠' },
-  { key: 'log', label: '여행 기록', icon: '📓' },
+  { key: 'trips', label: '내 스팟', icon: '◉' },
+  { key: 'log', label: '모아보기', icon: '▦' },
   { key: 'alarm', label: '알림', icon: '🔔' },
   { key: 'me', label: '마이페이지', icon: '👤' },
 ];
 
-/** 1. 내 모임: 모임 카드 목록. 여행모임 1 을 누르면 여행 일정으로 이동한다. */
+/** 1. 내 스팟: 일상을 함께 기록하는 모임 목록. */
 export function MyTripsScreen({ nav }: { nav: Nav }) {
   const toast = useToast();
   const [tab, setTab] = useState('trips');
@@ -24,8 +24,8 @@ export function MyTripsScreen({ nav }: { nav: Nav }) {
     <ScreenFrame>
       <View style={styles.top}>
         <View style={styles.brand}>
-          <Text style={styles.brandIcon}>🏔️</Text>
-          <Text style={styles.brandText}>Travel Together</Text>
+          <Text style={styles.brandIcon}>●</Text>
+          <Text style={styles.brandText}>AT THAT PLACE</Text>
         </View>
         <Pressable
           onPress={() => toast.show('새 모임 만들기는 아직 준비 중이에요')}
@@ -38,19 +38,30 @@ export function MyTripsScreen({ nav }: { nav: Nav }) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>내 모임</Text>
-        <Text style={styles.subtitle}>함께하는 여행이 더 특별해요!</Text>
+        <View style={styles.hero}>
+          <Text style={styles.eyebrow}>WITH MY SPOT CREW</Text>
+          <Text style={styles.title}>우리의 하루를{`\n`}한 스팟씩 남겨요</Text>
+          <Text style={styles.subtitle}>여행이 아니어도 괜찮아요. 함께한 평범한 순간이 기록이 되니까요.</Text>
+        </View>
+
+        <View style={styles.sectionHead}>
+          <Text style={styles.sectionTitle}>내 스팟 모임</Text>
+          <Text style={styles.sectionCount}>{TRIPS.length}개</Text>
+        </View>
 
         {TRIPS.map((trip) => (
           <Pressable
             key={trip.id}
             accessibilityRole="button"
             accessibilityLabel={`${trip.name} 열기`}
-            onPress={() =>
-              trip.id === 'trip1'
-                ? nav.push({ name: 'itinerary', tripId: trip.id })
-                : toast.show(`${trip.name}은 프로토타입에서 여행모임 1만 연결돼 있어요`)
-            }
+            onPress={() => {
+              const itinerary = itinerariesForTrip(trip.id)[0];
+              if (itinerary) {
+                nav.push({ name: 'itinerarySummary', tripId: trip.id, itineraryId: itinerary.id });
+              } else {
+                toast.show(`${trip.name}에는 아직 만든 일정이 없어요`);
+              }
+            }}
             style={({ pressed }) => [styles.card, pressed && styles.pressed]}
           >
             <CoverThumb kind={trip.cover} />
@@ -60,12 +71,20 @@ export function MyTripsScreen({ nav }: { nav: Nav }) {
                 {trip.destination}
               </Text>
               <Text style={styles.meta} numberOfLines={1}>
-                👥 {trip.memberCount}명   📅 {trip.period}
+                👥 {trip.memberCount}명   ·   {trip.period}
               </Text>
             </View>
             <Text style={styles.chevron}>›</Text>
           </Pressable>
         ))}
+
+        <View style={styles.promptCard}>
+          <Text style={styles.promptIcon}>✨</Text>
+          <View style={styles.promptCopy}>
+            <Text style={styles.promptTitle}>오늘은 어떤 하루였나요?</Text>
+            <Text style={styles.promptText}>자주 가는 카페, 산책길, 퇴근길도 스팟이 될 수 있어요.</Text>
+          </View>
+        </View>
       </ScrollView>
 
       <View style={styles.tabBar}>
@@ -103,9 +122,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: GUTTER,
     minHeight: 60,
   },
-  brand: { alignItems: 'center' },
-  brandIcon: { fontSize: 22 },
-  brandText: { fontSize: 13, fontStyle: 'italic', fontWeight: '600', color: colors.primary, letterSpacing: 0.4 },
+  // "+" 버튼(오른쪽에 절대배치, 너비 44)과 겹치지 않도록 좌우 여백을 두고, 긴 이름에 맞춰 자간을 줄였다.
+  brand: { alignItems: 'center', maxWidth: '62%' },
+  brandIcon: { fontSize: 12, color: colors.primary },
+  brandText: { fontSize: 11, fontWeight: '900', color: colors.text, letterSpacing: 1, marginTop: 3 },
   plus: {
     position: 'absolute',
     right: GUTTER,
@@ -119,23 +139,35 @@ const styles = StyleSheet.create({
   },
   plusGlyph: { color: colors.onPrimary, fontSize: 28, lineHeight: 32, fontWeight: '500' },
   pressed: { opacity: 0.85 },
-  content: { paddingHorizontal: GUTTER, paddingTop: 8, paddingBottom: 24, gap: 14 },
-  title: { fontSize: 28, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 14, color: colors.textSub, marginTop: -8, marginBottom: 4 },
+  content: { paddingHorizontal: GUTTER, paddingTop: 12, paddingBottom: 28, gap: 14 },
+  hero: { paddingVertical: 10, gap: 8 },
+  eyebrow: { fontSize: 11, fontWeight: '800', color: colors.primary, letterSpacing: 1.3 },
+  title: { fontSize: 30, lineHeight: 39, letterSpacing: -1, fontWeight: '900', color: colors.text },
+  subtitle: { fontSize: 14, lineHeight: 21, color: colors.textSub, maxWidth: 330 },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
+  sectionTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
+  sectionCount: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bg,
     borderRadius: radius.card,
     padding: 12,
-    boxShadow: shadow.card,
+    borderWidth: 1,
+    borderColor: colors.line,
+    boxShadow: '0px 6px 18px rgba(25, 31, 40, 0.06)',
   },
   info: { flex: 1, gap: 3 },
   name: { fontSize: 17, fontWeight: '700', color: colors.text },
   dest: { fontSize: 13, color: colors.textSub },
   meta: { fontSize: 12, color: colors.textSub, marginTop: 2 },
   chevron: { fontSize: 28, color: colors.textMuted, marginRight: 4, marginTop: -3 },
+  promptCard: { flexDirection: 'row', gap: 12, backgroundColor: '#FFF7F1', borderRadius: radius.card, padding: 16, marginTop: 4 },
+  promptIcon: { fontSize: 20 },
+  promptCopy: { flex: 1, gap: 3 },
+  promptTitle: { fontSize: 14, fontWeight: '800', color: colors.text },
+  promptText: { fontSize: 12, lineHeight: 18, color: colors.textSub },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: colors.bg,

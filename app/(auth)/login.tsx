@@ -45,10 +45,10 @@ export default function LoginScreen() {
 
         <View>
           <Text style={styles.wordmark}>
-            <Text style={styles.wordmarkReel}>Reel</Text>
-            <Text style={styles.wordmarkSpot}>Spot</Text>
+            <Text style={styles.wordmarkAt}>AT THAT </Text>
+            <Text style={styles.wordmarkPlace}>PLACE</Text>
           </Text>
-          <Text style={styles.tag}>SPOT THE WORLD, IN REELS</Text>
+          <Text style={styles.tag}>TOGETHER, AT THAT PLACE</Text>
         </View>
         <Text style={styles.tagline}>
           같이 간 여행,{'\n'}각자 찍은 순간을 한곳에.
@@ -111,14 +111,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   header: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing(6) },
-  wordmark: { fontSize: 46, fontWeight: '800', letterSpacing: -1.5, textAlign: 'center' },
-  wordmarkReel: { color: palette.ink },
-  wordmarkSpot: { color: colors.accent },
+  // 이름이 길어져서(REELSPOT → AT THAT PLACE) 기존 46px/-1.5 자간으로는 좁은 화면에서 줄바꿈된다.
+  // 글자 크기를 낮추고 자간을 덜 좁혀 한 줄에 들어오게 했다.
+  wordmark: { fontSize: 32, fontWeight: '800', letterSpacing: -0.5, textAlign: 'center' },
+  wordmarkAt: { color: palette.ink },
+  wordmarkPlace: { color: colors.accent },
   // 로고의 영문 태그라인. 자간을 넓혀 원본 느낌을 살린다.
   tag: {
     ...type.caption,
     color: colors.textMuted,
-    letterSpacing: 3,
+    letterSpacing: 2,
     textAlign: 'center',
     marginTop: spacing(2),
   },

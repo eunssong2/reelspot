@@ -7,14 +7,14 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        // 탭이 하나뿐인 동안은 막대를 숨긴다. 지도·영상 탭이 붙으면 되살린다.
-        tabBarStyle: { display: 'none' },
         tabBarLabelStyle: type.caption,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: { borderTopColor: colors.border },
       }}
     >
       <Tabs.Screen name="index" options={{ title: '내 여행' }} />
+      <Tabs.Screen name="mypage" options={{ title: '마이페이지' }} />
     </Tabs>
   );
 }

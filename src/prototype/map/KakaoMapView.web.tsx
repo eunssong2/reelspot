@@ -57,6 +57,7 @@ export const KakaoMapView = forwardRef<MapHandle, Props>(function KakaoMapView({
     clear(): void;
     select(id: string | null): void;
     setPadding(bottom: number): void;
+    locate(): void;
   } | null>(null);
 
   useImperativeHandle(ref, () => ({
@@ -68,6 +69,7 @@ export const KakaoMapView = forwardRef<MapHandle, Props>(function KakaoMapView({
     clear: () => api.current?.clear(),
     select: (id) => api.current?.select(id),
     setPadding: (bottom) => api.current?.setPadding(bottom),
+    locate: () => api.current?.locate(),
   }));
 
   useEffect(() => {
@@ -220,6 +222,27 @@ export const KakaoMapView = forwardRef<MapHandle, Props>(function KakaoMapView({
           },
           setPadding: (bottom) => {
             padBottom = Number.isFinite(bottom) ? Math.max(0, Math.round(bottom)) : 0;
+          },
+          locate: () => {
+            if (!navigator.geolocation) {
+              onEventRef.current({ type: 'locateError', message: '이 브라우저는 위치 기능을 지원하지 않아요.' });
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                const here = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                map.panTo(here);
+                onEventRef.current({ type: 'locateResult', lat: pos.coords.latitude, lng: pos.coords.longitude });
+              },
+              (err) => {
+                const message =
+                  err.code === err.PERMISSION_DENIED
+                    ? '위치 권한이 꺼져 있어요. 지도 위치 기준으로 검색할 수 있어요.'
+                    : '현재 위치를 가져오지 못했어요.';
+                onEventRef.current({ type: 'locateError', message });
+              },
+              { enableHighAccuracy: true, timeout: 8000 },
+            );
           },
         };
         // 'idle' 은 첫 로드에는 오지 않으므로 초기 중심·레벨을 직접 알린다.

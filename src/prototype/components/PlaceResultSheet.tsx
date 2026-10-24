@@ -23,7 +23,7 @@ interface Props {
   onToggleOpen: () => void;
   height: number;
   dayNumber: number;
-  /** 이미 이 Day 일정에 담긴 장소 id */
+  /** 이미 이 날짜의 스팟에 담긴 장소 id */
   addedIds: Set<string>;
   /** 장소 항목을 누름 → 사진·동영상 올리기로 이동 */
   onPressPlace: (place: Place) => void;
@@ -32,7 +32,7 @@ interface Props {
 
 /**
  * 검색 결과 목록 시트(네이버 지도 스타일). 항목을 누르면 그 장소의 사진·동영상 올리기로 이동하고,
- * 각 항목의 '+ Day n에 추가' 버튼은 별도 동작이다. 지도에서 핀을 누르면 해당 항목으로 스크롤된다.
+ * 각 항목의 '스팟에 추가' 버튼은 별도 동작이다. 지도에서 핀을 누르면 해당 항목으로 스크롤된다.
  */
 export function PlaceResultSheet({
   places,
@@ -71,7 +71,8 @@ export function PlaceResultSheet({
 
       <View style={styles.header}>
         <Text style={styles.headerText}>
-          검색 위치 기준 <Text style={styles.headerCount}>{places.length}곳</Text>
+          {places.some((p) => p.sample) ? '예시 장소 ' : '검색 위치 기준 '}
+          <Text style={styles.headerCount}>{places.length}곳</Text>
         </Text>
         <Pressable
           onPress={onToggleSort}
@@ -108,6 +109,7 @@ export function PlaceResultSheet({
                   <View style={styles.itemText}>
                     <Text style={styles.name} numberOfLines={1}>
                       {place.name} <Text style={styles.category}>{thumb.categoryLabel}</Text>
+                      {place.sample ? <Text style={styles.sampleTag}> 예시</Text> : null}
                     </Text>
                     <Text style={styles.addr} numberOfLines={1}>
                       {distance !== undefined ? <Text style={styles.distance}>{formatDistance(distance)} · </Text> : null}
@@ -120,13 +122,13 @@ export function PlaceResultSheet({
                 <View style={styles.actions}>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`${place.name} Day ${dayNumber} 일정에 추가`}
+                    accessibilityLabel={`${place.name} 스팟에 추가`}
                     disabled={added}
                     onPress={() => onAdd(place)}
                     style={({ pressed }) => [styles.action, added && styles.actionDone, pressed && styles.pressed]}
                   >
                     <Text style={[styles.actionText, added && styles.actionTextDone]}>
-                      {added ? `✓ Day ${dayNumber}에 추가됨` : `+ Day ${dayNumber}에 추가`}
+                      {added ? '✓ 스팟에 추가됨' : '+ 스팟에 추가'}
                     </Text>
                   </Pressable>
                 </View>
@@ -140,6 +142,8 @@ export function PlaceResultSheet({
 }
 
 const styles = StyleSheet.create({
+  /** 데모의 예시 검색 결과 표시 */
+  sampleTag: { fontSize: 11, fontWeight: '800', color: colors.textMuted },
   sheet: {
     position: 'absolute',
     left: 0,

@@ -9,6 +9,8 @@ export interface Place {
   lng: number;
   category: string;
   phone: string;
+  /** 데모의 예시 검색 결과이면 true. 실제 검색 결과로 오해하지 않도록 화면에 표시한다. */
+  sample?: boolean;
 }
 
 export type SearchStatus = 'idle' | 'searching' | 'done' | 'empty' | 'error';
@@ -27,7 +29,9 @@ export type MapEvent =
       excluded: number;
     }
   | { type: 'markerPress'; place: Place }
-  | { type: 'mapPress' };
+  | { type: 'mapPress' }
+  | { type: 'locateResult'; lat: number; lng: number }
+  | { type: 'locateError'; message: string };
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 
@@ -77,6 +81,13 @@ export function parseMapEvent(data: string): MapEvent | null {
     }
     case 'sdkError':
       return { type: 'sdkError', message: str(m.message), origin: str(m.origin) || undefined };
+    case 'locateResult': {
+      const lat = Number(m.lat);
+      const lng = Number(m.lng);
+      return Number.isFinite(lat) && Number.isFinite(lng) ? { type: 'locateResult', lat, lng } : null;
+    }
+    case 'locateError':
+      return { type: 'locateError', message: str(m.message) };
     case 'markerPress': {
       const place = parsePlace(m.place);
       return place ? { type: 'markerPress', place } : null;
@@ -113,4 +124,6 @@ export interface MapHandle {
   select(id: string | null): void;
   /** 화면 아래를 시트가 가리는 높이(px). 검색 결과 맞춤·핀 이동이 이 영역을 피한다. */
   setPadding(bottom: number): void;
+  /** 브라우저/기기 위치 권한을 요청해 현재 위치로 지도를 옮긴다. 결과는 onEvent(locateResult/locateError)로 온다. */
+  locate(): void;
 }

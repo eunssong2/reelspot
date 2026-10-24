@@ -2,18 +2,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppHeader } from '../components/AppHeader';
+import { PlaceDetailPanel } from '../components/PlaceDetailPanel';
 import { PlaceResultSheet, SHEET_COLLAPSED_HEIGHT, type SortKey } from '../components/PlaceResultSheet';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { Toast, useToast } from '../components/Toast';
+import { IS_DEMO_BUILD } from '../../demo/config';
 import { missingMapConfig } from '../config/env';
+import { DemoMapView } from '../map/DemoMapView';
 import { distanceMeters } from '../map/geo';
 import { KakaoMapView } from '../map/KakaoMapView';
 import { toItineraryPlace } from '../map/placeStyle';
 import { CATEGORIES, type CategoryKey, type MapEvent, type MapHandle, type Place, type SearchStatus } from '../map/types';
-import type { ItineraryPlace, TripDay } from '../mock/tripData';
+import type { Itinerary, ItineraryDay, ItineraryPlace } from '../mock/tripData';
 import type { Nav } from '../navigation/routes';
 import { colors, GUTTER, radius, shadow } from '../styles/tokens';
+import { fullDateLabel } from '../utils/date';
 
 /** 지도 타일이 이 시간 안에 그려지지 않으면 설정 문제로 보고 안내한다. */
 const TILES_TIMEOUT_MS = 15000;
@@ -22,6 +26,7 @@ const SHEET_RATIO = 0.5;
 
 type Stage = 'loading' | 'sdk' | 'tiles' | 'error';
 type Filter = 'all' | CategoryKey;
+type LastQuery = { type: 'keyword'; keyword: string } | { type: 'category'; key: CategoryKey } | null;
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: '전체' },
@@ -30,25 +35,27 @@ const FILTERS: { key: Filter; label: string }[] = [
 
 interface Props {
   nav: Nav;
-  days: TripDay[];
-  dayIndex: number;
-  onAddPlace: (dayIndex: number, place: ItineraryPlace) => void;
+  tripId: string;
+  itinerary: Itinerary;
+  day: ItineraryDay;
+  /** 담았으면 true, 이미 그 날짜에 있어 담지 않았으면 false(반환값이 없는 기존 구현은 담은 것으로 본다). */
+  onAddPlace: (place: ItineraryPlace) => boolean | void;
 }
 
 /**
- * 3. 여행 장소 검색: 실제 카카오 지도(웹은 HTML div, 앱은 WebView) 위에 이름표가 붙은 핀을 표시하고,
+ * 3. 장소 추가: 실제 카카오 지도(웹은 HTML div, 앱은 WebView) 위에 이름표가 붙은 핀을 표시하고,
  * 아래 결과 시트에 목록을 보여 준다(네이버 지도 스타일).
- * - 목록의 장소를 누르면 그 장소로 사진·동영상 올리기 화면에 이동한다.
- * - 각 항목의 '+ Day n에 추가' 버튼은 일정에 담는다.
- * - 지도의 핀을 누르면 해당 항목이 강조되고 목록이 그 위치로 스크롤된다.
+ * - 마커나 목록 항목을 고르면 아래가 그 장소의 상세 패널로 바뀌고, "이 날의 장소로 추가"로 저장한다.
+ * - 결과 목록의 '+ 장소 추가' 버튼으로도 바로 담을 수 있다.
  * 지도를 못 띄우면 임시 지도로 대체하지 않고 카카오가 돌려준 실제 오류를 보여 준다.
  */
-export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
+export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
   const toast = useToast();
   const mapRef = useRef<MapHandle>(null);
   const tilesShown = useRef(false);
   /** 지도 중심의 최신 좌표. 검색을 시작할 때의 값을 거리 계산 기준으로 쓴다. */
   const centerRef = useRef<{ lat: number; lng: number } | null>(null);
+  const lastQueryRef = useRef<LastQuery>(null);
 
   const [attempt, setAttempt] = useState(0);
   const [stage, setStage] = useState<Stage>('loading');
@@ -64,13 +71,21 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
   const [sort, setSort] = useState<SortKey>('relevance');
   const [sheetOpen, setSheetOpen] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailPlace, setDetailPlace] = useState<Place | null>(null);
+  const [saving, setSaving] = useState(false);
+  /**
+   * 데모 빌드는 인터넷·키 없이도 체험할 수 있게 "예시 검색"(오프라인)으로 시작하고,
+   * 지도 키가 있으면 "실제 지도"(카카오, 인터넷 필요)로 바꿔 볼 수 있다. 일반 빌드는 항상 실제 지도다.
+   */
+  const [mapMode, setMapMode] = useState<'sample' | 'kakao'>(IS_DEMO_BUILD ? 'sample' : 'kakao');
+  const sampleMode = IS_DEMO_BUILD && mapMode === 'sample';
 
-  const day = days[dayIndex];
-  const ready = stage === 'sdk' || stage === 'tiles';
-  const keyMissing = missingMapConfig.length > 0;
+  const ready = sampleMode || stage === 'sdk' || stage === 'tiles';
+  const keyMissing = !sampleMode && missingMapConfig.length > 0;
 
   const sheetHeight = Math.round((mapHeight || 600) * SHEET_RATIO);
   const hasResults = results.length > 0;
+  const dateLabel = fullDateLabel(day.date);
 
   const addedIds = useMemo(() => new Set(day.places.map((p) => p.id)), [day]);
 
@@ -110,19 +125,47 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
         setExcluded(event.excluded);
         setResults(event.places);
         setSelectedId(null);
+        setDetailPlace(null);
         setSheetOpen(true);
         break;
       case 'markerPress':
         Keyboard.dismiss();
         setSelectedId(event.place.id);
-        setSheetOpen(true);
+        setDetailPlace(event.place);
         break;
       case 'mapPress':
         setSelectedId(null);
+        setDetailPlace(null);
         mapRef.current?.select(null);
         break;
+      case 'locateResult':
+        setOrigin({ lat: event.lat, lng: event.lng });
+        break;
+      case 'locateError':
+        toast.show(event.message);
+        break;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /** 데모: 예시 검색 ↔ 실제 지도 전환. 이전 모드의 검색 상태는 모두 지운다. */
+  const switchMapMode = (next: 'sample' | 'kakao') => {
+    if (next === mapMode) return;
+    tilesShown.current = false;
+    lastQueryRef.current = null;
+    centerRef.current = null;
+    setMapMode(next);
+    setStage('loading');
+    setError(null);
+    setKeyword('');
+    setFilter('all');
+    setResults([]);
+    setOrigin(null);
+    setSelectedId(null);
+    setDetailPlace(null);
+    setStatus('idle');
+    setAttempt((n) => n + 1);
+  };
 
   const retry = () => {
     tilesShown.current = false;
@@ -130,28 +173,31 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
     setError(null);
     setResults([]);
     setSelectedId(null);
+    setDetailPlace(null);
     setStatus('idle');
     setAttempt((n) => n + 1);
   };
 
   useEffect(() => {
-    if (keyMissing || stage === 'tiles' || stage === 'error') return;
+    if (sampleMode || keyMissing || stage === 'tiles' || stage === 'error') return;
     const timer = setTimeout(() => {
       setError('지도가 제한 시간 안에 표시되지 않았습니다.');
       setStage('error');
     }, TILES_TIMEOUT_MS);
     return () => clearTimeout(timer);
-  }, [stage, attempt, keyMissing]);
+  }, [stage, attempt, keyMissing, sampleMode]);
 
   /** 검색 직전 공통 준비: 시트에 가리지 않게 여백을 알리고, 거리 기준점을 잡는다. */
   const startSearching = () => {
     Keyboard.dismiss();
     mapRef.current?.setPadding(sheetHeight);
-    setOrigin(centerRef.current);
+    // "현재 위치"로 정한 기준이 있으면 그대로 두고, 없으면 지도 중심을 기준으로 거리를 보여준다.
+    setOrigin((prev) => prev ?? centerRef.current);
     setStatus('searching');
     setExcluded(0);
     setResults([]);
     setSelectedId(null);
+    setDetailPlace(null);
   };
 
   const searchKeyword = () => {
@@ -159,6 +205,7 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
     if (!q || !ready) return;
     setFilter('all');
     startSearching();
+    lastQueryRef.current = { type: 'keyword', keyword: q };
     mapRef.current?.search(q);
   };
 
@@ -170,31 +217,57 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
       const q = keyword.trim();
       if (q) {
         startSearching();
+        lastQueryRef.current = { type: 'keyword', keyword: q };
         mapRef.current?.search(q);
       } else {
         mapRef.current?.clear();
         setResults([]);
         setSelectedId(null);
+        setDetailPlace(null);
         setStatus('idle');
+        lastQueryRef.current = null;
       }
       return;
     }
     setKeyword('');
     startSearching();
+    lastQueryRef.current = { type: 'category', key: next };
     mapRef.current?.searchCategory(next);
   };
 
-  const openUpload = (place: Place) => {
-    setSelectedId(place.id);
-    mapRef.current?.select(place.id);
-    nav.push({ name: 'mediaSettings', placeName: place.name });
+  /** 지도를 옮긴 뒤 같은 검색을 현재 지도 범위에서 다시 실행한다. */
+  const researchHere = () => {
+    const q = lastQueryRef.current;
+    if (!q || !ready) return;
+    startSearching();
+    if (q.type === 'keyword') mapRef.current?.search(q.keyword);
+    else mapRef.current?.searchCategory(q.key);
   };
 
-  const addPlace = (place: Place) => {
-    if (addedIds.has(place.id)) return;
+  const locateMe = () => {
+    if (!ready) return;
+    mapRef.current?.locate();
+  };
+
+  const selectResult = (place: Place) => {
+    setSelectedId(place.id);
+    setDetailPlace(place);
+    mapRef.current?.select(place.id);
+  };
+
+  const commitAddPlace = (place: Place) => {
+    if (addedIds.has(place.id) || saving) return;
+    setSaving(true);
     const item = toItineraryPlace(place);
-    onAddPlace(dayIndex, item);
-    toast.show(`${item.name}이(가) Day ${day.day} 일정에 추가되었어요`);
+    // 프로토타입은 실제 저장 API가 없어 지연을 흉내 내지 않고 바로 반영한다(실패를 꾸며내지 않는다).
+    const added = onAddPlace(item);
+    setSaving(false);
+    if (added === false) {
+      toast.show(`${item.name}은(는) 이미 ${dateLabel} 장소에 담겨 있어요`);
+      return;
+    }
+    // 담으면 곧바로 그 날짜의 장소 목록으로 돌아가 추가된 것을 확인하게 한다(목록에서 "추가됨"으로 강조된다).
+    nav.back();
   };
 
   const excludedNote = excluded > 0 ? ` (서울 밖 ${excluded}곳 제외)` : '';
@@ -202,14 +275,18 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
     status === 'searching'
       ? '검색 중…'
       : status === 'empty'
-        ? `서울특별시 안의 검색 결과가 없어요${excludedNote}`
+        ? sampleMode
+        ? '예시 장소 중에 찾는 결과가 없어요. 다른 검색어를 입력해 보세요'
+        : `서울특별시 안의 검색 결과가 없어요${excludedNote}`
         : status === 'error'
           ? '검색에 실패했어요. 잠시 후 다시 시도해 주세요.'
-          : '장소를 검색하거나 카테고리를 눌러 보세요';
+          : sampleMode
+            ? '예시 장소를 검색하거나 카테고리를 눌러 보세요 (예: 카페, 성수, 호텔)'
+            : '장소를 검색하거나 카테고리를 눌러 보세요';
 
   return (
     <ScreenFrame>
-      <AppHeader title="여행 장소 검색" subtitle={`Day ${day.day} · ${day.dateLabel}`} onBack={nav.back} />
+      <AppHeader title="장소 추가" subtitle={`${itinerary.name} · ${dateLabel}`} onBack={nav.back} />
 
       <View style={styles.searchArea}>
         <View style={styles.searchBox}>
@@ -220,7 +297,7 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
             style={styles.input}
             value={keyword}
             onChangeText={setKeyword}
-            placeholder="장소를 검색하세요 (예: 경복궁)"
+            placeholder="장소를 검색하세요 (예: 성수 카페)"
             placeholderTextColor={colors.textMuted}
             returnKeyType="search"
             onSubmitEditing={searchKeyword}
@@ -252,22 +329,73 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
         </ScrollView>
       </View>
 
+      {IS_DEMO_BUILD ? (
+        <View style={styles.modeRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: sampleMode }}
+            onPress={() => switchMapMode('sample')}
+            style={[styles.modeChip, sampleMode && styles.modeChipActive]}
+          >
+            <Text style={[styles.modeText, sampleMode && styles.modeTextActive]}>예시 검색 (오프라인)</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: !sampleMode }}
+            onPress={() => switchMapMode('kakao')}
+            style={[styles.modeChip, !sampleMode && styles.modeChipActive]}
+          >
+            <Text style={[styles.modeText, !sampleMode && styles.modeTextActive]}>실제 지도 (인터넷 필요)</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {sampleMode ? (
+        <Text style={styles.sampleNotice}>※ 아래 결과는 데모용 예시 장소예요. 실제 지도 검색 결과가 아닙니다.</Text>
+      ) : null}
+
       <View style={styles.mapWrap} onLayout={(e) => setMapHeight(e.nativeEvent.layout.height)}>
-        {keyMissing ? (
+        {sampleMode ? (
+          <DemoMapView key={`sample-${attempt}`} ref={mapRef} onEvent={handleEvent} />
+        ) : keyMissing ? (
           <View style={styles.notice}>
             <Text style={styles.noticeTitle}>카카오 지도 키가 아직 없어요</Text>
             <Text style={styles.noticeBody}>
-              프로젝트 폴더의 .env 에 EXPO_PUBLIC_KAKAO_JS_KEY 를 채운 뒤 npx expo start -c 로 다시 시작하세요.
+              {IS_DEMO_BUILD
+                ? '이 테스트 앱에는 카카오 지도 키가 들어 있지 않아요. 예시 검색으로 장소 추가를 체험해 보세요.'
+                : '프로젝트 폴더의 .env 에 EXPO_PUBLIC_KAKAO_JS_KEY 를 채운 뒤 npx expo start -c 로 다시 시작하세요.'}
             </Text>
+            {IS_DEMO_BUILD ? <PrimaryButton label="예시 검색으로 체험하기" onPress={() => switchMapMode('sample')} /> : null}
           </View>
         ) : (
           <KakaoMapView key={attempt} ref={mapRef} onEvent={handleEvent} />
         )}
 
-        {!keyMissing && (stage === 'loading' || stage === 'sdk') ? (
+        {!sampleMode && !keyMissing && (stage === 'loading' || stage === 'sdk') ? (
           <View style={styles.loading}>
             <Text style={styles.loadingText}>지도를 불러오는 중…</Text>
           </View>
+        ) : null}
+
+        {ready && lastQueryRef.current ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="이 지역 다시 검색"
+            onPress={researchHere}
+            style={({ pressed }) => [styles.research, pressed && styles.pressed]}
+          >
+            <Text style={styles.researchText}>⟳ 이 지역 다시 검색</Text>
+          </Pressable>
+        ) : null}
+
+        {ready ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="현재 위치로 이동"
+            onPress={locateMe}
+            style={({ pressed }) => [styles.locateBtn, pressed && styles.pressed]}
+          >
+            <Text style={styles.locateGlyph}>⦿</Text>
+          </Pressable>
         ) : null}
 
         {stage === 'error' ? (
@@ -284,10 +412,24 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
               </Text>
             </ScrollView>
             <PrimaryButton label="다시 시도" onPress={retry} />
+            {IS_DEMO_BUILD ? <PrimaryButton label="예시 검색으로 체험하기" onPress={() => switchMapMode('sample')} /> : null}
           </View>
         ) : null}
 
-        {hasResults ? (
+        {detailPlace ? (
+          <PlaceDetailPanel
+            place={detailPlace}
+            dateLabel={dateLabel}
+            added={addedIds.has(detailPlace.id)}
+            saving={saving}
+            onClose={() => {
+              setDetailPlace(null);
+              setSelectedId(null);
+              mapRef.current?.select(null);
+            }}
+            onAdd={() => commitAddPlace(detailPlace)}
+          />
+        ) : hasResults ? (
           <PlaceResultSheet
             places={sorted}
             distances={distances}
@@ -297,10 +439,10 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
             open={sheetOpen}
             onToggleOpen={() => setSheetOpen((o) => !o)}
             height={sheetHeight}
-            dayNumber={day.day}
+            dayNumber={day.dayNumber}
             addedIds={addedIds}
-            onPressPlace={openUpload}
-            onAdd={addPlace}
+            onPressPlace={selectResult}
+            onAdd={commitAddPlace}
           />
         ) : ready ? (
           <View style={styles.hint}>
@@ -309,7 +451,10 @@ export function PlaceSearchScreen({ nav, days, dayIndex, onAddPlace }: Props) {
         ) : null}
       </View>
 
-      <Toast message={toast.message} bottom={(hasResults ? (sheetOpen ? sheetHeight : SHEET_COLLAPSED_HEIGHT) : 0) + 24} />
+      <Toast
+        message={toast.message}
+        bottom={(detailPlace ? 220 : hasResults ? (sheetOpen ? sheetHeight : SHEET_COLLAPSED_HEIGHT) : 0) + 24}
+      />
     </ScreenFrame>
   );
 }
@@ -340,6 +485,20 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipDisabled: { opacity: 0.5 },
+  modeRow: { flexDirection: 'row', gap: 8, paddingHorizontal: GUTTER, paddingBottom: 8 },
+  modeChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 7,
+    borderRadius: radius.item,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.bg,
+  },
+  modeChipActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  modeText: { fontSize: 12, fontWeight: '700', color: colors.textSub },
+  modeTextActive: { color: colors.primary },
+  sampleNotice: { fontSize: 12, fontWeight: '600', color: colors.primary, paddingHorizontal: GUTTER, paddingBottom: 8 },
   chipText: { fontSize: 13, fontWeight: '600', color: colors.textSub },
   chipTextActive: { color: colors.onPrimary },
 
@@ -366,6 +525,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textSub,
   },
+
+  research: {
+    position: 'absolute',
+    top: 16,
+    alignSelf: 'center',
+    backgroundColor: colors.bg,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
+    boxShadow: shadow.float,
+    zIndex: 9,
+  },
+  researchText: { fontSize: 12, fontWeight: '700', color: colors.text },
+  pressed: { opacity: 0.85 },
+
+  locateBtn: {
+    position: 'absolute',
+    right: 12,
+    bottom: 100,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: shadow.float,
+    zIndex: 9,
+  },
+  locateGlyph: { fontSize: 17, color: colors.primary },
 
   errorCard: {
     position: 'absolute',

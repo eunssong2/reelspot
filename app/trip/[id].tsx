@@ -74,7 +74,7 @@ export default function TripDetailScreen() {
   const share = useCallback(async () => {
     if (!trip) return;
     await Share.share({
-      message: `[릴스팟] "${trip.title}" 여행에 스팟원으로 초대합니다.\n초대 코드: ${trip.invite_code}`,
+      message: `[AT THAT PLACE] "${trip.title}" 여행에 스팟원으로 초대합니다.\n초대 코드: ${trip.invite_code}`,
     });
   }, [trip]);
 

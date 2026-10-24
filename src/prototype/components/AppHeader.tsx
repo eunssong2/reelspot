@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type TextStyle } from 'react-native';
 
 import { colors, GUTTER } from '../styles/tokens';
 
@@ -9,10 +9,12 @@ interface Props {
   onBack?: () => void;
   /** 오른쪽 영역(아바타, 버튼 등) */
   right?: ReactNode;
+  /** 기본 제목 스타일 위에 덮어쓴다 — 브랜드명처럼 긴 제목의 크기·자간을 줄일 때 쓴다. */
+  titleStyle?: TextStyle;
 }
 
 /** 뒤로가기 · 가운데 제목 · 오른쪽 영역으로 이루어진 상단 바. */
-export function AppHeader({ title, subtitle, onBack, right }: Props) {
+export function AppHeader({ title, subtitle, onBack, right, titleStyle }: Props) {
   return (
     <View style={styles.row}>
       <View style={styles.side}>
@@ -29,7 +31,7 @@ export function AppHeader({ title, subtitle, onBack, right }: Props) {
         ) : null}
       </View>
       <View style={styles.center}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, titleStyle]} numberOfLines={1}>
           {title}
         </Text>
         {subtitle ? (

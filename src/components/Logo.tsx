@@ -23,12 +23,12 @@ const STRIPES = [
 ];
 
 /**
- * 릴스팟 마크. assets/logo.svg 와 같은 도형이다.
+ * AT THAT PLACE 마크. assets/logo.svg 와 같은 도형이다.
  * 둘 중 하나를 고치면 나머지도 같이 고칠 것.
  */
 export function Logo({ size = 96 }: { size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 1024 1024" accessibilityLabel="릴스팟">
+    <Svg width={size} height={size} viewBox="0 0 1024 1024" accessibilityLabel="AT THAT PLACE 로고">
       <Defs>
         <LinearGradient id="pinGradient" x1="280" y1="840" x2="760" y2="200" gradientUnits="userSpaceOnUse">
           <Stop offset="0" stopColor="#E8517E" />

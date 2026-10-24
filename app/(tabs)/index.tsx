@@ -4,7 +4,6 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
-import { signOut } from '@/features/auth/api';
 import { LayoutPreview } from '@/components/LayoutPreview';
 import { fetchMyTrips, type TripSummary } from '@/features/trips/api';
 import { formatRangeShort } from '@/features/trips/dates';
@@ -53,9 +52,6 @@ export default function TripsScreen() {
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.title}>내 여행</Text>
-            <Pressable onPress={() => void signOut()} hitSlop={spacing(3)}>
-              <Text style={styles.logout}>로그아웃</Text>
-            </Pressable>
           </View>
         }
         renderItem={({ item }) => (
@@ -117,7 +113,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing(4),
   },
   title: { ...type.display, color: colors.text },
-  logout: { ...type.label, color: colors.textMuted },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
