@@ -15,13 +15,15 @@ interface Props {
   imageUri?: string;
   /** 있으면 배너를 눌러 사진을 바꿀 수 있다(오른쪽 아래에 "배경 변경" 표시). */
   onEdit?: () => void;
+  /** true 면 모서리를 둥글게 하지 않는다(화면 가로 끝까지 닿는 배너용). */
+  square?: boolean;
 }
 
 /**
  * 일정 요약 화면 상단의 대표 이미지. 사진을 고르지 않았다면 모임 커버(CoverThumb)와 같은 방식의
  * 기본 그림을 보여주고, 고른 사진이 있으면 그 사진을 꽉 채워 보여준다.
  */
-export function ItineraryCoverBanner({ kind, imageUri, onEdit }: Props) {
+export function ItineraryCoverBanner({ kind, imageUri, onEdit, square }: Props) {
   const scene = SCENES[kind];
   return (
     <Pressable
@@ -29,7 +31,7 @@ export function ItineraryCoverBanner({ kind, imageUri, onEdit }: Props) {
       accessibilityLabel="배경 사진 변경"
       disabled={!onEdit}
       onPress={onEdit}
-      style={[styles.box, { backgroundColor: scene.sky }]}
+      style={[styles.box, square && styles.boxSquare, { backgroundColor: scene.sky }]}
     >
       {imageUri ? (
         <SafeImage source={imageUri} resizeMode="cover" style={StyleSheet.absoluteFill} />
@@ -57,6 +59,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  boxSquare: { borderRadius: 0 },
   ground: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '38%' },
   emoji: { fontSize: 56 },
   editBadge: {

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppHeader } from '../components/AppHeader';
-import { PlaceThumb } from '../components/PlaceThumb';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { TimeEditModal } from '../components/TimeEditModal';
 import { ScreenFrame } from '../components/ScreenFrame';
@@ -45,10 +44,7 @@ export function PlaceOrderEditScreen({ nav, itinerary, day, onSave }: Props) {
   const [timeTargetId, setTimeTargetId] = useState<string | null>(null);
   const timeTarget = places.find((p) => p.id === timeTargetId);
 
-  const singleDay = itinerary.days.length <= 1;
-  const subtitle = singleDay
-    ? `${monthDayLabel(day.date)} ${dayOfWeekLabel(day.date)}`
-    : `DAY ${day.dayNumber} · ${monthDayLabel(day.date)} ${dayOfWeekLabel(day.date)}`;
+  const subtitle = `${monthDayLabel(day.date)} ${dayOfWeekLabel(day.date)}요일`;
 
   const move = (index: number, dir: -1 | 1) => {
     const target = index + dir;
@@ -107,8 +103,6 @@ export function PlaceOrderEditScreen({ nav, itinerary, day, onSave }: Props) {
             <View style={styles.orderBadge}>
               <Text style={styles.orderBadgeText}>{index + 1}</Text>
             </View>
-
-            <PlaceThumb place={place} size={48} />
 
             <View style={styles.info}>
               <Text style={styles.name} numberOfLines={1}>

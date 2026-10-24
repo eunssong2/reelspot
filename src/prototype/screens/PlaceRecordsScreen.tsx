@@ -53,6 +53,21 @@ const formatDuration = (ms: number) => {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 };
 
+/** 사람별 보기에서 사진 사이 간격(px). */
+const GRID_GAP = 4;
+/** 사람별 보기 묶음에서 처음 보여 주는 최대 개수(나머지는 +N 으로 접는다). */
+const GROUP_PREVIEW = 4;
+
+type ViewMode = 'photo' | 'person';
+
+/** 사람별 보기: 한 스팟원이 올린 모든 사진·동영상을 한 묶음으로 본다. */
+interface PersonGroup {
+  member: TripMember;
+  cards: FlatMediaCard[];
+  /** 묶음에서 가장 앞에 나오는 게시물 시각(최신순이면 가장 최근, 오래된순이면 가장 오래된 것) */
+  firstTime: string;
+}
+
 /** 한 장의 사진·동영상 카드로 펼치기 위한 평평한 항목. 원래 게시물(작성자·시각)과의 연결은 그대로 둔다. */
 interface FlatMediaCard {
   item: PlaceRecordItem;
@@ -85,6 +100,19 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
     if (!member) return [];
     return record.items.map((item) => ({ item, member, postTime: record.time }));
   });
+  const [viewMode, setViewMode] = useState<ViewMode>('photo');
+  /** 사람별 보기에서 "+N"을 눌러 모두 펼친 스팟원 id */
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
+  const groups: PersonGroup[] = [];
+  for (const card of cards) {
+    let group = groups.find((g) => g.member.id === card.member.id);
+    if (!group) {
+      group = { member: card.member, cards: [], firstTime: card.postTime };
+      groups.push(group);
+    }
+    group.cards.push(card);
+  }
+  const gridWidth = Math.min(windowWidth, 430) - GUTTER * 2;
   const hasVideo = cards.some((c) => c.item.kind === 'video');
   const listTitle = hasVideo ? '함께 남긴 순간' : '함께 남긴 사진';
 
@@ -251,8 +279,61 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
           </Pressable>
         </View>
 
+        {cards.length > 0 ? (
+          <View style={styles.segment} accessibilityRole="tablist">
+            {([['photo', '사진별'], ['person', '사람별']] as const).map(([mode, label]) => (
+              <Pressable
+                key={mode}
+                accessibilityRole="tab"
+                accessibilityLabel={`${label} 보기`}
+                accessibilityState={{ selected: viewMode === mode }}
+                onPress={() => setViewMode(mode)}
+                style={[styles.segmentItem, viewMode === mode && styles.segmentItemActive]}
+              >
+                <Text style={[styles.segmentText, viewMode === mode && styles.segmentTextActive]}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+
         {cards.length === 0 ? (
           <Text style={styles.emptyCards}>아직 이곳에 남긴 사진·동영상이 없어요.{'\n'}스팟원이 올리면 여기에 모여요.</Text>
+        ) : viewMode === 'person' ? (
+          groups.map((group) => {
+            const photos = group.cards.filter((c) => c.item.kind !== 'video').length;
+            const videos = group.cards.length - photos;
+            const expanded = expandedIds.includes(group.member.id);
+            return (
+              <View key={group.member.id} style={styles.personCard}>
+                <View style={styles.personHead}>
+                  <Avatar uri={group.member.avatarUrl} size={36} />
+                  <View style={styles.personHeadText}>
+                    <Text style={styles.personName}>{group.member.name}</Text>
+                    <Text style={styles.personSub}>
+                      {`사진 ${photos}${videos > 0 ? ` · 동영상 ${videos}` : ''} · ${group.firstTime}`}
+                    </Text>
+                  </View>
+                </View>
+                <PersonGrid
+                  cards={group.cards}
+                  width={gridWidth - PERSON_PAD * 2}
+                  expanded={expanded}
+                  onOpen={openViewer}
+                  onExpand={() => setExpandedIds((prev) => [...prev, group.member.id])}
+                />
+                {expanded && group.cards.length > GROUP_PREVIEW ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${group.member.name} 사진 접기`}
+                    onPress={() => setExpandedIds((prev) => prev.filter((id) => id !== group.member.id))}
+                    hitSlop={6}
+                  >
+                    <Text style={styles.collapseText}>접기 ⌃</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            );
+          })
         ) : (
           cards.map((card, index) => (
             <Pressable
@@ -344,6 +425,82 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
   );
 }
 
+/** 사람별 보기 카드 안쪽 여백(px). */
+const PERSON_PAD = 12;
+
+/**
+ * 한 스팟원의 사진·동영상을 격자로 보여 준다.
+ * 1장은 크게, 2장은 나란히, 3장은 위 1 + 아래 2, 4장 이상은 2x2(5장 이상이면 네 번째 칸에 +N).
+ * +N 을 누르면 모두 펼친다. 각 칸은 원래 사진을 그대로 열어 보는 눌림 영역이다.
+ */
+function PersonGrid({
+  cards,
+  width,
+  expanded,
+  onOpen,
+  onExpand,
+}: {
+  cards: FlatMediaCard[];
+  width: number;
+  expanded: boolean;
+  onOpen: (card: FlatMediaCard) => void;
+  onExpand: () => void;
+}) {
+  const half = Math.floor((width - GRID_GAP) / 2);
+  const shown = expanded ? cards : cards.slice(0, GROUP_PREVIEW);
+  const extra = expanded ? 0 : Math.max(0, cards.length - GROUP_PREVIEW);
+
+  const tile = (card: FlatMediaCard, w: number, h: number, more = 0) => (
+    <Pressable
+      key={card.item.id}
+      accessibilityRole="button"
+      accessibilityLabel={
+        more > 0
+          ? `${card.member.name} 사진 ${more}개 더 보기`
+          : `${card.member.name}이 올린 ${card.item.kind === 'video' ? '동영상 재생' : '사진 크게 보기'}`
+      }
+      onPress={() => (more > 0 ? onExpand() : onOpen(card))}
+      style={({ pressed }) => [{ width: w, height: h }, styles.tile, pressed && styles.pressed]}
+    >
+      {card.item.imageUrl ? (
+        <SafeImage source={card.item.imageUrl} style={styles.tileImage} resizeMode="cover" />
+      ) : (
+        <View style={styles.tileImage} />
+      )}
+      {card.item.kind === 'video' ? (
+        <View style={styles.tileVideoBadge}>
+          <Text style={styles.playGlyph}>▶</Text>
+          {card.item.durationLabel ? <Text style={styles.playDuration}>{card.item.durationLabel}</Text> : null}
+        </View>
+      ) : null}
+      {more > 0 ? (
+        <View style={styles.tileMore}>
+          <Text style={styles.tileMoreText}>+{more}</Text>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+
+  if (!expanded && shown.length === 1) return <View>{tile(shown[0], width, Math.round((width * 3) / 4))}</View>;
+  if (!expanded && shown.length === 3) {
+    return (
+      <View style={{ gap: GRID_GAP }}>
+        {tile(shown[0], width, Math.round(width / 2))}
+        <View style={styles.tileRow}>
+          {tile(shown[1], half, half)}
+          {tile(shown[2], half, half)}
+        </View>
+      </View>
+    );
+  }
+  // 2장, 4장 이상(펼친 경우 포함): 정사각형 두 칸씩 줄바꿈
+  return (
+    <View style={styles.tileWrap}>
+      {shown.map((card, i) => tile(card, half, half, extra > 0 && i === shown.length - 1 ? extra + 1 : 0))}
+    </View>
+  );
+}
+
 function UploadCommitButton({ active, onPress }: { active: boolean; onPress: () => void }) {
   return (
     <Pressable
@@ -381,6 +538,58 @@ const styles = StyleSheet.create({
   sectionCount: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
   sortLabel: { fontSize: 13, fontWeight: '600', color: colors.textSub },
   emptyCards: { fontSize: 13, color: colors.textMuted, paddingVertical: 20, textAlign: 'center' },
+
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: radius.pill,
+    padding: 3,
+    alignSelf: 'flex-start',
+  },
+  segmentItem: { paddingHorizontal: 18, paddingVertical: 7, borderRadius: radius.pill },
+  segmentItemActive: { backgroundColor: colors.bg, boxShadow: '0px 1px 4px rgba(25, 31, 40, 0.12)' },
+  segmentText: { fontSize: 13, fontWeight: '700', color: colors.textMuted },
+  segmentTextActive: { color: colors.text },
+
+  personCard: {
+    backgroundColor: colors.bg,
+    borderRadius: radius.card,
+    padding: PERSON_PAD,
+    gap: 10,
+    boxShadow: CARD_SHADOW,
+  },
+  personHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  personHeadText: { flex: 1, gap: 1 },
+  personName: { fontSize: 15, fontWeight: '800', color: colors.text },
+  personSub: { fontSize: 12, color: colors.textMuted },
+  collapseText: { fontSize: 13, fontWeight: '700', color: colors.textSub, textAlign: 'center', paddingVertical: 2 },
+  tile: { borderRadius: 12, overflow: 'hidden', backgroundColor: colors.surfaceStrong },
+  tileImage: { width: '100%', height: '100%', backgroundColor: colors.surfaceStrong },
+  tileRow: { flexDirection: 'row', gap: GRID_GAP },
+  tileWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
+  tileVideoBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  tileMore: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileMoreText: { color: '#fff', fontSize: 26, fontWeight: '800' },
 
   card: {
     borderRadius: radius.card,

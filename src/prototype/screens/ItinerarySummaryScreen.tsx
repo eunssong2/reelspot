@@ -9,7 +9,6 @@ import { AppHeader } from '../components/AppHeader';
 import { CoverEditSheet } from '../components/CoverEditSheet';
 import { ItineraryCoverBanner } from '../components/ItineraryCoverBanner';
 import { MemberAvatarStack } from '../components/MemberAvatarStack';
-import { PlaceThumb } from '../components/PlaceThumb';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { TRIPS, membersFor, type Itinerary, type ItineraryDay } from '../mock/tripData';
 import type { Nav } from '../navigation/routes';
@@ -91,7 +90,6 @@ export function ItinerarySummaryScreen({ nav, tripId, itinerary }: Props) {
   };
 
   const members = membersFor(trip);
-  const singleDay = itinerary.days.length <= 1;
 
   return (
     <ScreenFrame onDemoReset={IS_DEMO_BUILD ? resetDemo : undefined}>
@@ -99,11 +97,17 @@ export function ItinerarySummaryScreen({ nav, tripId, itinerary }: Props) {
         title="AT THAT PLACE"
         titleStyle={styles.brandTitle}
         onBack={nav.back}
-        right={<MemberAvatarStack members={members} size={24} max={3} />}
       />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ItineraryCoverBanner kind={trip.cover} imageUri={covers[itinerary.id]} onEdit={() => setCoverSheet(true)} />
+        <View style={styles.bannerBleed}>
+          <ItineraryCoverBanner
+            kind={trip.cover}
+            imageUri={covers[itinerary.id]}
+            onEdit={() => setCoverSheet(true)}
+            square
+          />
+        </View>
 
         <View style={styles.intro}>
           <Text style={styles.name}>{itinerary.name}</Text>
@@ -115,15 +119,10 @@ export function ItinerarySummaryScreen({ nav, tripId, itinerary }: Props) {
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>
-          {singleDay ? '하루의 스팟' : `${itinerary.days.length}일간의 스팟`}
-        </Text>
-
         {itinerary.days.map((day) => (
           <DaySummaryCard
             key={day.id}
             day={day}
-            showDayBadge={!singleDay}
             media={mediaFor(itinerary.id, day)}
             onOpen={() => nav.push({ name: 'itineraryDay', tripId, itineraryId: itinerary.id, dayId: day.id })}
             onAddPlaces={() => nav.push({ name: 'placeSearch', tripId, itineraryId: itinerary.id, dayId: day.id })}
@@ -153,13 +152,11 @@ export function ItinerarySummaryScreen({ nav, tripId, itinerary }: Props) {
 
 function DaySummaryCard({
   day,
-  showDayBadge,
   media,
   onOpen,
   onAddPlaces,
 }: {
   day: ItineraryDay;
-  showDayBadge: boolean;
   media: MediaCounts;
   onOpen: () => void;
   onAddPlaces: () => void;
@@ -175,23 +172,10 @@ function DaySummaryCard({
       style={({ pressed }) => [styles.dayCard, pressed && styles.pressed]}
     >
       <View style={styles.dayCardRow}>
-        {showDayBadge ? (
-          <View style={styles.dayBadge}>
-            <Text style={styles.dayBadgeText}>DAY {day.dayNumber}</Text>
-          </View>
-        ) : null}
         <Text style={styles.dayDate}>{monthDayLabel(day.date)}</Text>
       </View>
 
       <View style={styles.dayCardBody}>
-        {hasPlaces ? (
-          <PlaceThumb place={day.places[0]} size={56} />
-        ) : (
-          <View style={styles.emptyThumb}>
-            <Text style={styles.emptyThumbGlyph}>🗺️</Text>
-          </View>
-        )}
-
         <View style={styles.dayCardInfo}>
           <Text style={styles.dayTitle} numberOfLines={1}>
             {title}
@@ -237,11 +221,12 @@ const styles = StyleSheet.create({
   missing: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   missingText: { fontSize: 14, color: colors.textSub },
   content: { paddingHorizontal: GUTTER, paddingBottom: 32, gap: 16 },
+  // 좌우 여백(GUTTER)을 상쇄해 배너가 화면 가로 끝까지 닿게 한다.
+  bannerBleed: { marginHorizontal: -GUTTER },
   intro: { gap: 8 },
   name: { fontSize: 24, fontWeight: '900', letterSpacing: -0.5, color: colors.text },
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   metaText: { fontSize: 13, fontWeight: '600', color: colors.textSub },
-  sectionTitle: { fontSize: 18, fontWeight: '900', color: colors.text, marginTop: 4 },
   dayCard: {
     backgroundColor: colors.bg,
     borderRadius: radius.card,
@@ -253,19 +238,8 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.85 },
   dayCardRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dayBadge: { backgroundColor: colors.primary, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 3 },
-  dayBadgeText: { fontSize: 11, fontWeight: '800', color: colors.onPrimary },
   dayDate: { fontSize: 13, fontWeight: '700', color: colors.textSub },
   dayCardBody: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  emptyThumb: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyThumbGlyph: { fontSize: 24 },
   dayCardInfo: { flex: 1, gap: 3 },
   dayTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
   dayStats: { fontSize: 12, color: colors.textSub },

@@ -3,15 +3,13 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { countMedia, recordsForVisit } from '../../demo/records';
 import { AppHeader } from '../components/AppHeader';
-import { MemberAvatarStack } from '../components/MemberAvatarStack';
 import { TimeEditModal } from '../components/TimeEditModal';
-import { PlaceThumb } from '../components/PlaceThumb';
 import { ScreenFrame } from '../components/ScreenFrame';
-import { TRIPS, membersFor, type Itinerary } from '../mock/tripData';
+import type { Itinerary } from '../mock/tripData';
 import type { Nav } from '../navigation/routes';
 import { usePrototype } from '../state/PrototypeProvider';
-import { colors, GUTTER, radius, shadow } from '../styles/tokens';
-import { dayOfWeekLabel, fullDateLabel, monthDayLabel, tripRangeLabel } from '../utils/date';
+import { colors, GUTTER, radius } from '../styles/tokens';
+import { dayOfWeekLabel, monthDayLabel, tripRangeLabel } from '../utils/date';
 
 interface Props {
   nav: Nav;
@@ -28,8 +26,6 @@ interface Props {
  * "사진 보기"는 그 장소의 사진 화면(4)으로, "+ 장소 추가"는 지도 검색(3)으로, "순서 편집"은 순서·시간 편집으로 이동한다.
  */
 export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highlightId }: Props) {
-  const trip = TRIPS.find((t) => t.id === tripId) ?? TRIPS[0];
-  const members = membersFor(trip);
   const singleDay = itinerary.days.length <= 1;
 
   const [selectedDayId, setSelectedDayId] = useState(
@@ -47,12 +43,6 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
         title={itinerary.name}
         subtitle={tripRangeLabel(itinerary.startDate, itinerary.endDate)}
         onBack={nav.back}
-        right={
-          <View style={styles.members}>
-            <MemberAvatarStack members={members} size={24} max={3} />
-            <Text style={styles.count}>{members.length}명</Text>
-          </View>
-        }
       />
 
       {!singleDay && (
@@ -67,10 +57,8 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
                 onPress={() => setSelectedDayId(d.id)}
                 style={[styles.tab, active && styles.tabActive]}
               >
-                <Text style={[styles.tabDay, active && styles.tabTextActive]}>DAY {d.dayNumber}</Text>
-                <Text style={[styles.tabDate, active && styles.tabTextActive]}>
-                  {monthDayLabel(d.date)} {dayOfWeekLabel(d.date)}
-                </Text>
+                <Text style={[styles.tabDay, active && styles.tabTextActive]}>{monthDayLabel(d.date)}</Text>
+                <Text style={[styles.tabDate, active && styles.tabTextActive]}>{dayOfWeekLabel(d.date)}요일</Text>
               </Pressable>
             );
           })}
@@ -78,83 +66,95 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
       )}
 
       {day ? (
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.dateHeading}>{fullDateLabel(day.date)}</Text>
-          {day.title ? <Text style={styles.dayTitle}>{day.title}</Text> : null}
-
-          <View style={styles.sectionRow}>
-            <Text style={styles.sectionTitle}>오늘의 장소</Text>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.dayHeader}>
+            <Text style={styles.dayHeading}>
+              {monthDayLabel(day.date)}
+              <Text style={styles.dayHeadingDate}>
+                {'  '}
+                {dayOfWeekLabel(day.date)}요일
+              </Text>
+            </Text>
             {day.places.length > 0 && (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="방문 순서 편집"
                 onPress={() => nav.push({ name: 'placeOrderEdit', tripId, itineraryId: itinerary.id, dayId: day.id })}
-                hitSlop={8}
+                hitSlop={10}
               >
-                <Text style={styles.editLink}>☰ 순서 편집</Text>
+                <Text style={styles.editLink}>편집</Text>
               </Pressable>
             )}
           </View>
+          {day.title ? <Text style={styles.dayTitle}>{day.title}</Text> : null}
 
           {day.places.length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyText}>가고 싶은 곳을 담아 하루를 채워보세요.</Text>
             </View>
-          ) : (
-            <Text style={styles.introText}>가고 싶은 곳을 담아 하루를 채워보세요.</Text>
-          )}
+          ) : null}
 
-          {day.places.map((place, index) => {
-            const isNew = place.id === highlightId;
-            const media = countMedia(recordsForVisit(itinerary.id, day.id, place));
-            return (
-              <Pressable
-                key={place.id}
-                accessibilityRole="button"
-                accessibilityLabel={`${place.name} 사진 보기`}
-                onPress={() =>
-                  nav.push({ name: 'placeRecords', tripId, itineraryId: itinerary.id, dayId: day.id, placeId: place.id })
-                }
-                style={({ pressed }) => [styles.placeCard, isNew && styles.placeCardNew, pressed && styles.pressed]}
-              >
-                <View style={styles.orderBadge}>
-                  <Text style={styles.orderBadgeText}>{index + 1}</Text>
-                </View>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${place.name} 방문 시간 수정`}
-                  onPress={() => setTimeTargetId(place.id)}
-                  hitSlop={6}
-                  style={styles.placeTimeCol}
-                >
-                  <Text style={place.visitTime ? styles.placeTime : styles.placeTimeMuted}>
-                    {place.visitTime ?? '시간 미정'}
-                  </Text>
-                  <Text style={styles.placeTimeEdit}>✎ 수정</Text>
-                </Pressable>
-
-                <PlaceThumb place={place} size={48} />
-
-                <View style={styles.placeInfo}>
-                  <View style={styles.placeNameRow}>
-                    <Text style={styles.placeCategory}>{place.categoryLabel}</Text>
-                    <Text style={styles.placeName} numberOfLines={1}>
-                      {place.name}
-                    </Text>
+          <View style={styles.timeline}>
+            {day.places.map((place, index) => {
+              const isNew = place.id === highlightId;
+              const isFirst = index === 0;
+              const isLast = index === day.places.length - 1;
+              const media = countMedia(recordsForVisit(itinerary.id, day.id, place));
+              return (
+                <View key={place.id} style={styles.row}>
+                  {/* 왼쪽: 번호 동그라미와 세로 선, 방문 시간 */}
+                  <View style={styles.rail}>
+                    {!(isFirst && isLast) && (
+                      <View
+                        style={[
+                          styles.railLine,
+                          isFirst ? { top: BADGE / 2, bottom: 0 } : isLast ? { top: 0, height: BADGE / 2 } : { top: 0, bottom: 0 },
+                        ]}
+                      />
+                    )}
+                    <View style={styles.orderBadge}>
+                      <Text style={styles.orderBadgeText}>{index + 1}</Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`${place.name} 방문 시간 수정`}
+                      onPress={() => setTimeTargetId(place.id)}
+                      hitSlop={6}
+                      style={styles.timeButton}
+                    >
+                      <Text style={place.visitTime ? styles.placeTime : styles.placeTimeMuted}>
+                        {place.visitTime ?? '시간 미정'}
+                      </Text>
+                      <Text style={styles.placeTimeEdit}>수정</Text>
+                    </Pressable>
                   </View>
-                  <Text style={styles.placeSub} numberOfLines={1}>
-                    {place.address}
-                  </Text>
-                  <Text style={media.total > 0 ? styles.photoLink : styles.photoLinkEmpty}>
-                    {media.total > 0 ? `사진 ${media.photos}·동영상 ${media.videos} 보기 ›` : '아직 기록 없음 ›'}
-                  </Text>
-                </View>
 
-                {isNew ? <Text style={styles.newBadge}>추가됨</Text> : null}
-              </Pressable>
-            );
-          })}
+                  {/* 오른쪽: 장소 카드 */}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${place.name} 사진 보기`}
+                    onPress={() =>
+                      nav.push({ name: 'placeRecords', tripId, itineraryId: itinerary.id, dayId: day.id, placeId: place.id })
+                    }
+                    style={({ pressed }) => [styles.placeCard, isNew && styles.placeCardNew, pressed && styles.pressed]}
+                  >
+                    <View style={styles.cardTop}>
+                      <Text style={styles.placeName} numberOfLines={2}>
+                        {place.name}
+                      </Text>
+                      {isNew ? <Text style={styles.newBadge}>추가됨</Text> : null}
+                    </View>
+                    <View style={styles.cardBottom}>
+                      <Text style={media.total > 0 ? styles.photoLink : styles.photoLinkEmpty}>
+                        {media.total > 0 ? `사진 ${media.photos} · 동영상 ${media.videos}` : '아직 기록 없음'}
+                      </Text>
+                      <Text style={media.total > 0 ? styles.chevron : styles.chevronMuted}>›</Text>
+                    </View>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
 
           <Pressable
             accessibilityRole="button"
@@ -162,7 +162,7 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
             onPress={() => nav.push({ name: 'placeSearch', tripId, itineraryId: itinerary.id, dayId: day.id })}
             style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}
           >
-            <Text style={styles.addText}>＋ 장소 추가</Text>
+            <Text style={styles.addText}>장소 추가</Text>
           </Pressable>
         </ScrollView>
       ) : (
@@ -189,9 +189,11 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
   );
 }
 
+/** 타임라인 왼쪽 칸 너비와 번호 동그라미 크기 */
+const RAIL = 60;
+const BADGE = 30;
+
 const styles = StyleSheet.create({
-  members: { alignItems: 'flex-end', gap: 2 },
-  count: { fontSize: 12, fontWeight: '600', color: colors.textSub },
   tabs: { flexDirection: 'row', paddingHorizontal: GUTTER, gap: 8, paddingBottom: 10 },
   tab: {
     flex: 1,
@@ -205,75 +207,79 @@ const styles = StyleSheet.create({
   tabDay: { fontSize: 12, fontWeight: '800', color: colors.textSub },
   tabDate: { fontSize: 11, fontWeight: '600', color: colors.textMuted },
   tabTextActive: { color: colors.onPrimary },
-  content: { paddingHorizontal: GUTTER, paddingBottom: 32, gap: 10 },
-  dayTitle: { fontSize: 14, fontWeight: '700', color: colors.textSub, marginTop: -4 },
-  dateHeading: { fontSize: 16, fontWeight: '900', color: colors.text, marginTop: 6 },
-  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
-  editLink: { fontSize: 13, fontWeight: '700', color: colors.primary },
-  introText: { fontSize: 12, color: colors.textMuted, marginTop: -4, marginBottom: 2 },
-  placeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.bg,
-    borderRadius: radius.item,
-    padding: 10,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    boxShadow: shadow.soft,
-  },
-  placeCardNew: { borderColor: colors.primary },
+  scroll: { backgroundColor: colors.pageBg },
+  content: { paddingHorizontal: GUTTER, paddingTop: 18, paddingBottom: 40, gap: 6 },
+  dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  dayHeading: { fontSize: 24, fontWeight: '900', color: colors.text },
+  dayHeadingDate: { fontSize: 15, fontWeight: '600', color: colors.textMuted },
+  editLink: { fontSize: 15, fontWeight: '600', color: colors.textSub },
+  dayTitle: { fontSize: 14, fontWeight: '700', color: colors.textSub },
+  timeline: { marginTop: 14 },
+  row: { flexDirection: 'row', paddingBottom: 14 },
+  rail: { width: RAIL, alignItems: 'center' },
+  railLine: { position: 'absolute', left: RAIL / 2 - 1, width: 2, backgroundColor: colors.primaryBorder },
   orderBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: BADGE,
+    height: BADGE,
+    borderRadius: BADGE / 2,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: colors.pageBg,
   },
-  orderBadgeText: { fontSize: 11, fontWeight: '800', color: colors.onPrimary },
-  placeTimeCol: { width: 52 },
-  placeTime: { fontSize: 12, fontWeight: '800', color: colors.text },
-  placeTimeEdit: { fontSize: 10, fontWeight: '700', color: colors.primary, marginTop: 2 },
-  placeTimeMuted: { fontSize: 11, fontWeight: '600', color: colors.textMuted },
-  placeInfo: { flex: 1, gap: 2 },
-  placeNameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  placeCategory: {
-    fontSize: 10,
+  orderBadgeText: { fontSize: 14, fontWeight: '800', color: colors.onPrimary },
+  timeButton: { alignItems: 'center', marginTop: 2, gap: 1, paddingVertical: 4, paddingHorizontal: 6, backgroundColor: colors.pageBg },
+  placeTime: { fontSize: 13, fontWeight: '700', color: colors.textSub },
+  placeTimeMuted: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+  placeTimeEdit: { fontSize: 10, fontWeight: '700', color: colors.primary },
+  placeCard: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    borderRadius: radius.item,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    gap: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    boxShadow: '0px 2px 12px rgba(25, 31, 40, 0.08)',
+  },
+  placeCardNew: { borderColor: colors.primary },
+  cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  placeName: { fontSize: 18, fontWeight: '800', color: colors.text, flexShrink: 1 },
+  cardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  photoLink: { fontSize: 13, fontWeight: '700', color: colors.primary },
+  photoLinkEmpty: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+  chevron: { fontSize: 20, fontWeight: '700', color: colors.primary },
+  chevronMuted: { fontSize: 20, fontWeight: '700', color: colors.textMuted },
+  newBadge: {
+    fontSize: 11,
     fontWeight: '800',
     color: colors.primary,
     backgroundColor: colors.primarySoft,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-  },
-  placeName: { fontSize: 15, fontWeight: '700', color: colors.text, flexShrink: 1 },
-  placeSub: { fontSize: 12, color: colors.textSub },
-  photoLink: { fontSize: 12, fontWeight: '700', color: colors.primary, marginTop: 2 },
-  photoLinkEmpty: { fontSize: 12, fontWeight: '600', color: colors.textMuted, marginTop: 2 },
-  newBadge: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.primary,
-    backgroundColor: colors.bg,
-    borderWidth: 1,
-    borderColor: colors.primaryBorder,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.pill,
     overflow: 'hidden',
   },
-  emptyCard: { backgroundColor: colors.pageBg, borderRadius: radius.card, padding: 24, alignItems: 'center' },
-  emptyText: { fontSize: 13, color: colors.textSub, textAlign: 'center' },
-  addButton: {
-    backgroundColor: colors.primarySoft,
+  emptyCard: {
+    backgroundColor: colors.bg,
     borderRadius: radius.item,
-    paddingVertical: 13,
+    padding: 28,
+    alignItems: 'center',
+    marginTop: 14,
+    boxShadow: '0px 2px 12px rgba(25, 31, 40, 0.08)',
+  },
+  emptyText: { fontSize: 14, color: colors.textSub, textAlign: 'center' },
+  addButton: {
+    backgroundColor: colors.bg,
+    borderRadius: radius.item,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    paddingVertical: 16,
     alignItems: 'center',
     marginTop: 4,
   },
   pressed: { opacity: 0.8 },
-  addText: { fontSize: 15, fontWeight: '700', color: colors.primary },
+  addText: { fontSize: 16, fontWeight: '800', color: colors.text },
 });
