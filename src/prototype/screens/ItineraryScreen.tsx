@@ -44,11 +44,11 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
   const tabWidth = Math.floor((frameWidth - GUTTER * 2 - TAB_GAP * (visibleTabs - 1)) / visibleTabs);
   const tabScroll = useRef<ScrollView>(null);
   const selectedIndex = Math.max(0, itinerary.days.findIndex((d) => d.id === day?.id));
-  // 선택한 날짜가 화면 가운데쯤 오도록 옮긴다(맨 앞·뒤는 알아서 멈춘다).
+  // 선택한 날짜가 항상 온전히 보이도록 탭 한 칸 단위로 옮긴다(앞 탭이 하나 보이게, 맨 앞·뒤는 거기서 멈춘다).
   useEffect(() => {
-    const x = selectedIndex * (tabWidth + TAB_GAP) - (frameWidth - tabWidth) / 2;
-    tabScroll.current?.scrollTo({ x: Math.max(0, x), animated: true });
-  }, [selectedIndex, tabWidth, frameWidth]);
+    const firstVisible = Math.min(Math.max(selectedIndex - 1, 0), Math.max(itinerary.days.length - visibleTabs, 0));
+    tabScroll.current?.scrollTo({ x: firstVisible * (tabWidth + TAB_GAP), animated: true });
+  }, [selectedIndex, tabWidth, visibleTabs, itinerary.days.length]);
 
   return (
     <ScreenFrame>
@@ -63,6 +63,8 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
           ref={tabScroll}
           horizontal
           showsHorizontalScrollIndicator={false}
+          snapToInterval={tabWidth + TAB_GAP}
+          decelerationRate="fast"
           style={styles.tabsScroll}
           contentContainerStyle={styles.tabs}
           accessibilityRole="tablist"
@@ -95,16 +97,15 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
                 {dayOfWeekLabel(day.date)}요일
               </Text>
             </Text>
-            {day.places.length > 0 && (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="방문 순서 편집"
-                onPress={() => nav.push({ name: 'placeOrderEdit', tripId, itineraryId: itinerary.id, dayId: day.id })}
-                hitSlop={10}
-              >
-                <Text style={styles.editLink}>편집</Text>
-              </Pressable>
-            )}
+            {/* 장소가 없어도 날짜 제목은 고칠 수 있도록 항상 보인다. */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="방문 순서 편집"
+              onPress={() => nav.push({ name: 'placeOrderEdit', tripId, itineraryId: itinerary.id, dayId: day.id })}
+              hitSlop={10}
+            >
+              <Text style={styles.editLink}>편집</Text>
+            </Pressable>
           </View>
           {day.title ? <Text style={styles.dayTitle}>{day.title}</Text> : null}
 
@@ -218,8 +219,8 @@ const MAX_VISIBLE_TABS = 4;
 const TAB_GAP = 8;
 
 const styles = StyleSheet.create({
-  tabsScroll: { flexGrow: 0 },
-  tabs: { paddingHorizontal: GUTTER, gap: TAB_GAP, paddingBottom: 10 },
+  tabsScroll: { flexGrow: 0, marginHorizontal: GUTTER, marginBottom: 10 },
+  tabs: { gap: TAB_GAP },
   tab: {
     alignItems: 'center',
     gap: 2,

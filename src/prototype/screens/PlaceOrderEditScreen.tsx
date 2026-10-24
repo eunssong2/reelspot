@@ -95,7 +95,11 @@ export function PlaceOrderEditScreen({ nav, itinerary, day, onSave }: Props) {
         </View>
 
         <View style={styles.banner}>
-          <Text style={styles.bannerText}>위·아래 버튼으로 방문 순서를 바꾸세요.</Text>
+          <Text style={styles.bannerText}>
+            {places.length > 0
+              ? '위·아래 버튼으로 방문 순서를 바꾸세요.'
+              : '아직 담은 장소가 없어요. 장소를 담으면 여기서 순서와 시간을 바꿀 수 있어요.'}
+          </Text>
         </View>
 
         {places.map((place, index) => (
