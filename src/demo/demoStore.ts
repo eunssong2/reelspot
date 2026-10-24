@@ -39,6 +39,40 @@ export function addPlaceToDay(
   return { itineraries: added ? next : itineraries, added };
 }
 
+/** 한 일정에 둘 수 있는 최대 날짜 수(끝없이 늘어나는 것을 막는다). */
+export const MAX_DAYS = 30;
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** 'YYYY-MM-DD' 의 다음 날을 같은 형식으로 돌려준다(시간대 영향 없이 UTC 로 계산). */
+export function nextDate(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+}
+
+export interface AddDayResult {
+  itineraries: Itinerary[];
+  /** 새로 만든 날짜의 id. 일정이 없거나 최대 날짜 수에 이르러 추가하지 못했으면 null. */
+  dayId: string | null;
+}
+
+/**
+ * 일정의 마지막 날짜 다음 날을 빈 날짜로 추가한다(여행 기간도 하루 늘어난다).
+ * 새 날짜의 id 는 `day-{번호}`, 장소·제목·메모는 비어 있다.
+ */
+export function addDayToItinerary(itineraries: Itinerary[], itineraryId: string): AddDayResult {
+  let dayId: string | null = null;
+  const next = itineraries.map((itinerary) => {
+    if (itinerary.id !== itineraryId || itinerary.days.length >= MAX_DAYS) return itinerary;
+    const last = itinerary.days[itinerary.days.length - 1];
+    const date = nextDate(last ? last.date : itinerary.endDate);
+    const dayNumber = (last?.dayNumber ?? 0) + 1;
+    dayId = `day-${dayNumber}`;
+    return { ...itinerary, endDate: date, days: [...itinerary.days, { id: dayId, date, dayNumber, places: [] }] };
+  });
+  return { itineraries: dayId ? next : itineraries, dayId };
+}
+
 /** 순서 편집 저장: 이미 정렬된 장소 배열(방문 시간 포함)과 메모를 그 날짜에 반영한다. */
 export function updateDayPlaces(
   itineraries: Itinerary[],
@@ -98,7 +132,7 @@ function validPlace(raw: unknown): raw is ItineraryPlace {
 /**
  * 저장된 문자열을 읽어 일정 배열로 돌려준다. 형식이 틀리거나 기본 일정과 구조(일정·날짜 id)가 다르면
  * null — 호출한 쪽이 처음 상태로 시작한다. 깨진 저장본이 앱을 멈추게 하지 않는다.
- * 일정 이름·기간·날짜는 기본값을 쓰고, 저장본에서는 날짜별 장소와 메모만 가져온다.
+ * 일정 이름·시작일·기본 날짜는 기본값을 쓰고, 저장본에서는 날짜별 장소·메모·제목과 뒤에 추가한 날짜만 가져온다.
  */
 export function parseStoredItineraries(raw: string | null, defaults: Itinerary[]): Itinerary[] | null {
   if (!raw) return null;
@@ -118,9 +152,10 @@ export function parseStoredItineraries(raw: string | null, defaults: Itinerary[]
         result.push(base);
         continue;
       }
-      if (!Array.isArray(saved.days) || saved.days.length !== base.days.length) return null;
+      // 기본 날짜보다 적으면 깨진 저장본. 더 많은 것은 사용자가 뒤에 추가한 날짜다(아래에서 검증).
+      if (!Array.isArray(saved.days) || saved.days.length < base.days.length) return null;
 
-      const days = [];
+      const days: Itinerary['days'] = [];
       for (const baseDay of base.days) {
         const savedDay = saved.days.find((d: unknown) => (d as { id?: unknown })?.id === baseDay.id) as
           | { places?: unknown; memo?: unknown; title?: unknown }
@@ -137,7 +172,28 @@ export function parseStoredItineraries(raw: string | null, defaults: Itinerary[]
           title: isStr(savedDay.title) ? savedDay.title.trim() || undefined : baseDay.title,
         });
       }
-      result.push({ ...base, days });
+      // 사용자가 뒤에 추가한 날짜: 마지막 날짜 바로 다음 날이고 번호가 이어질 때만 받아들인다.
+      const baseIds = new Set(base.days.map((d) => d.id));
+      const extras = saved.days.filter((d: unknown) => !baseIds.has((d as { id?: unknown })?.id as string));
+      for (const raw of extras) {
+        const e = raw as { id?: unknown; date?: unknown; dayNumber?: unknown; places?: unknown; memo?: unknown; title?: unknown };
+        const prev = days[days.length - 1];
+        if (!isStr(e.id) || !e.id || !isStr(e.date) || !DATE_RE.test(e.date)) return null;
+        if (!Array.isArray(e.places) || !e.places.every(validPlace)) return null;
+        if (!prev || e.date !== nextDate(prev.date) || e.dayNumber !== prev.dayNumber + 1) return null;
+        const places = e.places as ItineraryPlace[];
+        if (new Set(places.map((p) => p.id)).size !== places.length) return null;
+        if (days.length >= MAX_DAYS) return null;
+        days.push({
+          id: e.id,
+          date: e.date,
+          dayNumber: prev.dayNumber + 1,
+          places: places.map((p) => ({ ...p, visitId: p.visitId ?? visitKey(base.id, e.id as string, p.id) })),
+          memo: isStr(e.memo) && e.memo ? e.memo : undefined,
+          title: isStr(e.title) ? e.title.trim() || undefined : undefined,
+        });
+      }
+      result.push({ ...base, endDate: days[days.length - 1]?.date ?? base.endDate, days });
     }
     return result;
   } catch {

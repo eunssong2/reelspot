@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { IS_DEMO_BUILD } from '../../demo/config';
 import { NoticeModal } from '../../demo/NoticeModal';
+import { MAX_DAYS } from '../../demo/demoStore';
 import { countMedia, recordsForVisit, type MediaCounts } from '../../demo/records';
 import { AppHeader } from '../components/AppHeader';
 import { CoverEditSheet } from '../components/CoverEditSheet';
@@ -43,7 +44,7 @@ const mediaLabel = (m: MediaCounts): string =>
  */
 export function ItinerarySummaryScreen({ nav, tripId, itinerary }: Props) {
   const trip = TRIPS.find((t) => t.id === tripId);
-  const { resetDemo, covers, setCover } = usePrototype();
+  const { resetDemo, covers, setCover, addDay } = usePrototype();
   const [coverSheet, setCoverSheet] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
 
@@ -125,9 +126,19 @@ export function ItinerarySummaryScreen({ nav, tripId, itinerary }: Props) {
             day={day}
             media={mediaFor(itinerary.id, day)}
             onOpen={() => nav.push({ name: 'itineraryDay', tripId, itineraryId: itinerary.id, dayId: day.id })}
-            onAddPlaces={() => nav.push({ name: 'placeSearch', tripId, itineraryId: itinerary.id, dayId: day.id })}
           />
         ))}
+
+        {itinerary.days.length < MAX_DAYS ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="일정 추가"
+            onPress={() => addDay(itinerary.id)}
+            style={({ pressed }) => [styles.addDayButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.addDayText}>일정 추가</Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
 
       <CoverEditSheet
@@ -154,12 +165,10 @@ function DaySummaryCard({
   day,
   media,
   onOpen,
-  onAddPlaces,
 }: {
   day: ItineraryDay;
   media: MediaCounts;
   onOpen: () => void;
-  onAddPlaces: () => void;
 }) {
   const hasPlaces = day.places.length > 0;
   const title = day.title ?? `${monthDayLabel(day.date)}의 장소`;
@@ -192,19 +201,6 @@ function DaySummaryCard({
         <Text style={styles.chevron}>›</Text>
       </View>
 
-      {!hasPlaces ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${title}에 장소 담기`}
-          onPress={(e) => {
-            e.stopPropagation();
-            onAddPlaces();
-          }}
-          style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}
-        >
-          <Text style={styles.addButtonText}>＋ 장소 담기</Text>
-        </Pressable>
-      ) : null}
     </Pressable>
   );
 }
@@ -245,11 +241,13 @@ const styles = StyleSheet.create({
   dayStats: { fontSize: 12, color: colors.textSub },
   dayEmptyText: { fontSize: 12, color: colors.textMuted },
   chevron: { fontSize: 24, color: colors.textMuted },
-  addButton: {
-    backgroundColor: colors.primarySoft,
+  addDayButton: {
+    backgroundColor: colors.bg,
     borderRadius: radius.item,
-    paddingVertical: 11,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  addButtonText: { fontSize: 14, fontWeight: '700', color: colors.primary },
+  addDayText: { fontSize: 16, fontWeight: '800', color: colors.text },
 });

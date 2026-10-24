@@ -140,6 +140,44 @@ try {
     assert.equal(day(store.parseStoredItineraries(store.serializeItineraries(cleared), fresh()), 'day-1').title, undefined);
   });
 
+  test('일정 추가(새 날짜): 마지막 날 다음 날이 붙고, 저장 후에도 유지되며, 다른 일정·장소는 그대로', () => {
+    const base = fresh();
+    const r = store.addDayToItinerary(base, IT);
+    assert.equal(r.dayId, 'day-4');
+    const it = r.itineraries[0];
+    assert.equal(it.days.length, 4);
+    assert.equal(it.endDate, '2026-10-20');
+    assert.equal(it.days[3].date, '2026-10-20');
+    assert.equal(it.days[3].dayNumber, 4);
+    assert.deepEqual(it.days[3].places, []);
+    assert.equal(r.itineraries[1].days.length, 1); // 하루 일정은 그대로
+    assert.equal(base[0].days.length, 3); // 원본 불변
+    // 월 경계(10/31 → 11/01)
+    assert.equal(store.nextDate('2026-10-31'), '2026-11-01');
+    assert.equal(store.nextDate('2026-12-31'), '2027-01-01');
+    // 새 날짜에 장소를 담고 저장 → 읽기
+    const withPlace = store.addPlaceToDay(r.itineraries, IT, 'day-4', { id: 'n1', name: 'n1', address: 'a', categoryLabel: 'c', emoji: 'e', tint: 't' }).itineraries;
+    const loaded = store.parseStoredItineraries(store.serializeItineraries(withPlace), fresh());
+    assert.ok(loaded);
+    assert.equal(loaded[0].days.length, 4);
+    assert.equal(loaded[0].endDate, '2026-10-20');
+    assert.deepEqual(loaded[0].days[3].places.map((p) => p.id), ['n1']);
+    assert.equal(loaded[0].days[3].places[0].visitId, 'itin-seoul-1/day-4/n1');
+    // 두 번 더 추가해도 이어서 붙고, 존재하지 않는 일정은 추가하지 않는다
+    const twice = store.addDayToItinerary(store.addDayToItinerary(r.itineraries, IT).itineraries, IT);
+    assert.equal(twice.itineraries[0].days.length, 6);
+    assert.equal(twice.itineraries[0].endDate, '2026-10-22');
+    assert.equal(store.addDayToItinerary(base, 'nope').dayId, null);
+    // 날짜 수 상한
+    let many = base;
+    for (let i = 0; i < 60; i += 1) many = store.addDayToItinerary(many, IT).itineraries;
+    assert.equal(many[0].days.length, store.MAX_DAYS);
+    // 날짜가 이어지지 않는 저장본은 버린다
+    const broken = JSON.parse(store.serializeItineraries(r.itineraries));
+    broken.itineraries[0].days[3].date = '2026-11-05';
+    assert.equal(store.parseStoredItineraries(JSON.stringify(broken), fresh()), null);
+  });
+
   test('저장 → 읽기 왕복(앱 재시작 시 유지)', () => {
     const base = fresh();
     const next = store.addPlaceToDay(base, IT, 'day-3', { id: 'p1', name: 'p1', address: 'a', categoryLabel: 'c', emoji: 'e', tint: 't' }).itineraries;

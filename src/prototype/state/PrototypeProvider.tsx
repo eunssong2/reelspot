@@ -5,7 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { DEMO_COVER_STORAGE_KEY, DEMO_STORAGE_KEY, IS_DEMO_BUILD } from '../../demo/config';
 import { createDemoItineraries } from '../../demo/demoData';
-import { addPlaceToDay, parseStoredItineraries, serializeItineraries, updateDayPlaces } from '../../demo/demoStore';
+import { addDayToItinerary, addPlaceToDay, parseStoredItineraries, serializeItineraries, updateDayPlaces } from '../../demo/demoStore';
 import { ITINERARIES, type Itinerary, type ItineraryPlace } from '../mock/tripData';
 import type { Nav, Route } from '../navigation/routes';
 
@@ -17,6 +17,8 @@ interface PrototypeState {
   addPlace: (itineraryId: string, dayId: string, place: ItineraryPlace) => boolean;
   /** 순서 편집 저장: 장소 순서(이미 정렬된 배열) · 방문 시간 · 날짜 메모를 한 번에 반영한다. */
   updateDay: (itineraryId: string, dayId: string, patch: { places: ItineraryPlace[]; memo: string; title?: string }) => void;
+  /** 일정 끝에 빈 날짜(마지막 날 다음 날)를 하나 더한다. 새 날짜 id 를 돌려주고, 더할 수 없으면 null. */
+  addDay: (itineraryId: string) => string | null;
   /** 일정 대표(배경) 사진. 일정 id → 이미지 URI(data URI). 없으면 기본 그림을 쓴다. */
   covers: Record<string, string>;
   /** 대표 사진을 바꾼다. null 이면 기본 그림으로 되돌린다. */
@@ -99,6 +101,14 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const addDay = useCallback((itineraryId: string) => {
+    const result = addDayToItinerary(itinerariesRef.current, itineraryId);
+    if (!result.dayId) return null;
+    itinerariesRef.current = result.itineraries;
+    setItineraries(result.itineraries);
+    return result.dayId;
+  }, []);
+
   const setCover = useCallback((itineraryId: string, uri: string | null) => {
     setCovers((prev) => {
       const next = { ...prev };
@@ -124,8 +134,8 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ itineraries, highlightId, addPlace, updateDay, resetDemo, covers, setCover }),
-    [itineraries, highlightId, addPlace, updateDay, resetDemo, covers, setCover],
+    () => ({ itineraries, highlightId, addPlace, updateDay, addDay, resetDemo, covers, setCover }),
+    [itineraries, highlightId, addPlace, updateDay, addDay, resetDemo, covers, setCover],
   );
 
   if (!hydrated) {

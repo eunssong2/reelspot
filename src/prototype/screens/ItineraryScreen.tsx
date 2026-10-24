@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { countMedia, recordsForVisit } from '../../demo/records';
 import { AppHeader } from '../components/AppHeader';
@@ -37,6 +37,19 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
   const [timeTargetId, setTimeTargetId] = useState<string | null>(null);
   const timeTarget = day?.places.find((p) => p.id === timeTargetId);
 
+  // 날짜 탭은 한 화면에 최대 4개만 보이고, 더 많으면 옆으로 넘겨 본다(3일 이하면 폭을 나눠 가득 채운다).
+  const { width: windowWidth } = useWindowDimensions();
+  const visibleTabs = Math.max(1, Math.min(itinerary.days.length, MAX_VISIBLE_TABS));
+  const frameWidth = Math.min(windowWidth, 430);
+  const tabWidth = Math.floor((frameWidth - GUTTER * 2 - TAB_GAP * (visibleTabs - 1)) / visibleTabs);
+  const tabScroll = useRef<ScrollView>(null);
+  const selectedIndex = Math.max(0, itinerary.days.findIndex((d) => d.id === day?.id));
+  // 선택한 날짜가 화면 가운데쯤 오도록 옮긴다(맨 앞·뒤는 알아서 멈춘다).
+  useEffect(() => {
+    const x = selectedIndex * (tabWidth + TAB_GAP) - (frameWidth - tabWidth) / 2;
+    tabScroll.current?.scrollTo({ x: Math.max(0, x), animated: true });
+  }, [selectedIndex, tabWidth, frameWidth]);
+
   return (
     <ScreenFrame>
       <AppHeader
@@ -46,7 +59,14 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
       />
 
       {!singleDay && (
-        <View style={styles.tabs}>
+        <ScrollView
+          ref={tabScroll}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabsScroll}
+          contentContainerStyle={styles.tabs}
+          accessibilityRole="tablist"
+        >
           {itinerary.days.map((d) => {
             const active = d.id === day?.id;
             return (
@@ -55,14 +75,14 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
                 onPress={() => setSelectedDayId(d.id)}
-                style={[styles.tab, active && styles.tabActive]}
+                style={[styles.tab, { width: tabWidth }, active && styles.tabActive]}
               >
                 <Text style={[styles.tabDay, active && styles.tabTextActive]}>{monthDayLabel(d.date)}</Text>
                 <Text style={[styles.tabDate, active && styles.tabTextActive]}>{dayOfWeekLabel(d.date)}요일</Text>
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
       )}
 
       {day ? (
@@ -193,10 +213,14 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
 const RAIL = 60;
 const BADGE = 30;
 
+/** 날짜 탭: 한 화면에 보이는 최대 개수와 탭 사이 간격(px) */
+const MAX_VISIBLE_TABS = 4;
+const TAB_GAP = 8;
+
 const styles = StyleSheet.create({
-  tabs: { flexDirection: 'row', paddingHorizontal: GUTTER, gap: 8, paddingBottom: 10 },
+  tabsScroll: { flexGrow: 0 },
+  tabs: { paddingHorizontal: GUTTER, gap: TAB_GAP, paddingBottom: 10 },
   tab: {
-    flex: 1,
     alignItems: 'center',
     gap: 2,
     paddingVertical: 8,
