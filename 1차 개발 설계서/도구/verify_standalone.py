@@ -7,8 +7,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix='atp-design-standalone-') as temp:
         isolated=Path(temp)/'package'
         shutil.copytree(ROOT,isolated,ignore=shutil.ignore_patterns('__pycache__','.venv'))
-        assert not (isolated.parent/'기능명세서.md').exists()
-        assert not (isolated.parent/'기능 명세서 자료').exists()
+        assert not (isolated.parent/'기능 명세서').exists()
+        assert not (isolated.parent/'1차 개발 코드').exists()
         digest=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
         before=digest(isolated/'근거/APK/실행검토.json')
         for tool in ['build_design.py','build_evidence.py']:

@@ -5,7 +5,7 @@
     {
       "check": "build_design.py 독립 실행",
       "passed": true,
-      "output": "{\"screens\": 33, \"operations\": 73, \"tables\": 27, \"functional_cases\": 112, \"native_ui_pptx\": \"/tmp/atp-design-standalone-26t1kh6s/package/UI/05 UI 설계.pptx\"}\n",
+      "output": "{\"screens\": 33, \"operations\": 73, \"tables\": 27, \"functional_cases\": 116, \"native_ui_pptx\": \"/tmp/atp-design-standalone-uj_pi7he/package/UI/05 UI 설계.pptx\"}\n",
       "error": ""
     },
     {

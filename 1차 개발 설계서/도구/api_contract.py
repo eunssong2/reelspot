@@ -161,6 +161,9 @@ def build_openapi():
             p.append(dict(name='Idempotency-Key',**{'in':'header'},required=True,schema=S(minLength=16,maxLength=128)))
         if a['id'] in ['mediaStream','exportFile']:p.append(dict(name='Range',**{'in':'header'},required=False,schema=S()))
         op=dict(operationId=a['id'],summary=a['request']+' → '+a['response'],tags=a['features'],description='권한: '+a['auth']+'. 도메인 오류: '+a['errors']+'. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.',security=[] if a['auth'] in ['public','refresh-session'] else [{'bearerAuth':[]}],parameters=p,responses={})
+        if a['id'] in ['invitesList','inviteCreate','inviteRevoke']:
+            op['x-required-role']='member'
+            op['description']+=' F05 v2.1: 방장을 포함한 모든 현재 참여자가 같은 모임의 초대를 관리한다. 다른 참여자가 발급한 초대도 조회·공유·취소할 수 있다. 발급자 ID는 이력용이다. 탈퇴·퇴장·서비스 이용 제한·모임 종료 시 거부하며 멱등 재시도에서도 현재 권한을 재검증한다.'
         if a['id'] in ['uploadHead','uploadChunk']:
             op['parameters'].append(dict(name='Upload-Generation',**{'in':'header'},required=True,schema=I(minimum=1)))
             if a['id']=='uploadChunk':
@@ -192,4 +195,4 @@ def build_openapi():
             assert a['id'] in REQUESTS,a['id']
             op['requestBody']={'required':True,'content':{'application/json':{'schema':REQUESTS[a['id']]}}}
         paths.setdefault(a['path'],{})[a['method'].lower()]=op
-    return dict(openapi='3.1.0',info={'title':'At that place 1차 개발 API 설계안','version':'0.3.0-design','description':'패키지 기준/기능명세서.md(v2, 2026-10-22)와09 구현계약 보완 기준. 반복 일정·외부 공유 없음, 초대 50회·방문 15개·사진5/영상2 한도 포함. 실제 배포 서버가 아니다. NFC grapheme 검증과 권한/상태/한도 검사는 서버 책임.'},servers=[{'url':'https://api.example.invalid/v1','description':'문서용 가상 주소·실서비스 없음'}],paths=paths,components={'securitySchemes':{'bearerAuth':{'type':'http','scheme':'bearer','bearerFormat':'JWT'}},'schemas':SCHEMAS})
+    return dict(openapi='3.1.0',info={'title':'At that place 1차 개발 API 설계안','version':'0.3.1-design','description':'패키지 기준/기능명세서.md(v2.1, 2026-10-24)와09 구현계약 보완 기준. 반복 일정·외부 공유 없음, 초대 50회·방문 15개·사진5/영상2 한도 포함. 실제 배포 서버가 아니다. NFC grapheme 검증과 권한/상태/한도 검사는 서버 책임.'},servers=[{'url':'https://api.example.invalid/v1','description':'문서용 가상 주소·실서비스 없음'}],paths=paths,components={'securitySchemes':{'bearerAuth':{'type':'http','scheme':'bearer','bearerFormat':'JWT'}},'schemas':SCHEMAS})

@@ -136,5 +136,8 @@
       "acceptance": "커스텀 CameraX 모듈 존재·빌드/권한 확인",
       "status": "후보, 채택/빌드검증 전"
     }
-  ]
+  ],
+  "source_available": false,
+  "source_required": false,
+  "source_note": "원본 참고 앱은 2026-10-24 docs 브랜치 정리로 제거했다. 경로·hash·선언 버전은 과거 관찰 이력이며 현재 파일의 존재나 재사용 완료를 뜻하지 않는다."
 }

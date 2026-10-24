@@ -28,8 +28,6 @@ test-results/
 *.aab
 *.zip
 
-# Earlier reference application and private source conversation
+# This branch contains documentation; keep the implementation only in the local workspace.
+/1차 개발 코드/
 /mobile/
-/기능 명세서 자료/mobile/
-/기능 명세서 자료/.github/
-/기능 명세서 자료/삼선 3 카카오톡 대화

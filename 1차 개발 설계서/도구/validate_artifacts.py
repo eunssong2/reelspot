@@ -26,6 +26,10 @@ def main():
     ops=[v['operationId'] for path in spec['paths'].values() for v in path.values()]
     check('OpenAPI3.1 스키마와 operation 고유성',len(ops)==len(set(ops))==len(APIS),len(ops))
     required={f'F{i:02}' for i in range(1,29)}
+    invitation_ops=[v for path in spec['paths'].values() for v in path.values() if v.get('operationId') in ['invitesList','inviteCreate','inviteRevoke']]
+    invitation_ui=next(s for s in SCREENS if s['id']=='UI23')
+    check('초대 관리 3개 API는 모든 현재 참여자',len(invitation_ops)==3 and all(v.get('x-required-role')=='member' and '권한: member.' in v['description'] for v in invitation_ops),[v['operationId'] for v in invitation_ops])
+    check('초대 UI와 현재 참여 권한 연결','모든 현재 참여자' in invitation_ui['role'],invitation_ui['role'])
     check('28개 기능의 UI 연결',required<=set(f for s in SCREENS for f in s['features']),len(required))
     api_features=set(f for a in APIS for f in a['features'])
     check('서버 기능의 API 연결과 로컬 촬영 경계',(required-{'F12'})<=api_features,{'server_features':len(required-{'F12'}),'F12':'Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결'})
@@ -47,7 +51,8 @@ def main():
     check('컬럼 사전과 실제 DB 컬럼 일치',actual_set==expected_set,{'tables':len(PHYSICAL_TABLES),'columns':len(actual_set)})
     isolated=json.loads((ROOT/'부록/독립 패키지 검증.json').read_text())
     check('상위 원본과 DayLog 없는 패키지 재생성',isolated['passed'],isolated)
-    check('112개 기능 검수 시나리오',set(QA)==required and sum(len(x) for x in QA.values())==112,112)
+    qa_count=sum(map(len,QA.values()))
+    check(f'{qa_count}개 기능 검수 시나리오',set(QA)==required and qa_count==116,qa_count)
     svg_paths=list((ROOT/'UI/SVG').glob('*.svg'))
     svg_ok=True
     for p in svg_paths:
@@ -75,7 +80,7 @@ def main():
     for p in workbooks:
         w=openpyxl.load_workbook(p,data_only=False);check('Excel 열기 '+p.stem,len(w.sheetnames)>2,w.sheetnames)
     w=openpyxl.load_workbook(ROOT/'06 검수 및 추적.xlsx')
-    check('기능검수 결과 미실행 유지',all(w['기능검수'].cell(r,9).value=='미실행' for r in range(2,114)),112)
+    check('기능검수 결과 미실행 유지',all(w['기능검수'].cell(r,9).value=='미실행' for r in range(2,qa_count+2)),qa_count)
     broken=[]
     for p in ROOT.rglob('*.html'):
         if '.venv' in p.parts or '__pycache__' in p.parts:continue

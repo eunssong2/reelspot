@@ -1,8 +1,12 @@
 sequenceDiagram
+ participant M as 현재 참여자(방장 포함)
  participant U as 참여 사용자
  participant A as 업무 API
  participant D as DB
  participant O as 마지막 방장
+ M->>A: 같은 모임의 초대 조회·발급·개별 취소
+ A->>D: 현재 참여·모임·이용 제한 재검증, 발급/취소 잠금
+ A-->>M: 발급자 본인 여부와 무관하게 관리
  U->>A: 초대 확인
  A->>D: 초대행 잠금·기한/취소/소진 검사·use_count+1 (50회 소진)
  A-->>U: 모임명·일정요약·남은 횟수

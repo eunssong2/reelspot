@@ -1,9 +1,0 @@
-{
-  "design_version": "0.3.0-design",
-  "policy_snapshot": "기능명세서.md",
-  "sha256": "f0bf6e3d1bdf0a71370ea6c0a1f5ed55b8c1b4b7dbfeaab8605609f96d5ffcd3",
-  "bytes": 1255876,
-  "scope": "F01~F28/P01~P12/6절 한도/7절 제외",
-  "upper_source": "../기능명세서.md (작성 환경 참고, 패키지 밖 파일은 구현 기준 필수 의존 아님)",
-  "change_rule": "동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신"
-}

@@ -1,6 +1,0 @@
-
-> at-that-place@0.1.0 contracts
-> node scripts/contract-extensions.mjs && openapi-typescript contracts/openapi.json -o contracts/generated.ts
-
-✨ openapi-typescript 7.13.0
-🚀 contracts/openapi.json → contracts/generated.ts [535.4ms]

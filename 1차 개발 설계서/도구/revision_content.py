@@ -2,10 +2,12 @@
 from pathlib import Path
 import json,hashlib,shutil
 
-REVISION='0.3.0-design'
+REVISION='0.3.1-design'
 SECTIONS=[
-('0 v0.3 변경 요약 — 2026-10-20 회의 피드백 반영',[
-'기준 기능명세서가 v2(2026-10-22)로 바뀌었다. v1(2026-10-17)과의 정책 차이는 명세 0절의 표 10건이며 설계는 모두 그 표를 따른다. 이 절은 각 결정이 설계 산출물의 어디를 바꿨는지 요약한다.',
+('0 v0.3.1 변경 요약 — 초대 권한 확대와 기존 회의 반영',[
+'2026-10-24 추가 결정: F05 초대 조회·발급·공유·복사·개별 취소를 방장을 포함한 모든 현재 참여자에게 허용한다. 같은 모임의 다른 참여자가 발급한 초대도 조회·공유·취소할 수 있다. 발급자 ID는 감사 이력이며 권한 근거가 아니다. UI05·UI23·권한표·invitesList/inviteCreate/inviteRevoke(member)·F05 검수와 CT16을 함께 변경했다.',
+'탈퇴·퇴장·모임 종료·서비스 이용 제한 시 요청 및 멱등 재시도에서도 현재 권한을 재검증한다. 발급자의 참여 종료만으로 이미 발급한 초대를 자동 취소하지 않으며 다른 현재 참여자가 개별 취소할 수 있다. 7일·50회·정원10명 규칙은 유지한다. 이 개정은 명세·설계 변경이며 기존 앱·서버의 방장 전용 구현을 수정하거나 권한 검수를 통과한 결과가 아니다.',
+'기준 기능명세서가 v2.1(2026-10-24)로 바뀌었다. v1(2026-10-17)과의 정책 차이는 명세 0절의 표 10건이며 설계는 모두 그 표를 따른다. 이 절은 각 결정이 설계 산출물의 어디를 바꿨는지 요약한다.',
 '① 초대 7일+확인 50회: invitations.use_count/max_uses/exhausted_at 컬럼, invitation_uses_guard 트리거, invitePreview 성공 응답마다 +1, INVITE_EXHAUSTED 오류, Invitation.useCount/state 계약, UI23·UI24 표시. 참여 확정은 횟수를 소모하지 않는다.',
 '② 반복 폐지·기간 일정 수동 추가 / ④ 수동 추가·제거: recurrence_series·recurrence_exceptions 테이블과 schedules.series_id/original_occurrence_key 제거. recurrencePreview·schedulePreview·scheduleApply를 제거하고 scheduleUpdate(PATCH, 기간 밖 영향 확인)·scheduleCancel·scheduleDelete(범위 없음)로 대체. UI07 맞춤 반복 화면 폐지, UI06을 일정 추가와 변경으로 재정의.',
 '③ 종일 제거·시각은 장소에: schedules.all_day/start_at/end_at 제거, ScheduleInput은 title·startDate·endDate·timezone만. visitCreate에 plannedTime 입력 추가, 일정 상세 plan에 방문별 예정 시각·visitLimit 표시(UI08·UI10·UI11).',
@@ -15,7 +17,7 @@ SECTIONS=[
 '⑨ 사진 5·영상 2 / ⑩ 일차별 장소 15개: upload_tasks.kind 컬럼 추가, media_bucket_count 함수와 guard_media_limit 트리거(작성자×방문, 미지정은 작성자×일정×기록일, advisory lock), guard_visit_limit 트리거(일정 행 잠금). uploadPrepare fileErrors MEDIA_LIMIT·remaining[], visitCreate VISIT_LIMIT, metadataPatch 한도 재검증. UI08·UI10·UI11·UI13·UI16에 남은 개수 표시.',
 '검증: 003_contract_checks.sql에 6번째 사진·3번째 영상·16번째 방문·51번째 초대 확인·share 내보내기 거부와 실패 작업 자리 반환·삭제 방문 자리 복귀 회귀를 추가했다. 계약 통합 시나리오 CT13~CT15와 기능 검수 시나리오(F05·F06~F11·F13·F14·F16·F17·F19)를 갱신했다. 설계 검토 엑셀 1~3번(종료 후 맥락·만료 직전 업로드·차단과 관리 알림)은 미확정으로 두어 설계를 바꾸지 않았다.']),
 ('1 패키지 기준과 변경 통제',[
-'이 패키지의 정책 기준은 기준/기능명세서.md(v2, 2026-10-22)다. 상위 원본과 바이트가 같은 사본이며 SHA256·크기·정책 적용 범위를 기준/기준선.json에 기록한다. 상위 원본이 바뀌면 자동으로 새 정책을 적용하지 않고 차이를 검토해 기준선을 다시 확정한다. v0.3은 2026-10-20 회의 결정에 따라 F05·F07~F11·F13·F14·F16·F17·F19·F20·F21·F23·F28과 P11·P12를 바꾼 명세 v2를 기준으로 삼는다.',
+'이 패키지의 정책 기준은 기준/기능명세서.md(v2.1, 2026-10-24)다. 프로젝트의 기능 명세서/기능명세서.md 원본과 바이트가 같은 사본이며 SHA256·크기·정책 적용 범위를 기준/기준선.json에 기록한다. 상위 원본이 바뀌면 자동으로 새 정책을 적용하지 않고 차이를 검토해 기준선을 다시 확정한다. v0.3은 2026-10-20 회의 결정에 따라 F05·F07~F11·F13·F14·F16·F17·F19·F20·F21·F23·F28과 P11·P12를 바꾼 명세 v2를 기준으로 삼는다.',
 '문서 사이의 우선순위는 기준 기능명세 → OpenAPI 및 DB 물리 정의 → 업무 절차·화면 연결 → 예제다. 문서와 스키마가 다르면 구현자가 임의 선택하지 않고 계약 오류로 기록한다. 이번 변경의 operationId·컬럼명·HTTP 동작은 OpenAPI와 physical_model.py가 각각 원천이다. 실행 SQL은 빈 DB에 적용하는 초기 스키마이며 완성된 서버 구현을 뜻하지 않는다.']),
 ('2 구현 도구와 코드 배치 결정',[
 '서버는 Node.js 24 계열·TypeScript·Fastify 5·node-postgres(pg) 8, PostgreSQL 16을 선택한다. ORM은 사용하지 않고 매개변수화 SQL과 명시적 트랜잭션을 사용한다. 모든 트랜잭션은 pool에서 얻은 동일 client로 BEGIN/COMMIT/ROLLBACK을 실행한다. 프레임워크와 드라이버의 패치 버전은 최초 서버 설치에서 lockfile로 고정하고 빌드·테스트 결과를 기록한다.',
@@ -23,7 +25,7 @@ SECTIONS=[
 '구현 폴더는 mobile/(신규 앱 셸과 선별 이식), server/api/, server/worker/, server/db/migrations/, server/adapters/, ops-web/로 나눈다. 공유 계약 타입은 contracts/에 두고 OpenAPI에서 생성한다. 이번 산출물은 이 구조의 설계이며 해당 앱·서버를 생성한 결과가 아니다.',
 '미디어 작업자는 ffprobe로 형식·길이·회전·스트림을 확인하고 FFmpeg로 동영상 호환본을 만든다. 사진 디코딩·호환 JPEG/PNG 생성에는 ImageMagick을 사용한다. 위치 태그 읽기·재검증에는 ExifTool을 사용한다. 원래 해상도 저장본은 지원 형식별 메타데이터 처리 경로를 사용하고 일괄 재인코딩으로 대체하지 않는다. 새 도구의 정확한 버전·이미지 digest·HEIF/HDR/코덱 지원은 혼합 파일 기술 검증에서 고정한다. 메타데이터 삭제 명령 하나만으로 F20 완료라고 판정하지 않는다.']),
 ('3 DayLog 선별 재사용과 SDK 기준',[
-'기존 프로젝트는 기능 명세서 자료/mobile/의 DayLog다. 루트 mobile/에는 앱 소스 대신 .expo 상태 폴더만 있다. 기존 프로젝트 전체를 새 앱으로 간주하거나 그대로 복사해 실행 완료로 처리하지 않는다. 기존 코드 없이도 이 패키지의 명세와 계약으로 새 앱을 구성할 수 있으며, 기존 코드는 선택적인 구현 참고 자료다.',
+'기존 DayLog 앱은 선택적 참고 자료였으며, 2026-10-24 문서 저장소 정리에서 원본 앱과 사용하지 않는 루트 캐시 폴더를 제거했다. 기준/재사용후보.json의 원래 경로·hash는 과거 관찰 이력이다. 설계서 열람·재생성에는 원본 앱이 필요하지 않으며, 신규 앱 구현 완료를 뜻하지 않는다.',
 '재사용 후보는 CameraScreen/CameraXScreen과 카메라 상태 머신, media ingest/probe, 파일 선택·재생·공유 보조 코드다. 각 후보는 출처 경로·SHA256·새 요구와의 차이를 기준/재사용후보.json에 기록한다. API31 권한, 1~5초·무음·조기 종료, Photo Picker, 계정별 임시 파일, 백그라운드 복구를 새 앱에서 검증한 뒤 채택한다.',
 '기존 로컬 SQLite 업무 모델, 개인 로그·편집 스택·영상 프로젝트·자동 알림·DayLog 라우팅과 브랜딩은 이식하지 않는다. DayLog 패키지명·scheme·개발 서버 주소·광범위 미디어 권한 설정도 그대로 사용하지 않는다. 새 앱은 별도 applicationId·인증 리디렉트·minSdk31 설정과 선택 권한 정책을 갖는다.',
 '실제 원본의 선언 조합은 Expo ~57.0.27 / React Native 0.86.3 / React 19.2.3이다. 선행 XLSX의 Expo54/RN0.81은 과거 자료다. 선언값과 lockfile hash를 기준선에 보관하며 버전 문서의 대응 조합은 확인했다. 실제 설치·expo-doctor·typecheck·lint·Android 개발 빌드·기기 검수 통과를 주장하지 않는다. 새 앱 lockfile을 고정하는 단계가 SDK 수락 조건이다.']),
@@ -56,7 +58,7 @@ SECTIONS=[
 '1단계 계약/기술 검증: 기준선·스키마·API 예제·업로드 프로토콜을 고정하고 API31 개발 빌드,120개 혼합 후보, 전송 복구, 위치 포함 HEIF/MOV·HDR 호환본을 먼저 검증한다. 실패하면 도구/어댑터 결정을 바꾸고 기록한다.',
 '2단계 계정·모임·초대(F01~F05, 50회 소진 포함)와 최소 파일 처리 뼈대를 함께 만든다. 3단계 일정 수동 추가·장소·예정 시각·계획(F06~F11, 15개 한도)을 구현한다. 4단계 촬영/가져오기/전송/감상(F12~F16)에 F20 위치 제거와 F26 공개 전 검사를 동시에 연결한다. 위치 검증·검사가 통과하기 전에는 완료/공동 공개를 만들지 않는다.',
 '5단계 공통 선택 화면·본인 일괄 수정·삭제·휴대폰 저장(F17~F19),6단계 보관·역할·종료·계정·신고·복구·운영(F21~F28)을 마무리한다. 운영 웹의 나머지 기능은 뒤에 완성할 수 있어도 비공개 review 저장과 실제 공개 차단은4단계부터 필요하다.',
-'각 단계는 코드 존재, 로컬 자동화 통과, staging 실제 연동, Android 실기기 검수, 출시 준비의 상태를 따로 기록한다. 기존112개 기능 시나리오를112개의 단위 테스트로 기계적으로 치환하지 않는다. 테스트 방식별 실행 계획과 신규 계약 검증 시나리오를06 추적표에 추가했다.']),
+'각 단계는 코드 존재, 로컬 자동화 통과, staging 실제 연동, Android 실기기 검수, 출시 준비의 상태를 따로 기록한다. 기능 검수 시나리오를 같은 수의 단위 테스트로 기계적으로 치환하지 않는다. 테스트 방식별 실행 계획과 신규 계약 검증 시나리오를06 추적표에 추가했다.']),
 ('10 이번 실행 결과와 남은 검증',[
 '부록/DB/검증결과.json은 임시 PostgreSQL에서 초기 DDL과 제약을 검사한 결과다. 부록/계약예제/검증결과.json은 OpenAPI 정상/오류 예제 검증 결과다. 부록/산출물 검증.json은 문서·파일·연결 검증 결과다. 각각의 범위를 구분하며 F01~F28의 실제 구현 검수 결과는 미실행으로 유지한다.',
 '실제 인증 등록·지도키·운영 저장지역/접속권한·콘텐츠 판정 공급자·운영 인력·약관/동의 문서·문의 연락처·실기기 성능 검수는 여전히 출시 준비 항목이다. 이번 작업은 제품 구현을 시작한 것이 아니라 구현 가능한 수준으로 설계 계약을 보완한 것이다.'])]
@@ -71,28 +73,23 @@ EXTERNAL=[
 
 def prepare_baseline(root):
     root=Path(root);basis=root/'기준';basis.mkdir(exist_ok=True)
-    source=root.parent/'기능명세서.md';snapshot=basis/'기능명세서.md'
+    source=root.parent/'기능 명세서'/'기능명세서.md';snapshot=basis/'기능명세서.md'
     # 원본이 없는 단독 패키지에서도 기존 사본으로 재생성할 수 있다.
     if not snapshot.exists():shutil.copy2(source,snapshot)
     digest=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
     if source.exists() and digest(source)!=digest(snapshot):raise RuntimeError('기준 명세와 상위 원본이 다릅니다. 정책 변경 검토 후 기준선을 명시적으로 갱신하세요.')
-    mobile=root.parent/'기능 명세서 자료/mobile';records=[]
-    candidates=[('src/features/camera','촬영 상태/권한 흐름','1~5초·0.5초·무음·API31 재검증'),('src/services/media','파일 ingest/probe','선택 URI 유지·계정별 큐·혼합120개 재설계'),('src/native','Android 네이티브 래퍼','커스텀 CameraX 모듈 존재·빌드/권한 확인')]
-    for directory,scope,gap in candidates:
-        folder=mobile/directory
-        for p in sorted(folder.rglob('*')) if folder.exists() else []:
-            if p.is_file() and p.suffix in ['.ts','.tsx']:
-                records.append({'source':str(p.relative_to(root.parent)),'sha256':digest(p),'scope':scope,'acceptance':gap,'status':'후보, 채택/빌드검증 전'})
-    package=mobile/'package.json'
-    if package.exists():
-        data=json.loads(package.read_text());decl={k:data['dependencies'].get(k) for k in ['expo','react-native','react','expo-camera','expo-image-picker','expo-video']}
-        locks=[{'path':str(p.relative_to(root.parent)),'sha256':digest(p)} for p in [mobile/'package-lock.json',mobile/'bun.lock',mobile/'yarn.lock'] if p.exists()]
-        (basis/'재사용후보.json').write_text(json.dumps({'app':'DayLog','declared_dependencies':decl,'package_sha256':digest(package),'locks':locks,'reuse_is_optional':True,'candidates':records},ensure_ascii=False,indent=2))
-    (basis/'기준선.json').write_text(json.dumps({'design_version':REVISION,'policy_snapshot':'기능명세서.md','sha256':digest(snapshot),'bytes':snapshot.stat().st_size,'scope':'F01~F28/P01~P12/6절 한도/7절 제외','upper_source':'../기능명세서.md (작성 환경 참고, 패키지 밖 파일은 구현 기준 필수 의존 아님)','change_rule':'동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신'},ensure_ascii=False,indent=2))
+    # The original reference application is not a package dependency. Preserve observation metadata.
+    reuse=basis/'재사용후보.json'
+    if reuse.exists():
+        record=json.loads(reuse.read_text())
+        record.update({'source_available':False,'source_required':False,'source_note':'원본 참고 앱은 2026-10-24 docs 브랜치 정리로 제거했다. 경로·hash·선언 버전은 과거 관찰 이력이며 현재 파일의 존재나 재사용 완료를 뜻하지 않는다.'})
+        reuse.write_text(json.dumps(record,ensure_ascii=False,indent=2))
+    (basis/'기준선.json').write_text(json.dumps({'design_version':REVISION,'policy_snapshot':'기능명세서.md','sha256':digest(snapshot),'bytes':snapshot.stat().st_size,'policy_version':'2.1','policy_date':'2026-10-24','scope':'F01~F28/P01~P12/6절 한도/7절 제외','upper_source':'../기능 명세서/기능명세서.md (정책 원본, 독립 패키지에서는 내부 기준 사본 사용)','change_rule':'동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신'},ensure_ascii=False,indent=2))
 
 def apply_content(arch,decisions,sources,workflows):
-    arch[0][1][0]='At that place 1차 기준은 패키지 내부 기준/기능명세서.md(v2, 2026-10-22)의 F01~F28·P01~P12이며 Android12(API31)+, Asia/Seoul 고정이다. 상위 원본과 동일한 SHA256 사본을 포함한다. v0.3은 2026-10-20 회의 피드백 10건(초대 50회·반복 폐지·일정 시각 제거·수동 일정·UI16/19 통합·보기 방식·길게 눌러 저장·외부 공유 제거·사진5/영상2·장소15)을 반영한 명세 v2를 따른다.'
+    arch[0][1][0]='At that place 1차 기준은 패키지 내부 기준/기능명세서.md(v2.1, 2026-10-24)의 F01~F28·P01~P12이며 Android12(API31)+, Asia/Seoul 고정이다. 상위 원본과 동일한 SHA256 사본을 포함한다. v0.3은 2026-10-20 회의 피드백 10건(초대 50회·반복 폐지·일정 시각 제거·수동 일정·UI16/19 통합·보기 방식·길게 눌러 저장·외부 공유 제거·사진5/영상2·장소15)을 반영한 명세 v2를 따른다.'
     arch[0][1][1]='실행 DB 정의·업로드 프로토콜·업무 결과 형식·선별 재사용 범위(v0.2)에 더해 v0.3에서 일정 모델 단순화·한도 트리거·초대 횟수·보기 방식·공통 선택 화면을 반영했다. 09 구현 계약 보완 0절과 부록/DB/001_initial.sql·부록/openapi.json을 함께 적용한다. 실제 공급자 등록·문서·연락처·실기기 측정은 출시 준비다.'
+    arch[0][1].append('v0.3.1 추가 변경: 초대 관리는 방장 전용 기능에서 모든 현재 참여자의 기능으로 이동했다. API는 member 권한, UI23은 모든 현재 참여자 진입이며 발급자 본인 여부로 취소를 제한하지 않는다. 조회·발급·취소마다 현재 참여와 모임/이용 상태를 재검증한다.')
     arch[2][1][0]='Android 앱은 React Native·Expo 신규 앱 셸에 DayLog의 촬영·파일 처리 후보를 선별 이식한다. 기존 로컬 업무 DB·편집·알림·라우팅은 재사용하지 않는다. 기존 코드가 없어도 기준 명세와 UI/API 계약으로 구현할 수 있다. Expo57/RN0.86.3/React19.2.3 선언 조합과 채택 조건은09 문서·기준/재사용후보.json을 따른다.'
     arch[2][1].append('서버 도구는 Node24·TypeScript·Fastify5·pg8, PostgreSQL16, 번호별 SQL 마이그레이션으로 선택했다. ORM은 사용하지 않는다. 작업자 도구·운영자 OIDC/MFA·실제 로컬 구현과 테스트 대역 구분은09 문서에서 정의한다.')
     arch[3][1][-1]='파일 GET은 인증 프록시에서 현재 권한·기한을 검사한다. 파일 업로드도 인증 HEAD/PATCH로 격리 청크를 기록하고 DB의 확정 offset으로 재개한다. 공개 버킷·직접 원본 GET을 허용하지 않는다. 전송 프로토콜은09 문서와 OpenAPI uploadHead/uploadChunk를 적용한다.'
@@ -131,6 +128,8 @@ CONTRACT_CASES=[
  ('CT13','초대 확인 50회 경쟁','49회에서 동시 두 미리보기·51번째·로그인 복귀·참여하기','50회까지만 응답·INVITE_EXHAUSTED·복귀/참여는 횟수 미증가·기존 참여 유지','DB경쟁+API통합'),
  ('CT14','일차별 방문 15개 경쟁','14개에서 두 참여자 동시 추가·16번째·빈 방문 삭제 후 추가','15개 확정·VISIT_LIMIT·자리 복귀·planned_time 저장','DB경쟁+API통합'),
  ('CT15','작성자별 사진5/영상2 경쟁','같은 방문에 두 기기 동시 접수·실패/취소 반환·F17 방문 이동·미지정 묶음','합산 한도 유지·MEDIA_LIMIT 파일별·remaining 일치·이동 대상 재검증','DB경쟁+API통합+실파일')]
+
+CONTRACT_CASES.append(('CT16','모든 현재 참여자의 초대 관리','방장/일반 참여자·타인 초대 취소·비참여/탈퇴/퇴장/이용 제한·종료 경합·멱등 재시도','현재 참여자 동일 권한·발급자 이력 유지·권한 소멸 뒤 거부·7일/50회/정원 유지','API권한+DB경쟁+Android 화면'))
 
 def test_method(f,scenario):
     if any(k in scenario for k in ['동시','경쟁']):return 'DB 경쟁 + API 통합'

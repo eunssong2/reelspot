@@ -3,22 +3,30 @@
     {
       "path": "기능명세서.md",
       "bytes": 1428027,
-      "sha256": "60f2c98a6473287b2641640af5ce41c0f7b3d8b0fbb8d9bee63dacade59a3317"
+      "sha256": "60f2c98a6473287b2641640af5ce41c0f7b3d8b0fbb8d9bee63dacade59a3317",
+      "current_path": "../기능 명세서/참고 자료/기능명세서_v1_2026-10-17.md",
+      "availability": "보관 위치 변경; 당시 관찰 hash 유지"
     },
     {
       "path": "설계 자료/프로젝트 소개.pdf",
       "bytes": 3620711,
-      "sha256": "078b2a880c0d427e09d34169cd337437069e0d6f82814400fc591adaf40af793"
+      "sha256": "078b2a880c0d427e09d34169cd337437069e0d6f82814400fc591adaf40af793",
+      "current_path": "참고 자료/프로젝트 소개.pdf",
+      "availability": "보관 위치 변경; 당시 관찰 hash 유지"
     },
     {
       "path": "설계 자료/화면 명세 데이터.xlsx",
       "bytes": 2045063,
-      "sha256": "0b0645fb2d9bd32db94185ee75729c55e4cb49ae66cc2eb9f35a6e29aaa617de"
+      "sha256": "0b0645fb2d9bd32db94185ee75729c55e4cb49ae66cc2eb9f35a6e29aaa617de",
+      "current_path": "참고 자료/화면 명세 데이터.xlsx",
+      "availability": "보관 위치 변경; 당시 관찰 hash 유지"
     },
     {
       "path": "기능 명세서 자료/ReelSpot-Demo.apk",
       "bytes": 48232943,
-      "sha256": "97ffbb36feee848c12efe3cc75faf15b1370b94b62e4da3741c881be98897e9a"
+      "sha256": "97ffbb36feee848c12efe3cc75faf15b1370b94b62e4da3741c881be98897e9a",
+      "current_path": null,
+      "availability": "원본 APK 제거; 근거/APK의 캡처·XML·관찰 기록 유지"
     }
   ],
   "pdf_pages": 14,

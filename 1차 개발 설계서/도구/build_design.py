@@ -35,7 +35,7 @@ def label(f):
     return m.group(1) if m else f
 
 class Doc:
-    def __init__(self,filename,title,sub='1차 개발 구현 설계 v0.3 · 기준 기능명세서 v2(2026-10-22) 우선'):
+    def __init__(self,filename,title,sub='1차 개발 구현 설계 v0.3.1 · 기준 기능명세서 v2.1(2026-10-24) 우선'):
         self.name=filename;self.doc=Document();self.parts=[]
         sec=self.doc.sections[0];sec.top_margin=DInches(.65);sec.bottom_margin=DInches(.65);sec.left_margin=DInches(.65);sec.right_margin=DInches(.65)
         normal=self.doc.styles['Normal'];normal.font.name=FONT;normal.font.size=DPt(10)
@@ -181,7 +181,7 @@ def build_ui():
     prs=Presentation();prs.slide_width=Inches(16);prs.slide_height=Inches(9)
     def base(title,sub):
         s=prs.slides.add_slide(prs.slide_layouts[6]);ppt_shape(s,rect(0,0,16,.86,'navy',r=0));pt_text(s,.45,.18,15,.5,title,26,'white',True);pt_text(s,.5,8.58,15,.3,sub+'  ·  '+DATE,11,'muted');return s
-    s=base('At that place  1차 UI 설계','편집 가능한 화면 원본 · 기능명세서 v2(2026-10-20 회의 반영) 기준')
+    s=base('At that place  1차 UI 설계','편집 가능한 화면 원본 · 기능명세서 v2.1(2026-10-24) 기준')
     pt_text(s,.7,1.35,9,1.2,'함께한 기록을\n일정 안에서 바로 만납니다.',36,'ink',True)
     pt_text(s,.7,3.1,8.7,2.2,f'{len(SCREENS)}개 대표 화면과 실제 APK 화면을 함께 검토합니다.\nUI07(맞춤 반복)은 폐지, UI19는 UI16에 통합했습니다.\n각 화면의 글자·버튼·배경·필드는 PowerPoint 도형입니다.\nSVG의 텍스트·도형도 개별 편집할 수 있습니다.\nAPK 캡처는 관찰 근거 이미지이며 편집용 UI 원본과 구분합니다.',21)
     ppt_shape(s,rect(.7,6.15,8.8,1.2,'soft'));pt_text(s,1,6.35,8.2,.8,'Android 12+ · 한국 시간 고정 · 반복 일정·외부 공유 없음\n영상 편집·제작·결제는 후속 범위',19,'accent',True)
@@ -240,7 +240,7 @@ def build_ui():
     sheet(wb,'구성요소명세',['화면ID','요소ID','유형','표시문구','동작·검증·전환','권한','오류·상태'],component_rows,[12,18,15,48,100,32,70])
     sheet(wb,'화면API연결',['화면ID','operationId','기능'],api_rows,[16,35,28])
     sheet(wb,'화면상태',['화면ID','공통상태','화면별주요상태','복구규칙'],state_rows,[14,45,90,80])
-    flow=[('앱시작','UI01','세션복원실패/없음','replace','초대와 보류작업 유지'),('UI01','UI02','최초가입','replace','동의 완료 전 공동진입 제한'),('UI01/UI02','UI24','보류초대 존재','replace','참여하기 재확인'),('UI01/UI02','UI03','로그인/가입완료','replace','초대없음'),('UI03','UI04','모임생성','push','첫일정 필수'),('UI03','UI05','모임카드','push','현재참여'),('UI05','UI06','일정추가','push','현재 방장·반복 없음'),('UI05','UI08','일정선택','push','날짜별 화면 경유없음'),('UI08','UI09','공동기록','tab','필터·보기방식·스크롤 유지'),('UI08','UI13','장소선택','push','사람별/시간순 보기'),('UI08','UI10','장소추가','push','일정/방문일 전달·15개 검사'),('UI10','UI11','직접등록','push','검색어 초깃값'),('UI10/UI11','UI08','방문저장성공','pop','마지막순서 추가·예정 시각'),('UI08','UI12','계획편집','push','미저장이탈확인'),('UI08/UI13','UI14','올리기','sheet','취소/만료검증'),('UI14','UI15','촬영','push','필요시권한'),('UI14/UI15','UI16','파일선택/사용','push','최대120'),('UI16','UI17','업로드확인','push','서버접수·한도 파일별 거부'),('UI09/UI13/UI22','UI18','카드열기','push','공동/본인context'),('UI09/UI13/UI22','UI16','길게누르기/선택','mode','최대120·기존 기록 선택(구 UI19)'),('UI16','UI20','본인정보수정','push','같은일정본인'),('UI18/UI16','UI21','휴대폰 저장','sheet','현재참여·공유 없음'),('UI28','UI22','내기록','push','나간모임본인포함'),('UI26','UI27','나가기','sheet','방장선행조건'),('UI28','UI30','계정삭제','push','재인증·역할정리'),('UI28','UI29','로그인수단','push','명시적연결'),('UI31','UI28','차단해제/신고조회','pop','목록/집계갱신'),('UI26','UI32','부재복구문의','push','후임별도동의'),('UI28','UI33','캐시/저장공간','push','원본과캐시분리'),('모든쓰기화면','UI35','결과불명/충돌','inline/sheet','입력유지·작업조회')]
+    flow=[('앱시작','UI01','세션복원실패/없음','replace','초대와 보류작업 유지'),('UI01','UI02','최초가입','replace','동의 완료 전 공동진입 제한'),('UI01/UI02','UI24','보류초대 존재','replace','참여하기 재확인'),('UI01/UI02','UI03','로그인/가입완료','replace','초대없음'),('UI03','UI04','모임생성','push','첫일정 필수'),('UI03','UI05','모임카드','push','현재참여'),('UI05','UI23','초대 발급·관리','push','모든 현재 참여자·같은 모임 초대'),('UI05','UI06','일정추가','push','현재 방장·반복 없음'),('UI05','UI08','일정선택','push','날짜별 화면 경유없음'),('UI08','UI09','공동기록','tab','필터·보기방식·스크롤 유지'),('UI08','UI13','장소선택','push','사람별/시간순 보기'),('UI08','UI10','장소추가','push','일정/방문일 전달·15개 검사'),('UI10','UI11','직접등록','push','검색어 초깃값'),('UI10/UI11','UI08','방문저장성공','pop','마지막순서 추가·예정 시각'),('UI08','UI12','계획편집','push','미저장이탈확인'),('UI08/UI13','UI14','올리기','sheet','취소/만료검증'),('UI14','UI15','촬영','push','필요시권한'),('UI14/UI15','UI16','파일선택/사용','push','최대120'),('UI16','UI17','업로드확인','push','서버접수·한도 파일별 거부'),('UI09/UI13/UI22','UI18','카드열기','push','공동/본인context'),('UI09/UI13/UI22','UI16','길게누르기/선택','mode','최대120·기존 기록 선택(구 UI19)'),('UI16','UI20','본인정보수정','push','같은일정본인'),('UI18/UI16','UI21','휴대폰 저장','sheet','현재참여·공유 없음'),('UI28','UI22','내기록','push','나간모임본인포함'),('UI26','UI27','나가기','sheet','방장선행조건'),('UI28','UI30','계정삭제','push','재인증·역할정리'),('UI28','UI29','로그인수단','push','명시적연결'),('UI31','UI28','차단해제/신고조회','pop','목록/집계갱신'),('UI26','UI32','부재복구문의','push','후임별도동의'),('UI28','UI33','캐시/저장공간','push','원본과캐시분리'),('모든쓰기화면','UI35','결과불명/충돌','inline/sheet','입력유지·작업조회')]
     sheet(wb,'화면전환',['출발','도착','이벤트','방식','전달·복귀규칙'],flow,[28,18,35,20,70])
     sheet(wb,'디자인토큰',['토큰','값','용도·기준'],[['기준 캔버스','390×844dp','Android 대표화면·실제는가변레이아웃'],['본문','17sp','200%글자확대검수'],['보조','14sp','충분한대비'],['터치','최소56dp','달력 셀은예외로확대날짜선택목록 보완'],['간격','4dp단위·좌우20dp','카드간12·섹션32'],*[[k,'#'+v,'브랜드/본문/표면'] for k,v in COLORS.items()]], [30,30,75])
     wb.save(ROOT/'UI/05 화면 명세.xlsx')
@@ -260,7 +260,7 @@ def build_docs():
     d.h('9 요구사항과 기술 근거')
     d.table(['ID','자료','반영 범위','우선순위'],SOURCES);d.save()
     d=Doc('02 데이터베이스 설계','At that place 1차 데이터베이스 설계')
-    d.p('PostgreSQL16 물리 설계 v0.3(반복 테이블 제거·초대 횟수·방문 15개·사진5/영상2 트리거). 컬럼별 정의의 원천은 도구/physical_model.py이며 부록/DB/001_initial.sql과 이 사전을 함께 생성한다. 초기 스키마와 DB 제약은 임시 DB에서 실행 검증했다. FK는 ON DELETE NO ACTION, 서버 역할은002_service_roles.sql을 따른다. API/worker의 업무 권한·검사·집계·최종 완료는 별도 구현 및 통합 검수가 필요하다.')
+    d.p('PostgreSQL16 물리 설계 v0.3.1(반복 테이블 제거·초대 횟수·방문 15개·사진5/영상2 트리거). 컬럼별 정의의 원천은 도구/physical_model.py이며 부록/DB/001_initial.sql과 이 사전을 함께 생성한다. 초기 스키마와 DB 제약은 임시 DB에서 실행 검증했다. FK는 ON DELETE NO ACTION, 서버 역할은002_service_roles.sql을 따른다. API/worker의 업무 권한·검사·집계·최종 완료는 별도 구현 및 통합 검수가 필요하다.')
     d.h('1 핵심 관계');d.image(ROOT/'부록/ERD.png');d.table(['부모','자식','관계'],RELATIONS)
     d.h('2 공통 데이터 규칙')
     for p in ['식별자는UUID, 순간은timestamptz(UTC저장), 기록일·방문일·일정의날짜는date, 표시는Asia/Seoul이다. 순수날짜를기기UTC Date 변환으로계산하지않는다.','모든수정대상은version을갖고초기1에서증가한다. 보관고정·소유자·완료시각·최초선택순서는수정가능정보와분리한다.','문자길이는SQL char_length가아닌NFC후grapheme단위애플리케이션검증을기준으로한다. DB의text크기/체크는보조장치다.','집계캐시는가속용이다. 사용자가볼수있는파일조건(완료·기한·삭제·운영·차단)과같은predicate로응답집계를구성한다.','representative cover는별도asset이며일반기록바이트/보관정책과혼동하지않는다. 모임종료후불필요한대표사진·계획은정리한다.']:d.p(p)
@@ -272,7 +272,7 @@ def build_docs():
         for r in t['rules']:d.p(r)
     d.h('4 권한과 무결성 강제 위치')
     d.table(['불변식','DB/API 강제','경쟁 검수'],[
-      ['활성참여10명·중복없음','group잠금+활성membership 부분UNIQUE','9명동시2참여'],['초대 확인 50회','invitations 행 잠금+use_count 증가·소진 트리거','49회 동시 두 확인'],['방문 15개/일','schedule 잠금+visit_limit 트리거','14개 동시 두 추가'],['작성자 사진5/영상2','advisory lock+media_limit 트리거(task+media 합산)','같은 방문 동시 접수·F17 이동'],['방장한명·활성참여','groups.owner_user_id단일원천+membership일치검사','이전/나가기/종료 경합'],['일정별최초기한고정','schedule잠금+null→값트리거·업무권한','첫완료/변경 동시'],['용량5GB','group잠금+완료/예약CHECK','동시접수/실패/취소/정리'],['파일완료1회','media.task_id UNIQUE+task잠금','중복worker/완료취소'],['빈방문/일정삭제','접수/완료와같은잠금+숨김task포함조회','삭제/접수 경합'],['일괄수정원자성','검사후모든대상잠금·버전검증·단일커밋','검사중버전변경'],['오래된퇴장무효','targetMembershipId고정+멱등결과','해제/재가입후재시도']])
+      ['활성참여10명·중복없음','group잠금+활성membership 부분UNIQUE','9명동시2참여'],['초대 관리 현재 권한','현재 member·활성 모임·이용 제한 검증·발급자 ID는 이력','일반 참여자/타인 초대 취소·참여 종료 경합'],['초대 확인 50회','invitations 행 잠금+use_count 증가·소진 트리거','49회 동시 두 확인'],['방문 15개/일','schedule 잠금+visit_limit 트리거','14개 동시 두 추가'],['작성자 사진5/영상2','advisory lock+media_limit 트리거(task+media 합산)','같은 방문 동시 접수·F17 이동'],['방장한명·활성참여','groups.owner_user_id단일원천+membership일치검사','이전/나가기/종료 경합'],['일정별최초기한고정','schedule잠금+null→값트리거·업무권한','첫완료/변경 동시'],['용량5GB','group잠금+완료/예약CHECK','동시접수/실패/취소/정리'],['파일완료1회','media.task_id UNIQUE+task잠금','중복worker/완료취소'],['빈방문/일정삭제','접수/완료와같은잠금+숨김task포함조회','삭제/접수 경합'],['일괄수정원자성','검사후모든대상잠금·버전검증·단일커밋','검사중버전변경'],['오래된퇴장무효','targetMembershipId고정+멱등결과','해제/재가입후재시도']])
     d.h('5 정리와 복원');d.p('논리차단→정리outbox→원본/파생본삭제→purged_at와용량반환을한번확정한다. 객체정리의부분실패는재시도하되접근을복구하지않는다. 백업최대30일, 복원은tombstone먼저반영후API를개방한다. 신고증거는암호화·최소권한·종료후최대90일로별도정리한다.');d.save()
     d=Doc('03 API 연동 설계','At that place 1차 API 연동 설계')
     d.p('부록/openapi.json은OpenAPI3.1구현계약안이다. 서버주소example.invalid는실제배포주소가아니다. 모든operationId는화면/기능/검수추적표와연결한다. 인증과운영권한·공개전검사·도메인검증은스키마만으로완성되지않으며서버에서집행한다.')
@@ -281,7 +281,7 @@ def build_docs():
       ['기본경로','/v1. 실제 도메인은 배포시 주입. JSON UTF-8, 업로드 PATCH는 바이너리.'],['인증','Authorization: Bearer. auth/exchange·문서·초대미리보기는 공개,refresh는 본문 refreshToken 검증.'],['멱등','업무 쓰기 Idempotency-Key(16~128자),actor+route+key유일. 업로드 PATCH는 세대·offset·청크해시로 중복 판정.'],['버전','expectedVersion과 필요시 previewId. 충돌409는 입력 유지·최신값 확인.'],['정상','확정200 또는 접수202 Operation. 키는 operationId로 통일. HEAD/PATCH 성공은204와 전송 헤더. 전송100%는 완료 아님.'],['오류','{code,message,requestId,retryable,operationId?,currentVersion?,itemErrors?}. HEAD 오류는 본문 없이 X-Error-Code/X-Request-Id.'],['페이지','모임30개·파일60개. opaque cursor에 필터/정렬/actor/snapshotAt와 마지막 정렬키 서명.'],['목록스냅샷','snapshotAt 뒤 완료 파일은 갱신에서 반영. 삭제·차단·만료는 즉시 제외.'],['필드삭제','apply/value 명시. 설명 빈문자열은 비우기,visitId:null은 미지정. 누락 필드는 유지.'],['파일GET','인증된 thumbnail/view/export만. Range 재검증·private/no-store. 위치포함 원본GET 없음.'],['파일전송','ATP-Upload/1: 인증 HEAD/PATCH·offset·generation·SHA256·24h transport.09 문서·예제 참조.']])
     d.h('2 업무별 확정과 실패 단위')
     d.table(['업무','성공 조건','실패·재시도'],[
-      ['모임생성','모임+방장참여+첫일정(날짜만)한커밋','응답유실은동일키결과조회'],['초대확인/참여','확인마다 use_count+1·50회 소진. 참여는 서버시각·정원·차단·계정·모임 재검증','만료/소진/취소/종료/정원/차단구분'],['일정추가/변경','날짜 범위·겹침 안내. 변경은 기간 밖 영향 confirm 없으면 409','버전충돌409·입력유지'],['방문추가','일정잠금·중복·15개 검사·예정시각','VISIT_LIMIT·중복요청 방문 불증가'],['파일접수','유효후보별task+예약·작성자×방문 사진5/영상2. 잘못된/초과후보는fileErrors·remaining','수락0개면공동빈묶음없음'],['파일완료','위치/검사·현재권한·기한재검증','기존task재시도·성공파일중복없음'],['일괄정보수정','검사후전체대상원자커밋','하나오류면전체미적용'],['일괄삭제','사전권한전체검증후파일별결과','실패파일만재시도·이미삭제성공'],['휴대폰 저장','purpose=save만. 준비와실제기기쓰기를분리','새파일GET권한재검증·share 400']])
+      ['초대 조회/발급/취소','모든 현재 참여자(member)·같은 모임 전체 초대·발급자 ID는 이력','비참여/참여 종료/이용 제한/모임 종료 거부·멱등 재시도 재검증'],['모임생성','모임+방장참여+첫일정(날짜만)한커밋','응답유실은동일키결과조회'],['초대확인/참여','확인마다 use_count+1·50회 소진. 참여는 서버시각·정원·차단·계정·모임 재검증','만료/소진/취소/종료/정원/차단구분'],['일정추가/변경','날짜 범위·겹침 안내. 변경은 기간 밖 영향 confirm 없으면 409','버전충돌409·입력유지'],['방문추가','일정잠금·중복·15개 검사·예정시각','VISIT_LIMIT·중복요청 방문 불증가'],['파일접수','유효후보별task+예약·작성자×방문 사진5/영상2. 잘못된/초과후보는fileErrors·remaining','수락0개면공동빈묶음없음'],['파일완료','위치/검사·현재권한·기한재검증','기존task재시도·성공파일중복없음'],['일괄정보수정','검사후전체대상원자커밋','하나오류면전체미적용'],['일괄삭제','사전권한전체검증후파일별결과','실패파일만재시도·이미삭제성공'],['휴대폰 저장','purpose=save만. 준비와실제기기쓰기를분리','새파일GET권한재검증·share 400']])
     for a in APIS:
         d.h(a['id']+'  '+a['method']+' '+a['path'],2)
         d.table(['항목','계약'],[['기능·권한',' '.join(a['features'])+' / '+a['auth']],['요청',a['request']],['응답',a['response']],['도메인오류',a['errors']]])
@@ -293,9 +293,9 @@ def build_docs():
         for p in ps:d.p(p)
     d.h('13 권한 판정표')
     d.table(['동작','현재참여자','현재방장','참여종료작성자','운영자'],[
-      ['공동조회/계획','가능','가능','불가','운영케이스최소범위'],['장소추가·예정시각·계획(15개/일)','가능','가능','불가','없음'],['업로드(방문당 사진5·영상2)','유효일정','동일','불가','없음'],['일정추가/변경/취소/삭제·초대/모임정보/역할','불가','가능','불가','복구만별도절차'],['본인정보수정','본인만','본인만','불가','콘텐츠조치별도'],['본인조회/삭제','가능','가능','본인파일만','위반조치예외'],['휴대폰 저장(길게 눌러 다중 선택)','조회가능본인·타인','동일','본인도불가','일반내보내기권한없음'],['개인차단/신고','가능','가능','본인보존문의','케이스처리'],['모임종료','불가','마지막1인만','불가','종료재개불가']])
+      ['공동조회/계획','가능','가능','불가','운영케이스최소범위'],['장소추가·예정시각·계획(15개/일)','가능','가능','불가','없음'],['업로드(방문당 사진5·영상2)','유효일정','동일','불가','없음'],['초대 조회·발급·공유·복사·개별 취소','가능(같은 모임 전체)','가능(같은 모임 전체)','불가','일반 초대 관리 권한 없음'],['일정추가/변경/취소/삭제·모임정보/역할','불가','가능','불가','복구만별도절차'],['본인정보수정','본인만','본인만','불가','콘텐츠조치별도'],['본인조회/삭제','가능','가능','본인파일만','위반조치예외'],['휴대폰 저장(길게 눌러 다중 선택)','조회가능본인·타인','동일','본인도불가','일반내보내기권한없음'],['개인차단/신고','가능','가능','본인보존문의','케이스처리'],['모임종료','불가','마지막1인만','불가','종료재개불가']])
     d.h('14 수정 가능한 다이어그램');d.p('부록/다이어그램/*.mmd는유스케이스가아닌실행시퀀스·상태도원본이다. Mermaid를지원하는IDE에서편집/렌더링한다. DB관계와구성도는부록/ERD.svg·아키텍처.svg의도형/텍스트를수정할수있다.');d.save()
-    d=Doc('09 구현 계약 보완','At that place 1차 구현 계약 보완','v0.3 · 2026-10-20 회의 반영·기준 명세 v2·물리 DB·전송·운영·검수')
+    d=Doc('09 구현 계약 보완','At that place 1차 구현 계약 보완','v0.3.1 · 2026-10-24 초대 권한 확대·기존 회의 반영·기준 명세 v2.1·물리 DB·전송·운영·검수')
     for title,paragraphs in SECTIONS:
         d.h(title)
         for p in paragraphs:d.p(p)
@@ -364,7 +364,7 @@ def build_tracking():
     sheet(wb,'컬럼',['테이블','컬럼','타입·NULL·기본값·컬럼제약','설명'],[[n,*c] for n,t in physical.items() for c in t['columns']],[30,32,105,80])
     sheet(wb,'제약과인덱스',['테이블','구분','SQL 정의'],[[n,'테이블 제약',v] for n,t in physical.items() for v in t['constraints']]+[[n,'인덱스',v] for n,t in physical.items() for v in t['indexes']],[30,25,150])
     sheet(wb,'서비스강제',['불변식','DB 강제','서비스 추가 책임'],[
-      ['동시 참여','group 잠금·활성 중복유일·정원10명','초대시각·모임별 차단·현재 계정 검증'],
+      ['초대 관리','issuer_user_id 기록·group/초대 잠금','모든 현재 member 권한·타인 초대 취소·참여 종료와 멱등 재시도 재검증'],['동시 참여','group 잠금·활성 중복유일·정원10명','초대시각·모임별 차단·현재 계정 검증'],
       ['보관 고정','첫 기준 계산·고정 이후 변경 거부','첫 공개 완료 시각·현재 권한·기한 경합'],
       ['파일 공개','위치 미검증 파생 ready 거부·task별media유일','실파일 제거 검증·콘텐츠 검사·완료 트랜잭션'],
       ['일괄 수정','대상별 버전 컬럼·정합 FK','검사 뒤 전 대상 재검증·전체 단일 커밋'],
@@ -372,7 +372,7 @@ def build_tracking():
     wb.save(ROOT/'부록/DB/컬럼 및 제약.xlsx')
 
 def build_index():
-    files=[('09 구현 계약 보완','v0.3 변경 요약(2026-10-20 회의)·기준선·DayLog 선별 재사용·재개 업로드·개발 순서'),('01 시스템 설계','서비스 구조·확정한 도구·인증·파일접근·운영'),('02 데이터베이스 설계',f'{len(TABLES)}개 테이블의 컬럼별 물리 정의·실행 SQL·DB 제약'),('03 API 연동 설계',f'{len(APIS)}개 operation·typed 업무 결과·HEAD/PATCH 전송'),('04 업무 흐름 상태 설계','업로드·위치 제거·검사·보관·원자 수정·생명주기')]
+    files=[('09 구현 계약 보완','v0.3.1 변경 요약(2026-10-20 회의)·기준선·DayLog 선별 재사용·재개 업로드·개발 순서'),('01 시스템 설계','서비스 구조·확정한 도구·인증·파일접근·운영'),('02 데이터베이스 설계',f'{len(TABLES)}개 테이블의 컬럼별 물리 정의·실행 SQL·DB 제약'),('03 API 연동 설계',f'{len(APIS)}개 operation·typed 업무 결과·HEAD/PATCH 전송'),('04 업무 흐름 상태 설계','업로드·위치 제거·검사·보관·원자 수정·생명주기')]
     rows=''.join(f'<a class="card" href="{n}.docx"><b>{n}</b><span>{desc}</span></a><a class="pdf" href="{n}.pdf">PDF 열기</a>' for n,desc in files)
     index='''<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place 1차 개발 설계서</title><style>
     body{font-family:'Noto Sans CJK KR',sans-serif;color:#191F28;background:#f3f5f7;margin:0}header{padding:55px max(30px,calc((100vw - 1120px)/2));background:#202A35;color:white}header small{color:#F1706B}h1{font-size:42px;line-height:1.35}main{max-width:1120px;margin:35px auto;padding:0 24px}h2{margin-top:45px}p{line-height:1.9}.grid{display:grid;grid-template-columns:1fr 110px;gap:12px}.card,.pdf{display:block;background:white;padding:22px;border:1px solid #DCE1E6;border-radius:14px;text-decoration:none;color:#191F28}.card b{display:block;font-size:20px}.card span{display:block;color:#5F6B78;margin-top:8px}.pdf{color:#B8433F;display:flex;align-items:center}.primary{background:#B8433F;color:white;padding:22px;border-radius:14px;display:inline-block;text-decoration:none;font-size:22px}.info{background:#FDEDEB;padding:25px;border-radius:16px}a{color:#B8433F}li{margin:14px 0;line-height:1.7}code{background:#e9edf0;padding:2px 6px}footer{padding:35px;color:#5F6B78}
@@ -389,9 +389,10 @@ def build_index():
     <li><a href="근거/08 APK 실행 검토.docx">APK 실행 검토 Word</a> · <a href="근거/08 APK 실행 검토.pdf">실행 검토 PDF</a> · <a href="근거/APK/실행검토.json">실행 근거 JSON</a></li>
     <li><a href="부록/아키텍처.svg">아키텍처 SVG</a> · <a href="부록/ERD.svg">ERD SVG</a> · 업무 시퀀스/상태 원본은 <code>부록/다이어그램/</code></li>
     </ul><div class="info"><b>적용 기준과 수정 방법</b><p>루트 기능명세서가 정책 기준입니다. 소개 PDF·선행 XLSX·APK는 참고 자료이며 충돌은 최신 명세로 정리했습니다. 클라우드·검사 공급자·키·문서·문의 연락처·SDK 버전은 실제 환경에서 확정해야 합니다.</p><p>Word·Excel·PowerPoint 파일은 직접 편집할 수 있습니다. SVG는 벡터 편집기로 열어 수정합니다. 전체를 재생성하려면 <code>도구/사용법.txt</code>를 참고하세요. 직접 편집한 Office 파일은 재생성 전에 별도 보관하세요.</p></div><footer>설계 검토와 구현 검수를 구분합니다. PDF는 같은 내용의 HTML 인쇄 레이아웃이며 Office 원본과 줄바꿈이 다를 수 있습니다.</footer></main></html>'''
-    index=index.replace('1차 구현 설계안','1차 구현 설계 v0.3').replace('루트 기능명세서가 정책 기준입니다.','패키지 내부 기준/기능명세서.md(v2, 2026-10-22)가 정책 기준입니다. 원본과 동일한 SHA256 사본을 포함했습니다. v1 대비 변경은 명세 0절과 09 문서 0절을 보세요.').replace('112개 기능 시나리오·10개 비기능 항목.','112개 기능 시나리오·10개 비기능 항목·12개 계약 통합 시나리오와 실행 방식.').replace('클라우드·검사 공급자·키·문서·문의 연락처·SDK 버전은 실제 환경에서 확정해야 합니다.','서버 도구·전송·물리 스키마·재사용 범위는 v0.2에서 구체화했습니다. 운영 공급자·키·문서·문의 연락처·실기기/빌드 검증은 남아 있습니다.')
-    extra='''<h2>v0.3 구현 계약과 기준 자료</h2><ul><li><a href="기준/기능명세서.md">기준 기능명세서 사본</a> · <a href="기준/기준선.json">SHA256 기준선</a> · <a href="기준/재사용후보.json">DayLog 재사용 후보와 버전</a></li><li><a href="부록/DB/001_initial.sql">실행 가능한 초기 DB SQL</a> · <a href="부록/DB/검증결과.json">실제 PostgreSQL 검증 결과</a> · <a href="부록/DB/실제 컬럼 사전.json">실행 DB 컬럼 사전</a> · <a href="부록/DB/컬럼 및 제약.xlsx">컬럼·제약 Excel</a></li><li><a href="부록/계약예제/examples.json">정상·오류 JSON 예제</a> · <a href="부록/계약예제/검증결과.json">계약 검증 결과</a> · <a href="부록/계약예제/업로드.http">HEAD/PATCH 요청 예제</a></li></ul>'''
+    index=index.replace('1차 구현 설계안','1차 구현 설계 v0.3.1').replace('루트 기능명세서가 정책 기준입니다.','패키지 내부 기준/기능명세서.md(v2.1, 2026-10-24)가 정책 기준입니다. 정책 원본은 ../기능 명세서/기능명세서.md이며 동일한 SHA256 사본을 포함했습니다. v1 대비 변경은 명세 0절과 09 문서 0절을 보세요.').replace('112개 기능 시나리오·10개 비기능 항목.','112개 기능 시나리오·10개 비기능 항목·12개 계약 통합 시나리오와 실행 방식.').replace('클라우드·검사 공급자·키·문서·문의 연락처·SDK 버전은 실제 환경에서 확정해야 합니다.','서버 도구·전송·물리 스키마·재사용 범위는 v0.2에서 구체화했습니다. 운영 공급자·키·문서·문의 연락처·실기기/빌드 검증은 남아 있습니다.')
+    extra='''<h2>v0.3.1 구현 계약과 기준 자료</h2><ul><li><a href="기준/기능명세서.md">기준 기능명세서 사본</a> · <a href="기준/기준선.json">SHA256 기준선</a> · <a href="기준/재사용후보.json">DayLog 재사용 후보와 버전</a></li><li><a href="부록/DB/001_initial.sql">실행 가능한 초기 DB SQL</a> · <a href="부록/DB/검증결과.json">실제 PostgreSQL 검증 결과</a> · <a href="부록/DB/실제 컬럼 사전.json">실행 DB 컬럼 사전</a> · <a href="부록/DB/컬럼 및 제약.xlsx">컬럼·제약 Excel</a></li><li><a href="부록/계약예제/examples.json">정상·오류 JSON 예제</a> · <a href="부록/계약예제/검증결과.json">계약 검증 결과</a> · <a href="부록/계약예제/업로드.http">HEAD/PATCH 요청 예제</a></li></ul>'''
     index=index.replace('<h2>검수와 구현 결정</h2>',extra+'<h2>검수와 구현 결정</h2>')
+    index=index.replace('112개',str(sum(map(len,QA.values())))+'개').replace('12개 계약 통합',str(len(CONTRACT_CASES))+'개 계약 통합').replace('기능명세서 v2(', '기능명세서 v2.1(').replace('v2.1(2026-10-20 회의 반영)', 'v2.1(2026-10-24 초대 권한 확대)')
     (ROOT/'00 설계서 안내.html').write_text(index)
 
 def main():

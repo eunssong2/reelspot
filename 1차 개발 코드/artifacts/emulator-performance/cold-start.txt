@@ -1,7 +1,0 @@
-Starting: Intent { cmp=kr.atthatplace.app/.MainActivity }
-Status: ok
-LaunchState: COLD
-Activity: kr.atthatplace.app/.MainActivity
-TotalTime: 1116
-WaitTime: 1123
-Complete

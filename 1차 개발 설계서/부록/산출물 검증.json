@@ -8,6 +8,20 @@
       "detail": 73
     },
     {
+      "check": "초대 관리 3개 API는 모든 현재 참여자",
+      "passed": true,
+      "detail": [
+        "invitesList",
+        "inviteCreate",
+        "inviteRevoke"
+      ]
+    },
+    {
+      "check": "초대 UI와 현재 참여 권한 연결",
+      "passed": true,
+      "detail": "모든 현재 참여자(방장 포함)"
+    },
+    {
       "check": "28개 기능의 UI 연결",
       "passed": true,
       "detail": 28
@@ -28,7 +42,7 @@
     {
       "check": "패키지 내부 기능명세 SHA256",
       "passed": true,
-      "detail": "f0bf6e3d1bdf0a71370ea6c0a1f5ed55b8c1b4b7dbfeaab8605609f96d5ffcd3"
+      "detail": "a682db16e2289d4258d3c232fd0245441fffecfdee42dd7df8759140be2c50f9"
     },
     {
       "check": "업무 결과 키 operationId 통일",
@@ -80,7 +94,7 @@
           {
             "check": "build_design.py 독립 실행",
             "passed": true,
-            "output": "{\"screens\": 33, \"operations\": 73, \"tables\": 27, \"functional_cases\": 112, \"native_ui_pptx\": \"/tmp/atp-design-standalone-26t1kh6s/package/UI/05 UI 설계.pptx\"}\n",
+            "output": "{\"screens\": 33, \"operations\": 73, \"tables\": 27, \"functional_cases\": 116, \"native_ui_pptx\": \"/tmp/atp-design-standalone-uj_pi7he/package/UI/05 UI 설계.pptx\"}\n",
             "error": ""
           },
           {
@@ -101,9 +115,9 @@
       }
     },
     {
-      "check": "112개 기능 검수 시나리오",
+      "check": "116개 기능 검수 시나리오",
       "passed": true,
-      "detail": 112
+      "detail": 116
     },
     {
       "check": "33개 SVG의 독립 텍스트/도형",
@@ -201,7 +215,7 @@
         ],
         [
           "UI23",
-          30
+          31
         ],
         [
           "UI24",
@@ -270,7 +284,7 @@
       "check": "Word 열기 01 시스템 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 42,
+        "paragraphs": 43,
         "tables": 1
       }
     },
@@ -286,7 +300,7 @@
       "check": "Word 열기 09 구현 계약 보완",
       "passed": true,
       "detail": {
-        "paragraphs": 59,
+        "paragraphs": 61,
         "tables": 2
       }
     },
@@ -294,7 +308,7 @@
       "check": "Word 열기 04 업무 흐름 상태 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 55,
+        "paragraphs": 56,
         "tables": 1
       }
     },
@@ -355,7 +369,7 @@
     {
       "check": "기능검수 결과 미실행 유지",
       "passed": true,
-      "detail": 112
+      "detail": 116
     },
     {
       "check": "로컬 HTML 링크/이미지",

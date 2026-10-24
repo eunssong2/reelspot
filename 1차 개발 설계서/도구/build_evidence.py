@@ -1,4 +1,4 @@
-import json,hashlib,subprocess
+import json,hashlib,subprocess,os
 from pathlib import Path
 from PIL import Image
 import openpyxl
@@ -7,8 +7,9 @@ from build_design import Doc
 
 def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def main():
-    apk=ROOT.parent/'기능 명세서 자료/ReelSpot-Demo.apk'
-    if not apk.exists():
+    configured=os.environ.get('ATP_REFERENCE_APK')
+    apk=Path(configured).expanduser().resolve() if configured else None
+    if not apk or not apk.exists():
         assert (ROOT/'근거/APK/실행검토.json').exists(),'APK도 기존 실행 근거도 없습니다.'
         print('외부 APK가 없어 패키지에 보관된 실제 실행 근거를 유지합니다. 새 실행 결과를 생성하지 않았습니다.')
         return
@@ -18,7 +19,7 @@ def main():
         assert sha(p)==m['sha256']
         assert Image.open(p).size==(1080,2400)
         captures.append({k:m[k] for k in ['id','captured_at','action','sha256']})
-    metadata={'review_date':DATE,'apk':str(apk.relative_to(ROOT.parent)),
+    metadata={'review_date':DATE,'apk':str(apk),
       'apk_sha256':sha(apk),'package':'com.reelspot.app.demo','version_name':'0.1.0','version_code':1,
       'environment':{'avd':'daylog35','android':'15','api':35,'abi':'x86_64','resolution':'1080x2400','mode':'no-window Android emulator, ADB screen capture'},
       'launch_command':'adb -s emulator-5554 shell am start --user 0 -n com.reelspot.app.demo/.MainActivity',
@@ -29,10 +30,10 @@ def main():
       'observed_differences':['업로드 시트 최대10개→최신명세120개','날짜 화면을 경유→최신명세일정전체직접상세','날짜 전체 메모→최신명세제외'],
       'captures':captures}
     (ROOT/'근거/APK/실행검토.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2))
-    book=openpyxl.load_workbook(ROOT.parent/'설계 자료/화면 명세 데이터.xlsx',data_only=True)
+    book=openpyxl.load_workbook(ROOT/'참고 자료/화면 명세 데이터.xlsx',data_only=True)
     inventory=[]
-    for rel in ['기능명세서.md','설계 자료/프로젝트 소개.pdf','설계 자료/화면 명세 데이터.xlsx','기능 명세서 자료/ReelSpot-Demo.apk']:
-        p=ROOT.parent/rel;inventory.append({'path':rel,'bytes':p.stat().st_size,'sha256':sha(p)})
+    for rel,p in [('기준/기능명세서.md',ROOT/'기준/기능명세서.md'),('참고 자료/프로젝트 소개.pdf',ROOT/'참고 자료/프로젝트 소개.pdf'),('참고 자료/화면 명세 데이터.xlsx',ROOT/'참고 자료/화면 명세 데이터.xlsx'),('ATP_REFERENCE_APK',apk)]:
+        inventory.append({'path':rel,'bytes':p.stat().st_size,'sha256':sha(p)})
     (ROOT/'근거/자료/자료 검토.json').write_text(json.dumps({'sources':inventory,'pdf_pages':14,'pdf_review':'텍스트 추출에서 한글 누락을 확인하여 14페이지를 렌더링해 시각 검토','workbook_sheets':[{'sheet':s.title,'rows':s.max_row,'columns':s.max_column,'embedded_images':len(s._images)} for s in book]},ensure_ascii=False,indent=2))
     d=Doc('08 APK 실행 검토','ReelSpot 데모 APK 실행과 UI 관찰','실제 실행 근거 · 1차 신규 설계/실서비스 검수와 구분')
     d.h('1 실행 환경과 식별')
