@@ -5,11 +5,11 @@ from playwright.async_api import async_playwright
 from PIL import Image,ImageDraw,ImageFont
 from design_model import ROOT
 
-async def render(only_diagrams=False):
+async def render(only_diagrams=False, ui_only=False):
     async with async_playwright() as pw:
         browser=await pw.chromium.launch(headless=True)
         page=await browser.new_page(viewport={'width':1600,'height':1100},device_scale_factor=1)
-        for name in ['아키텍처','ERD']:
+        for name in ([] if ui_only else ['아키텍처','ERD']):
             p=ROOT/'부록'/(name+'.svg')
             await page.goto(p.as_uri());await page.locator('svg').screenshot(path=str(p.with_suffix('.png')))
         if only_diagrams:
@@ -26,7 +26,14 @@ async def render(only_diagrams=False):
         for i,p in enumerate(paths):
             im=Image.open(p);im.thumbnail((215,470));x=(i%7)*257+18;y=(i//7)*520+30;out.paste(im,(x,y));draw.text((x,y-23),p.stem[:18],font=font,fill='#191F28')
         out.save(ROOT/'UI/전체 화면 미리보기.jpg')
-        for p in sorted((ROOT/'부록/열람용HTML').glob('*.html')):
+        prototype_paths=sorted((ROOT/'UI/프로토타입').glob('*.png'))
+        if prototype_paths:
+            out=Image.new('RGB',(1800,math_rows(len(prototype_paths))*520),'#e6e9ed');draw=ImageDraw.Draw(out)
+            for i,p in enumerate(prototype_paths):
+                im=Image.open(p);im.thumbnail((215,470));x=(i%7)*257+18;y=(i//7)*520+30
+                out.paste(im,(x,y));draw.text((x,y-23),p.stem,font=font,fill='#191F28')
+            out.save(ROOT/'UI/프로토타입 전체 미리보기.jpg')
+        for p in ([] if ui_only else sorted((ROOT/'부록/열람용HTML').glob('*.html'))):
             await page.goto(p.as_uri());await page.evaluate('document.fonts.ready')
             dest=(ROOT/'근거' if p.stem.startswith('08 ') else ROOT)/(p.stem+'.pdf')
             await page.pdf(path=str(dest),print_background=True,prefer_css_page_size=True,display_header_footer=True,header_template='<div></div>',footer_template='<div style="font-size:8px;width:100%;text-align:center;color:#777">At that place · 1차 개발 설계 · <span class="pageNumber"></span> / <span class="totalPages"></span></div>')
@@ -38,4 +45,4 @@ async def render(only_diagrams=False):
 def math_rows(n):return (n+6)//7
 if __name__=='__main__':
     import sys
-    asyncio.run(render('--diagrams' in sys.argv))
+    asyncio.run(render('--diagrams' in sys.argv, '--ui' in sys.argv))

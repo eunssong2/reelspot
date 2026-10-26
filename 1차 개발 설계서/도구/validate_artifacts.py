@@ -54,23 +54,43 @@ def main():
     qa_count=sum(map(len,QA.values()))
     check(f'{qa_count}개 기능 검수 시나리오',set(QA)==required and qa_count==116,qa_count)
     svg_paths=list((ROOT/'UI/SVG').glob('*.svg'))
+    from prototype_ui import load_source
+    prototype=load_source()
+    applied=json.loads((ROOT/'UI/화면 반영.json').read_text())
+    replaced=set(applied['replaced_ui'])
+    check('프로토타입 출처와 캡처 무결성',len(prototype['screens'])==applied['captures'] and
+          prototype['commit']==applied['source_commit'] and
+          replaced=={s['ui'] for s in prototype['screens'] if s['ui']},
+          {'commit':prototype['commit'],'captures':len(prototype['screens']),'replaced':sorted(replaced)})
     svg_ok=True
     for p in svg_paths:
         el=ET.parse(p)
-        if any(x.tag.endswith('image') for x in el.iter()):svg_ok=False
-        if not any(x.tag.endswith('text') for x in el.iter()):svg_ok=False
-    check(f'{len(SCREENS)}개 SVG의 독립 텍스트/도형',len(svg_paths)==len(SCREENS) and svg_ok,len(svg_paths))
+        images=[x for x in el.iter() if x.tag.endswith('image')]
+        if p.name.split('_')[0] in replaced:
+            import base64
+            shot=next(s for s in prototype['screens'] if s['ui']==p.name.split('_')[0])
+            if len(images)!=1 or hashlib.sha256(base64.b64decode(images[0].get('href','').split(',')[-1])).hexdigest()!=shot['sha256']:svg_ok=False
+        elif images or not any(x.tag.endswith('text') for x in el.iter()):svg_ok=False
+    check(f'{len(SCREENS)}개 SVG의 화면 출처별 구조',len(svg_paths)==len(SCREENS) and svg_ok,
+          {'prototype_raster':len(replaced),'editable_vector':len(SCREENS)-len(replaced)})
     issues=json.loads((ROOT/'부록/SVG 레이아웃 검사.json').read_text())
     check('SVG 텍스트 화면경계',len(issues)==0,issues)
-    prs=Presentation(ROOT/'UI/05 UI 설계.pptx');layout_issues=[];native=[]
+    prs=Presentation(ROOT/'UI/05 UI 설계.pptx');layout_issues=[];native=[];capture_slides=[]
     for slide in prs.slides:
         texts='\n'.join(sh.text for sh in slide.shapes if sh.has_text_frame and sh.text.strip())
         for s in SCREENS:
-            if texts.startswith(s['id']+'  '):native.append((s['id'],sum(1 for sh in slide.shapes if sh.has_text_frame)))
+            if texts.startswith(s['id']+'  '):
+                if s['id'] in replaced:
+                    capture_slides.append((s['id'],any(sh.shape_type==13 for sh in slide.shapes)))
+                else:native.append((s['id'],sum(1 for sh in slide.shapes if sh.has_text_frame)))
         for sh in slide.shapes:
             if min(sh.left,sh.top)<-1000 or sh.left+sh.width>prs.slide_width+1000 or sh.top+sh.height>prs.slide_height+1000:
                 layout_issues.append({'slide':len(layout_issues),'shape':sh.name})
-    check(f'PPTX {len(SCREENS)}개 화면의 네이티브 텍스트',len(native)==len(SCREENS) and all(n>=10 for _,n in native),native)
+    check('PPTX 명세 기반 화면의 네이티브 텍스트',len(native)==len(SCREENS)-len(replaced) and all(n>=10 for _,n in native),native)
+    check('PPTX 브랜치 대응 화면의 캡처 이미지',len(capture_slides)==len(replaced) and all(ok for _,ok in capture_slides),capture_slides)
+    check('PPTX 기본·상세·상태 화면 수',len(prs.slides)==applied['pptx_slides'],len(prs.slides))
+    ppt_images={hashlib.sha256(sh.image.blob).hexdigest() for slide in prs.slides for sh in slide.shapes if sh.shape_type==13}
+    check('PPTX 캡처 전체의 원본 이미지 포함',all(s['sha256'] in ppt_images for s in prototype['screens']),len(prototype['screens']))
     check('PPTX 도형 슬라이드 경계',not layout_issues,layout_issues)
     documents=list(ROOT.glob('*.docx'))+list((ROOT/'근거').glob('*.docx'))
     for p in documents:
@@ -100,8 +120,12 @@ def main():
     pdfs=list(ROOT.glob('*.pdf'))+list((ROOT/'UI').glob('*.pdf'))+list((ROOT/'근거').glob('*.pdf'))
     for p in pdfs:
         pdf=pymupdf.open(p);check('PDF 열기 '+p.stem,len(pdf)>0 and bool(pdf[0].get_text().strip()),len(pdf))
-        if p.stem=='05 UI 설계':check('UI PDF 화면수',len(pdf)==len(SCREENS),len(pdf))
-    result={'scope':'설계 산출물 검증. 실제 앱 F01~F28 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.','passed':not errors,'checks':checks,'errors':errors}
+        if p.stem=='05 UI 설계':
+            check('UI PDF 기본·상세·상태 화면수',len(pdf)==applied['pdf_pages'],len(pdf))
+            pages=list(pdf)[applied['pdf_intro_pages']:]
+            check('UI PDF 출처와 적용 기준',prototype['commit'][:7] in pdf[0].get_text() and '화면 적용 기준' in pdf[0].get_text(),prototype['commit'])
+            check('UI PDF 화면 순서와 누락',len(pages)==len(applied['gallery_pages']) and all(id+' ·' in page.get_text() for id,page in zip(applied['gallery_pages'],pages)),applied['gallery_pages'])
+    result={'scope':'설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F28 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.','passed':not errors,'checks':checks,'errors':errors}
     (ROOT/'부록/산출물 검증.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
     manifest=[]
     for p in sorted(ROOT.rglob('*')):

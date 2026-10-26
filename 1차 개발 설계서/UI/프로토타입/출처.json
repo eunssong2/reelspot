@@ -1,0 +1,373 @@
+{
+  "branch": "feature/ui-prototype",
+  "commit": "99ab363734236c16e3e16e6d8b7987cf1fced425",
+  "repository": "https://github.com/eunssong2/reelspot",
+  "captured_at": "2026-10-26T16:13:28+09:00",
+  "environment": "Expo 데모 모드 · Playwright Chromium 웹 · 390×844 CSS px · DPR 2 · ko-KR · Asia/Seoul",
+  "scope": "브랜치 화면의 웹 실행 캡처. Android APK 재실행·실제 로그인·서버·업로드·지도 검수 아님.",
+  "sources": [
+    {
+      "path": "docs/demo-app-spec.md",
+      "sha256": "622ce9afa3faab763996555c7e991809dd7657e99470ff5ec73b634eac7f70eb"
+    },
+    {
+      "path": "docs/feature-spec.md",
+      "sha256": "af7042916a0a56a2be04db5dca21bda0889085b486301f918c079f7d7f0373b3"
+    },
+    {
+      "path": "src/demo/DemoHome.tsx",
+      "sha256": "f02e2edf0384c46b08e44385c0c9d2a0562ba83e2c3cc880759549e236636209"
+    },
+    {
+      "path": "src/demo/MediaViewerModal.tsx",
+      "sha256": "612c7dfde1876294dbbb3c3e0ae774c0cd599cf277e29693d05d5501201ba22f"
+    },
+    {
+      "path": "src/prototype/components/CoverEditSheet.tsx",
+      "sha256": "d7591c80bbdaf18f702af0d0f3fcde2763ca4d597d58e97477a31d8602c62c56"
+    },
+    {
+      "path": "src/prototype/components/MediaPickerSheet.tsx",
+      "sha256": "663c00664f5b5cfb88b6416b05ad38e25a8280f6eb28152fc4cce7071bd30feb"
+    },
+    {
+      "path": "src/prototype/components/PlaceDetailPanel.tsx",
+      "sha256": "47ed5d4f8994285e783863fbd73b991b5d1d58bdf3c073092608edb68b1a893f"
+    },
+    {
+      "path": "src/prototype/components/TimeEditModal.tsx",
+      "sha256": "c0fb83380d03f9c41abef8730544903f6bd2603a4a171bd02f53758ac9646ce6"
+    },
+    {
+      "path": "src/prototype/screens/ItineraryScreen.tsx",
+      "sha256": "a8067ea796644a583251942e6cd75131bb74c93fe95bdcf5bd45658eee7cdf37"
+    },
+    {
+      "path": "src/prototype/screens/ItinerarySummaryScreen.tsx",
+      "sha256": "2507cd4227843fb782b33ace81d500af2929fccf27209fc65f9195b6355e0e07"
+    },
+    {
+      "path": "src/prototype/screens/PlaceOrderEditScreen.tsx",
+      "sha256": "5bdf29a9bf5ac520058eae1756b423a0ec6ec9f26348a9e3abc9ee0447b2eb0e"
+    },
+    {
+      "path": "src/prototype/screens/PlaceRecordsScreen.tsx",
+      "sha256": "36e0001dd1838114673232979df27fe09a2e0f16fd25ffdd32ab2869782b4daf"
+    },
+    {
+      "path": "src/prototype/screens/PlaceSearchScreen.tsx",
+      "sha256": "b4d77219f050f99c6d765d7be53ec2ea5b76311d11e030563bdf4f5b3b026131"
+    },
+    {
+      "path": "src/prototype/styles/tokens.ts",
+      "sha256": "acf2d330ede6bc83e811e59c296747c7a6ef9c2988e72ee4678742b605db8c3b"
+    },
+    {
+      "path": "src/theme/theme.ts",
+      "sha256": "64c07a0a3ced79aa230746baaeaed61c3e590bee725f6061166d7891137d9cc8"
+    }
+  ],
+  "screens": [
+    {
+      "id": "S0",
+      "title": "데모 일정 선택",
+      "ui": null,
+      "image": "S0.png",
+      "source": "src/demo/DemoHome.tsx",
+      "route": "/prototype/?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "/prototype 진입",
+      "notes": [
+        "데모 전용 진입 화면. 서비스의 내 모임(UI03)과 구분한다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\nAT THAT PLACE\n어떤 일정을 볼까요?\n우리의 서울 여행\n3일 일정 · 2026.10.17 - 10.19\n성수 당일치기\n하루 일정 · 2026.10.24 토요일",
+      "captured_at": "2026-10-26T16:12:59+09:00",
+      "sha256": "c483edde58c206201df5b42f73e4dc93263cb2e9dd2dd14ec59ccfc3028a406b"
+    },
+    {
+      "id": "S01",
+      "title": "일정 요약",
+      "ui": "UI08",
+      "image": "S01.png",
+      "source": "src/prototype/screens/ItinerarySummaryScreen.tsx",
+      "route": "/prototype/itinerary?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "서울 여행 일정 열기",
+      "notes": [
+        "헤더는 뒤로가기와 브랜드. 16:9 대표 배너는 화면 가로 끝까지 표시한다.",
+        "날짜 카드에 날짜·제목·장소/미디어 수를 표시한다. DAY 배지·썸네일·카드 안 추가 버튼은 없다.",
+        "일정 추가는 마지막 날 다음 날짜를 추가하는 데모 동작이다. 새 일정 생성(UI06)과 다르다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n↺ 데모 초기화\n‹\nAT THAT PLACE\n🌉\n📷 배경 변경\n우리의 서울 여행\n📅 2026.10.17 - 10.19 · 5명\n+1\n10월 17일\n성수에서 느긋한 오후\n장소 3곳 · 미디어 9개 (사진 7·동영상 2)\n›\n10월 18일\n연남동 골목 산책\n장소 2곳 · 미디어 3개 (사진 3·동영상 0)\n›\n10월 19일\n10월 19일의 장소\n아직 정한 장소가 없어요\n›\n일정 추가",
+      "captured_at": "2026-10-26T16:13:02+09:00",
+      "sha256": "b8e3f2f62ef53b7a37afdd6280a841acedc955baca09dd733ffeff03a3b03cfc"
+    },
+    {
+      "id": "M4",
+      "title": "배경 사진 시트",
+      "ui": null,
+      "image": "M4.png",
+      "source": "src/prototype/components/CoverEditSheet.tsx",
+      "route": "/prototype/itinerary?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "S01 → 배경 사진 변경",
+      "notes": [
+        "앨범에서 사진 고르기·취소. 직접 선택한 사진이 있으면 기본 이미지로 되돌리기 표시."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n↺ 데모 초기화\n‹\nAT THAT PLACE\n🌉\n📷 배경 변경\n우리의 서울 여행\n📅 2026.10.17 - 10.19 · 5명\n+1\n10월 17일\n성수에서 느긋한 오후\n장소 3곳 · 미디어 9개 (사진 7·동영상 2)\n›\n10월 18일\n연남동 골목 산책\n장소 2곳 · 미디어 3개 (사진 3·동영상 0)\n›\n10월 19일\n10월 19일의 장소\n아직 정한 장소가 없어요\n›\n일정 추가\n배경 사진\n🖼️  앨범에서 사진 고르기\n취소",
+      "captured_at": "2026-10-26T16:13:02+09:00",
+      "sha256": "4f7998ba77cf1f90b3b66c566bdbe2b278980dbccaa69eed5704d2c75bf29d4b"
+    },
+    {
+      "id": "S02",
+      "title": "날짜별 장소",
+      "ui": null,
+      "image": "S02.png",
+      "source": "src/prototype/screens/ItineraryScreen.tsx",
+      "route": "/prototype/itinerary-day?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "S01 → 날짜 카드",
+      "notes": [
+        "날짜 탭은 최대 4개씩 가로 스크롤. 선택 날짜의 장소를 순서·방문 시간과 함께 표시한다.",
+        "장소 이미지는 생략하고 장소명·사진/영상 수·기록 진입 링크를 표시한다.",
+        "편집은 빈 날짜에도 제공한다. 장소 추가는 S03, 장소 카드는 S04로 이동한다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n우리의 서울 여행\n2026.10.17 - 10.19\n10월 17일\n토요일\n10월 18일\n일요일\n10월 19일\n월요일\n10월 17일  토요일\n편집\n성수에서 느긋한 오후\n1\n14:00\n수정\n오후의 커피\n사진 4 · 동영상 1\n›\n2\n15:10\n수정\n서울숲 산책길\n사진 3 · 동영상 1\n›\n3\n16:20\n수정\n작은책방 하루\n아직 기록 없음\n›\n장소 추가",
+      "captured_at": "2026-10-26T16:13:04+09:00",
+      "sha256": "cdcf2fa871224ea592d8982a6943eea9bd1fce6fc75ef972593042fe13d0b578"
+    },
+    {
+      "id": "M1",
+      "title": "방문 시간 수정",
+      "ui": null,
+      "image": "M1.png",
+      "source": "src/prototype/components/TimeEditModal.tsx",
+      "route": "/prototype/itinerary-day?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "S02 → 방문 시간 수정",
+      "notes": [
+        "오전/오후·시·분 휠. 분은 1분 단위이며 시간 미정·취소·확인 제공.",
+        "기존 설계의 5분 단위 입력과 차이가 있다. 저장 형식은 HH:mm이다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n우리의 서울 여행\n2026.10.17 - 10.19\n10월 17일\n토요일\n10월 18일\n일요일\n10월 19일\n월요일\n10월 17일  토요일\n편집\n성수에서 느긋한 오후\n1\n14:00\n수정\n오후의 커피\n사진 4 · 동영상 1\n›\n2\n15:10\n수정\n서울숲 산책길\n사진 3 · 동영상 1\n›\n3\n16:20\n수정\n작은책방 하루\n아직 기록 없음\n›\n장소 추가\n방문 시간\n오후의 커피\n오전\n오후\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n:\n00\n01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50\n51\n52\n53\n54\n55\n56\n57\n58\n59\n시간 미정으로 두기\n취소\n확인",
+      "captured_at": "2026-10-26T16:13:05+09:00",
+      "sha256": "a275178152b765e1763d507fcc88783c8b2e426c73f86e676e32856b631b560f"
+    },
+    {
+      "id": "S02-empty",
+      "title": "빈 날짜의 장소",
+      "ui": null,
+      "image": "S02-empty.png",
+      "source": "src/prototype/screens/ItineraryScreen.tsx",
+      "route": "/prototype/itinerary-day?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-3",
+      "actions": "장소가 없는 10월 19일 선택",
+      "notes": [
+        "빈 상태에서도 편집과 장소 추가를 제공한다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n우리의 서울 여행\n2026.10.17 - 10.19\n10월 17일\n토요일\n10월 18일\n일요일\n10월 19일\n월요일\n10월 19일  월요일\n편집\n가고 싶은 곳을 담아 하루를 채워보세요.\n장소 추가",
+      "captured_at": "2026-10-26T16:13:07+09:00",
+      "sha256": "e3fb76cd76cd5315737f68cf4af0146c97d14d5f4b8c3da5edfe37ed5cb8fa54"
+    },
+    {
+      "id": "S05-empty",
+      "title": "빈 날짜 편집",
+      "ui": null,
+      "image": "S05-empty.png",
+      "source": "src/prototype/screens/PlaceOrderEditScreen.tsx",
+      "route": "/prototype/place-order?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-3",
+      "actions": "빈 날짜 → 편집",
+      "notes": [
+        "장소 행 없이 날짜 제목을 수정할 수 있다. 메모 입력은 데모에 남아 있는 차이 사항이다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n장소 순서 편집\n10월 19일 월요일\n날짜 제목\n0/30 · 비워 두면 \"10월 19일의 장소\"로 보여요\n아직 담은 장소가 없어요. 장소를 담으면 여기서 순서와 시간을 바꿀 수 있어요.\n장소 메모\n0/100\n변경 저장",
+      "captured_at": "2026-10-26T16:13:08+09:00",
+      "sha256": "07c7657f20a957defb4b4f3a997b0f7617631482e78abafe06979ed7c5994386"
+    },
+    {
+      "id": "S02-oneday",
+      "title": "하루 일정",
+      "ui": null,
+      "image": "S02-oneday.png",
+      "source": "src/prototype/screens/ItineraryScreen.tsx",
+      "route": "/prototype/itinerary-day?tripId=trip1&itineraryId=itin-seoul-oneday&dayId=day-1",
+      "actions": "성수 당일치기 → 날짜별 장소",
+      "notes": [
+        "날짜가 하나인 일정에는 날짜 탭을 표시하지 않는다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n성수 당일치기\n2026.10.24 토요일\n10월 24일  토요일\n편집\n빵 먹고 전시 보고 저녁까지\n1\n10:30\n수정\n아침 빵집\n사진 2 · 동영상 0\n›\n2\n13:00\n수정\n작은 전시관\n아직 기록 없음\n›\n3\n시간 미정\n수정\n골목 저녁 식당\n사진 1 · 동영상 0\n›\n장소 추가",
+      "captured_at": "2026-10-26T16:13:10+09:00",
+      "sha256": "14f5d9bfc77bb40a5cb1a3420eedf5ea6bea9269131f1952cfeccd7231c4c494"
+    },
+    {
+      "id": "S02-tabs",
+      "title": "5일 일정의 날짜 탭",
+      "ui": null,
+      "image": "S02-tabs.png",
+      "source": "src/prototype/screens/ItineraryScreen.tsx",
+      "route": "/prototype/itinerary-day?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-5",
+      "actions": "S01에서 날짜 2개 추가 → 마지막 날짜 열기",
+      "notes": [
+        "추가한 날짜로 기간이 늘어나며 선택 탭이 온전히 보이도록 자동 스크롤한다.",
+        "최대 4개 탭이 여백 안에 표시된다. 데모의 최대 30일은 제품 명세의 366일과 다르다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n우리의 서울 여행\n2026.10.17 - 10.21\n10월 17일\n토요일\n10월 18일\n일요일\n10월 19일\n월요일\n10월 20일\n화요일\n10월 21일\n수요일\n10월 21일  수요일\n편집\n가고 싶은 곳을 담아 하루를 채워보세요.\n장소 추가",
+      "captured_at": "2026-10-26T16:13:14+09:00",
+      "sha256": "afe38f5d6460f540e402a80b8eb93d0dc3bcd1c20a5ae151f184a9595d0b21f3"
+    },
+    {
+      "id": "S03",
+      "title": "장소 검색과 지도",
+      "ui": "UI10",
+      "image": "S03.png",
+      "source": "src/prototype/screens/PlaceSearchScreen.tsx",
+      "route": "/prototype/place-search?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "장소 추가 → 카페 카테고리",
+      "notes": [
+        "검색창·카테고리·예시 지도·결과 시트. 현재 캡처는 오프라인 예시 검색이다.",
+        "검색 결과와 핀을 연동하고 관련도순/거리순을 제공한다.",
+        "추가 성공 시 S02로 복귀하고 마지막 순서에 추가·추가됨 표시. 실제 카카오 연동은 별도 검수."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n장소 추가\n우리의 서울 여행 · 2026년 10월 17일 토요일\n🔍\n전체\n관광지\n맛집\n카페\n숙소\n예시 검색 (오프라인)\n실제 지도 (인터넷 필요)\n※ 아래 결과는 데모용 예시 장소예요. 실제 지도 검색 결과가 아닙니다.\n☕\n성수 로스터리 카페\n☕\n한남 브런치 카페\n☕\n익선동 한옥 카페\n☕\n합정 디저트 카페\n예시 지도 (실제 아님)\n⟳ 이 지역 다시 검색\n⦿\n예시 장소 4곳\n관련도순 ▾\n성수 로스터리 카페 카페 예시\n7.3km · 서울 성동구 연무장길 33\n☕\n+ 스팟에 추가\n한남 브런치 카페 카페 예시\n4.1km · 서울 용산구 이태원로 245\n☕\n+ 스팟에 추가\n익선동 한옥 카페 카페 예시\n1.3km · 서울 종로구 수표로28길 17\n☕\n+ 스팟에 추가\n합정 디저트 카페 카페 예시\n6.0km · 서울 마포구 양화로 45\n☕\n+ 스팟에 추가",
+      "captured_at": "2026-10-26T16:13:16+09:00",
+      "sha256": "ff9dfdaa64decab8c59d6744741bd8ca609983f47afe716c65dee5d1fcf3f7f3"
+    },
+    {
+      "id": "S03-detail",
+      "title": "장소 상세와 추가",
+      "ui": null,
+      "image": "S03-detail.png",
+      "source": "src/prototype/components/PlaceDetailPanel.tsx",
+      "route": "/prototype/place-search?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "카페 결과 → 성수 로스터리 카페",
+      "notes": [
+        "선택 날짜·주소를 확인하고 이 날의 장소로 추가한다. 선택만으로는 저장하지 않는다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n장소 추가\n우리의 서울 여행 · 2026년 10월 17일 토요일\n🔍\n전체\n관광지\n맛집\n카페\n숙소\n예시 검색 (오프라인)\n실제 지도 (인터넷 필요)\n※ 아래 결과는 데모용 예시 장소예요. 실제 지도 검색 결과가 아닙니다.\n☕\n성수 로스터리 카페\n☕\n한남 브런치 카페\n☕\n익선동 한옥 카페\n☕\n합정 디저트 카페\n예시 지도 (실제 아님)\n⟳ 이 지역 다시 검색\n⦿\n성수 로스터리 카페\n카페\n예시\n✕\n📍 서울 성동구 연무장길 33\n📅 선택한 날짜 · 2026년 10월 17일 토요일\n※ 데모용 예시 장소예요. 실제 장소 정보가 아닙니다.\n☕\n이 날의 장소로 추가",
+      "captured_at": "2026-10-26T16:13:17+09:00",
+      "sha256": "fadf879346518058d6cab602f7aee46464e191c4b8d19b5418e0a731f0167b28"
+    },
+    {
+      "id": "S05",
+      "title": "방문 계획 편집",
+      "ui": "UI12",
+      "image": "S05.png",
+      "source": "src/prototype/screens/PlaceOrderEditScreen.tsx",
+      "route": "/prototype/place-order?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "S02 → 편집",
+      "notes": [
+        "날짜 제목 30자·위/아래 순서 이동·방문 시간·변경 저장.",
+        "드래그 없이 ▲▼로 이동한다. 시간 변경으로 순서를 자동 정렬하지 않는다.",
+        "장소 메모 100자 입력은 데모에 남아 있다. 제품 명세의 날짜 공통 메모 제외와 차이가 있다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n장소 순서 편집\n10월 17일 토요일\n날짜 제목\n11/30 · 비워 두면 \"10월 17일의 장소\"로 보여요\n위·아래 버튼으로 방문 순서를 바꾸세요.\n1\n오후의 커피\n서울 성동구 연무장길 21\n방문 시간\n14:00 ✎\n▲\n▼\n2\n서울숲 산책길\n서울 성동구 뚝섬로 273\n방문 시간\n15:10 ✎\n▲\n▼\n3\n작은책방 하루\n서울 성동구 서울숲길 18\n방문 시간\n16:20 ✎\n▲\n▼\n장소 메모\n14/100\n변경 저장",
+      "captured_at": "2026-10-26T16:13:19+09:00",
+      "sha256": "5ef148576ff57c5796f8657e3c11bcd10ca9ecdfce16fdaca6dc2d59ed618cea"
+    },
+    {
+      "id": "S04",
+      "title": "장소별 기록 · 사진별",
+      "ui": "UI13",
+      "image": "S04.png",
+      "source": "src/prototype/screens/PlaceRecordsScreen.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "S02 → 오후의 커피",
+      "notes": [
+        "장소 헤더·올리기·사진/영상 수·최신/오래된순·사진별/사람별 전환.",
+        "파일 하나당 4:3 카드 하나. 작성자·시각·설명·영상 길이를 표시한다.",
+        "데모 최신순은 게시물 시각 기준이며 제품의 촬영 시각 기준 오름차순과 차이가 있다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n▶\n0:06\n10.17 14:25 · 도윤\n김이 모락모락\n10.17 14:25 · 도윤\n디저트도 하나\n10.17 14:12 · 수아\n창가 자리 찾았어요\n10.17 14:12 · 수아\n라떼 아트가 예뻐요\n10.17 14:12 · 수아",
+      "captured_at": "2026-10-26T16:13:21+09:00",
+      "sha256": "e9b9d3572120f6dace40a1d3fd5aa789bc31dc864823f0b28f2979927248cdc9"
+    },
+    {
+      "id": "S04-people",
+      "title": "장소별 기록 · 사람별",
+      "ui": "UI09",
+      "image": "S04-people.png",
+      "source": "src/prototype/screens/PlaceRecordsScreen.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "S04 → 사람별 보기",
+      "notes": [
+        "작성자별 카드와 사진 격자. 여러 장은 +N으로 펼치거나 접는다.",
+        "이 캡처는 한 방문의 사람별 보기다. 일정 전체·기간 밖·장소 미지정 기록 조회는 기존 제품 계약으로 남는다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n도윤\n사진 1 · 동영상 1 · 10.17 14:25\n▶\n0:06\n수아\n사진 3 · 10.17 14:12",
+      "captured_at": "2026-10-26T16:13:22+09:00",
+      "sha256": "4cd4f175ea4a77dd68052a4d722f1a7b6838d82ca5af00169293b4df5baa0bf1"
+    },
+    {
+      "id": "V1-photo",
+      "title": "사진 확대 보기",
+      "ui": "UI18",
+      "image": "V1-photo.png",
+      "source": "src/demo/MediaViewerModal.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "S04 → 도윤 사진",
+      "notes": [
+        "전체 화면 사진·확대/축소·닫기. 버튼과 두 번 탭 확대를 제공한다.",
+        "저장·다중 선택·신고/차단 등 제품 기능은 이 데모 뷰어에 구현되어 있지 않다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n▶\n0:06\n10.17 14:25 · 도윤\n김이 모락모락\n10.17 14:25 · 도윤\n디저트도 하나\n10.17 14:12 · 수아\n창가 자리 찾았어요\n10.17 14:12 · 수아\n라떼 아트가 예뻐요\n10.17 14:12 · 수아\n✕\n－\n1배\n＋\n도윤 · 10.17 14:25\n디저트도 하나",
+      "captured_at": "2026-10-26T16:13:22+09:00",
+      "sha256": "0584a1e86e4cdcb5e025af52ecf4d08631fbf63c1b1813c2d3e894e71b56af8f"
+    },
+    {
+      "id": "V1-video",
+      "title": "동영상 재생 보기",
+      "ui": null,
+      "image": "V1-video.png",
+      "source": "src/demo/MediaViewerModal.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "S04 → 도윤 동영상",
+      "notes": [
+        "번들 예시 동영상과 재생 컨트롤. 웹 렌더링 캡처이며 Android 재생 검수 결과와 구분한다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n▶\n0:06\n10.17 14:25 · 도윤\n김이 모락모락\n10.17 14:25 · 도윤\n디저트도 하나\n10.17 14:12 · 수아\n창가 자리 찾았어요\n10.17 14:12 · 수아\n라떼 아트가 예뻐요\n10.17 14:12 · 수아\n✕\n도윤 · 10.17 14:25\n김이 모락모락",
+      "captured_at": "2026-10-26T16:13:24+09:00",
+      "sha256": "a5822899584bc3f9dece09cdc3b2a5933834ed64d9331319e94a5438014e5fc5"
+    },
+    {
+      "id": "M2",
+      "title": "기록 추가 시트",
+      "ui": "UI14",
+      "image": "M2.png",
+      "source": "src/prototype/screens/PlaceRecordsScreen.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "S04 → 사진·동영상 올리기",
+      "notes": [
+        "빈 선택 목록·추가 타일·업로드하기. 선택 0개이면 제출 비활성.",
+        "화면의 최대 10개는 데모 값이다. 제품 계약의 방문별 사진5/영상2·다중선택120과 구분한다.",
+        "실제 업로드는 팀원 연결 지점이며 서버 저장 완료를 뜻하지 않는다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n▶\n0:06\n10.17 14:25 · 도윤\n김이 모락모락\n10.17 14:25 · 도윤\n디저트도 하나\n10.17 14:12 · 수아\n창가 자리 찾았어요\n10.17 14:12 · 수아\n라떼 아트가 예뻐요\n10.17 14:12 · 수아\n지금 이 순간 남기기\n＋\n사진·동영상 최대 10개\n업로드하기",
+      "captured_at": "2026-10-26T16:13:25+09:00",
+      "sha256": "32d05a33037e0249ebc54f078ad4a2a08a810f6c103f5cbf9bafd93f0300f5b9"
+    },
+    {
+      "id": "M3",
+      "title": "촬영과 앨범 선택",
+      "ui": null,
+      "image": "M3.png",
+      "source": "src/prototype/components/MediaPickerSheet.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "M2 → 추가 타일",
+      "notes": [
+        "사진 촬영·동영상 촬영·앨범 선택 연결. OS 선택기 자체는 이 캡처에 포함하지 않는다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n▶\n0:06\n10.17 14:25 · 도윤\n김이 모락모락\n10.17 14:25 · 도윤\n디저트도 하나\n10.17 14:12 · 수아\n창가 자리 찾았어요\n10.17 14:12 · 수아\n라떼 아트가 예뻐요\n10.17 14:12 · 수아\n지금 이 순간 남기기\n＋\n사진·동영상 최대 10개\n업로드하기\n🖼️\n사진 보관함에서 선택\n🎞️\n동영상 보관함에서 선택\n📷\n사진 촬영\n🎥\n동영상 촬영\n취소",
+      "captured_at": "2026-10-26T16:13:26+09:00",
+      "sha256": "6dab1969da52f988e743680b1387d89cbd551db3ba2dffd98905e575f6e9e6b5"
+    },
+    {
+      "id": "S04-empty",
+      "title": "기록 없는 장소",
+      "ui": null,
+      "image": "S04-empty.png",
+      "source": "src/prototype/screens/PlaceRecordsScreen.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-books",
+      "actions": "S02 → 작은책방 하루",
+      "notes": [
+        "기록 없음 안내와 올리기 버튼을 표시한다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n작은책방 하루\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 사진\n최신순 ⌄\n아직 이곳에 남긴 사진·동영상이 없어요.\n스팟원이 올리면 여기에 모여요.",
+      "captured_at": "2026-10-26T16:13:28+09:00",
+      "sha256": "ed73c695eab519a9537a588bdc906b6d2fec64d0ede50271bb5e6a3168aeb976"
+    }
+  ]
+}

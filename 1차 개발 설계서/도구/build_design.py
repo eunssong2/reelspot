@@ -178,78 +178,9 @@ def pt_text(slide,x,y,w,h,t,size=18,color='ink',bold=False):
     return ppt_shape(slide,txt(x,y,w,h,t,size/72,color,bold),scale=1)
 
 def build_ui():
-    prs=Presentation();prs.slide_width=Inches(16);prs.slide_height=Inches(9)
-    def base(title,sub):
-        s=prs.slides.add_slide(prs.slide_layouts[6]);ppt_shape(s,rect(0,0,16,.86,'navy',r=0));pt_text(s,.45,.18,15,.5,title,26,'white',True);pt_text(s,.5,8.58,15,.3,sub+'  ·  '+DATE,11,'muted');return s
-    s=base('At that place  1차 UI 설계','편집 가능한 화면 원본 · 기능명세서 v2.1(2026-10-24) 기준')
-    pt_text(s,.7,1.35,9,1.2,'함께한 기록을\n일정 안에서 바로 만납니다.',36,'ink',True)
-    pt_text(s,.7,3.1,8.7,2.2,f'{len(SCREENS)}개 대표 화면과 실제 APK 화면을 함께 검토합니다.\nUI07(맞춤 반복)은 폐지, UI19는 UI16에 통합했습니다.\n각 화면의 글자·버튼·배경·필드는 PowerPoint 도형입니다.\nSVG의 텍스트·도형도 개별 편집할 수 있습니다.\nAPK 캡처는 관찰 근거 이미지이며 편집용 UI 원본과 구분합니다.',21)
-    ppt_shape(s,rect(.7,6.15,8.8,1.2,'soft'));pt_text(s,1,6.35,8.2,.8,'Android 12+ · 한국 시간 고정 · 반복 일정·외부 공유 없음\n영상 편집·제작·결제는 후속 범위',19,'accent',True)
-    for e in screen_elements(next(x for x in SCREENS if x['id']=='UI08')):ppt_shape(s,e,11.1,1.12,3.1/390)
-    s=base('정보 구조와 핵심 이동','날짜는 일정 내부의 정리·필터 속성')
-    stages=[('UI03','내 모임'),('UI05','모임 달력'),('UI08','일정 전체'),('UI09 / UI13','공동 기록'),('UI18','감상')]
-    for i,(id,t) in enumerate(stages):
-        x=.65+i*3.05;ppt_shape(s,rect(x,1.5,2.65,1.1,'soft'));pt_text(s,x+.15,1.64,2.3,.75,id+'\n'+t,20,'accent',True)
-        if i<4:pt_text(s,x+2.72,1.8,.32,.4,'→',24,'muted')
-    pt_text(s,.8,3.2,14,1.4,'등록  UI14 방식 선택 → UI15 촬영 / 기기 선택기 → UI16 파일 선택·정보 → UI17 전송\n선택  UI09/UI13 길게 누르기 → UI16 선택 모드 → UI21 저장 · UI20 본인 수정 · 삭제\n관리  UI06 일정 수동 추가 · UI23 초대(50회) · UI26 참여자 · UI27 나가기/종료 · UI30 계정 삭제',23)
-    pt_text(s,.8,5.5,14,1.7,'화면 공통 규칙\n로딩·빈 결과·오류를 구분하고, 실패해도 입력을 유지합니다.\n서버가 권한·기한·버전을 재검증하며 전송100%를 완료로 표시하지 않습니다.',23)
-    s=base('디자인 토큰과 편집 방법','선행 XLSX의 브랜드 색과 간격을 Android 기준으로 정리')
-    tokens=[('기본 본문','#191F28'),('보조 본문','#4E5968'),('브랜드 포인트','#F1706B'),('주 버튼','#B8433F'),('안내 배경','#FDEDEB')]
-    for i,(name,c) in enumerate(tokens):
-        x=.8+i*3;ppt_shape(s,rect(x,1.4,2.5,1.1,c,r=.2));pt_text(s,x,2.65,2.8,.8,name+'\n'+c,18)
-    pt_text(s,.8,4,14,3,'본문17sp · 보조14sp · 제목24~28sp · 간격4dp 단위 · 좌우20dp\n버튼/필드 최소56dp · 폰트 확대200%는 스크롤/재배치로 검수\n밝은 코랄은 장식에 사용하고 주 버튼은 대비를 높인 진한 코랄로 제안합니다.\nPowerPoint: 도형/텍스트를 직접 선택해 수정 · SVG: 벡터 도구에서 열어 수정\n재생성: 도구/design_model.py 수정 후 build_design.py 실행',22)
-    wb=Workbook();wb.remove(wb.active)
-    screen_rows=[];component_rows=[];api_rows=[];state_rows=[];ui_html=[]
-    for si,spec in enumerate(SCREENS):
-        els=screen_elements(spec);svg=svg_for(els);fn=spec['id']+'_'+spec['title'].replace(' ','_')+'.svg';(ROOT/'UI/SVG'/fn).write_text(svg)
-        s=base(spec['id']+'  '+spec['title'],'1차 신규 설계안 · 도형/텍스트 개별 편집 가능 · '+ ' / '.join(spec['features']))
-        pt_text(s,.55,1.05,3.5,.35,'1차 화면 설계안 · 390×844dp',12,'accent',True)
-        for e in els:ppt_shape(s,e,.55,1.48,3.05/390)
-        ref=ROOT/'근거/APK'/str(spec.get('reference') or '')
-        ref=ref.with_suffix('.png') if spec.get('reference') else None
-        if ref and ref.exists():
-            pt_text(s,3.95,1.05,3.2,.38,'이번 실행 APK · 관찰 근거',12,'muted',True)
-            s.shapes.add_picture(str(ref),Inches(4),Inches(1.48),height=Inches(6.6))
-        else:
-            pt_text(s,4.05,1.55,2.6,.8,'명세 기반\n신규 화면',24,'accent',True)
-            pt_text(s,4.05,2.85,2.6,3.7,'데모에서 동작을\n확인한 화면이 아닙니다.\n\n구현·실제 연동·실기기\n검수가 필요합니다.',18,'muted')
-        pt_text(s,7.25,1.12,8.15,.5,'대상  '+spec['role'],20,'ink',True)
-        y=1.95
-        for n in spec['notes']:
-            n=wrap(n,38);linecount=len(n.splitlines());hh=max(.7,linecount*.27+.15)
-            pt_text(s,7.25,y,8.1,hh,n,17);y+=hh+.17
-        pt_text(s,7.25,5.98,8.15,.35,'상태와 예외',16,'accent',True)
-        pt_text(s,7.25,6.4,8.1,.95,wrap(spec['states'],49),14,'body')
-        pt_text(s,7.25,7.55,8.1,.8,'API  '+', '.join(spec['api']),12,'muted')
-        s.notes_slide.notes_text_frame.text='기능: '+' '.join(spec['features'])+'\n권한: '+spec['role']+'\n'+'\n'.join(spec['notes'])+'\n상태: '+spec['states']+'\nAPI: '+', '.join(spec['api'])
-        screen_rows.append([spec['id'],spec['title'],' '.join(spec['features']),spec['role'],'신규 설계안',fn,str(ref.relative_to(ROOT)) if ref and ref.exists() else '이번 APK에 대응 화면 없음',spec['states'],', '.join(spec['api'])])
-        for i,(kind,t) in enumerate(spec['rows'],1):component_rows.append([spec['id'],f'{spec["id"]}-C{i:02}',kind,t,'\n'.join(spec['notes']),spec['role'],spec['states']])
-        for op in spec['api']:api_rows.append([spec['id'],op,' '.join(spec['features'])])
-        state_rows.append([spec['id'],'정상/로딩/빈결과/오류/권한변경',spec['states'],'입력·필터·선택·스크롤 보존. 결과불명은작업조회. 쓰기는버전/권한검증.'])
-        refhtml=f'<figure><img src="../근거/APK/{ref.name}"><figcaption>이번 APK 실행 캡처 · {E(ref.stem)}</figcaption></figure>' if ref and ref.exists() else '<div class="new">최신 기능명세서에 따라 새로 설계한 화면입니다.</div>'
-        ui_html.append(f'<article class="screen" id="{spec["id"]}"><h2>{spec["id"]} {E(spec["title"])}</h2><p class="meta">{" · ".join(spec["features"])} · {E(spec["role"])}</p><div class="pair"><figure><img src="SVG/{E(fn)}"><figcaption>수정 가능한 1차 화면 원본 · <a href="SVG/{E(fn)}">SVG 열기</a></figcaption></figure>{refhtml}<div class="notes">'+''.join('<p>'+E(n)+'</p>' for n in spec['notes'])+f'<h3>상태</h3><p>{E(spec["states"])}</p><h3>API</h3><p>{E(", ".join(spec["api"]))}</p></div></div></article>')
-    # 실제 실행 캡처 전용 페이지에 관찰 경로를 표시한다.
-    for p in sorted((ROOT/'근거/APK').glob('*.png')):
-        meta=json.loads(p.with_suffix('.json').read_text());s=base('APK 관찰  '+p.stem,'원본 스크린샷 · 이번 실행 · 설계안/실서비스 검수 결과와 구분')
-        s.shapes.add_picture(str(p),Inches(.8),Inches(1.15),height=Inches(7.1))
-        pt_text(s,4.8,1.4,10,1.1,meta['action'],26,'ink',True)
-        pt_text(s,4.8,2.85,10,1.6,'촬영 시각  '+meta['captured_at']+'\nAndroid 15(API35) · daylog35 · 1080×2400\n예시 데이터 기반 데모 모드',19,'body')
-        pt_text(s,4.8,5.05,10,2,'관찰 근거: PNG + UI XML + 화면 텍스트 + 실행 경로\n실제 로그인·서버 업로드·공동 동기화·실제 지도·검사·만료는 이 캡처로 검증되지 않습니다.',20,'muted')
-    prs.save(ROOT/'UI/05 UI 설계.pptx')
-    sheet(wb,'화면목록',['화면ID','화면명','기능','권한','설계상태','SVG','APK근거','대표상태','API'],screen_rows,[12,28,22,30,18,38,42,65,65])
-    sheet(wb,'구성요소명세',['화면ID','요소ID','유형','표시문구','동작·검증·전환','권한','오류·상태'],component_rows,[12,18,15,48,100,32,70])
-    sheet(wb,'화면API연결',['화면ID','operationId','기능'],api_rows,[16,35,28])
-    sheet(wb,'화면상태',['화면ID','공통상태','화면별주요상태','복구규칙'],state_rows,[14,45,90,80])
-    flow=[('앱시작','UI01','세션복원실패/없음','replace','초대와 보류작업 유지'),('UI01','UI02','최초가입','replace','동의 완료 전 공동진입 제한'),('UI01/UI02','UI24','보류초대 존재','replace','참여하기 재확인'),('UI01/UI02','UI03','로그인/가입완료','replace','초대없음'),('UI03','UI04','모임생성','push','첫일정 필수'),('UI03','UI05','모임카드','push','현재참여'),('UI05','UI23','초대 발급·관리','push','모든 현재 참여자·같은 모임 초대'),('UI05','UI06','일정추가','push','현재 방장·반복 없음'),('UI05','UI08','일정선택','push','날짜별 화면 경유없음'),('UI08','UI09','공동기록','tab','필터·보기방식·스크롤 유지'),('UI08','UI13','장소선택','push','사람별/시간순 보기'),('UI08','UI10','장소추가','push','일정/방문일 전달·15개 검사'),('UI10','UI11','직접등록','push','검색어 초깃값'),('UI10/UI11','UI08','방문저장성공','pop','마지막순서 추가·예정 시각'),('UI08','UI12','계획편집','push','미저장이탈확인'),('UI08/UI13','UI14','올리기','sheet','취소/만료검증'),('UI14','UI15','촬영','push','필요시권한'),('UI14/UI15','UI16','파일선택/사용','push','최대120'),('UI16','UI17','업로드확인','push','서버접수·한도 파일별 거부'),('UI09/UI13/UI22','UI18','카드열기','push','공동/본인context'),('UI09/UI13/UI22','UI16','길게누르기/선택','mode','최대120·기존 기록 선택(구 UI19)'),('UI16','UI20','본인정보수정','push','같은일정본인'),('UI18/UI16','UI21','휴대폰 저장','sheet','현재참여·공유 없음'),('UI28','UI22','내기록','push','나간모임본인포함'),('UI26','UI27','나가기','sheet','방장선행조건'),('UI28','UI30','계정삭제','push','재인증·역할정리'),('UI28','UI29','로그인수단','push','명시적연결'),('UI31','UI28','차단해제/신고조회','pop','목록/집계갱신'),('UI26','UI32','부재복구문의','push','후임별도동의'),('UI28','UI33','캐시/저장공간','push','원본과캐시분리'),('모든쓰기화면','UI35','결과불명/충돌','inline/sheet','입력유지·작업조회')]
-    sheet(wb,'화면전환',['출발','도착','이벤트','방식','전달·복귀규칙'],flow,[28,18,35,20,70])
-    sheet(wb,'디자인토큰',['토큰','값','용도·기준'],[['기준 캔버스','390×844dp','Android 대표화면·실제는가변레이아웃'],['본문','17sp','200%글자확대검수'],['보조','14sp','충분한대비'],['터치','최소56dp','달력 셀은예외로확대날짜선택목록 보완'],['간격','4dp단위·좌우20dp','카드간12·섹션32'],*[[k,'#'+v,'브랜드/본문/표면'] for k,v in COLORS.items()]], [30,30,75])
-    wb.save(ROOT/'UI/05 화면 명세.xlsx')
-    navigation=''.join(f'<a href="#{s["id"]}">{s["id"]} {E(s["title"])}</a>' for s in SCREENS)
-    ui_page='''<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place 1차 UI 설계</title><style>
-    *{box-sizing:border-box}body{font-family:'Noto Sans CJK KR',sans-serif;color:#191F28;background:#f4f5f7;margin:0}header{background:#202A35;color:white;padding:40px}header a{color:#fff}h1{font-size:34px}h2{font-size:27px}aside{position:fixed;top:0;bottom:0;width:250px;overflow:auto;background:white;padding:22px}aside a{display:block;padding:8px;font-size:13px;color:#4E5968;text-decoration:none}main{margin-left:250px}.screen{background:white;border-radius:20px;margin:30px;padding:30px;scroll-margin:20px}.pair{display:flex;gap:28px;align-items:flex-start}figure{margin:0;width:255px;flex-shrink:0}figure img{width:100%;border:1px solid #DCE1E6;border-radius:16px}figcaption{font-size:12px;line-height:1.7;color:#5F6B78;margin-top:8px}.notes{max-width:630px;font-size:15px;line-height:1.9}.meta{color:#B8433F}.new{width:210px;background:#FDEDEB;color:#B8433F;padding:24px;border-radius:15px;flex-shrink:0}.notes h3{font-size:15px}a{color:#B8433F}@media(max-width:1100px){aside{display:none}main{margin:0}.pair{flex-wrap:wrap}}@media print{@page{size:A4 landscape;margin:10mm}aside,header{display:none}main{margin:0}.screen{margin:0;padding:15px;break-after:page;break-inside:avoid;border-radius:0}.pair{flex-wrap:nowrap;gap:24px}figure{width:235px}.notes{font-size:13px;line-height:1.75}body{background:white}h2{margin:0 0 8px}}
-    </style><aside><b>1차 UI 설계</b><p><a href="../00 설계서 안내.html">← 설계서 목록</a></p>'''+navigation+'''</aside><main><header><h1>At that place 1차 UI 설계</h1><p>'''+str(len(SCREENS))+'''개 대표 화면 · Android 12+ · 기능명세 v2(2026-10-20 회의 반영) · UI07 폐지·UI19는 UI16에 통합 · 수정 가능한 PPTX와 SVG</p><p><a href="05 UI 설계.pptx">PowerPoint 원본</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">열람용 PDF</a></p></header>'''+''.join(ui_html)+'</main></html>'
-    (ROOT/'UI/05 UI 화면 갤러리.html').write_text(ui_page)
-    (ROOT/'UI/화면데이터.json').write_text(json.dumps(SCREENS,ensure_ascii=False,indent=2))
+    from prototype_ui import build
+    build(screen_elements, svg_for, ppt_shape, sheet)
+
 
 def build_docs():
     d=Doc('01 시스템 설계','At that place 1차 시스템 설계')
@@ -394,6 +325,8 @@ def build_index():
     index=index.replace('<h2>검수와 구현 결정</h2>',extra+'<h2>검수와 구현 결정</h2>')
     index=index.replace('112개',str(sum(map(len,QA.values())))+'개').replace('12개 계약 통합',str(len(CONTRACT_CASES))+'개 계약 통합').replace('기능명세서 v2(', '기능명세서 v2.1(').replace('v2.1(2026-10-20 회의 반영)', 'v2.1(2026-10-24 초대 권한 확대)')
     (ROOT/'00 설계서 안내.html').write_text(index)
+    from prototype_ui import update_index
+    update_index()
 
 def main():
     prepare_baseline(ROOT)

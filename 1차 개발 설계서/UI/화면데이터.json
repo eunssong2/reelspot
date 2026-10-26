@@ -42,7 +42,8 @@
       "authExchange",
       "sessionRefresh"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI02",
@@ -95,7 +96,8 @@
       "onboard",
       "consentDocs"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI03",
@@ -150,7 +152,8 @@
       "groupsList",
       "groupCreate"
     ],
-    "reference": "01-entry"
+    "reference": "01-entry",
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI04",
@@ -199,7 +202,8 @@
     "api": [
       "groupCreate"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI05",
@@ -251,7 +255,8 @@
       "calendar",
       "scheduleDelete"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI06",
@@ -304,11 +309,12 @@
       "scheduleCancel",
       "scheduleDelete"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI08",
-    "title": "일정 전체 계획과 기록",
+    "title": "일정 요약",
     "features": [
       "F06",
       "F09",
@@ -317,6 +323,112 @@
     ],
     "role": "현재 참여자",
     "rows": [
+      [
+        "prototype",
+        "TEST"
+      ],
+      [
+        "prototype",
+        "예시 데이터로 체험 중이에요"
+      ],
+      [
+        "prototype",
+        "↺ 데모 초기화"
+      ],
+      [
+        "prototype",
+        "‹"
+      ],
+      [
+        "prototype",
+        "AT THAT PLACE"
+      ],
+      [
+        "prototype",
+        "🌉"
+      ],
+      [
+        "prototype",
+        "📷 배경 변경"
+      ],
+      [
+        "prototype",
+        "우리의 서울 여행"
+      ],
+      [
+        "prototype",
+        "📅 2026.10.17 - 10.19 · 5명"
+      ],
+      [
+        "prototype",
+        "+1"
+      ],
+      [
+        "prototype",
+        "10월 17일"
+      ],
+      [
+        "prototype",
+        "성수에서 느긋한 오후"
+      ],
+      [
+        "prototype",
+        "장소 3곳 · 미디어 9개 (사진 7·동영상 2)"
+      ],
+      [
+        "prototype",
+        "›"
+      ],
+      [
+        "prototype",
+        "10월 18일"
+      ],
+      [
+        "prototype",
+        "연남동 골목 산책"
+      ],
+      [
+        "prototype",
+        "장소 2곳 · 미디어 3개 (사진 3·동영상 0)"
+      ],
+      [
+        "prototype",
+        "›"
+      ],
+      [
+        "prototype",
+        "10월 19일"
+      ],
+      [
+        "prototype",
+        "10월 19일의 장소"
+      ],
+      [
+        "prototype",
+        "아직 정한 장소가 없어요"
+      ],
+      [
+        "prototype",
+        "›"
+      ],
+      [
+        "prototype",
+        "일정 추가"
+      ]
+    ],
+    "notes": [
+      "① 완료 전 예상, 첫 완료 후 고정 기한으로 표시한다. 기한 예시는 2026.10.19 종료에 대응한다.",
+      "② 전체가 기본이며 날짜는 필터다. ③ 장소 계획은 방문일별 순서·예정 시각(미입력은 시간 미정)·장소별 개수를 표시한다. 일정에는 시각이 없다.",
+      "④ 미지정도 업로드 가능. ⑤ UI10, 날짜별 15개 도달 시 비활성과 사유 표시. ⑥ UI14. 취소·만료 시 새 업로드를 막고 이유를 표시한다."
+    ],
+    "states": "빈 일정 / 전체·날짜 필터 / 기간 밖 기록 구역 / 장소 15개 도달 / 취소 / 만료 / 권한 상실",
+    "api": [
+      "scheduleDetail",
+      "mediaList"
+    ],
+    "reference": "02-schedule",
+    "contract_title": "일정 전체 계획과 기록",
+    "contract_rows": [
       [
         "lead",
         "우리의 서울 여행"
@@ -354,21 +466,29 @@
         "⑥ 사진·영상 올리기"
       ]
     ],
-    "notes": [
-      "① 완료 전 예상, 첫 완료 후 고정 기한으로 표시한다. 기한 예시는 2026.10.19 종료에 대응한다.",
-      "② 전체가 기본이며 날짜는 필터다. ③ 장소 계획은 방문일별 순서·예정 시각(미입력은 시간 미정)·장소별 개수를 표시한다. 일정에는 시각이 없다.",
-      "④ 미지정도 업로드 가능. ⑤ UI10, 날짜별 15개 도달 시 비활성과 사유 표시. ⑥ UI14. 취소·만료 시 새 업로드를 막고 이유를 표시한다."
-    ],
-    "states": "빈 일정 / 전체·날짜 필터 / 기간 밖 기록 구역 / 장소 15개 도달 / 취소 / 만료 / 권한 상실",
-    "api": [
-      "scheduleDetail",
-      "mediaList"
-    ],
-    "reference": "02-schedule"
+    "visual_source": "브랜치 실행 캡처",
+    "prototype": {
+      "id": "S01",
+      "title": "일정 요약",
+      "ui": "UI08",
+      "image": "S01.png",
+      "source": "src/prototype/screens/ItinerarySummaryScreen.tsx",
+      "route": "/prototype/itinerary?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "서울 여행 일정 열기",
+      "notes": [
+        "헤더는 뒤로가기와 브랜드. 16:9 대표 배너는 화면 가로 끝까지 표시한다.",
+        "날짜 카드에 날짜·제목·장소/미디어 수를 표시한다. DAY 배지·썸네일·카드 안 추가 버튼은 없다.",
+        "일정 추가는 마지막 날 다음 날짜를 추가하는 데모 동작이다. 새 일정 생성(UI06)과 다르다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n↺ 데모 초기화\n‹\nAT THAT PLACE\n🌉\n📷 배경 변경\n우리의 서울 여행\n📅 2026.10.17 - 10.19 · 5명\n+1\n10월 17일\n성수에서 느긋한 오후\n장소 3곳 · 미디어 9개 (사진 7·동영상 2)\n›\n10월 18일\n연남동 골목 산책\n장소 2곳 · 미디어 3개 (사진 3·동영상 0)\n›\n10월 19일\n10월 19일의 장소\n아직 정한 장소가 없어요\n›\n일정 추가",
+      "captured_at": "2026-10-26T16:13:02+09:00",
+      "sha256": "b8e3f2f62ef53b7a37afdd6280a841acedc955baca09dd733ffeff03a3b03cfc"
+    },
+    "source_commit": "99ab363734236c16e3e16e6d8b7987cf1fced425"
   },
   {
     "id": "UI09",
-    "title": "공동 기록과 보기 방식",
+    "title": "장소별 기록 · 사람별",
     "features": [
       "F16",
       "F17",
@@ -376,6 +496,83 @@
     ],
     "role": "현재 참여자",
     "rows": [
+      [
+        "prototype",
+        "TEST"
+      ],
+      [
+        "prototype",
+        "예시 데이터로 체험 중이에요"
+      ],
+      [
+        "prototype",
+        "‹"
+      ],
+      [
+        "prototype",
+        "오후의 커피"
+      ],
+      [
+        "prototype",
+        "우리의 서울 여행 · 10.17 토"
+      ],
+      [
+        "prototype",
+        "＋ 사진·동영상 올리기"
+      ],
+      [
+        "prototype",
+        "함께 남긴 순간  사진 4·동영상 1"
+      ],
+      [
+        "prototype",
+        "최신순 ⌄"
+      ],
+      [
+        "prototype",
+        "사진별"
+      ],
+      [
+        "prototype",
+        "사람별"
+      ],
+      [
+        "prototype",
+        "도윤"
+      ],
+      [
+        "prototype",
+        "사진 1 · 동영상 1 · 10.17 14:25"
+      ],
+      [
+        "prototype",
+        "▶"
+      ],
+      [
+        "prototype",
+        "0:06"
+      ],
+      [
+        "prototype",
+        "수아"
+      ],
+      [
+        "prototype",
+        "사진 3 · 10.17 14:12"
+      ]
+    ],
+    "notes": [
+      "① 날짜·방문·장소 미지정 필터. 목록 60개 커서. 카드 하나는 파일 하나다. 기간 밖 기록도 전체 목록에 표시한다.",
+      "② 시간순은 촬영 시각 기준(없으면 업로드 완료 시각, 카드에 표시), 오름차순 기본. 사람별 묶음은 작성자 구역으로 묶고 구역 안은 시간순이다. 보기 방식은 기기에 기억한다.",
+      "③ 카드 → UI18. ④ 길게 누르기 또는 선택 버튼 → UI16 선택 모드(저장·본인 수정·본인 삭제). 차단한 작성자는 목록·구역에서 제외한다."
+    ],
+    "states": "로딩·빈 필터 / 페이지 오류 / 촬영 시각 없음 / 차단·운영제한 집계 반영 / 후속 파일 부분 완료",
+    "api": [
+      "mediaList"
+    ],
+    "reference": "04-place",
+    "contract_title": "공동 기록과 보기 방식",
+    "contract_rows": [
       [
         "row",
         "① 전체 날짜  >  ·  전체 장소  >"
@@ -405,16 +602,24 @@
         "사진·영상 올리기"
       ]
     ],
-    "notes": [
-      "① 날짜·방문·장소 미지정 필터. 목록 60개 커서. 카드 하나는 파일 하나다. 기간 밖 기록도 전체 목록에 표시한다.",
-      "② 시간순은 촬영 시각 기준(없으면 업로드 완료 시각, 카드에 표시), 오름차순 기본. 사람별 묶음은 작성자 구역으로 묶고 구역 안은 시간순이다. 보기 방식은 기기에 기억한다.",
-      "③ 카드 → UI18. ④ 길게 누르기 또는 선택 버튼 → UI16 선택 모드(저장·본인 수정·본인 삭제). 차단한 작성자는 목록·구역에서 제외한다."
-    ],
-    "states": "로딩·빈 필터 / 페이지 오류 / 촬영 시각 없음 / 차단·운영제한 집계 반영 / 후속 파일 부분 완료",
-    "api": [
-      "mediaList"
-    ],
-    "reference": "04-place"
+    "visual_source": "브랜치 실행 캡처",
+    "prototype": {
+      "id": "S04-people",
+      "title": "장소별 기록 · 사람별",
+      "ui": "UI09",
+      "image": "S04-people.png",
+      "source": "src/prototype/screens/PlaceRecordsScreen.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "S04 → 사람별 보기",
+      "notes": [
+        "작성자별 카드와 사진 격자. 여러 장은 +N으로 펼치거나 접는다.",
+        "이 캡처는 한 방문의 사람별 보기다. 일정 전체·기간 밖·장소 미지정 기록 조회는 기존 제품 계약으로 남는다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n도윤\n사진 1 · 동영상 1 · 10.17 14:25\n▶\n0:06\n수아\n사진 3 · 10.17 14:12",
+      "captured_at": "2026-10-26T16:13:22+09:00",
+      "sha256": "4cd4f175ea4a77dd68052a4d722f1a7b6838d82ca5af00169293b4df5baa0bf1"
+    },
+    "source_commit": "99ab363734236c16e3e16e6d8b7987cf1fced425"
   },
   {
     "id": "UI10",
@@ -424,6 +629,192 @@
     ],
     "role": "현재 참여자",
     "rows": [
+      [
+        "prototype",
+        "TEST"
+      ],
+      [
+        "prototype",
+        "예시 데이터로 체험 중이에요"
+      ],
+      [
+        "prototype",
+        "‹"
+      ],
+      [
+        "prototype",
+        "장소 추가"
+      ],
+      [
+        "prototype",
+        "우리의 서울 여행 · 2026년 10월 17일 토요일"
+      ],
+      [
+        "prototype",
+        "🔍"
+      ],
+      [
+        "prototype",
+        "전체"
+      ],
+      [
+        "prototype",
+        "관광지"
+      ],
+      [
+        "prototype",
+        "맛집"
+      ],
+      [
+        "prototype",
+        "카페"
+      ],
+      [
+        "prototype",
+        "숙소"
+      ],
+      [
+        "prototype",
+        "예시 검색 (오프라인)"
+      ],
+      [
+        "prototype",
+        "실제 지도 (인터넷 필요)"
+      ],
+      [
+        "prototype",
+        "※ 아래 결과는 데모용 예시 장소예요. 실제 지도 검색 결과가 아닙니다."
+      ],
+      [
+        "prototype",
+        "☕"
+      ],
+      [
+        "prototype",
+        "성수 로스터리 카페"
+      ],
+      [
+        "prototype",
+        "☕"
+      ],
+      [
+        "prototype",
+        "한남 브런치 카페"
+      ],
+      [
+        "prototype",
+        "☕"
+      ],
+      [
+        "prototype",
+        "익선동 한옥 카페"
+      ],
+      [
+        "prototype",
+        "☕"
+      ],
+      [
+        "prototype",
+        "합정 디저트 카페"
+      ],
+      [
+        "prototype",
+        "예시 지도 (실제 아님)"
+      ],
+      [
+        "prototype",
+        "⟳ 이 지역 다시 검색"
+      ],
+      [
+        "prototype",
+        "⦿"
+      ],
+      [
+        "prototype",
+        "예시 장소 4곳"
+      ],
+      [
+        "prototype",
+        "관련도순 ▾"
+      ],
+      [
+        "prototype",
+        "성수 로스터리 카페 카페 예시"
+      ],
+      [
+        "prototype",
+        "7.3km · 서울 성동구 연무장길 33"
+      ],
+      [
+        "prototype",
+        "☕"
+      ],
+      [
+        "prototype",
+        "+ 스팟에 추가"
+      ],
+      [
+        "prototype",
+        "한남 브런치 카페 카페 예시"
+      ],
+      [
+        "prototype",
+        "4.1km · 서울 용산구 이태원로 245"
+      ],
+      [
+        "prototype",
+        "☕"
+      ],
+      [
+        "prototype",
+        "+ 스팟에 추가"
+      ],
+      [
+        "prototype",
+        "익선동 한옥 카페 카페 예시"
+      ],
+      [
+        "prototype",
+        "1.3km · 서울 종로구 수표로28길 17"
+      ],
+      [
+        "prototype",
+        "☕"
+      ],
+      [
+        "prototype",
+        "+ 스팟에 추가"
+      ],
+      [
+        "prototype",
+        "합정 디저트 카페 카페 예시"
+      ],
+      [
+        "prototype",
+        "6.0km · 서울 마포구 양화로 45"
+      ],
+      [
+        "prototype",
+        "☕"
+      ],
+      [
+        "prototype",
+        "+ 스팟에 추가"
+      ]
+    ],
+    "notes": [
+      "① 국내 카카오맵 데이터 사용. 늦은 이전 응답은 버린다. 검색어 100자.",
+      "② 지도 이동 후 명시적 재검색. 기본은 일정 첫 좌표 방문→기기 마지막 영역→서울시청이다.",
+      "③ 현재 위치 버튼 때만 권한 요청. ⑤ 예정 시각은 5분 단위 또는 미정. 같은 일정·방문일·동일 공급자 장소 중복 금지, 날짜별 15개 초과 거부. 저장 뒤 UI08로 돌아간다."
+    ],
+    "states": "검색 전 / 결과 없음 / 공급자 오류 / 위치 거절·실패 / 중복 방문 / 장소 15개 도달 / 저장 충돌",
+    "api": [
+      "placesSearch",
+      "visitCreate"
+    ],
+    "reference": "07-place-search",
+    "contract_title": "장소 검색과 지도",
+    "contract_rows": [
       [
         "field",
         "① 장소명 또는 주소  |  성수 카페"
@@ -461,17 +852,25 @@
         "검색에 없나요? 직접 등록"
       ]
     ],
-    "notes": [
-      "① 국내 카카오맵 데이터 사용. 늦은 이전 응답은 버린다. 검색어 100자.",
-      "② 지도 이동 후 명시적 재검색. 기본은 일정 첫 좌표 방문→기기 마지막 영역→서울시청이다.",
-      "③ 현재 위치 버튼 때만 권한 요청. ⑤ 예정 시각은 5분 단위 또는 미정. 같은 일정·방문일·동일 공급자 장소 중복 금지, 날짜별 15개 초과 거부. 저장 뒤 UI08로 돌아간다."
-    ],
-    "states": "검색 전 / 결과 없음 / 공급자 오류 / 위치 거절·실패 / 중복 방문 / 장소 15개 도달 / 저장 충돌",
-    "api": [
-      "placesSearch",
-      "visitCreate"
-    ],
-    "reference": "07-place-search"
+    "visual_source": "브랜치 실행 캡처",
+    "prototype": {
+      "id": "S03",
+      "title": "장소 검색과 지도",
+      "ui": "UI10",
+      "image": "S03.png",
+      "source": "src/prototype/screens/PlaceSearchScreen.tsx",
+      "route": "/prototype/place-search?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "장소 추가 → 카페 카테고리",
+      "notes": [
+        "검색창·카테고리·예시 지도·결과 시트. 현재 캡처는 오프라인 예시 검색이다.",
+        "검색 결과와 핀을 연동하고 관련도순/거리순을 제공한다.",
+        "추가 성공 시 S02로 복귀하고 마지막 순서에 추가·추가됨 표시. 실제 카카오 연동은 별도 검수."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n장소 추가\n우리의 서울 여행 · 2026년 10월 17일 토요일\n🔍\n전체\n관광지\n맛집\n카페\n숙소\n예시 검색 (오프라인)\n실제 지도 (인터넷 필요)\n※ 아래 결과는 데모용 예시 장소예요. 실제 지도 검색 결과가 아닙니다.\n☕\n성수 로스터리 카페\n☕\n한남 브런치 카페\n☕\n익선동 한옥 카페\n☕\n합정 디저트 카페\n예시 지도 (실제 아님)\n⟳ 이 지역 다시 검색\n⦿\n예시 장소 4곳\n관련도순 ▾\n성수 로스터리 카페 카페 예시\n7.3km · 서울 성동구 연무장길 33\n☕\n+ 스팟에 추가\n한남 브런치 카페 카페 예시\n4.1km · 서울 용산구 이태원로 245\n☕\n+ 스팟에 추가\n익선동 한옥 카페 카페 예시\n1.3km · 서울 종로구 수표로28길 17\n☕\n+ 스팟에 추가\n합정 디저트 카페 카페 예시\n6.0km · 서울 마포구 양화로 45\n☕\n+ 스팟에 추가",
+      "captured_at": "2026-10-26T16:13:16+09:00",
+      "sha256": "ff9dfdaa64decab8c59d6744741bd8ca609983f47afe716c65dee5d1fcf3f7f3"
+    },
+    "source_commit": "99ab363734236c16e3e16e6d8b7987cf1fced425"
   },
   {
     "id": "UI11",
@@ -515,7 +914,8 @@
     "api": [
       "visitCreate"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI12",
@@ -526,6 +926,148 @@
     ],
     "role": "현재 참여자",
     "rows": [
+      [
+        "prototype",
+        "TEST"
+      ],
+      [
+        "prototype",
+        "예시 데이터로 체험 중이에요"
+      ],
+      [
+        "prototype",
+        "‹"
+      ],
+      [
+        "prototype",
+        "장소 순서 편집"
+      ],
+      [
+        "prototype",
+        "10월 17일 토요일"
+      ],
+      [
+        "prototype",
+        "날짜 제목"
+      ],
+      [
+        "prototype",
+        "11/30 · 비워 두면 \"10월 17일의 장소\"로 보여요"
+      ],
+      [
+        "prototype",
+        "위·아래 버튼으로 방문 순서를 바꾸세요."
+      ],
+      [
+        "prototype",
+        "1"
+      ],
+      [
+        "prototype",
+        "오후의 커피"
+      ],
+      [
+        "prototype",
+        "서울 성동구 연무장길 21"
+      ],
+      [
+        "prototype",
+        "방문 시간"
+      ],
+      [
+        "prototype",
+        "14:00 ✎"
+      ],
+      [
+        "prototype",
+        "▲"
+      ],
+      [
+        "prototype",
+        "▼"
+      ],
+      [
+        "prototype",
+        "2"
+      ],
+      [
+        "prototype",
+        "서울숲 산책길"
+      ],
+      [
+        "prototype",
+        "서울 성동구 뚝섬로 273"
+      ],
+      [
+        "prototype",
+        "방문 시간"
+      ],
+      [
+        "prototype",
+        "15:10 ✎"
+      ],
+      [
+        "prototype",
+        "▲"
+      ],
+      [
+        "prototype",
+        "▼"
+      ],
+      [
+        "prototype",
+        "3"
+      ],
+      [
+        "prototype",
+        "작은책방 하루"
+      ],
+      [
+        "prototype",
+        "서울 성동구 서울숲길 18"
+      ],
+      [
+        "prototype",
+        "방문 시간"
+      ],
+      [
+        "prototype",
+        "16:20 ✎"
+      ],
+      [
+        "prototype",
+        "▲"
+      ],
+      [
+        "prototype",
+        "▼"
+      ],
+      [
+        "prototype",
+        "장소 메모"
+      ],
+      [
+        "prototype",
+        "14/100"
+      ],
+      [
+        "prototype",
+        "변경 저장"
+      ]
+    ],
+    "notes": [
+      "① 날짜 제목 30자, 비우면 날짜 표시. 날짜 전체 메모는 없다.",
+      "② 드래그 외에 위/아래 이동 버튼도 제공한다. 시각 변경으로 자동 재정렬하지 않는다.",
+      "③ 5분 단위/미입력 허용, 시각순 정렬 버튼은 눌렀을 때만 재정렬. 편집으로 방문을 추가하지 않으므로 15개 한도는 UI10/11에서 검사. ④ 숨긴 파일·업로드도 서버에서 검사한다. ⑤ 순서·시각·제목과 버전을 함께 저장한다."
+    ],
+    "states": "순서 중복·누락 / 타 날짜 혼입 / 버전 충돌 / 미저장 이탈: 저장·버리기·계속",
+    "api": [
+      "planUpdate",
+      "visitDelete"
+    ],
+    "reference": "09-plan",
+    "contract_title": "방문 계획 편집",
+    "contract_rows": [
       [
         "field",
         "① 날짜 제목  |  서울에서 만나는 날"
@@ -555,21 +1097,29 @@
         "⑤ 계획 저장"
       ]
     ],
-    "notes": [
-      "① 날짜 제목 30자, 비우면 날짜 표시. 날짜 전체 메모는 없다.",
-      "② 드래그 외에 위/아래 이동 버튼도 제공한다. 시각 변경으로 자동 재정렬하지 않는다.",
-      "③ 5분 단위/미입력 허용, 시각순 정렬 버튼은 눌렀을 때만 재정렬. 편집으로 방문을 추가하지 않으므로 15개 한도는 UI10/11에서 검사. ④ 숨긴 파일·업로드도 서버에서 검사한다. ⑤ 순서·시각·제목과 버전을 함께 저장한다."
-    ],
-    "states": "순서 중복·누락 / 타 날짜 혼입 / 버전 충돌 / 미저장 이탈: 저장·버리기·계속",
-    "api": [
-      "planUpdate",
-      "visitDelete"
-    ],
-    "reference": "09-plan"
+    "visual_source": "브랜치 실행 캡처",
+    "prototype": {
+      "id": "S05",
+      "title": "방문 계획 편집",
+      "ui": "UI12",
+      "image": "S05.png",
+      "source": "src/prototype/screens/PlaceOrderEditScreen.tsx",
+      "route": "/prototype/place-order?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1",
+      "actions": "S02 → 편집",
+      "notes": [
+        "날짜 제목 30자·위/아래 순서 이동·방문 시간·변경 저장.",
+        "드래그 없이 ▲▼로 이동한다. 시간 변경으로 순서를 자동 정렬하지 않는다.",
+        "장소 메모 100자 입력은 데모에 남아 있다. 제품 명세의 날짜 공통 메모 제외와 차이가 있다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n장소 순서 편집\n10월 17일 토요일\n날짜 제목\n11/30 · 비워 두면 \"10월 17일의 장소\"로 보여요\n위·아래 버튼으로 방문 순서를 바꾸세요.\n1\n오후의 커피\n서울 성동구 연무장길 21\n방문 시간\n14:00 ✎\n▲\n▼\n2\n서울숲 산책길\n서울 성동구 뚝섬로 273\n방문 시간\n15:10 ✎\n▲\n▼\n3\n작은책방 하루\n서울 성동구 서울숲길 18\n방문 시간\n16:20 ✎\n▲\n▼\n장소 메모\n14/100\n변경 저장",
+      "captured_at": "2026-10-26T16:13:19+09:00",
+      "sha256": "5ef148576ff57c5796f8657e3c11bcd10ca9ecdfce16fdaca6dc2d59ed618cea"
+    },
+    "source_commit": "99ab363734236c16e3e16e6d8b7987cf1fced425"
   },
   {
     "id": "UI13",
-    "title": "방문별 기록",
+    "title": "장소별 기록 · 사진별",
     "features": [
       "F09",
       "F14",
@@ -577,6 +1127,103 @@
     ],
     "role": "현재 참여자",
     "rows": [
+      [
+        "prototype",
+        "TEST"
+      ],
+      [
+        "prototype",
+        "예시 데이터로 체험 중이에요"
+      ],
+      [
+        "prototype",
+        "‹"
+      ],
+      [
+        "prototype",
+        "오후의 커피"
+      ],
+      [
+        "prototype",
+        "우리의 서울 여행 · 10.17 토"
+      ],
+      [
+        "prototype",
+        "＋ 사진·동영상 올리기"
+      ],
+      [
+        "prototype",
+        "함께 남긴 순간  사진 4·동영상 1"
+      ],
+      [
+        "prototype",
+        "최신순 ⌄"
+      ],
+      [
+        "prototype",
+        "사진별"
+      ],
+      [
+        "prototype",
+        "사람별"
+      ],
+      [
+        "prototype",
+        "▶"
+      ],
+      [
+        "prototype",
+        "0:06"
+      ],
+      [
+        "prototype",
+        "10.17 14:25 · 도윤"
+      ],
+      [
+        "prototype",
+        "김이 모락모락"
+      ],
+      [
+        "prototype",
+        "10.17 14:25 · 도윤"
+      ],
+      [
+        "prototype",
+        "디저트도 하나"
+      ],
+      [
+        "prototype",
+        "10.17 14:12 · 수아"
+      ],
+      [
+        "prototype",
+        "창가 자리 찾았어요"
+      ],
+      [
+        "prototype",
+        "10.17 14:12 · 수아"
+      ],
+      [
+        "prototype",
+        "라떼 아트가 예뻐요"
+      ],
+      [
+        "prototype",
+        "10.17 14:12 · 수아"
+      ]
+    ],
+    "notes": [
+      "① 현재 사용자가 볼 수 있는 완료 파일만 집계한다. 차단·운영 제한·삭제·만료를 제외한다. 사람별 묶음은 작성자 구역(먼저 완료한 작성자부터)·접기/펼치기, 시간순은 촬영 시각 기준이다.",
+      "② 작성자별 이 방문의 한도(사진 5·영상 2)에서 완료+진행 중 작업을 뺀 남은 수. 0이면 올리기 버튼에 사유를 표시한다.",
+      "올리기 → UI14. UI16에서 방문일을 제안하고 사용자가 확인한다. 다른 날짜로 바꾸면 방문을 해제·재선택한다."
+    ],
+    "states": "기록 없음 / 파일 검사 중 / 장소 좌표 없음 / 남은 개수 0 / 방문 삭제 충돌",
+    "api": [
+      "mediaList"
+    ],
+    "reference": "04-place",
+    "contract_title": "방문별 기록",
+    "contract_rows": [
       [
         "lead",
         "성수 로스터리 카페"
@@ -610,20 +1257,29 @@
         "이 장소에 기록 올리기"
       ]
     ],
-    "notes": [
-      "① 현재 사용자가 볼 수 있는 완료 파일만 집계한다. 차단·운영 제한·삭제·만료를 제외한다. 사람별 묶음은 작성자 구역(먼저 완료한 작성자부터)·접기/펼치기, 시간순은 촬영 시각 기준이다.",
-      "② 작성자별 이 방문의 한도(사진 5·영상 2)에서 완료+진행 중 작업을 뺀 남은 수. 0이면 올리기 버튼에 사유를 표시한다.",
-      "올리기 → UI14. UI16에서 방문일을 제안하고 사용자가 확인한다. 다른 날짜로 바꾸면 방문을 해제·재선택한다."
-    ],
-    "states": "기록 없음 / 파일 검사 중 / 장소 좌표 없음 / 남은 개수 0 / 방문 삭제 충돌",
-    "api": [
-      "mediaList"
-    ],
-    "reference": "04-place"
+    "visual_source": "브랜치 실행 캡처",
+    "prototype": {
+      "id": "S04",
+      "title": "장소별 기록 · 사진별",
+      "ui": "UI13",
+      "image": "S04.png",
+      "source": "src/prototype/screens/PlaceRecordsScreen.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "S02 → 오후의 커피",
+      "notes": [
+        "장소 헤더·올리기·사진/영상 수·최신/오래된순·사진별/사람별 전환.",
+        "파일 하나당 4:3 카드 하나. 작성자·시각·설명·영상 길이를 표시한다.",
+        "데모 최신순은 게시물 시각 기준이며 제품의 촬영 시각 기준 오름차순과 차이가 있다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n▶\n0:06\n10.17 14:25 · 도윤\n김이 모락모락\n10.17 14:25 · 도윤\n디저트도 하나\n10.17 14:12 · 수아\n창가 자리 찾았어요\n10.17 14:12 · 수아\n라떼 아트가 예뻐요\n10.17 14:12 · 수아",
+      "captured_at": "2026-10-26T16:13:21+09:00",
+      "sha256": "e9b9d3572120f6dace40a1d3fd5aa789bc31dc864823f0b28f2979927248cdc9"
+    },
+    "source_commit": "99ab363734236c16e3e16e6d8b7987cf1fced425"
   },
   {
     "id": "UI14",
-    "title": "기록 추가 방식",
+    "title": "기록 추가 시트",
     "features": [
       "F12",
       "F13",
@@ -631,6 +1287,119 @@
     ],
     "role": "현재 참여자",
     "rows": [
+      [
+        "prototype",
+        "TEST"
+      ],
+      [
+        "prototype",
+        "예시 데이터로 체험 중이에요"
+      ],
+      [
+        "prototype",
+        "‹"
+      ],
+      [
+        "prototype",
+        "오후의 커피"
+      ],
+      [
+        "prototype",
+        "우리의 서울 여행 · 10.17 토"
+      ],
+      [
+        "prototype",
+        "＋ 사진·동영상 올리기"
+      ],
+      [
+        "prototype",
+        "함께 남긴 순간  사진 4·동영상 1"
+      ],
+      [
+        "prototype",
+        "최신순 ⌄"
+      ],
+      [
+        "prototype",
+        "사진별"
+      ],
+      [
+        "prototype",
+        "사람별"
+      ],
+      [
+        "prototype",
+        "▶"
+      ],
+      [
+        "prototype",
+        "0:06"
+      ],
+      [
+        "prototype",
+        "10.17 14:25 · 도윤"
+      ],
+      [
+        "prototype",
+        "김이 모락모락"
+      ],
+      [
+        "prototype",
+        "10.17 14:25 · 도윤"
+      ],
+      [
+        "prototype",
+        "디저트도 하나"
+      ],
+      [
+        "prototype",
+        "10.17 14:12 · 수아"
+      ],
+      [
+        "prototype",
+        "창가 자리 찾았어요"
+      ],
+      [
+        "prototype",
+        "10.17 14:12 · 수아"
+      ],
+      [
+        "prototype",
+        "라떼 아트가 예뻐요"
+      ],
+      [
+        "prototype",
+        "10.17 14:12 · 수아"
+      ],
+      [
+        "prototype",
+        "지금 이 순간 남기기"
+      ],
+      [
+        "prototype",
+        "＋"
+      ],
+      [
+        "prototype",
+        "사진·동영상 최대 10개"
+      ],
+      [
+        "prototype",
+        "업로드하기"
+      ]
+    ],
+    "notes": [
+      "① Photo Picker 우선, 불가 시 문서 선택기. 전체 앨범 권한을 강제하지 않는다.",
+      "②·③ 카메라 권한을 필요한 시점에 요청한다. 취소 일정이면 진입 전 신규 작업을 막는다.",
+      "촬영·기기 파일 혼합 후보를 같은 제출에 넣고 최초 선택 순서를 유지한다."
+    ],
+    "states": "선택 취소 / 121번째 후보 / 권한 거절 / 파일 접근 소실 / 클라우드 다운로드 실패",
+    "api": [
+      "uploadPrepare"
+    ],
+    "reference": "06-media-source",
+    "contract_title": "기록 추가 방식",
+    "contract_rows": [
       [
         "lead",
         "어떤 순간을 남길까요?"
@@ -660,16 +1429,25 @@
         "닫기"
       ]
     ],
-    "notes": [
-      "① Photo Picker 우선, 불가 시 문서 선택기. 전체 앨범 권한을 강제하지 않는다.",
-      "②·③ 카메라 권한을 필요한 시점에 요청한다. 취소 일정이면 진입 전 신규 작업을 막는다.",
-      "촬영·기기 파일 혼합 후보를 같은 제출에 넣고 최초 선택 순서를 유지한다."
-    ],
-    "states": "선택 취소 / 121번째 후보 / 권한 거절 / 파일 접근 소실 / 클라우드 다운로드 실패",
-    "api": [
-      "uploadPrepare"
-    ],
-    "reference": "06-media-source"
+    "visual_source": "브랜치 실행 캡처",
+    "prototype": {
+      "id": "M2",
+      "title": "기록 추가 시트",
+      "ui": "UI14",
+      "image": "M2.png",
+      "source": "src/prototype/screens/PlaceRecordsScreen.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "S04 → 사진·동영상 올리기",
+      "notes": [
+        "빈 선택 목록·추가 타일·업로드하기. 선택 0개이면 제출 비활성.",
+        "화면의 최대 10개는 데모 값이다. 제품 계약의 방문별 사진5/영상2·다중선택120과 구분한다.",
+        "실제 업로드는 팀원 연결 지점이며 서버 저장 완료를 뜻하지 않는다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n▶\n0:06\n10.17 14:25 · 도윤\n김이 모락모락\n10.17 14:25 · 도윤\n디저트도 하나\n10.17 14:12 · 수아\n창가 자리 찾았어요\n10.17 14:12 · 수아\n라떼 아트가 예뻐요\n10.17 14:12 · 수아\n지금 이 순간 남기기\n＋\n사진·동영상 최대 10개\n업로드하기",
+      "captured_at": "2026-10-26T16:13:25+09:00",
+      "sha256": "32d05a33037e0249ebc54f078ad4a2a08a810f6c103f5cbf9bafd93f0300f5b9"
+    },
+    "source_commit": "99ab363734236c16e3e16e6d8b7987cf1fced425"
   },
   {
     "id": "UI15",
@@ -713,7 +1491,8 @@
     "api": [
       "uploadPrepare"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI16",
@@ -772,7 +1551,8 @@
       "mediaDelete",
       "exportCreate"
     ],
-    "reference": "05-upload"
+    "reference": "05-upload",
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI17",
@@ -827,11 +1607,12 @@
       "uploadHead",
       "uploadChunk"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI18",
-    "title": "사진 감상과 영상 재생",
+    "title": "사진 확대 보기",
     "features": [
       "F16",
       "F17",
@@ -841,6 +1622,131 @@
     ],
     "role": "현재 참여자 또는 본인 보존 경로",
     "rows": [
+      [
+        "prototype",
+        "TEST"
+      ],
+      [
+        "prototype",
+        "예시 데이터로 체험 중이에요"
+      ],
+      [
+        "prototype",
+        "‹"
+      ],
+      [
+        "prototype",
+        "오후의 커피"
+      ],
+      [
+        "prototype",
+        "우리의 서울 여행 · 10.17 토"
+      ],
+      [
+        "prototype",
+        "＋ 사진·동영상 올리기"
+      ],
+      [
+        "prototype",
+        "함께 남긴 순간  사진 4·동영상 1"
+      ],
+      [
+        "prototype",
+        "최신순 ⌄"
+      ],
+      [
+        "prototype",
+        "사진별"
+      ],
+      [
+        "prototype",
+        "사람별"
+      ],
+      [
+        "prototype",
+        "▶"
+      ],
+      [
+        "prototype",
+        "0:06"
+      ],
+      [
+        "prototype",
+        "10.17 14:25 · 도윤"
+      ],
+      [
+        "prototype",
+        "김이 모락모락"
+      ],
+      [
+        "prototype",
+        "10.17 14:25 · 도윤"
+      ],
+      [
+        "prototype",
+        "디저트도 하나"
+      ],
+      [
+        "prototype",
+        "10.17 14:12 · 수아"
+      ],
+      [
+        "prototype",
+        "창가 자리 찾았어요"
+      ],
+      [
+        "prototype",
+        "10.17 14:12 · 수아"
+      ],
+      [
+        "prototype",
+        "라떼 아트가 예뻐요"
+      ],
+      [
+        "prototype",
+        "10.17 14:12 · 수아"
+      ],
+      [
+        "prototype",
+        "✕"
+      ],
+      [
+        "prototype",
+        "－"
+      ],
+      [
+        "prototype",
+        "1배"
+      ],
+      [
+        "prototype",
+        "＋"
+      ],
+      [
+        "prototype",
+        "도윤 · 10.17 14:25"
+      ],
+      [
+        "prototype",
+        "디저트도 하나"
+      ]
+    ],
+    "notes": [
+      "① 닫으면 영상·소리를 중단하고 목록 위치를 복원한다. ② 촬영 시각이 없으면 업로드 시각만 표시한다.",
+      "③ 현재 참여 중이며 조회 가능한 파일만 저장. 다른 앱 공유 버튼은 없다. 나간 뒤 본인 경로는 열람·삭제만 허용한다.",
+      "④ 수정은 현재 참여 중 본인 파일만, 삭제는 본인만. 방장도 타인 파일 수정·삭제 불가. 타인 신고·차단은 UI31로 연결한다."
+    ],
+    "states": "재생 통신·형식 오류 / 만료 / 삭제 / 퇴장 / 운영 제한 / 보존 경로에서는 저장 숨김",
+    "api": [
+      "mediaStream",
+      "metadataPatch",
+      "mediaDelete",
+      "reportCreate",
+      "exportCreate"
+    ],
+    "reference": "04-place",
+    "contract_title": "사진 감상과 영상 재생",
+    "contract_rows": [
       [
         "photo",
         "① 사진 확대 / 영상 재생·탐색"
@@ -870,20 +1776,24 @@
         "④ 정보 수정  ·  삭제  ·  신고"
       ]
     ],
-    "notes": [
-      "① 닫으면 영상·소리를 중단하고 목록 위치를 복원한다. ② 촬영 시각이 없으면 업로드 시각만 표시한다.",
-      "③ 현재 참여 중이며 조회 가능한 파일만 저장. 다른 앱 공유 버튼은 없다. 나간 뒤 본인 경로는 열람·삭제만 허용한다.",
-      "④ 수정은 현재 참여 중 본인 파일만, 삭제는 본인만. 방장도 타인 파일 수정·삭제 불가. 타인 신고·차단은 UI31로 연결한다."
-    ],
-    "states": "재생 통신·형식 오류 / 만료 / 삭제 / 퇴장 / 운영 제한 / 보존 경로에서는 저장 숨김",
-    "api": [
-      "mediaStream",
-      "metadataPatch",
-      "mediaDelete",
-      "reportCreate",
-      "exportCreate"
-    ],
-    "reference": "04-place"
+    "visual_source": "브랜치 실행 캡처",
+    "prototype": {
+      "id": "V1-photo",
+      "title": "사진 확대 보기",
+      "ui": "UI18",
+      "image": "V1-photo.png",
+      "source": "src/demo/MediaViewerModal.tsx",
+      "route": "/prototype/place-records?tripId=trip1&itineraryId=itin-seoul-1&dayId=day-1&placeId=demo-cafe",
+      "actions": "S04 → 도윤 사진",
+      "notes": [
+        "전체 화면 사진·확대/축소·닫기. 버튼과 두 번 탭 확대를 제공한다.",
+        "저장·다중 선택·신고/차단 등 제품 기능은 이 데모 뷰어에 구현되어 있지 않다."
+      ],
+      "text": "TEST\n예시 데이터로 체험 중이에요\n‹\n오후의 커피\n우리의 서울 여행 · 10.17 토\n＋ 사진·동영상 올리기\n함께 남긴 순간  사진 4·동영상 1\n최신순 ⌄\n사진별\n사람별\n▶\n0:06\n10.17 14:25 · 도윤\n김이 모락모락\n10.17 14:25 · 도윤\n디저트도 하나\n10.17 14:12 · 수아\n창가 자리 찾았어요\n10.17 14:12 · 수아\n라떼 아트가 예뻐요\n10.17 14:12 · 수아\n✕\n－\n1배\n＋\n도윤 · 10.17 14:25\n디저트도 하나",
+      "captured_at": "2026-10-26T16:13:22+09:00",
+      "sha256": "0584a1e86e4cdcb5e025af52ecf4d08631fbf63c1b1813c2d3e894e71b56af8f"
+    },
+    "source_commit": "99ab363734236c16e3e16e6d8b7987cf1fced425"
   },
   {
     "id": "UI20",
@@ -935,7 +1845,8 @@
     "api": [
       "metadataPatch"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI21",
@@ -982,7 +1893,8 @@
       "exportGet",
       "exportFile"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI22",
@@ -1032,7 +1944,8 @@
       "mineList",
       "mediaDelete"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI23",
@@ -1087,7 +2000,8 @@
       "inviteCreate",
       "inviteRevoke"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI24",
@@ -1133,7 +2047,8 @@
       "invitePreview",
       "inviteJoin"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI25",
@@ -1180,7 +2095,8 @@
       "uploadHead",
       "uploadChunk"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI26",
@@ -1232,7 +2148,8 @@
       "memberRemove",
       "reentryUnblock"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI27",
@@ -1282,7 +2199,8 @@
       "groupLeave",
       "groupClose"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI28",
@@ -1345,7 +2263,8 @@
       "notificationsList",
       "notificationRead"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI29",
@@ -1392,7 +2311,8 @@
       "identitiesList",
       "reauthenticate"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI30",
@@ -1439,7 +2359,8 @@
       "deletionPreconditions",
       "reauthenticate"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI31",
@@ -1489,7 +2410,8 @@
       "inquiryCreate",
       "blocksList"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI32",
@@ -1541,7 +2463,8 @@
       "recoveryConsent",
       "recoveryResponse"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI33",
@@ -1585,7 +2508,8 @@
     "api": [
       "storageUsage"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI34",
@@ -1638,7 +2562,8 @@
       "opsRecovery",
       "opsCaseGet"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   },
   {
     "id": "UI35",
@@ -1689,6 +2614,7 @@
     "api": [
       "operationGet"
     ],
-    "reference": null
+    "reference": null,
+    "visual_source": "명세 기반 설계안 · 기존 화면 유지"
   }
 ]

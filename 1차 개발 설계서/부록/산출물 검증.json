@@ -1,5 +1,5 @@
 {
-  "scope": "설계 산출물 검증. 실제 앱 F01~F28 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.",
+  "scope": "설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F28 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.",
   "passed": true,
   "checks": [
     {
@@ -94,7 +94,7 @@
           {
             "check": "build_design.py 독립 실행",
             "passed": true,
-            "output": "{\"screens\": 33, \"operations\": 73, \"tables\": 27, \"functional_cases\": 116, \"native_ui_pptx\": \"/tmp/atp-design-standalone-uj_pi7he/package/UI/05 UI 설계.pptx\"}\n",
+            "output": " \"99ab363734236c16e3e16e6d8b7987cf1fced425\", \"main_screens\": 33, \"replaced_ui\": [\"UI08\", \"UI10\", \"UI12\", \"UI13\", \"UI09\", \"UI18\", \"UI14\"], \"captures\": 19, \"supplemental_screens\": 12, \"gallery_pages\": [\"UI01\", \"UI02\", \"UI03\", \"UI04\", \"UI05\", \"UI06\", \"UI08\", \"M4\", \"S02\", \"S02-empty\", \"S02-oneday\", \"S02-tabs\", \"UI09\", \"UI10\", \"S03-detail\", \"UI11\", \"UI12\", \"M1\", \"S05-empty\", \"UI13\", \"S04-empty\", \"UI14\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"UI24\", \"UI25\", \"UI26\", \"UI27\", \"UI28\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"S0\"], \"pdf_intro_pages\": 1, \"pdf_pages\": 46, \"pptx_slides\": 48}\n{\"screens\": 33, \"operations\": 73, \"tables\": 27, \"functional_cases\": 116, \"native_ui_pptx\": \"/tmp/atp-design-standalone-072h65et/package/UI/05 UI 설계.pptx\"}\n",
             "error": ""
           },
           {
@@ -110,6 +110,10 @@
           {
             "check": "기준 사본과 패키지 내부 참조",
             "passed": true
+          },
+          {
+            "check": "브랜치 체크아웃 없는 UI 화면 재생성",
+            "passed": true
           }
         ]
       }
@@ -120,9 +124,29 @@
       "detail": 116
     },
     {
-      "check": "33개 SVG의 독립 텍스트/도형",
+      "check": "프로토타입 출처와 캡처 무결성",
       "passed": true,
-      "detail": 33
+      "detail": {
+        "commit": "99ab363734236c16e3e16e6d8b7987cf1fced425",
+        "captures": 19,
+        "replaced": [
+          "UI08",
+          "UI09",
+          "UI10",
+          "UI12",
+          "UI13",
+          "UI14",
+          "UI18"
+        ]
+      }
+    },
+    {
+      "check": "33개 SVG의 화면 출처별 구조",
+      "passed": true,
+      "detail": {
+        "prototype_raster": 7,
+        "editable_vector": 26
+      }
     },
     {
       "check": "SVG 텍스트 화면경계",
@@ -130,142 +154,158 @@
       "detail": []
     },
     {
-      "check": "PPTX 33개 화면의 네이티브 텍스트",
+      "check": "PPTX 명세 기반 화면의 네이티브 텍스트",
       "passed": true,
       "detail": [
         [
           "UI01",
-          25
+          21
         ],
         [
           "UI02",
-          30
+          26
         ],
         [
           "UI03",
-          30
+          27
         ],
         [
           "UI04",
-          29
+          25
         ],
         [
           "UI05",
-          71
+          67
         ],
         [
           "UI06",
-          29
-        ],
-        [
-          "UI08",
-          32
-        ],
-        [
-          "UI09",
-          33
-        ],
-        [
-          "UI10",
-          37
+          25
         ],
         [
           "UI11",
-          33
-        ],
-        [
-          "UI12",
           29
-        ],
-        [
-          "UI13",
-          31
-        ],
-        [
-          "UI14",
-          27
         ],
         [
           "UI15",
-          28
+          24
         ],
         [
           "UI16",
-          32
+          29
         ],
         [
           "UI17",
-          29
-        ],
-        [
-          "UI18",
-          31
+          25
         ],
         [
           "UI20",
-          32
-        ],
-        [
-          "UI21",
-          26
-        ],
-        [
-          "UI22",
-          34
-        ],
-        [
-          "UI23",
-          31
-        ],
-        [
-          "UI24",
-          27
-        ],
-        [
-          "UI25",
-          29
-        ],
-        [
-          "UI26",
-          29
-        ],
-        [
-          "UI27",
-          29
-        ],
-        [
-          "UI28",
-          32
-        ],
-        [
-          "UI29",
-          26
-        ],
-        [
-          "UI30",
-          26
-        ],
-        [
-          "UI31",
           28
         ],
         [
-          "UI32",
-          29
+          "UI21",
+          22
         ],
         [
-          "UI33",
-          27
-        ],
-        [
-          "UI34",
+          "UI22",
           30
         ],
         [
-          "UI35",
+          "UI23",
           27
+        ],
+        [
+          "UI24",
+          23
+        ],
+        [
+          "UI25",
+          25
+        ],
+        [
+          "UI26",
+          25
+        ],
+        [
+          "UI27",
+          25
+        ],
+        [
+          "UI28",
+          28
+        ],
+        [
+          "UI29",
+          22
+        ],
+        [
+          "UI30",
+          22
+        ],
+        [
+          "UI31",
+          24
+        ],
+        [
+          "UI32",
+          25
+        ],
+        [
+          "UI33",
+          23
+        ],
+        [
+          "UI34",
+          26
+        ],
+        [
+          "UI35",
+          23
         ]
       ]
+    },
+    {
+      "check": "PPTX 브랜치 대응 화면의 캡처 이미지",
+      "passed": true,
+      "detail": [
+        [
+          "UI08",
+          true
+        ],
+        [
+          "UI09",
+          true
+        ],
+        [
+          "UI10",
+          true
+        ],
+        [
+          "UI12",
+          true
+        ],
+        [
+          "UI13",
+          true
+        ],
+        [
+          "UI14",
+          true
+        ],
+        [
+          "UI18",
+          true
+        ]
+      ]
+    },
+    {
+      "check": "PPTX 기본·상세·상태 화면 수",
+      "passed": true,
+      "detail": 48
+    },
+    {
+      "check": "PPTX 캡처 전체의 원본 이미지 포함",
+      "passed": true,
+      "detail": 19
     },
     {
       "check": "PPTX 도형 슬라이드 경계",
@@ -353,6 +393,8 @@
         "구성요소명세",
         "화면API연결",
         "화면상태",
+        "프로토타입대응",
+        "정책차이",
         "화면전환",
         "디자인토큰"
       ]
@@ -412,12 +454,68 @@
     {
       "check": "PDF 열기 05 UI 설계",
       "passed": true,
-      "detail": 33
+      "detail": 46
     },
     {
-      "check": "UI PDF 화면수",
+      "check": "UI PDF 기본·상세·상태 화면수",
       "passed": true,
-      "detail": 33
+      "detail": 46
+    },
+    {
+      "check": "UI PDF 출처와 적용 기준",
+      "passed": true,
+      "detail": "99ab363734236c16e3e16e6d8b7987cf1fced425"
+    },
+    {
+      "check": "UI PDF 화면 순서와 누락",
+      "passed": true,
+      "detail": [
+        "UI01",
+        "UI02",
+        "UI03",
+        "UI04",
+        "UI05",
+        "UI06",
+        "UI08",
+        "M4",
+        "S02",
+        "S02-empty",
+        "S02-oneday",
+        "S02-tabs",
+        "UI09",
+        "UI10",
+        "S03-detail",
+        "UI11",
+        "UI12",
+        "M1",
+        "S05-empty",
+        "UI13",
+        "S04-empty",
+        "UI14",
+        "M3",
+        "UI15",
+        "UI16",
+        "UI17",
+        "UI18",
+        "V1-video",
+        "UI20",
+        "UI21",
+        "UI22",
+        "UI23",
+        "UI24",
+        "UI25",
+        "UI26",
+        "UI27",
+        "UI28",
+        "UI29",
+        "UI30",
+        "UI31",
+        "UI32",
+        "UI33",
+        "UI34",
+        "UI35",
+        "S0"
+      ]
     },
     {
       "check": "PDF 열기 08 APK 실행 검토",
