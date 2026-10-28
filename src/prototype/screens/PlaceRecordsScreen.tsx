@@ -4,13 +4,15 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, Vi
 
 import { IS_DEMO_BUILD } from '../../demo/config';
 import { MediaViewerModal, type ViewerTarget } from '../../demo/MediaViewerModal';
+import { DOWNLOAD_NOT_CONNECTED_MESSAGE, requestDownload } from '../../demo/downloadBridge';
 import { NoticeModal } from '../../demo/NoticeModal';
-import { countMedia, recordsForVisit, sortRecords, visitIdOf } from '../../demo/records';
+import { recordsForVisit, sortRecords, visitIdOf } from '../../demo/records';
 import { SafeImage } from '../../demo/SafeImage';
 import { requestUpload, UPLOAD_NOT_CONNECTED_MESSAGE } from '../../demo/uploadBridge';
 import { AppHeader } from '../components/AppHeader';
 import { Avatar } from '../components/Avatar';
 import { MediaPickerSheet, type MediaPickerAction } from '../components/MediaPickerSheet';
+import { PersonIcon, PhotoGridIcon } from '../components/ViewModeIcons';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { StagedMediaThumb, type StagedMedia } from '../components/StagedMediaThumb';
 import { Toast, useToast } from '../components/Toast';
@@ -90,7 +92,6 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
   const members = membersFor(trip);
   // 방문(일정·날짜·장소) 단위로 기록을 찾는다. 같은 장소를 다른 날짜에 담아도 기록이 섞이지 않는다.
   const records = recordsForVisit(itinerary.id, day.id, place ?? { id: placeId });
-  const mediaCounts = countMedia(records);
 
   /** 최신순(true) / 오래된순(false) */
   const [newestFirst, setNewestFirst] = useState(true);
@@ -237,6 +238,39 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
    */
   const handleUploadPress = () => setUploadVisible(true);
 
+  /** 사진별 보기의 "선택" 모드와 선택한 사진 id */
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  /** 사람별 보기 ⋯ 메뉴가 열린 스팟원 id */
+  const [menuMemberId, setMenuMemberId] = useState<string | null>(null);
+  const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
+
+  const exitSelecting = () => {
+    setSelecting(false);
+    setSelectedIds([]);
+  };
+  const toggleSelected = (id: string) =>
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]));
+  const allSelected = cards.length > 0 && selectedIds.length === cards.length;
+
+  /** 고른 카드들을 다운로드 연결 지점으로 넘긴다. 처리되지 않으면 저장된 척하지 않고 안내만 한다. */
+  const downloadCards = async (target: FlatMediaCard[]) => {
+    if (target.length === 0) return;
+    try {
+      const result = await requestDownload(
+        target.map((c) => ({ id: c.item.id, kind: c.item.kind === 'video' ? 'video' : 'photo', source: c.item.imageUrl as string | number })),
+      );
+      if (!result.handled) {
+        setDownloadNotice(DOWNLOAD_NOT_CONNECTED_MESSAGE);
+        return;
+      }
+      toast.show(`${target.length}개를 저장했어요`);
+      exitSelecting();
+    } catch {
+      setDownloadNotice('저장하지 못했어요');
+    }
+  };
+
   const openViewer = (card: FlatMediaCard) => {
     // 재생할 영상 파일이 없는 동영상은 열지 않는다(사진처럼 보여 주며 동영상인 척하지 않는다).
     if (card.item.kind === 'video' && card.item.videoSource === undefined) {
@@ -264,35 +298,62 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
           <Text style={styles.uploadButtonText}>＋ 사진·동영상 올리기</Text>
         </Pressable>
 
-        <View style={styles.sectionHeadRow}>
-          <Text style={styles.sectionTitle}>
-            {listTitle}
-            {mediaCounts.total > 0 ? <Text style={styles.sectionCount}>{`  사진 ${mediaCounts.photos}·동영상 ${mediaCounts.videos}`}</Text> : null}
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={newestFirst ? '정렬: 최신순, 누르면 오래된순' : '정렬: 오래된순, 누르면 최신순'}
-            onPress={() => setNewestFirst((v) => !v)}
-            hitSlop={6}
-          >
-            <Text style={styles.sortLabel}>{newestFirst ? '최신순' : '오래된순'} ⌄</Text>
-          </Pressable>
-        </View>
+        <Text style={styles.sectionTitle}>{listTitle}</Text>
 
         {cards.length > 0 ? (
-          <View style={styles.segment} accessibilityRole="tablist">
-            {([['photo', '사진별'], ['person', '사람별']] as const).map(([mode, label]) => (
-              <Pressable
-                key={mode}
-                accessibilityRole="tab"
-                accessibilityLabel={`${label} 보기`}
-                accessibilityState={{ selected: viewMode === mode }}
-                onPress={() => setViewMode(mode)}
-                style={[styles.segmentItem, viewMode === mode && styles.segmentItemActive]}
-              >
-                <Text style={[styles.segmentText, viewMode === mode && styles.segmentTextActive]}>{label}</Text>
-              </Pressable>
-            ))}
+          <View style={styles.segmentRow}>
+            <View style={styles.segment} accessibilityRole="tablist">
+              {([['photo', '사진별'], ['person', '사람별']] as const).map(([mode, label]) => (
+                <Pressable
+                  key={mode}
+                  accessibilityRole="tab"
+                  accessibilityLabel={`${label} 보기`}
+                  accessibilityState={{ selected: viewMode === mode }}
+                  onPress={() => {
+                    setViewMode(mode);
+                    exitSelecting();
+                  }}
+                  style={[styles.segmentItem, viewMode === mode && styles.segmentItemActive]}
+                >
+                  {mode === 'photo' ? (
+                    <PhotoGridIcon size={17} color={viewMode === mode ? colors.text : colors.textMuted} />
+                  ) : (
+                    <PersonIcon size={17} color={viewMode === mode ? colors.text : colors.textMuted} />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+            {selecting ? (
+              <View style={styles.selectActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={allSelected ? '전체 선택 해제' : '전체 선택'}
+                  onPress={() => setSelectedIds(allSelected ? [] : cards.map((c) => c.item.id))}
+                  hitSlop={6}
+                >
+                  <Text style={styles.selectText}>{allSelected ? '전체 해제' : '전체 선택'}</Text>
+                </Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="선택 취소" onPress={exitSelecting} hitSlop={6}>
+                  <Text style={styles.selectText}>취소</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.selectActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={newestFirst ? '정렬: 최신순, 누르면 오래된순' : '정렬: 오래된순, 누르면 최신순'}
+                  onPress={() => setNewestFirst((v) => !v)}
+                  hitSlop={6}
+                >
+                  <Text style={styles.selectText}>{newestFirst ? '최신순' : '오래된순'}</Text>
+                </Pressable>
+                {viewMode === 'photo' ? (
+                  <Pressable accessibilityRole="button" accessibilityLabel="사진 선택" onPress={() => setSelecting(true)} hitSlop={6}>
+                    <Text style={styles.selectText}>선택</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            )}
           </View>
         ) : null}
 
@@ -310,9 +371,18 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
                   <View style={styles.personHeadText}>
                     <Text style={styles.personName}>{group.member.name}</Text>
                     <Text style={styles.personSub}>
-                      {`사진 ${photos}${videos > 0 ? ` · 동영상 ${videos}` : ''} · ${group.firstTime}`}
+                      {`사진 ${photos}${videos > 0 ? ` · 동영상 ${videos}` : ''} · ${group.firstTime.replace(/^\d{1,2}\.\d{1,2}\s+/, '')}`}
                     </Text>
                   </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${group.member.name} 더보기 메뉴`}
+                    onPress={() => setMenuMemberId(group.member.id)}
+                    hitSlop={10}
+                    style={styles.moreButton}
+                  >
+                    <Text style={styles.moreGlyph}>⋯</Text>
+                  </Pressable>
                 </View>
                 <PersonGrid
                   cards={group.cards}
@@ -340,9 +410,14 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
               key={card.item.id}
               accessibilityRole="button"
               accessibilityLabel={`${card.member.name}이 올린 ${card.item.kind === 'video' ? '동영상 재생' : '사진 크게 보기'}`}
-              onPress={() => openViewer(card)}
+              onPress={() => (selecting ? toggleSelected(card.item.id) : openViewer(card))}
               style={({ pressed }) => [styles.card, pressed && styles.pressed]}
             >
+              {selecting ? (
+                <View style={[styles.checkCircle, selectedIds.includes(card.item.id) && styles.checkCircleOn]}>
+                  {selectedIds.includes(card.item.id) ? <Text style={styles.checkGlyph}>✓</Text> : null}
+                </View>
+              ) : null}
               {card.item.imageUrl ? (
                 <SafeImage source={card.item.imageUrl} style={[styles.cardImage, { height: cardImageHeight }]} resizeMode="cover" />
               ) : (
@@ -365,7 +440,8 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
                 <Avatar uri={card.member.avatarUrl} size={28} />
                 <View style={styles.cardFooterText}>
                   <Text style={styles.cardFooterTop}>
-                    {card.postTime} · {card.member.name}
+                    {/* 날짜는 화면 상단 부제목에 이미 있어 카드에는 시간만 보여 준다 */}
+                    {card.postTime.replace(/^\d{1,2}\.\d{1,2}\s+/, '')} · {card.member.name}
                   </Text>
                   {card.item.caption ? (
                     <Text style={styles.cardCaption} numberOfLines={1}>
@@ -378,6 +454,50 @@ export function PlaceRecordsScreen({ nav, tripId, itinerary, day, placeId }: Pro
           ))
         )}
       </ScrollView>
+
+      {/* 사진별 선택 모드: 고른 개수만큼 다운받기 */}
+      {selecting ? (
+        <View style={styles.selectBar}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: selectedIds.length === 0 }}
+            disabled={selectedIds.length === 0}
+            onPress={() => downloadCards(cards.filter((c) => selectedIds.includes(c.item.id)))}
+            style={[styles.uploadBtn, selectedIds.length > 0 ? styles.uploadBtnActive : styles.uploadBtnDisabled]}
+          >
+            <Text style={[styles.uploadBtnText, selectedIds.length > 0 ? styles.uploadBtnTextActive : styles.uploadBtnTextDisabled]}>
+              {selectedIds.length > 0 ? `${selectedIds.length}개 다운받기` : '사진을 선택하세요'}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {/* 사람별 ⋯ 메뉴 */}
+      <Modal visible={menuMemberId !== null} animationType="fade" transparent onRequestClose={() => setMenuMemberId(null)}>
+        <Pressable accessibilityRole="button" accessibilityLabel="닫기" onPress={() => setMenuMemberId(null)} style={styles.backdrop} />
+        <View style={styles.uploadSheet}>
+          <View style={styles.handle} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="사진 다운받기"
+            onPress={() => {
+              const target = groups.find((g) => g.member.id === menuMemberId);
+              setMenuMemberId(null);
+              if (target) downloadCards(target.cards);
+            }}
+            style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+          >
+            <Text style={styles.menuItemText}>사진 다운받기</Text>
+          </Pressable>
+        </View>
+      </Modal>
+
+      <NoticeModal
+        visible={downloadNotice !== null}
+        title="사진 다운받기"
+        message={downloadNotice ?? ''}
+        onConfirm={() => setDownloadNotice(null)}
+      />
 
       {/* 업로드 시트: 버튼을 눌렀을 때만 연다. 선택·중복 거르기·업로드 로직은 기존 그대로다. */}
       <Modal visible={uploadVisible} animationType="slide" transparent onRequestClose={() => setUploadVisible(false)}>
@@ -533,23 +653,43 @@ const styles = StyleSheet.create({
   uploadButtonText: { fontSize: 15, fontWeight: '700', color: colors.primary },
   pressed: { opacity: 0.85 },
 
-  sectionHeadRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
-  sectionCount: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
-  sortLabel: { fontSize: 13, fontWeight: '600', color: colors.textSub },
   emptyCards: { fontSize: 13, color: colors.textMuted, paddingVertical: 20, textAlign: 'center' },
+
+  segmentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  selectActions: { flexDirection: 'row', gap: 16 },
+  selectText: { fontSize: 13, fontWeight: '700', color: colors.textSub },
+  moreButton: { paddingHorizontal: 6, minHeight: 32, justifyContent: 'center' },
+  moreGlyph: { fontSize: 22, fontWeight: '800', color: colors.textSub, lineHeight: 24 },
+  checkCircle: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 2,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkCircleOn: { backgroundColor: colors.primary },
+  checkGlyph: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  selectBar: { paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 16, backgroundColor: colors.bg, borderTopWidth: 1, borderTopColor: colors.line },
+  menuItem: { minHeight: MIN_TOUCH, justifyContent: 'center' },
+  menuItemText: { fontSize: 16, fontWeight: '700', color: colors.text },
 
   segment: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
     borderRadius: radius.pill,
-    padding: 3,
+    padding: 2,
     alignSelf: 'flex-start',
   },
-  segmentItem: { paddingHorizontal: 18, paddingVertical: 7, borderRadius: radius.pill },
+  segmentItem: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   segmentItemActive: { backgroundColor: colors.bg, boxShadow: '0px 1px 4px rgba(25, 31, 40, 0.12)' },
-  segmentText: { fontSize: 13, fontWeight: '700', color: colors.textMuted },
-  segmentTextActive: { color: colors.text },
 
   personCard: {
     backgroundColor: colors.bg,
@@ -640,7 +780,7 @@ const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
   uploadSheet: {
     backgroundColor: colors.bg,
-    borderTopLeftRadius: radius.card,
+    width: '100%', maxWidth: 430, alignSelf: 'center', borderTopLeftRadius: radius.card,
     borderTopRightRadius: radius.card,
     paddingHorizontal: 16,
     paddingTop: 10,

@@ -50,27 +50,49 @@ export function nextDate(date: string): string {
   return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
 }
 
-export interface AddDayResult {
+/** 날짜순으로 정렬하고 일차 번호를 1부터 다시 매긴다. 시작일·종료일은 첫·마지막 날짜로 맞춘다. */
+function normalizeDays(itinerary: Itinerary, days: Itinerary['days']): Itinerary {
+  const sorted = [...days].sort((a, b) => a.date.localeCompare(b.date)).map((d, i) => ({ ...d, dayNumber: i + 1 }));
+  return {
+    ...itinerary,
+    startDate: sorted[0]?.date ?? itinerary.startDate,
+    endDate: sorted[sorted.length - 1]?.date ?? itinerary.endDate,
+    days: sorted,
+  };
+}
+
+export interface AddDatesResult {
   itineraries: Itinerary[];
-  /** 새로 만든 날짜의 id. 일정이 없거나 최대 날짜 수에 이르러 추가하지 못했으면 null. */
-  dayId: string | null;
+  /** 실제로 새로 만든 날짜의 id 목록. */
+  addedDayIds: string[];
 }
 
 /**
- * 일정의 마지막 날짜 다음 날을 빈 날짜로 추가한다(여행 기간도 하루 늘어난다).
- * 새 날짜의 id 는 `day-{번호}`, 장소·제목·메모는 비어 있다.
+ * 고른 날짜들을 일정에 빈 날짜로 추가한다. 이어지지 않는 날짜도 되고, 일정 기간 앞뒤·중간 어디든 된다.
+ * - 이미 있는 날짜, 형식이 틀린 날짜, 중복은 건너뛴다. 최대 날짜 수(MAX_DAYS)를 넘는 만큼은 추가하지 않는다.
+ * - 기존 날짜의 id 는 바뀌지 않는다(그 날짜의 장소 기록이 id 로 연결되어 있다). 새 id 는 `day-{큰 번호+1}`부터 쓴다.
+ * - 추가 후 날짜순으로 정렬하고 일차(dayNumber)와 일정 시작일·종료일을 다시 맞춘다.
  */
-export function addDayToItinerary(itineraries: Itinerary[], itineraryId: string): AddDayResult {
-  let dayId: string | null = null;
+export function addDatesToItinerary(itineraries: Itinerary[], itineraryId: string, dates: string[]): AddDatesResult {
+  const addedDayIds: string[] = [];
   const next = itineraries.map((itinerary) => {
-    if (itinerary.id !== itineraryId || itinerary.days.length >= MAX_DAYS) return itinerary;
-    const last = itinerary.days[itinerary.days.length - 1];
-    const date = nextDate(last ? last.date : itinerary.endDate);
-    const dayNumber = (last?.dayNumber ?? 0) + 1;
-    dayId = `day-${dayNumber}`;
-    return { ...itinerary, endDate: date, days: [...itinerary.days, { id: dayId, date, dayNumber, places: [] }] };
+    if (itinerary.id !== itineraryId) return itinerary;
+    const have = new Set(itinerary.days.map((d) => d.date));
+    const usedIds = new Set(itinerary.days.map((d) => d.id));
+    let seq = itinerary.days.reduce((max, d) => Math.max(max, Number(/^day-(\d+)$/.exec(d.id)?.[1] ?? 0)), 0);
+    const added: Itinerary['days'] = [];
+    for (const date of [...dates].sort()) {
+      if (!DATE_RE.test(date) || have.has(date)) continue;
+      if (itinerary.days.length + added.length >= MAX_DAYS) break;
+      do seq += 1;
+      while (usedIds.has(`day-${seq}`));
+      have.add(date);
+      added.push({ id: `day-${seq}`, date, dayNumber: 0, places: [] });
+      addedDayIds.push(`day-${seq}`);
+    }
+    return added.length === 0 ? itinerary : normalizeDays(itinerary, [...itinerary.days, ...added]);
   });
-  return { itineraries: dayId ? next : itineraries, dayId };
+  return { itineraries: addedDayIds.length > 0 ? next : itineraries, addedDayIds };
 }
 
 /** 순서 편집 저장: 이미 정렬된 장소 배열(방문 시간 포함)과 메모를 그 날짜에 반영한다. */
@@ -172,28 +194,27 @@ export function parseStoredItineraries(raw: string | null, defaults: Itinerary[]
           title: isStr(savedDay.title) ? savedDay.title.trim() || undefined : baseDay.title,
         });
       }
-      // 사용자가 뒤에 추가한 날짜: 마지막 날짜 바로 다음 날이고 번호가 이어질 때만 받아들인다.
+      // 사용자가 추가한 날짜: id·날짜 형식이 맞고, 기존 날짜와 겹치지 않을 때만 받아들인다(이어지지 않아도 된다).
       const baseIds = new Set(base.days.map((d) => d.id));
       const extras = saved.days.filter((d: unknown) => !baseIds.has((d as { id?: unknown })?.id as string));
       for (const raw of extras) {
-        const e = raw as { id?: unknown; date?: unknown; dayNumber?: unknown; places?: unknown; memo?: unknown; title?: unknown };
-        const prev = days[days.length - 1];
+        const e = raw as { id?: unknown; date?: unknown; places?: unknown; memo?: unknown; title?: unknown };
         if (!isStr(e.id) || !e.id || !isStr(e.date) || !DATE_RE.test(e.date)) return null;
         if (!Array.isArray(e.places) || !e.places.every(validPlace)) return null;
-        if (!prev || e.date !== nextDate(prev.date) || e.dayNumber !== prev.dayNumber + 1) return null;
+        if (days.some((d) => d.id === e.id || d.date === e.date)) return null;
         const places = e.places as ItineraryPlace[];
         if (new Set(places.map((p) => p.id)).size !== places.length) return null;
         if (days.length >= MAX_DAYS) return null;
         days.push({
           id: e.id,
           date: e.date,
-          dayNumber: prev.dayNumber + 1,
+          dayNumber: 0,
           places: places.map((p) => ({ ...p, visitId: p.visitId ?? visitKey(base.id, e.id as string, p.id) })),
           memo: isStr(e.memo) && e.memo ? e.memo : undefined,
           title: isStr(e.title) ? e.title.trim() || undefined : undefined,
         });
       }
-      result.push({ ...base, endDate: days[days.length - 1]?.date ?? base.endDate, days });
+      result.push(normalizeDays(base, days));
     }
     return result;
   } catch {

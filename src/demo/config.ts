@@ -20,3 +20,5 @@ export const DEMO_STORAGE_KEY = 'reelspot.demo.itineraries.v1';
 /** 일정 대표(배경) 사진 저장 키. { [일정 id]: data URI } 형태. */
 export const DEMO_COVER_STORAGE_KEY = 'reelspot.demo.covers.v1';
 
+/** 마이페이지 프로필(닉네임·프로필 사진) 저장 키. { nickname, avatarUri } 형태. */
+export const DEMO_PROFILE_STORAGE_KEY = 'reelspot.demo.profile.v1';

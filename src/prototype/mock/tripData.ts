@@ -301,3 +301,9 @@ export const templatesFor = (cuts: number): Template[] => TEMPLATES.filter((t) =
 export const TEMPLATE_BY_ID: Record<string, Template> = Object.fromEntries(TEMPLATES.map((t) => [t.id, t]));
 
 export type MediaKind = 'photo' | 'video';
+
+/**
+ * 프로필 및 계정 화면에 보여 줄 로그인 방식 예시. 프로토타입에는 로그인 기능이 없어 고정값이며,
+ * 실제 서비스에서는 로그인한 계정의 공급자(카카오·구글 등)로 바뀐다.
+ */
+export const LOGIN_PROVIDER_EXAMPLE = { label: '카카오', color: '#FEE500' } as const;

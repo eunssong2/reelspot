@@ -10,7 +10,6 @@ import type { Nav } from '../navigation/routes';
 import { colors, GUTTER, radius, shadow } from '../styles/tokens';
 import { monthDayLabel, dayOfWeekLabel } from '../utils/date';
 
-const MEMO_MAX = 100;
 const TITLE_MAX = 30;
 /** 입력 중인 "HH:mm" 문자열이 올바른 시각인지 확인한다. */
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -37,7 +36,8 @@ interface Props {
  */
 export function PlaceOrderEditScreen({ nav, itinerary, day, onSave }: Props) {
   const [places, setPlaces] = useState<ItineraryPlace[]>(day.places);
-  const [memo, setMemo] = useState(day.memo ?? '');
+  // 장소 메모 입력은 화면에서 뺐다. 이미 저장된 메모는 지우지 않고 그대로 다시 저장한다.
+  const memo = day.memo ?? '';
   const [title, setTitle] = useState(day.title ?? '');
   const [saving, setSaving] = useState(false);
   /** 방문 시간을 고치는 중인 장소 id */
@@ -158,23 +158,6 @@ export function PlaceOrderEditScreen({ nav, itinerary, day, onSave }: Props) {
             </View>
           </View>
         ))}
-
-        <View style={styles.memoBlock}>
-          <Text style={styles.memoLabel}>장소 메모</Text>
-          <TextInput
-            value={memo}
-            onChangeText={(text) => setMemo(text.slice(0, MEMO_MAX))}
-            placeholder="이 날의 장소 구성에 대해 적어 보세요"
-            placeholderTextColor={colors.textMuted}
-            multiline
-            maxLength={MEMO_MAX}
-            style={styles.memoInput}
-            accessibilityLabel="장소 메모"
-          />
-          <Text style={styles.memoCount}>
-            {memo.length}/{MEMO_MAX}
-          </Text>
-        </View>
       </ScrollView>
 
       <TimeEditModal
@@ -250,18 +233,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.8 },
   titleBlock: { gap: 6 },
   titleInput: { minHeight: 48, backgroundColor: colors.surface, borderRadius: radius.item, paddingHorizontal: 12, fontSize: 14, color: colors.text, outlineWidth: 0 },
-  memoBlock: { marginTop: 8, gap: 6 },
   memoLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
-  memoInput: {
-    minHeight: 72,
-    backgroundColor: colors.surface,
-    borderRadius: radius.item,
-    padding: 12,
-    fontSize: 14,
-    color: colors.text,
-    textAlignVertical: 'top',
-    outlineWidth: 0,
-  },
   memoCount: { fontSize: 11, color: colors.textMuted, textAlign: 'right' },
   footer: { paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 16 },
 });

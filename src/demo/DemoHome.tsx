@@ -1,8 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Avatar } from '../prototype/components/Avatar';
 import { ScreenFrame } from '../prototype/components/ScreenFrame';
 import { usePrototype, usePrototypeNav } from '../prototype/state/PrototypeProvider';
 import { colors, GUTTER, radius } from '../prototype/styles/tokens';
+import { membersFor, TRIPS } from '../prototype/mock/tripData';
 import { tripRangeLabel } from '../prototype/utils/date';
 import { DEMO_TRIP_ID } from './config';
 
@@ -12,11 +14,22 @@ import { DEMO_TRIP_ID } from './config';
  */
 export function DemoHome() {
   const nav = usePrototypeNav();
-  const { itineraries } = usePrototype();
+  const { itineraries, profile } = usePrototype();
   const list = itineraries.filter((it) => it.tripId === DEMO_TRIP_ID);
 
   return (
     <ScreenFrame>
+      <View style={styles.topBar}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="마이페이지 열기"
+          onPress={() => nav.push({ name: 'myPage' })}
+          style={({ pressed }) => [styles.myPageButton, pressed && styles.pressed]}
+        >
+          <Avatar uri={profile.avatarUri ?? membersFor(TRIPS[0])[0].avatarUrl} size={26} />
+          <Text style={styles.myPageText}>마이페이지</Text>
+        </Pressable>
+      </View>
       <View style={styles.wrap}>
         <Text style={styles.brand}>AT THAT PLACE</Text>
         <Text style={styles.title}>어떤 일정을 볼까요?</Text>
@@ -44,6 +57,9 @@ export function DemoHome() {
 }
 
 const styles = StyleSheet.create({
+  topBar: { alignItems: 'flex-end', paddingHorizontal: GUTTER, paddingTop: 12 },
+  myPageButton: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, borderRadius: radius.pill, paddingVertical: 5, paddingLeft: 5, paddingRight: 14 },
+  myPageText: { fontSize: 13, fontWeight: '700', color: colors.text },
   wrap: { flex: 1, justifyContent: 'center', paddingHorizontal: GUTTER, gap: 14 },
   brand: { fontSize: 12, fontWeight: '900', letterSpacing: 1.2, color: colors.primary, textAlign: 'center' },
   title: { fontSize: 24, fontWeight: '900', color: colors.text, textAlign: 'center', marginBottom: 10 },

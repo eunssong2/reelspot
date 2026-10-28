@@ -3,9 +3,9 @@ import { useRouter } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
-import { DEMO_COVER_STORAGE_KEY, DEMO_STORAGE_KEY, IS_DEMO_BUILD } from '../../demo/config';
+import { DEMO_COVER_STORAGE_KEY, DEMO_PROFILE_STORAGE_KEY, DEMO_STORAGE_KEY, IS_DEMO_BUILD } from '../../demo/config';
 import { createDemoItineraries } from '../../demo/demoData';
-import { addDayToItinerary, addPlaceToDay, parseStoredItineraries, serializeItineraries, updateDayPlaces } from '../../demo/demoStore';
+import { addDatesToItinerary, addPlaceToDay, parseStoredItineraries, serializeItineraries, updateDayPlaces } from '../../demo/demoStore';
 import { ITINERARIES, type Itinerary, type ItineraryPlace } from '../mock/tripData';
 import type { Nav, Route } from '../navigation/routes';
 
@@ -17,15 +17,27 @@ interface PrototypeState {
   addPlace: (itineraryId: string, dayId: string, place: ItineraryPlace) => boolean;
   /** 순서 편집 저장: 장소 순서(이미 정렬된 배열) · 방문 시간 · 날짜 메모를 한 번에 반영한다. */
   updateDay: (itineraryId: string, dayId: string, patch: { places: ItineraryPlace[]; memo: string; title?: string }) => void;
-  /** 일정 끝에 빈 날짜(마지막 날 다음 날)를 하나 더한다. 새 날짜 id 를 돌려주고, 더할 수 없으면 null. */
-  addDay: (itineraryId: string) => string | null;
+  /** 고른 날짜들(이어지지 않아도 됨)을 빈 날짜로 더한다. 실제로 더한 날짜 수를 돌려준다(이미 있는 날짜는 건너뜀). */
+  addDays: (itineraryId: string, dates: string[]) => number;
   /** 일정 대표(배경) 사진. 일정 id → 이미지 URI(data URI). 없으면 기본 그림을 쓴다. */
   covers: Record<string, string>;
   /** 대표 사진을 바꾼다. null 이면 기본 그림으로 되돌린다. */
   setCover: (itineraryId: string, uri: string | null) => void;
   /** 데모 전용: 추가한 장소·순서 변경을 지우고 예시 데이터를 처음 상태로 되돌린다. */
   resetDemo: () => void;
+  /** 마이페이지 프로필. avatarUri 가 null 이면 기본 프로필 사진을 쓴다. */
+  profile: MyProfile;
+  setNickname: (nickname: string) => void;
+  setAvatar: (uri: string | null) => void;
 }
+
+export interface MyProfile {
+  nickname: string;
+  /** 직접 고른 프로필 사진(data URI). 없으면 null. */
+  avatarUri: string | null;
+}
+
+const DEFAULT_PROFILE: MyProfile = { nickname: '나', avatarUri: null };
 
 const PrototypeContext = createContext<PrototypeState | null>(null);
 
@@ -42,6 +54,7 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [covers, setCovers] = useState<Record<string, string>>({});
   /** 데모: 저장된 상태를 읽어 오기 전에는 화면을 그리지 않는다(처음 상태가 잠깐 비치지 않도록). */
+  const [profile, setProfile] = useState<MyProfile>(DEFAULT_PROFILE);
   const [hydrated, setHydrated] = useState(!IS_DEMO_BUILD);
   // 연속으로 호출해도 최신 상태를 보고 중복 여부를 판단하기 위한 참조.
   const itinerariesRef = useRef(itineraries);
@@ -63,6 +76,15 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
             if (typeof uri === 'string' && uri) clean[id] = uri;
           }
           setCovers(clean);
+        }
+        const rawProfile = await AsyncStorage.getItem(DEMO_PROFILE_STORAGE_KEY);
+        const parsedProfile: unknown = rawProfile ? JSON.parse(rawProfile) : null;
+        if (!cancelled && parsedProfile && typeof parsedProfile === 'object') {
+          const p = parsedProfile as Record<string, unknown>;
+          setProfile({
+            nickname: typeof p.nickname === 'string' && p.nickname.trim() ? p.nickname : DEFAULT_PROFILE.nickname,
+            avatarUri: typeof p.avatarUri === 'string' && p.avatarUri ? p.avatarUri : null,
+          });
         }
       } catch {
         // 저장소를 읽지 못하면 예시 처음 상태로 시작한다.
@@ -101,12 +123,12 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const addDay = useCallback((itineraryId: string) => {
-    const result = addDayToItinerary(itinerariesRef.current, itineraryId);
-    if (!result.dayId) return null;
+  const addDays = useCallback((itineraryId: string, dates: string[]) => {
+    const result = addDatesToItinerary(itinerariesRef.current, itineraryId, dates);
+    if (result.addedDayIds.length === 0) return 0;
     itinerariesRef.current = result.itineraries;
     setItineraries(result.itineraries);
-    return result.dayId;
+    return result.addedDayIds.length;
   }, []);
 
   const setCover = useCallback((itineraryId: string, uri: string | null) => {
@@ -123,8 +145,24 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const updateProfile = useCallback((patch: Partial<MyProfile>) => {
+    setProfile((prev) => {
+      const next = { ...prev, ...patch };
+      if (IS_DEMO_BUILD) {
+        AsyncStorage.setItem(DEMO_PROFILE_STORAGE_KEY, JSON.stringify(next)).catch(() => {
+          // 저장 실패는 이번 실행의 화면에는 영향이 없다.
+        });
+      }
+      return next;
+    });
+  }, []);
+  const setNickname = useCallback((nickname: string) => updateProfile({ nickname }), [updateProfile]);
+  const setAvatar = useCallback((uri: string | null) => updateProfile({ avatarUri: uri }), [updateProfile]);
+
   const resetDemo = useCallback(() => {
     if (!IS_DEMO_BUILD) return;
+    setProfile(DEFAULT_PROFILE);
+    AsyncStorage.removeItem(DEMO_PROFILE_STORAGE_KEY).catch(() => {});
     setCovers({});
     AsyncStorage.removeItem(DEMO_COVER_STORAGE_KEY).catch(() => {});
     const fresh = createDemoItineraries();
@@ -134,8 +172,8 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ itineraries, highlightId, addPlace, updateDay, addDay, resetDemo, covers, setCover }),
-    [itineraries, highlightId, addPlace, updateDay, addDay, resetDemo, covers, setCover],
+    () => ({ itineraries, highlightId, addPlace, updateDay, addDays, resetDemo, covers, setCover, profile, setNickname, setAvatar }),
+    [itineraries, highlightId, addPlace, updateDay, addDays, resetDemo, covers, setCover, profile, setNickname, setAvatar],
   );
 
   if (!hydrated) {
@@ -194,6 +232,14 @@ const toHref = (route: Route) => {
       } as const;
     case 'videoMerge':
       return { pathname: '/prototype/video-merge' } as const;
+    case 'myPage':
+      return { pathname: '/prototype/my-page' } as const;
+    case 'members':
+      return { pathname: '/prototype/members', params: { tripId: route.tripId, itineraryId: route.itineraryId } } as const;
+    case 'settings':
+      return { pathname: '/prototype/settings' } as const;
+    case 'account':
+      return { pathname: '/prototype/account' } as const;
   }
 };
 

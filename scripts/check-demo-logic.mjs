@@ -140,41 +140,47 @@ try {
     assert.equal(day(store.parseStoredItineraries(store.serializeItineraries(cleared), fresh()), 'day-1').title, undefined);
   });
 
-  test('일정 추가(새 날짜): 마지막 날 다음 날이 붙고, 저장 후에도 유지되며, 다른 일정·장소는 그대로', () => {
+  test('일정 추가(날짜 선택): 하나·여러 날·이어지지 않는 날짜가 들어가고, 날짜순 정렬·일차·기간이 맞춰진다', () => {
     const base = fresh();
-    const r = store.addDayToItinerary(base, IT);
-    assert.equal(r.dayId, 'day-4');
-    const it = r.itineraries[0];
-    assert.equal(it.days.length, 4);
-    assert.equal(it.endDate, '2026-10-20');
-    assert.equal(it.days[3].date, '2026-10-20');
-    assert.equal(it.days[3].dayNumber, 4);
-    assert.deepEqual(it.days[3].places, []);
-    assert.equal(r.itineraries[1].days.length, 1); // 하루 일정은 그대로
+    // 하나 추가(마지막 날 다음 날)
+    const one = store.addDatesToItinerary(base, IT, ['2026-10-20']);
+    assert.deepEqual(one.addedDayIds, ['day-4']);
+    assert.equal(one.itineraries[0].endDate, '2026-10-20');
+    assert.equal(one.itineraries[0].days[3].dayNumber, 4);
+    assert.deepEqual(one.itineraries[0].days[3].places, []);
+    assert.equal(one.itineraries[1].days.length, 1); // 다른 일정은 그대로
     assert.equal(base[0].days.length, 3); // 원본 불변
-    // 월 경계(10/31 → 11/01)
-    assert.equal(store.nextDate('2026-10-31'), '2026-11-01');
-    assert.equal(store.nextDate('2026-12-31'), '2027-01-01');
+    // 이어지지 않는 여러 날짜 + 일정 앞 날짜. 기존 날짜 id·장소는 그대로, 일차는 날짜순으로 다시 매긴다
+    const many = store.addDatesToItinerary(base, IT, ['2026-11-05', '2026-10-15', '2026-10-17', 'bad', '2026-11-05']);
+    assert.equal(many.addedDayIds.length, 2); // 이미 있는 날짜·잘못된 값·중복은 건너뜀
+    const it = many.itineraries[0];
+    assert.deepEqual(it.days.map((d) => d.date), ['2026-10-15', '2026-10-17', '2026-10-18', '2026-10-19', '2026-11-05']);
+    assert.deepEqual(it.days.map((d) => d.dayNumber), [1, 2, 3, 4, 5]);
+    assert.equal(it.startDate, '2026-10-15');
+    assert.equal(it.endDate, '2026-11-05');
+    assert.equal(it.days.find((d) => d.date === '2026-10-17').id, 'day-1'); // 기존 날짜 id 유지
+    assert.equal(it.days.find((d) => d.date === '2026-10-17').places.length, 3);
     // 새 날짜에 장소를 담고 저장 → 읽기
-    const withPlace = store.addPlaceToDay(r.itineraries, IT, 'day-4', { id: 'n1', name: 'n1', address: 'a', categoryLabel: 'c', emoji: 'e', tint: 't' }).itineraries;
+    const newId = many.addedDayIds[0];
+    const withPlace = store.addPlaceToDay(many.itineraries, IT, newId, { id: 'n1', name: 'n1', address: 'a', categoryLabel: 'c', emoji: 'e', tint: 't' }).itineraries;
     const loaded = store.parseStoredItineraries(store.serializeItineraries(withPlace), fresh());
     assert.ok(loaded);
-    assert.equal(loaded[0].days.length, 4);
-    assert.equal(loaded[0].endDate, '2026-10-20');
-    assert.deepEqual(loaded[0].days[3].places.map((p) => p.id), ['n1']);
-    assert.equal(loaded[0].days[3].places[0].visitId, 'itin-seoul-1/day-4/n1');
-    // 두 번 더 추가해도 이어서 붙고, 존재하지 않는 일정은 추가하지 않는다
-    const twice = store.addDayToItinerary(store.addDayToItinerary(r.itineraries, IT).itineraries, IT);
-    assert.equal(twice.itineraries[0].days.length, 6);
-    assert.equal(twice.itineraries[0].endDate, '2026-10-22');
-    assert.equal(store.addDayToItinerary(base, 'nope').dayId, null);
+    assert.deepEqual(loaded[0].days.map((d) => d.date), it.days.map((d) => d.date));
+    assert.equal(loaded[0].startDate, '2026-10-15');
+    assert.equal(loaded[0].endDate, '2026-11-05');
+    assert.deepEqual(loaded[0].days.find((d) => d.id === newId).places.map((p) => p.id), ['n1']);
+    assert.equal(loaded[0].days.find((d) => d.id === newId).places[0].visitId, `itin-seoul-1/${newId}/n1`);
+    // 존재하지 않는 일정·빈 선택은 추가하지 않는다
+    assert.deepEqual(store.addDatesToItinerary(base, 'nope', ['2026-10-20']).addedDayIds, []);
+    assert.deepEqual(store.addDatesToItinerary(base, IT, []).addedDayIds, []);
     // 날짜 수 상한
-    let many = base;
-    for (let i = 0; i < 60; i += 1) many = store.addDayToItinerary(many, IT).itineraries;
-    assert.equal(many[0].days.length, store.MAX_DAYS);
-    // 날짜가 이어지지 않는 저장본은 버린다
-    const broken = JSON.parse(store.serializeItineraries(r.itineraries));
-    broken.itineraries[0].days[3].date = '2026-11-05';
+    const lots = Array.from({ length: 60 }, (_, i) => store.nextDate(`2026-12-${String(i % 28 + 1).padStart(2, '0')}`)).concat(
+      Array.from({ length: 60 }, (_, i) => new Date(Date.UTC(2027, 0, 1 + i)).toISOString().slice(0, 10)),
+    );
+    assert.equal(store.addDatesToItinerary(base, IT, lots).itineraries[0].days.length, store.MAX_DAYS);
+    // 날짜가 겹치는 저장본은 버린다
+    const broken = JSON.parse(store.serializeItineraries(one.itineraries));
+    broken.itineraries[0].days[3].date = '2026-10-19';
     assert.equal(store.parseStoredItineraries(JSON.stringify(broken), fresh()), null);
   });
 

@@ -17,7 +17,13 @@ export type Route =
   // clipSeconds 를 모르는 진입 경로(장소 검색에서 바로 올리기)는 화면에서 기본값을 쓴다.
   | { name: 'mediaUpload'; placeName?: string; clipSeconds?: ClipSeconds }
   // 동영상 여러 개 이어 붙이기 실험 화면(웹 전용)
-  | { name: 'videoMerge' };
+  | { name: 'videoMerge' }
+  // 마이페이지: 프로필 사진·닉네임 변경, 참여한 모임 수
+  | { name: 'myPage' }
+  // 설정(프로필 및 계정·초대코드·약관·로그아웃)과 프로필 및 계정 상세
+  | { name: 'members'; tripId: string; itineraryId: string }
+  | { name: 'settings' }
+  | { name: 'account' };
 
 export interface Nav {
   push: (route: Route) => void;

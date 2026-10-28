@@ -7,10 +7,12 @@ import { NoticeModal } from '../../demo/NoticeModal';
 import { MAX_DAYS } from '../../demo/demoStore';
 import { countMedia, recordsForVisit, type MediaCounts } from '../../demo/records';
 import { AppHeader } from '../components/AppHeader';
+import { DatePickSheet } from '../components/DatePickSheet';
 import { CoverEditSheet } from '../components/CoverEditSheet';
 import { ItineraryCoverBanner } from '../components/ItineraryCoverBanner';
 import { MemberAvatarStack } from '../components/MemberAvatarStack';
 import { ScreenFrame } from '../components/ScreenFrame';
+import { Toast, useToast } from '../components/Toast';
 import { TRIPS, membersFor, type Itinerary, type ItineraryDay } from '../mock/tripData';
 import type { Nav } from '../navigation/routes';
 import { usePrototype } from '../state/PrototypeProvider';
@@ -44,7 +46,9 @@ const mediaLabel = (m: MediaCounts): string =>
  */
 export function ItinerarySummaryScreen({ nav, tripId, itinerary }: Props) {
   const trip = TRIPS.find((t) => t.id === tripId);
-  const { resetDemo, covers, setCover, addDay } = usePrototype();
+  const { resetDemo, covers, setCover, addDays } = usePrototype();
+  const toast = useToast();
+  const [dateSheet, setDateSheet] = useState(false);
   const [coverSheet, setCoverSheet] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
 
@@ -116,7 +120,14 @@ export function ItinerarySummaryScreen({ nav, tripId, itinerary }: Props) {
             <Text style={styles.metaText}>
               📅 {tripRangeLabel(itinerary.startDate, itinerary.endDate)} · {members.length}명
             </Text>
-            <MemberAvatarStack members={members} size={22} max={4} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="함께하는 친구 보기"
+              onPress={() => nav.push({ name: 'members', tripId, itineraryId: itinerary.id })}
+              hitSlop={8}
+            >
+              <MemberAvatarStack members={members} size={22} max={4} />
+            </Pressable>
           </View>
         </View>
 
@@ -133,13 +144,28 @@ export function ItinerarySummaryScreen({ nav, tripId, itinerary }: Props) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="일정 추가"
-            onPress={() => addDay(itinerary.id)}
+            onPress={() => setDateSheet(true)}
             style={({ pressed }) => [styles.addDayButton, pressed && styles.pressed]}
           >
             <Text style={styles.addDayText}>일정 추가</Text>
           </Pressable>
         ) : null}
       </ScrollView>
+
+      <DatePickSheet
+        visible={dateSheet}
+        existingDates={itinerary.days.map((d) => d.date)}
+        maxPick={MAX_DAYS - itinerary.days.length}
+        initialDate={itinerary.endDate}
+        onCancel={() => setDateSheet(false)}
+        onConfirm={(dates) => {
+          setDateSheet(false);
+          const added = addDays(itinerary.id, dates);
+          toast.show(added > 0 ? `${added}일을 추가했어요` : '추가할 수 있는 날짜가 없어요');
+        }}
+      />
+
+      <Toast message={toast.message} bottom={24} />
 
       <CoverEditSheet
         visible={coverSheet}
