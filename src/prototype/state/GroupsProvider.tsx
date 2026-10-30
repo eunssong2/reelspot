@@ -16,7 +16,7 @@ import {
   type Invite,
   type Schedule,
 } from '../mock/groupData';
-import { MAX_SCHEDULE_DAYS, inclusiveDays, isWithin, todayKst, type DateStr } from '../utils/calendar';
+import { MAX_SCHEDULE_DAYS, addDays, inclusiveDays, isWithin, todayKst, type DateStr } from '../utils/calendar';
 import { usePrototype } from './PrototypeProvider';
 
 /**
@@ -71,7 +71,7 @@ export type UpdateResult =
   | { ok: true }
   | { ok: false; error: 'OUTSIDE_RANGE_CONFIRMATION_REQUIRED'; visits: number; media: number }
   | { ok: false; error: 'VERSION_CONFLICT'; latest: Schedule }
-  | { ok: false; error: 'SCHEDULE_CANCELLED' | 'FORBIDDEN' | 'TEXT_REJECTED' | CommonError };
+  | { ok: false; error: 'SCHEDULE_CANCELLED' | 'FORBIDDEN' | 'TEXT_REJECTED' | 'DATE_TAKEN' | CommonError };
 
 export type CalendarView = 'calendar' | 'list';
 
@@ -165,7 +165,7 @@ interface GroupsState {
     groupId: string,
     input: ScheduleInput,
     key: string,
-  ) => Promise<Result<{ schedule: Schedule }, 'TEXT_REJECTED' | CommonError>>;
+  ) => Promise<Result<{ schedule: Schedule }, 'TEXT_REJECTED' | 'DATE_TAKEN' | CommonError>>;
   updateSchedule: (
     scheduleId: string,
     input: ScheduleInput,
@@ -176,6 +176,23 @@ interface GroupsState {
   /** 빈 일정만 지운다. 기록이 있으면 NOT_EMPTY */
   deleteSchedule: (scheduleId: string) => Promise<Result<{ deletedVisits: number }, 'NOT_EMPTY' | CommonError>>;
   visitCount: (schedule: Schedule) => number;
+
+  /** 한 날짜(하루 일정)의 제목·날짜를 고친다. 같은 모임의 다른 일정이 쓰는 날짜로는 옮길 수 없다(DATE_TAKEN). */
+  updateScheduleDay: (
+    scheduleId: string,
+    dayId: string,
+    patch: { title: string; date: DateStr },
+  ) => Promise<Result<object, 'DATE_TAKEN' | 'SCHEDULE_CANCELLED' | 'FORBIDDEN' | 'TEXT_REJECTED' | CommonError>>;
+  /** 하루만 취소한다(기록은 남는다). 모든 날이 취소되면 일정 전체가 취소된 상태가 된다. */
+  cancelScheduleDay: (scheduleId: string, dayId: string) => Promise<Result<object, 'FORBIDDEN' | CommonError>>;
+  /** 장소가 없는 하루를 지운다. 마지막 하루였으면 일정도 함께 지워진다. */
+  removeScheduleDay: (scheduleId: string, dayId: string) => Promise<Result<object, 'NOT_EMPTY' | 'FORBIDDEN' | CommonError>>;
+
+  /** 모임 대표 사진을 바꾼다(방장). 이 프로토타입의 모임 정보는 앱을 다시 열면 처음 예시로 돌아간다. */
+  setGroupCover: (groupId: string, uri: string) => void;
+
+  /** 방장이 참여자를 내보낸다. 내보낸 사람은 같은 초대로 다시 참여할 수 없다(REENTRY_BLOCKED). */
+  removeMember: (groupId: string, name: string) => Promise<Result<object, 'FORBIDDEN' | CommonError>>;
 
   invitesOf: (groupId: string) => Invite[];
   loadInvites: (groupId: string) => Promise<Result<object, CommonError>>;
@@ -218,7 +235,9 @@ export function representativeSchedule(
 const fail = <E extends string>(error: E) => ({ ok: false as const, error });
 
 export function GroupsProvider({ children }: { children: ReactNode }) {
-  const { itineraries, addItinerary, updateItineraryInfo } = usePrototype();
+  const { itineraries, addItinerary, updateDayInfo, removeDay, updateItineraryInfo } = usePrototype();
+  const itinerariesRefG = useRef(itineraries);
+  itinerariesRefG.current = itineraries;
   const [restoring, setRestoring] = useState(true);
   const [restoreError, setRestoreError] = useState<CommonError | null>(null);
   const [restoreTick, setRestoreTick] = useState(0);
@@ -489,6 +508,25 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
     [addItinerary],
   );
 
+  /** 일정이 차지하는 날짜들. 일정 요약(날짜 목록)이 있으면 그 날짜들, 없으면 시작~종료 기간. */
+  const datesOf = (sc: Schedule): DateStr[] => {
+    const it = sc.itineraryId ? itinerariesRefG.current.find((i) => i.id === sc.itineraryId) : undefined;
+    if (it && it.days.length > 0) return it.days.filter((d) => !d.cancelled).map((d) => d.date);
+    const out: DateStr[] = [];
+    for (let d = sc.startDate; d <= sc.endDate && out.length < 400; d = addDays(d, 1)) out.push(d);
+    return out;
+  };
+
+  /** 하루에는 일정 하나만 둔다. 같은 모임의 다른 (취소되지 않은) 일정이 이미 쓰는 날짜가 [start, end] 안에 있으면 그 날짜를 돌려준다. */
+  const takenDate = (groupId: string, start: DateStr, end: DateStr, exceptId?: string): DateStr | null => {
+    const taken = new Set<DateStr>();
+    for (const x of schedulesRef.current) {
+      if (x.groupId === groupId && x.id !== exceptId && x.status === 'active') datesOf(x).forEach((d) => taken.add(d));
+    }
+    for (let d = start; d <= end; d = addDays(d, 1)) if (taken.has(d)) return d;
+    return null;
+  };
+
   const createSchedule = useCallback(
     async (groupId: string, input: ScheduleInput, key: string) => {
       const done = operations.current.get(key) as { ok: true; schedule: Schedule } | undefined;
@@ -496,6 +534,7 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
       if (err) return fail(err);
       if (done) return done;
       if (scenarioRef.current.textRejected) return fail('TEXT_REJECTED' as const);
+      if (takenDate(groupId, input.startDate, input.endDate)) return fail('DATE_TAKEN' as const);
       const t = Date.now();
       const sc: Schedule = {
         id: `sc-${t}`,
@@ -541,6 +580,7 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
       if (sc.version !== expectedVersion) return { ok: false, error: 'VERSION_CONFLICT', latest: sc };
       if (scenarioRef.current.textRejected) return fail('TEXT_REJECTED');
       if (inclusiveDays(input.startDate, input.endDate) > MAX_SCHEDULE_DAYS) return fail('FORBIDDEN');
+      if (takenDate(sc.groupId, input.startDate, input.endDate, sc.id)) return fail('DATE_TAKEN');
       // 새 기간 밖이 되는 방문(장소)·기록 수. 기록 수는 예시라 방문이 밖으로 나가는 비율로 어림한다.
       const itinerary = itineraryOf(sc);
       const outsideVisits =
@@ -676,6 +716,86 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
     [roundTrip],
   );
 
+  const updateScheduleDay = useCallback(
+    async (scheduleId: string, dayId: string, patch: { title: string; date: DateStr }) => {
+      const err = await roundTrip();
+      if (err) return fail(err);
+      const sc = schedulesRef.current.find((x) => x.id === scheduleId);
+      if (!sc) return fail('FORBIDDEN' as const);
+      if (sc.status === 'cancelled') return fail('SCHEDULE_CANCELLED' as const);
+      if (scenarioRef.current.textRejected) return fail('TEXT_REJECTED' as const);
+      // 같은 모임의 다른 일정이 이미 쓰는 날짜로는 옮길 수 없다.
+      if (takenDate(sc.groupId, patch.date, patch.date, sc.id)) return fail('DATE_TAKEN' as const);
+      const itineraryId = ensureItinerary(sc.id);
+      const range = updateDayInfo(itineraryId, dayId, { title: patch.title.normalize('NFC'), date: patch.date });
+      if (!range) return fail('DATE_TAKEN' as const); // 같은 일정 안에 이미 있는 날짜
+      setSchedules((prev) => prev.map((x) => (x.id === scheduleId ? { ...x, ...range, version: x.version + 1 } : x)));
+      touch(sc.groupId);
+      return { ok: true as const };
+    },
+    [ensureItinerary, roundTrip, updateDayInfo],
+  );
+
+  const cancelScheduleDay = useCallback(
+    async (scheduleId: string, dayId: string) => {
+      const err = await roundTrip();
+      if (err) return fail(err);
+      const sc = schedulesRef.current.find((x) => x.id === scheduleId);
+      if (!sc) return fail('FORBIDDEN' as const);
+      const itineraryId = ensureItinerary(sc.id);
+      if (!updateDayInfo(itineraryId, dayId, { cancelled: true })) return fail('FORBIDDEN' as const);
+      // 남은 (취소되지 않은) 날이 없으면 일정 전체를 취소 상태로 둔다.
+      const stillActive = (itinerariesRefG.current.find((i) => i.id === itineraryId)?.days ?? [])
+        .filter((d) => d.id !== dayId)
+        .some((d) => !d.cancelled);
+      if (!stillActive) setSchedules((prev) => prev.map((x) => (x.id === scheduleId ? { ...x, status: 'cancelled', version: x.version + 1 } : x)));
+      touch(sc.groupId);
+      return { ok: true as const };
+    },
+    [ensureItinerary, roundTrip, updateDayInfo],
+  );
+
+  const removeScheduleDay = useCallback(
+    async (scheduleId: string, dayId: string) => {
+      const err = await roundTrip();
+      if (err) return fail(err);
+      const sc = schedulesRef.current.find((x) => x.id === scheduleId);
+      if (!sc) return fail('FORBIDDEN' as const);
+      const itineraryId = ensureItinerary(sc.id);
+      const result = removeDay(itineraryId, dayId);
+      if (result === null) return fail('FORBIDDEN' as const);
+      if (result === 'NOT_EMPTY') return fail('NOT_EMPTY' as const);
+      if (result === 'ALL_GONE') setSchedules((prev) => prev.filter((x) => x.id !== scheduleId));
+      else setSchedules((prev) => prev.map((x) => (x.id === scheduleId ? { ...x, ...result, version: x.version + 1 } : x)));
+      touch(sc.groupId);
+      return { ok: true as const };
+    },
+    [ensureItinerary, removeDay, roundTrip],
+  );
+
+  const setGroupCover = useCallback((groupId: string, uri: string) => {
+    setAllGroups((prev) => prev.map((g) => (g.id === groupId ? { ...g, cover: { uri } } : g)));
+  }, []);
+
+  const removeMember = useCallback(
+    async (groupId: string, name: string) => {
+      const err = await roundTrip();
+      if (err) return fail(err);
+      const g = groupsRef.current.find((x) => x.id === groupId);
+      // 방장만, 방장 본인이 아닌 참여자만 내보낼 수 있다.
+      if (!g || g.myRole !== 'owner' || name === g.members[0] || !g.members.includes(name)) return fail('FORBIDDEN' as const);
+      setAllGroups((prev) =>
+        prev.map((x) =>
+          x.id === groupId
+            ? { ...x, members: x.members.filter((m) => m !== name), blocked: [...(x.blocked ?? []), name], activityAt: Date.now() }
+            : x,
+        ),
+      );
+      return { ok: true as const };
+    },
+    [roundTrip],
+  );
+
   const joinInvite = useCallback(
     async (code: string, key: string) => {
       const done = operations.current.get(key) as { ok: true; groupId: string; alreadyMember: boolean } | undefined;
@@ -687,7 +807,7 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
       if (problem || !invite) return fail(problem ?? 'INVITE_INVALID');
       const g = groupsRef.current.find((x) => x.id === invite.groupId)!;
       if (g.members.includes(me)) return { ok: true as const, groupId: g.id, alreadyMember: true };
-      if (g.blockedMe) return fail('REENTRY_BLOCKED' as const);
+      if (g.blockedMe || g.blocked?.includes(me)) return fail('REENTRY_BLOCKED' as const);
       if (scenarioRef.current.groupLimit) return fail('GROUP_LIMIT' as const);
       if (g.members.length >= MAX_MEMBERS) return fail('CAPACITY_FULL' as const);
       setAllGroups((prev) =>
@@ -730,6 +850,11 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
       visitCount,
       invitesOf,
       loadInvites,
+      updateScheduleDay,
+      cancelScheduleDay,
+      removeScheduleDay,
+      setGroupCover,
+      removeMember,
       createInvite,
       revokeInvite,
       previewInvite,

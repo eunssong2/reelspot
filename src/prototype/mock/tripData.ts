@@ -137,6 +137,8 @@ export interface ItineraryDay {
   places: ItineraryPlace[];
   /** 이 날짜의 장소 구성에 대한 메모(순서 편집에서 적는다, 최대 100자). */
   memo?: string;
+  /** 취소된 날짜(기록은 남기고 새로 올릴 수 없다). 모임 달력에서 취소선으로 보인다. */
+  cancelled?: boolean;
 }
 
 /**

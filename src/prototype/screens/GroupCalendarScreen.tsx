@@ -11,8 +11,10 @@ import { Toast, useToast } from '../components/Toast';
 import { MAX_MEMBERS, type Group, type Schedule } from '../mock/groupData';
 import type { Nav } from '../navigation/routes';
 import { commonErrorText, useFlash, useGroups } from '../state/GroupsProvider';
+import { usePrototype } from '../state/PrototypeProvider';
 import { colors, GUTTER, MIN_TOUCH, radius } from '../styles/tokens';
 import {
+  addDays,
   isWithin,
   monthDayLabel,
   monthGrid,
@@ -25,9 +27,16 @@ import {
   weekdayLabel,
   type DateStr,
 } from '../utils/calendar';
+import { dayEntriesOf } from '../utils/dayEntries';
 
 const LANES = 3;
 const CELL_HEIGHT = 84;
+
+/**
+ * 달력·목록에 그리는 한 줄. 여러 날 일정도 하루씩 풀어서 날짜 하나가 한 줄이 되고,
+ * 제목은 그날의 제목(날짜 제목)을 쓴다. 변경·취소 같은 일정 단위 동작은 원래 일정(parent)에 한다.
+ */
+type Entry = Schedule & { parent: Schedule; itineraryId?: string; dayId: string; places: number; firstPlace: string | null };
 
 interface Props {
   nav: Nav;
@@ -42,13 +51,14 @@ interface Props {
  * 일정 카드를 누르면 날짜별 화면을 거치지 않고 일정 요약(UI08)으로 바로 간다.
  */
 export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
-  const { schedulesOf, loadCalendar, placeCount, firstPlaceName, ensureItinerary, calendarView, setCalendarView } = useGroups();
+  const { schedulesOf, loadCalendar, ensureItinerary, calendarView, setCalendarView } = useGroups();
   const toast = useToast();
+  const { itineraries } = usePrototype();
   useFlash(toast.show);
   const today = todayKst();
   const [month, setMonth] = useState(monthKey(focusDate || today));
   const [selected, setSelected] = useState<DateStr>(focusDate || today);
-  const [menuFor, setMenuFor] = useState<Schedule | null>(null);
+  const [menuFor, setMenuFor] = useState<Entry | null>(null);
 
   // 달력 조회(calendar). 받기 전에는 일정 0개로 그리지 않는다. 받아 둔 달은 먼저 보여 주고 다시 조회한다.
   const [status, setStatus] = useState<'loading' | 'ok' | 'error' | 'forbidden'>('loading');
@@ -83,7 +93,24 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
 
   const ready = loadedMonths.has(month);
   const isOwner = group.myRole === 'owner';
-  const schedules = ready ? schedulesOf(group.id) : [];
+  const rawSchedules = ready ? schedulesOf(group.id) : [];
+  // 일정마다 날짜를 하루씩 풀어 그날의 제목·장소로 보여 준다(일정 요약 화면을 거치지 않고 그날 화면으로 간다).
+  const schedules: Entry[] = rawSchedules.flatMap((sc): Entry[] => {
+    const itinerary = sc.itineraryId ? itineraries.find((it) => it.id === sc.itineraryId) : undefined;
+    return dayEntriesOf(sc, itinerary).map((en) => ({
+      ...sc,
+      status: en.cancelled ? ('cancelled' as const) : sc.status,
+      id: `${sc.id}::${en.dayId}`,
+      title: en.title,
+      startDate: en.date,
+      endDate: en.date,
+      parent: sc,
+      itineraryId: itinerary?.id,
+      dayId: en.dayId,
+      places: en.places,
+      firstPlace: en.firstPlace,
+    }));
+  });
 
   // 달력 카드를 좌우로 밀어 월을 넘긴다.
   const monthRef = useRef(month);
@@ -108,9 +135,12 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
     .filter((sc) => rangesOverlap(sc.startDate, sc.endDate, `${month}-01`, `${month}-31`))
     .sort(scheduleOrder);
 
-  const openSchedule = (sc: Schedule) => {
-    const itineraryId = ensureItinerary(sc.id);
-    nav.push({ name: 'itinerarySummary', tripId: group.tripId, itineraryId });
+  const openSchedule = (en: Entry) => {
+    // 아직 열어 본 적 없는 일정도 날짜 탭에 나오도록 모임의 모든 일정을 미리 만들어 둔다.
+    const ids = new Map<string, string>();
+    for (const sc of rawSchedules) ids.set(sc.id, sc.itineraryId ?? ensureItinerary(sc.id));
+    const itineraryId = ids.get(en.parent.id) ?? ensureItinerary(en.parent.id);
+    nav.push({ name: 'itineraryDay', tripId: group.tripId, itineraryId, dayId: en.dayId, groupId: group.id });
   };
 
   const goToday = () => {
@@ -163,7 +193,13 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
             <Pill label={`방장 ${group.members[0]}`} tone="coral" />
             {!isOwner ? <Pill label="나는 참여자" /> : null}
           </View>
-          <View style={styles.avatars}>
+          <Pressable
+            onPress={() => nav.push({ name: 'members', groupId: group.id })}
+            accessibilityRole="button"
+            accessibilityLabel="함께하는 친구 보기"
+            hitSlop={8}
+            style={styles.avatars}
+          >
             {group.members.slice(0, 2).map((m, i) => (
               <View key={m} style={[styles.avatar, i === 1 && styles.avatarAlt]}>
                 <Text style={styles.avatarText}>{m.slice(0, 1)}</Text>
@@ -174,7 +210,7 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
                 <Text style={styles.avatarMoreText}>+{group.members.length - 2}</Text>
               </View>
             ) : null}
-          </View>
+          </Pressable>
         </View>
 
         <View style={styles.monthRow}>
@@ -276,8 +312,8 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
                 <ScheduleCard
                   key={sc.id}
                   schedule={sc}
-                  places={placeCount(sc)}
-                  firstPlace={firstPlaceName(sc)}
+                  places={sc.places}
+                  firstPlace={sc.firstPlace}
                   isOwner={isOwner}
                   today={today}
                   onOpen={() => openSchedule(sc)}
@@ -300,8 +336,8 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
               ) : null}
               <ScheduleCard
                 schedule={sc}
-                places={placeCount(sc)}
-                firstPlace={firstPlaceName(sc)}
+                places={sc.places}
+                firstPlace={sc.firstPlace}
                 isOwner={isOwner}
                 today={today}
                 onOpen={() => openSchedule(sc)}
@@ -333,9 +369,9 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
           {
             label: '일정 변경',
             onPress: () => {
-              const id = menuFor!.id;
+              const id = menuFor!.parent.id;
               setMenuFor(null);
-              nav.push({ name: 'scheduleEdit', groupId: group.id, scheduleId: id });
+              nav.push({ name: 'scheduleEdit', groupId: group.id, scheduleId: id, dayId: menuFor!.dayId });
             },
           },
           { label: '닫기', tone: 'plain', onPress: () => setMenuFor(null) },
@@ -482,14 +518,6 @@ function ScheduleCard({
         accessibilityLabel={`${sc.title} ${periodLabel(sc.startDate, sc.endDate)}${cancelled ? ' 취소된 일정' : ''}`}
         style={({ pressed }) => [styles.cardMain, pressed && styles.cardPressed]}
       >
-        <View
-          style={[
-            styles.cardIcon,
-            cancelled ? styles.cardIconCancelled : sc.startDate !== sc.endDate ? styles.cardIconTrip : null,
-          ]}
-        >
-          <Text style={styles.cardIconGlyph}>{cancelled ? '🚫' : sc.startDate !== sc.endDate ? '🧳' : '📍'}</Text>
-        </View>
         <View style={styles.cardBody}>
           <Text style={[styles.cardTitle, cancelled && styles.cardTitleCancelled]} numberOfLines={2}>
             {sc.title}
@@ -656,17 +684,6 @@ const styles = StyleSheet.create({
   cardMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
   cardCancelled: { opacity: 0.75 },
   cardPressed: { backgroundColor: colors.surfaceStrong },
-  cardIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardIconTrip: { backgroundColor: colors.primarySoft },
-  cardIconCancelled: { backgroundColor: colors.surfaceStrong },
-  cardIconGlyph: { fontSize: 20 },
   cardBody: { flex: 1, gap: 3 },
   cardTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
   cardTitleCancelled: { color: colors.textMuted, textDecorationLine: 'line-through' },

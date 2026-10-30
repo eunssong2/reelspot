@@ -4,15 +4,15 @@ import * as ImagePicker from 'expo-image-picker';
 const AVATAR_MAX_LENGTH = 1_400_000;
 
 /**
- * 앨범에서 사진을 골라 정사각형으로 잘라 data URI 로 돌려준다.
+ * 앨범에서 사진을 골라 주어진 비율로 잘라 data URI 로 돌려준다.
  * 사용자가 취소하면 null, 실패하면 { error } 로 안내 문구를 돌려준다.
  */
-export async function pickProfilePhoto(): Promise<{ uri: string } | { error: string } | null> {
+export async function pickPhoto(aspect: [number, number]): Promise<{ uri: string } | { error: string } | null> {
   try {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect,
       quality: 0.4,
       base64: true,
     });
@@ -26,3 +26,6 @@ export async function pickProfilePhoto(): Promise<{ uri: string } | { error: str
     return { error: '사진을 열지 못했어요. 사진 접근 권한을 확인해 주세요.' };
   }
 }
+
+/** 프로필 사진: 정사각형. */
+export const pickProfilePhoto = () => pickPhoto([1, 1]);

@@ -21,6 +21,13 @@ interface PrototypeState {
   addDays: (itineraryId: string, dates: string[]) => number;
   /** 모임 달력(UI05·UI06)에서 만든 일정을 일정 요약에 등록한다. 같은 id 가 이미 있으면 그대로 둔다. */
   addItinerary: (itinerary: Itinerary) => void;
+  /**
+   * 한 날짜의 제목·날짜를 고친다. 같은 일정 안에 이미 있는 날짜로는 옮길 수 없다(null).
+   * 성공하면 일정의 새 시작일·종료일(날짜순 정렬·일차 다시 매김 반영)을 돌려준다.
+   */
+  updateDayInfo: (itineraryId: string, dayId: string, patch: { title?: string; date?: string; cancelled?: boolean }) => { startDate: string; endDate: string } | null;
+  /** 장소가 없는 날짜를 지운다. 장소가 있으면 NOT_EMPTY, 마지막 날짜였으면 ALL_GONE. */
+  removeDay: (itineraryId: string, dayId: string) => { startDate: string; endDate: string } | 'NOT_EMPTY' | 'ALL_GONE' | null;
   /** 일정 변경(UI06): 이름·기간을 바꾸고 새 기간에 없는 날짜를 빈 날짜로 더한다. 기간 밖이 된 날짜는 지우지 않는다. */
   updateItineraryInfo: (itineraryId: string, patch: { name: string; startDate: string; endDate: string }) => void;
   /** 일정 대표(배경) 사진. 일정 id → 이미지 URI(data URI). 없으면 기본 그림을 쓴다. */
@@ -145,6 +152,47 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
     setItineraries(next);
   }, []);
 
+  const updateDayInfo = useCallback(
+    (itineraryId: string, dayId: string, patch: { title?: string; date?: string; cancelled?: boolean }) => {
+      const cur = itinerariesRef.current.find((it) => it.id === itineraryId);
+      const day = cur?.days.find((d) => d.id === dayId);
+      if (!cur || !day) return null;
+      if (patch.date && patch.date !== day.date && cur.days.some((d) => d.date === patch.date)) return null;
+      let range = { startDate: cur.startDate, endDate: cur.endDate };
+      const next = itinerariesRef.current.map((it) => {
+        if (it.id !== itineraryId) return it;
+        const days = it.days
+          .map((d) =>
+            d.id === dayId
+              ? { ...d, ...(patch.title === undefined ? {} : { title: patch.title.trim() || undefined }), ...(patch.date ? { date: patch.date } : {}), ...(patch.cancelled ? { cancelled: true } : {}) }
+              : d,
+          )
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .map((d, i) => ({ ...d, dayNumber: i + 1 }));
+        range = { startDate: days[0].date, endDate: days[days.length - 1].date };
+        return { ...it, ...range, days };
+      });
+      itinerariesRef.current = next;
+      setItineraries(next);
+      return range;
+    },
+    [],
+  );
+
+  const removeDay = useCallback((itineraryId: string, dayId: string) => {
+    const cur = itinerariesRef.current.find((it) => it.id === itineraryId);
+    const day = cur?.days.find((d) => d.id === dayId);
+    if (!cur || !day) return null;
+    if (day.places.length > 0) return 'NOT_EMPTY' as const;
+    const days = cur.days.filter((d) => d.id !== dayId).map((d, i) => ({ ...d, dayNumber: i + 1 }));
+    if (days.length === 0) return 'ALL_GONE' as const;
+    const range = { startDate: days[0].date, endDate: days[days.length - 1].date };
+    const next = itinerariesRef.current.map((it) => (it.id === itineraryId ? { ...it, ...range, days } : it));
+    itinerariesRef.current = next;
+    setItineraries(next);
+    return range;
+  }, []);
+
   const updateItineraryInfo = useCallback(
     (itineraryId: string, patch: { name: string; startDate: string; endDate: string }) => {
       const next = itinerariesRef.current.map((it) => {
@@ -214,6 +262,8 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
       updateDay,
       addDays,
       addItinerary,
+      updateDayInfo,
+      removeDay,
       updateItineraryInfo,
       resetDemo,
       covers,
@@ -222,7 +272,7 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
       setNickname,
       setAvatar,
     }),
-    [itineraries, highlightId, addPlace, updateDay, addDays, addItinerary, updateItineraryInfo, resetDemo, covers, setCover, profile, setNickname, setAvatar],
+    [itineraries, highlightId, addPlace, updateDay, addDays, addItinerary, updateDayInfo, removeDay, updateItineraryInfo, resetDemo, covers, setCover, profile, setNickname, setAvatar],
   );
 
   if (!hydrated) {
@@ -254,7 +304,7 @@ const toHref = (route: Route) => {
     case 'itineraryDay':
       return {
         pathname: '/prototype/itinerary-day',
-        params: { tripId: route.tripId, itineraryId: route.itineraryId, dayId: route.dayId },
+        params: { tripId: route.tripId, itineraryId: route.itineraryId, dayId: route.dayId, groupId: route.groupId ?? '' },
       } as const;
     case 'placeOrderEdit':
       return {
@@ -284,7 +334,10 @@ const toHref = (route: Route) => {
     case 'myPage':
       return { pathname: '/prototype/my-page' } as const;
     case 'members':
-      return { pathname: '/prototype/members', params: { tripId: route.tripId, itineraryId: route.itineraryId } } as const;
+      return {
+        pathname: '/prototype/members',
+        params: { groupId: route.groupId ?? '', tripId: route.tripId ?? '', itineraryId: route.itineraryId ?? '' },
+      } as const;
     case 'settings':
       return { pathname: '/prototype/settings' } as const;
     case 'account':
@@ -301,7 +354,7 @@ const toHref = (route: Route) => {
     case 'scheduleEdit':
       return {
         pathname: '/prototype/schedule-edit',
-        params: { groupId: route.groupId, scheduleId: route.scheduleId ?? '', date: route.date ?? '' },
+        params: { groupId: route.groupId, scheduleId: route.scheduleId ?? '', date: route.date ?? '', dayId: route.dayId ?? '' },
       } as const;
     case 'invites':
       return { pathname: '/prototype/invites', params: { groupId: route.groupId } } as const;

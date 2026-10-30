@@ -93,7 +93,9 @@ export function ScheduleEditScreen({ nav, group, schedule, defaultDate }: Props)
         setError(
           created.error === 'TEXT_REJECTED'
             ? '사용할 수 없는 표현이 있어요. 일정 제목을 바꿔 주세요.'
-            : commonErrorText(created.error),
+            : created.error === 'DATE_TAKEN'
+              ? '이미 다른 일정이 있는 날짜가 들어 있어요. 하루에는 일정을 하나만 만들 수 있어요.'
+              : commonErrorText(created.error),
         );
         return;
       }
@@ -111,6 +113,7 @@ export function ScheduleEditScreen({ nav, group, schedule, defaultDate }: Props)
         setDialog('conflict');
       } else if (result.error === 'SCHEDULE_CANCELLED') setError('취소된 일정은 바꿀 수 없어요.');
       else if (result.error === 'TEXT_REJECTED') setError('사용할 수 없는 표현이 있어요. 일정 제목을 바꿔 주세요.');
+      else if (result.error === 'DATE_TAKEN') setError('이미 다른 일정이 있는 날짜가 들어 있어요. 하루에는 일정을 하나만 만들 수 있어요.');
       else if (result.error === 'FORBIDDEN') setError('방장만 일정을 바꿀 수 있어요.');
       else setError(commonErrorText(result.error));
     } finally {

@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { countMedia, recordsForVisit } from '../../demo/records';
 import { AppHeader } from '../components/AppHeader';
 import { TimeEditModal } from '../components/TimeEditModal';
 import { ScreenFrame } from '../components/ScreenFrame';
-import type { Itinerary } from '../mock/tripData';
+import type { Itinerary, ItineraryDay } from '../mock/tripData';
 import type { Nav } from '../navigation/routes';
+import { useGroups } from '../state/GroupsProvider';
 import { usePrototype } from '../state/PrototypeProvider';
 import { colors, GUTTER, radius } from '../styles/tokens';
-import { dayOfWeekLabel, monthDayLabel, tripRangeLabel } from '../utils/date';
+import { dayOfWeekLabel, defaultDayTitle, monthDayLabel, tripRangeLabel } from '../utils/date';
 
 interface Props {
   nav: Nav;
@@ -19,42 +20,135 @@ interface Props {
   initialDayId: string;
   /** 방금 장소 검색에서 추가한 장소(잠깐 강조 표시) */
   highlightId: string | null;
+  /**
+   * 모임 달력에서 들어온 경우의 모임 id. 있으면 위 제목은 모임 이름이고, 날짜 탭에는 이 모임의 모든 일정의
+   * 날짜(취소된 일정 제외)가 날짜순으로 한꺼번에 나온다.
+   */
+  groupId?: string;
+}
+
+/** 날짜 탭 하나. 모임 전체를 보면 날짜마다 속한 일정이 다를 수 있어 일정도 함께 든다. */
+interface DayTab {
+  key: string;
+  itinerary: Itinerary;
+  day: ItineraryDay;
 }
 
 /**
  * 2. 날짜별 장소 구성: 하루 일정이면 날짜 탭 없이 그날의 장소만, 여러 날이면 날짜 탭으로 골라 본다.
  * "사진 보기"는 그 장소의 사진 화면(4)으로, "+ 장소 추가"는 지도 검색(3)으로, "순서 편집"은 순서·시간 편집으로 이동한다.
  */
-export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highlightId }: Props) {
-  const singleDay = itinerary.days.length <= 1;
+export function ItineraryScreen({ nav, tripId, itinerary: initialItinerary, initialDayId, highlightId, groupId }: Props) {
+  const { updateDay, itineraries } = usePrototype();
+  const { group, schedulesOf } = useGroups();
+  const groupInfo = groupId ? group(groupId) : undefined;
 
-  const [selectedDayId, setSelectedDayId] = useState(
-    itinerary.days.some((d) => d.id === initialDayId) ? initialDayId : itinerary.days[0]?.id,
-  );
-  const day = itinerary.days.find((d) => d.id === selectedDayId) ?? itinerary.days[0];
-  const { updateDay } = usePrototype();
+  // 날짜 탭 목록: 모임에서 들어왔으면 모임의 모든 일정 날짜, 아니면 이 일정의 날짜.
+  const tabs: DayTab[] = groupInfo
+    ? schedulesOf(groupInfo.id)
+        .filter((sc) => sc.status === 'active' && sc.itineraryId)
+        .flatMap((sc) => {
+          const it = itineraries.find((i) => i.id === sc.itineraryId);
+          return it ? it.days.filter((day) => !day.cancelled).map((day) => ({ key: `${it.id}/${day.id}`, itinerary: it, day })) : [];
+        })
+        .sort((a, b) => a.day.date.localeCompare(b.day.date))
+    : (itineraries.find((i) => i.id === initialItinerary.id) ?? initialItinerary).days.map((day) => ({
+        key: `${initialItinerary.id}/${day.id}`,
+        itinerary: itineraries.find((i) => i.id === initialItinerary.id) ?? initialItinerary,
+        day,
+      }));
+  const singleDay = tabs.length <= 1;
+
+  const [selectedKey, setSelectedKey] = useState(`${initialItinerary.id}/${initialDayId}`);
+  const current = tabs.find((t) => t.key === selectedKey) ?? tabs[0];
+  const itinerary = current?.itinerary ?? initialItinerary;
+  const day = current?.day;
   /** 방문 시간을 고치는 중인 장소 id */
   const [timeTargetId, setTimeTargetId] = useState<string | null>(null);
   const timeTarget = day?.places.find((p) => p.id === timeTargetId);
 
   // 날짜 탭은 한 화면에 최대 4개만 보이고, 더 많으면 옆으로 넘겨 본다(3일 이하면 폭을 나눠 가득 채운다).
   const { width: windowWidth } = useWindowDimensions();
-  const visibleTabs = Math.max(1, Math.min(itinerary.days.length, MAX_VISIBLE_TABS));
+  const visibleTabs = Math.max(1, Math.min(tabs.length, MAX_VISIBLE_TABS));
   const frameWidth = Math.min(windowWidth, 430);
   const tabWidth = Math.floor((frameWidth - GUTTER * 2 - TAB_GAP * (visibleTabs - 1)) / visibleTabs);
   const tabScroll = useRef<ScrollView>(null);
-  const selectedIndex = Math.max(0, itinerary.days.findIndex((d) => d.id === day?.id));
+  // 웹(마우스)에서는 가로 스크롤을 끌어서 넘길 수 없어, 탭 줄을 마우스로 끌면 옆으로 밀리도록 직접 처리한다.
+  // 손가락으로 쓰는 앱에서는 ScrollView 가 알아서 하므로 쓰지 않는다.
+  const tabStep = tabWidth + TAB_GAP;
+  /** 탭 줄을 끌고 있었는지(끌고 놓을 때 따라오는 "누름"을 탭 선택으로 받지 않으려고 쓴다) */
+  const dragged = useRef(false);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || singleDay) return;
+    const node = (tabScroll.current as unknown as { getScrollableNode?: () => HTMLElement } | null)?.getScrollableNode?.();
+    if (!node) return;
+    let down = false;
+    let moved = false;
+    let startX = 0;
+    let startLeft = 0;
+    const onDown = (e: MouseEvent) => {
+      down = true;
+      moved = false;
+      startX = e.clientX;
+      startLeft = node.scrollLeft;
+    };
+    const onMove = (e: MouseEvent) => {
+      if (!down) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 5) moved = true;
+      if (moved) {
+        dragged.current = true;
+        node.scrollLeft = startLeft - dx;
+        e.preventDefault();
+      }
+    };
+    const onUp = () => {
+      if (!down) return;
+      down = false;
+      // 놓으면 가장 가까운 탭 칸에 맞춘다.
+      if (moved) node.scrollTo({ left: Math.round(node.scrollLeft / tabStep) * tabStep, behavior: 'smooth' });
+      // 놓는 순간에 따라오는 누름 처리가 끝난 뒤에 끌기 상태를 푼다.
+      setTimeout(() => {
+        dragged.current = false;
+      }, 80);
+    };
+    // 끌고 난 뒤에 따라오는 클릭은 탭 선택으로 받지 않는다.
+    const onClick = (e: MouseEvent) => {
+      if (moved) {
+        e.stopPropagation();
+        e.preventDefault();
+        moved = false;
+      }
+    };
+    node.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    node.addEventListener('click', onClick, true);
+    return () => {
+      node.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      node.removeEventListener('click', onClick, true);
+    };
+  }, [singleDay, tabStep]);
+  const selectedIndex = Math.max(0, tabs.findIndex((t) => t.key === current?.key));
   // 선택한 날짜가 항상 온전히 보이도록 탭 한 칸 단위로 옮긴다(앞 탭이 하나 보이게, 맨 앞·뒤는 거기서 멈춘다).
   useEffect(() => {
-    const firstVisible = Math.min(Math.max(selectedIndex - 1, 0), Math.max(itinerary.days.length - visibleTabs, 0));
+    const firstVisible = Math.min(Math.max(selectedIndex - 1, 0), Math.max(tabs.length - visibleTabs, 0));
     tabScroll.current?.scrollTo({ x: firstVisible * (tabWidth + TAB_GAP), animated: true });
-  }, [selectedIndex, tabWidth, visibleTabs, itinerary.days.length]);
+  }, [selectedIndex, tabWidth, visibleTabs, tabs.length]);
 
   return (
     <ScreenFrame>
       <AppHeader
-        title={itinerary.name}
-        subtitle={tripRangeLabel(itinerary.startDate, itinerary.endDate)}
+        title={groupInfo?.name ?? itinerary.name}
+        subtitle={
+          groupInfo
+            ? tabs.length > 0
+              ? tripRangeLabel(tabs[0].day.date, tabs[tabs.length - 1].day.date)
+              : undefined
+            : tripRangeLabel(itinerary.startDate, itinerary.endDate)
+        }
         onBack={nav.back}
       />
 
@@ -69,14 +163,17 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
           contentContainerStyle={styles.tabs}
           accessibilityRole="tablist"
         >
-          {itinerary.days.map((d) => {
-            const active = d.id === day?.id;
+          {tabs.map((t) => {
+            const d = t.day;
+            const active = t.key === current?.key;
             return (
               <Pressable
-                key={d.id}
+                key={t.key}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
-                onPress={() => setSelectedDayId(d.id)}
+                onPress={() => {
+                  if (!dragged.current) setSelectedKey(t.key);
+                }}
                 style={[styles.tab, { width: tabWidth }, active && styles.tabActive]}
               >
                 <Text style={[styles.tabDay, active && styles.tabTextActive]}>{monthDayLabel(d.date)}</Text>
@@ -107,7 +204,9 @@ export function ItineraryScreen({ nav, tripId, itinerary, initialDayId, highligh
               <Text style={styles.editLink}>편집</Text>
             </Pressable>
           </View>
-          {day.title ? <Text style={styles.dayTitle}>{day.title}</Text> : null}
+          {day.title || groupInfo ? (
+            <Text style={styles.dayTitle}>{day.title || defaultDayTitle(itinerary.name, day.dayNumber, itinerary.days.length)}</Text>
+          ) : null}
 
           {day.places.length === 0 ? (
             <View style={styles.emptyCard}>

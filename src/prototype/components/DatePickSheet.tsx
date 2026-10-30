@@ -21,6 +21,11 @@ interface Props {
   maxPick: number;
   /** 달력이 처음 보여 줄 달을 가리키는 날짜 */
   initialDate: string;
+  /** 날짜 하나만 고른다(다른 날짜를 누르면 옮겨 간다). 일정 변경에서 쓴다. */
+  single?: boolean;
+  /** 열 때 미리 골라 둘 날짜 */
+  initialPicked?: string[];
+  title?: string;
   onCancel: () => void;
   onConfirm: (dates: string[]) => void;
 }
@@ -29,17 +34,19 @@ interface Props {
  * 일정 추가용 달력. 날짜를 눌러 하나 또는 여러 개를 고르고(다시 누르면 해제) "추가"로 확정한다.
  * 이어지지 않는 날짜도 고를 수 있다.
  */
-export function DatePickSheet({ visible, existingDates, maxPick, initialDate, onCancel, onConfirm }: Props) {
+export function DatePickSheet({ visible, existingDates, maxPick, initialDate, single, initialPicked, title, onCancel, onConfirm }: Props) {
   const [picked, setPicked] = useState<string[]>([]);
 
   // 열 때마다 선택을 비운다 — 취소하고 다시 열면 이전 선택이 남아 있으면 안 된다.
   useEffect(() => {
-    if (visible) setPicked([]);
+    if (visible) setPicked(initialPicked ?? []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const toggle = (date: string) => {
     if (existingDates.includes(date)) return;
     setPicked((prev) => {
+      if (single) return [date];
       if (prev.includes(date)) return prev.filter((d) => d !== date);
       return prev.length >= maxPick ? prev : [...prev, date];
     });
@@ -58,8 +65,11 @@ export function DatePickSheet({ visible, existingDates, maxPick, initialDate, on
     };
   }
 
-  const guide =
-    picked.length === 0
+  const guide = single
+    ? picked.length === 0
+      ? '날짜를 눌러 주세요.'
+      : '날짜를 골랐어요.'
+    : picked.length === 0
       ? '추가할 날짜를 눌러 주세요. 여러 날도 고를 수 있어요.'
       : picked.length >= maxPick
         ? `${picked.length}일 선택 (최대예요)`
@@ -70,7 +80,7 @@ export function DatePickSheet({ visible, existingDates, maxPick, initialDate, on
       <Pressable accessibilityRole="button" accessibilityLabel="닫기" style={styles.backdrop} onPress={onCancel} />
       <View style={styles.sheet}>
         <View style={styles.handle} />
-        <Text style={styles.title}>일정 추가</Text>
+        <Text style={styles.title}>{title ?? '일정 추가'}</Text>
         <Text style={styles.guide}>{guide}</Text>
 
         <Calendar
@@ -95,7 +105,7 @@ export function DatePickSheet({ visible, existingDates, maxPick, initialDate, on
             style={[styles.action, picked.length > 0 ? styles.confirmOn : styles.confirmOff]}
           >
             <Text style={picked.length > 0 ? styles.confirmOnText : styles.confirmOffText}>
-              {picked.length > 0 ? `${picked.length}일 추가` : '날짜를 선택하세요'}
+              {picked.length > 0 ? (single ? '선택 완료' : `${picked.length}일 추가`) : '날짜를 선택하세요'}
             </Text>
           </Pressable>
         </View>

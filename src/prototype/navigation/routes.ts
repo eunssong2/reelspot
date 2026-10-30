@@ -10,7 +10,7 @@ import type { ClipSeconds } from '../mock/tripData';
 export type Route =
   | { name: 'trips' }
   | { name: 'itinerarySummary'; tripId: string; itineraryId: string }
-  | { name: 'itineraryDay'; tripId: string; itineraryId: string; dayId: string }
+  | { name: 'itineraryDay'; tripId: string; itineraryId: string; dayId: string; groupId?: string }
   | { name: 'placeOrderEdit'; tripId: string; itineraryId: string; dayId: string }
   | { name: 'placeSearch'; tripId: string; itineraryId: string; dayId: string }
   | { name: 'placeRecords'; tripId: string; itineraryId: string; dayId: string; placeId: string }
@@ -21,7 +21,7 @@ export type Route =
   // 마이페이지: 프로필 사진·닉네임 변경, 참여한 모임 수
   | { name: 'myPage' }
   // 설정(프로필 및 계정·초대코드·약관·로그아웃)과 프로필 및 계정 상세
-  | { name: 'members'; tripId: string; itineraryId: string }
+  | { name: 'members'; groupId?: string; tripId?: string; itineraryId?: string }
   | { name: 'settings' }
   | { name: 'account' }
   // 로그인 → 모임 → 달력 → 일정 → 초대 (docs/login-calendar-ui-spec.md). 'trips'(/prototype)가 로그인·내 모임 입구다.
@@ -29,7 +29,7 @@ export type Route =
   | { name: 'groupCreate' }
   | { name: 'groupCalendar'; groupId: string; focusDate?: string }
   // scheduleId 가 없으면 추가, 있으면 변경. date 는 추가할 때 시작·종료 기본값.
-  | { name: 'scheduleEdit'; groupId: string; scheduleId?: string; date?: string }
+  | { name: 'scheduleEdit'; groupId: string; scheduleId?: string; date?: string; dayId?: string }
   | { name: 'invites'; groupId: string }
   // code 가 있으면 초대 링크로 연 것처럼 바로 확인한다.
   | { name: 'inviteJoin'; code?: string };

@@ -1,7 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '../components/AppHeader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -22,6 +22,7 @@ import type { Nav } from '../navigation/routes';
 import { commonErrorText, newRequestKey, representativeSchedule, useGroups } from '../state/GroupsProvider';
 import { colors, GUTTER, radius } from '../styles/tokens';
 import { periodLabel, stamp } from '../utils/calendar';
+import { pickPhoto } from '../utils/profilePhoto';
 
 const STATE_LABEL: Record<InviteState, string> = { active: '사용 가능', exhausted: '소진', expired: '만료', revoked: '취소' };
 
@@ -31,7 +32,7 @@ const STATE_LABEL: Record<InviteState, string> = { active: '사용 가능', exha
  * 공유 메시지에는 모임명·일정 요약·링크·코드만 담는다.
  */
 export function InviteManageScreen({ nav, group }: { nav: Nav; group: Group }) {
-  const { invitesOf, loadInvites, createInvite, revokeInvite, schedulesOf } = useGroups();
+  const { invitesOf, loadInvites, createInvite, revokeInvite, schedulesOf, setGroupCover } = useGroups();
   const toast = useToast();
   const [now, setNow] = useState(Date.now());
   const [issuing, setIssuing] = useState(false);
@@ -89,6 +90,18 @@ export function InviteManageScreen({ nav, group }: { nav: Nav; group: Group }) {
       .filter(Boolean)
       .join('\n');
 
+  // 모임 사진 바꾸기(방장). 앨범에서 고르면 4:3 으로 잘라 내 모임 목록의 카드에도 같이 바뀐다.
+  const changeCover = async () => {
+    const result = await pickPhoto([4, 3]);
+    if (!result) return;
+    if ('error' in result) {
+      toast.show(result.error);
+      return;
+    }
+    setGroupCover(group.id, result.uri);
+    toast.show('모임 사진을 바꿨어요');
+  };
+
   const copy = async (text: string, done: string) => {
     await Clipboard.setStringAsync(text);
     toast.show(done);
@@ -145,6 +158,28 @@ export function InviteManageScreen({ nav, group }: { nav: Nav; group: Group }) {
       <AppHeader title="모임에 초대하기" onBack={nav.back} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {group.myRole === 'owner' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="모임 사진 변경"
+            onPress={changeCover}
+            style={({ pressed }) => [styles.coverRow, pressed && styles.coverPressed]}
+          >
+            <View style={styles.coverThumb}>
+              {group.cover ? (
+                <Image source={group.cover} style={styles.coverImg} resizeMode="cover" />
+              ) : (
+                <Text style={styles.coverFallback}>{group.name.slice(0, 1)}</Text>
+              )}
+            </View>
+            <View style={styles.coverText}>
+              <Text style={styles.coverTitle}>모임 사진</Text>
+              <Text style={styles.coverHint}>내 모임 목록에 보이는 대표 사진이에요</Text>
+            </View>
+            <Text style={styles.coverAction}>변경</Text>
+          </Pressable>
+        ) : null}
+
         <View style={styles.context}>
           <View style={styles.groupPill}>
             <Text style={styles.groupPillText}>👥 {group.name}</Text>
@@ -337,6 +372,15 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   content: { paddingHorizontal: GUTTER, paddingBottom: 24, gap: 14 },
+  coverRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: radius.item, padding: 12 },
+  coverPressed: { opacity: 0.85 },
+  coverThumb: { width: 56, height: 42, borderRadius: 10, overflow: 'hidden', backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  coverImg: { width: 56, height: 42 },
+  coverFallback: { fontSize: 16, fontWeight: '800', color: colors.primary },
+  coverText: { flex: 1, gap: 2 },
+  coverTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
+  coverHint: { fontSize: 12, color: colors.textSub },
+  coverAction: { fontSize: 14, fontWeight: '700', color: colors.primary },
   context: { gap: 8 },
   groupPill: {
     alignSelf: 'flex-start',

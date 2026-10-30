@@ -5,10 +5,11 @@ import { ItineraryScreen } from '@/prototype/screens/ItineraryScreen';
 import { usePrototype, usePrototypeNav } from '@/prototype/state/PrototypeProvider';
 
 export default function PrototypeItineraryDayRoute() {
-  const { tripId, itineraryId, dayId } = useLocalSearchParams<{
+  const { tripId, itineraryId, dayId, groupId } = useLocalSearchParams<{
     tripId?: string;
     itineraryId?: string;
     dayId?: string;
+    groupId?: string;
   }>();
   const { itineraries, highlightId } = usePrototype();
   const itinerary = itineraries.find((it) => it.id === itineraryId && it.tripId === tripId);
@@ -28,6 +29,7 @@ export default function PrototypeItineraryDayRoute() {
       itinerary={itinerary}
       initialDayId={dayId ?? itinerary.days[0]?.id ?? ''}
       highlightId={highlightId}
+      groupId={groupId || undefined}
     />
   );
 }

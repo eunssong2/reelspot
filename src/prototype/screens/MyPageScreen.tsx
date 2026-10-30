@@ -10,6 +10,7 @@ import { ScreenFrame } from '../components/ScreenFrame';
 import { Toast, useToast } from '../components/Toast';
 import { membersFor, TRIPS } from '../mock/tripData';
 import type { Nav } from '../navigation/routes';
+import { useGroups } from '../state/GroupsProvider';
 import { usePrototype } from '../state/PrototypeProvider';
 import { colors, GUTTER, MIN_TOUCH, radius } from '../styles/tokens';
 import { pickProfilePhoto } from '../utils/profilePhoto';
@@ -21,6 +22,9 @@ import { pickProfilePhoto } from '../utils/profilePhoto';
 export function MyPageScreen({ nav }: { nav: Nav }) {
   const toast = useToast();
   const { profile, setNickname, setAvatar } = usePrototype();
+  // 로그인해서 모임 목록이 있으면 실제 참여 중인 모임 수를, 없으면(데모) 예시 모임 수를 보여 준다.
+  const { groups } = useGroups();
+  const groupCount = groups.length > 0 ? groups.length : TRIPS.length;
   const defaultAvatar = membersFor(TRIPS[0])[0].avatarUrl;
 
   const [editingName, setEditingName] = useState(false);
@@ -71,10 +75,19 @@ export function MyPageScreen({ nav }: { nav: Nav }) {
           </View>
         </View>
 
-        <View style={styles.statCard}>
+        {/* 누르면 내 모임(모임 목록)으로 이동한다 */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`참여한 모임 ${groupCount}개, 내 모임으로 이동`}
+          onPress={() => nav.home()}
+          style={({ pressed }) => [styles.statCard, pressed && styles.pressed]}
+        >
           <Text style={styles.statLabel}>참여한 모임</Text>
-          <Text style={styles.statValue}>{TRIPS.length}개</Text>
-        </View>
+          <View style={styles.statRight}>
+            <Text style={styles.statValue}>{groupCount}개</Text>
+            <Text style={styles.statChevron}>›</Text>
+          </View>
+        </Pressable>
 
         <Pressable
           accessibilityRole="button"
@@ -153,6 +166,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   statLabel: { fontSize: 15, fontWeight: '700', color: colors.textSub },
+  statRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  statChevron: { fontSize: 26, color: colors.textMuted, lineHeight: 28 },
   statValue: { fontSize: 22, fontWeight: '800', color: colors.text },
 
   button: {

@@ -29,6 +29,8 @@ export interface Group {
   closed?: boolean;
   /** 이 모임에서 강제 퇴장되어 재참여가 막힌 상태(F22) */
   blockedMe?: boolean;
+  /** 방장이 내보내 재참여가 막힌 참여자 표시명 */
+  blocked?: string[];
 }
 
 export interface Schedule {
@@ -295,11 +297,11 @@ export const SEED_SCHEDULES: Schedule[] = [
     retentionLastDate: addDays(today, 6),
   }),
   s('sc-jeju', 'g-campus', '제주 졸업 여행', '2026-12-30', '2027-01-02'),
-  s('sc-a', 'g-full', 'A 일정', '2026-10-31', '2026-10-31', { createdAt: 1 }),
-  s('sc-b', 'g-full', 'B 일정', '2026-10-31', '2026-10-31', { createdAt: 2 }),
+  s('sc-a', 'g-full', 'A 일정', '2026-10-27', '2026-10-27', { createdAt: 1 }),
+  s('sc-b', 'g-full', 'B 일정', '2026-10-28', '2026-10-28', { createdAt: 2 }),
   s('sc-c', 'g-full', 'C 연휴 일정', '2026-10-30', '2026-11-01', { createdAt: 3 }),
-  s('sc-d', 'g-full', 'D 일정', '2026-10-31', '2026-10-31', { createdAt: 4 }),
-  s('sc-e', 'g-full', 'E 일정', '2026-10-31', '2026-10-31', { createdAt: 5 }),
+  s('sc-d', 'g-full', 'D 일정', '2026-11-03', '2026-11-03', { createdAt: 4 }),
+  s('sc-e', 'g-full', 'E 일정', '2026-11-04', '2026-11-04', { createdAt: 5 }),
 ];
 
 const inv = (id: string, groupId: string, code: string, hoursAgo: number, useCount: number, revoked = false): Invite => ({

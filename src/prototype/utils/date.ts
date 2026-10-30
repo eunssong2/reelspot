@@ -51,3 +51,11 @@ export function tripRangeLabel(startIso: string, endIso: string): string {
   }
   return `${dotDateLabel(startIso)} - ${shortDotDateLabel(endIso)}`;
 }
+
+/**
+ * 날짜 제목을 따로 적지 않았을 때 보여 주는 이름.
+ * 여러 날 일정이면 "1일차 · 일정 이름", 하루 일정이면 일정 이름 그대로다.
+ */
+export function defaultDayTitle(itineraryName: string, dayNumber: number, dayCount: number): string {
+  return dayCount > 1 ? `${dayNumber}일차 · ${itineraryName}` : itineraryName;
+}

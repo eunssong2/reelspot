@@ -50,7 +50,6 @@ export function GroupsScreen({ nav }: { nav: Nav }) {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
           <View style={styles.flex}>
-            <Text style={styles.title}>함께하는 모임</Text>
             <Text style={styles.sub}>
               {status !== 'ok'
                 ? ' '
@@ -126,7 +125,7 @@ export function GroupsScreen({ nav }: { nav: Nav }) {
       <View style={styles.tabBar}>
         <Tab icon="👥" label="모임" active />
         <Tab icon="📖" label="내 기록" onPress={() => toast.show('내 기록(UI22)은 다른 담당 화면이에요')} />
-        <Tab icon="⚙️" label="설정" onPress={() => nav.push({ name: 'settings' })} />
+        <Tab icon="👤" label="마이페이지" onPress={() => nav.push({ name: 'myPage' })} />
       </View>
 
       <Toast message={toast.message} bottom={160} />
@@ -207,7 +206,6 @@ const styles = StyleSheet.create({
   topTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
   content: { paddingHorizontal: GUTTER, paddingBottom: 24, gap: 12 },
   head: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginBottom: 4 },
-  title: { fontSize: 22, fontWeight: '800', letterSpacing: -0.4, color: colors.text },
   sub: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   sortPill: { backgroundColor: colors.surface, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 6 },
   sortText: { fontSize: 11, fontWeight: '600', color: colors.textSub },
