@@ -1,0 +1,1797 @@
+<!-- UI02 가입 동의와 표시명 -->
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_blank" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"inverse-primary":"#ffb3ae","on-primary-fixed":"#410004","on-primary":"#ffffff","surface-dim":"#d5dae7","surface-container-lowest":"#ffffff","background":"#f8f9ff","primary-fixed-dim":"#ffb3ae","secondary-fixed-dim":"#d2c3c1","on-secondary-container":"#6d6260","on-surface":"#161c25","surface-container-highest":"#dde3ef","surface":"#f8f9ff","surface-container-low":"#eff4ff","on-tertiary-container":"#66050d","surface-bright":"#f8f9ff","secondary":"#675c5b","tertiary-container":"#f26f69","outline":"#8a716f","inverse-on-surface":"#ebf1fe","primary-fixed":"#ffdad7","on-background":"#161c25","on-primary-fixed-variant":"#862122","primary-container":"#f1706b","surface-tint":"#a63837","on-tertiary":"#ffffff","surface-container":"#e9eefb","on-error-container":"#93000a","on-tertiary-fixed-variant":"#862021","error-container":"#ffdad6","secondary-container":"#efdfdd","secondary-fixed":"#efdfdd","on-error":"#ffffff","surface-container-high":"#e3e8f5","tertiary":"#a73836","on-secondary":"#ffffff","inverse-surface":"#2b313a","surface-variant":"#dde3ef","outline-variant":"#dec0bd","on-secondary-fixed-variant":"#4e4443","on-surface-variant":"#574240","on-tertiary-fixed":"#410004","error":"#ba1a1a","primary":"#a63837","tertiary-fixed":"#ffdad7","tertiary-fixed-dim":"#ffb3ae","on-primary-container":"#66060e","on-secondary-fixed":"#221a19"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xl":"1.5rem","space-md":"0.75rem",gutter:"1rem","space-sm":"0.5rem",margin:"1.25rem","space-lg":"1rem","space-xs":"0.25rem"},fontFamily:{"body-md":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-lg":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"]},fontSize:{"body-md":["15px",{lineHeight:"22px",letterSpacing:"-0.005em",fontWeight:"400"}],"headline-md":["20px",{lineHeight:"28px",letterSpacing:"-0.015em",fontWeight:"700"}],"label-md":["12px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"600"}],"body-sm":["13px",{lineHeight:"18px",letterSpacing:"0em",fontWeight:"400"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.02em",fontWeight:"500"}],"headline-lg":["26px",{lineHeight:"34px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-lg":["14px",{lineHeight:"20px",letterSpacing:"-0.005em",fontWeight:"600"}],"body-lg":["16px",{lineHeight:"24px",letterSpacing:"-0.01em",fontWeight:"500"}],"headline-sm":["18px",{lineHeight:"24px",letterSpacing:"-0.01em",fontWeight:"600"}]}}}};</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased flex justify-center"><div class="w-full max-w-[390px] min-h-screen relative flex flex-col bg-surface shadow-[0_4px_24px_rgba(22,28,37,0.04)]"><main class="flex-1 flex flex-col relative w-full pt-safe pb-safe px-margin bg-surface"><div class="flex flex-col w-full pb-6">
+<!-- Top Navigation Bar -->
+<header class="w-full flex items-center justify-between h-12 mb-3">
+<button aria-label="뒤로가기" class="w-12 h-12 -ml-2.5 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high/60">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="font-label-sm text-label-sm text-secondary">가입 단계 1/2</span>
+</div>
+</header>
+<!-- Title & Subtitle Section -->
+<div class="flex flex-col mb-6">
+<div class="flex items-center gap-2 mb-1.5">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">처음 오셨네요</h1>
+<span class="inline-flex items-center justify-center text-xl select-none animate-bounce" style="animation-duration: 2s;">👋</span>
+</div>
+<p class="font-body-md text-body-md text-secondary">문서를 읽고 필요한 항목에 동의해 주세요.</p>
+</div>
+<!-- Interactive Form Container -->
+<form class="flex flex-col gap-6" id="signup-consent-form" onsubmit="event.preventDefault();">
+<!-- All Agreement Quick Selector (Moment of Delight) -->
+<div class="bg-surface-container-low rounded-[18px] p-4 flex items-center justify-between shadow-sm cursor-pointer select-none transition-all active:scale-[0.99]" id="toggle-all-box">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center transition-colors" id="select-all-icon">
+<span class="material-symbols-outlined text-[16px] text-secondary">done_all</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface">약관 전체 동의</span>
+<span class="font-label-sm text-label-sm text-secondary">선택 동의 항목까지 한 번에 완료해요</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px]" id="select-all-chevron">expand_more</span>
+</div>
+<!-- Agreement List Card -->
+<div class="bg-surface-container-low rounded-[20px] p-3.5 flex flex-col gap-1 shadow-sm">
+<!-- Row 1: 서비스 이용약관 (필수) -->
+<div class="flex items-center justify-between p-2.5 rounded-[14px] hover:bg-surface-container transition-colors select-none group">
+<label class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+<input checked="" class="peer sr-only consent-item consent-required" id="consent-terms" type="checkbox"/>
+<div class="w-6 h-6 rounded-full bg-surface-container-highest peer-checked:bg-primary-container flex items-center justify-center transition-all peer-checked:text-on-primary">
+<span class="material-symbols-outlined text-[16px] text-white">check</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface truncate group-hover:text-primary transition-colors">서비스 이용약관</span>
+</label>
+<div class="flex items-center gap-2 flex-shrink-0">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-primary-container font-label-sm text-label-sm font-semibold">필수</span>
+<button aria-label="서비스 이용약관 상세 보기" class="w-8 h-8 flex items-center justify-center text-secondary hover:text-on-surface rounded-full" type="button">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Row 2: 개인정보 수집 및 이용 동의 (필수) -->
+<div class="flex items-center justify-between p-2.5 rounded-[14px] hover:bg-surface-container transition-colors select-none group">
+<label class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+<input checked="" class="peer sr-only consent-item consent-required" id="consent-privacy" type="checkbox"/>
+<div class="w-6 h-6 rounded-full bg-surface-container-highest peer-checked:bg-primary-container flex items-center justify-center transition-all peer-checked:text-on-primary">
+<span class="material-symbols-outlined text-[16px] text-white">check</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface truncate group-hover:text-primary transition-colors">개인정보 수집 및 이용 동의</span>
+</label>
+<div class="flex items-center gap-2 flex-shrink-0">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-primary-container font-label-sm text-label-sm font-semibold">필수</span>
+<button aria-label="개인정보 수집 및 이용 동의 상세 보기" class="w-8 h-8 flex items-center justify-center text-secondary hover:text-on-surface rounded-full" type="button">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Row 3: 마케팅 정보 수신 동의 (선택) -->
+<div class="flex items-center justify-between p-2.5 rounded-[14px] hover:bg-surface-container transition-colors select-none group">
+<label class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+<input class="peer sr-only consent-item" id="consent-marketing" type="checkbox"/>
+<div class="w-6 h-6 rounded-full bg-surface-container-highest peer-checked:bg-primary-container flex items-center justify-center transition-all text-transparent peer-checked:text-on-primary">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface truncate group-hover:text-primary transition-colors">마케팅 정보 수신 동의</span>
+</label>
+<div class="flex items-center gap-2 flex-shrink-0">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-label-sm text-label-sm font-medium">선택</span>
+<button aria-label="마케팅 정보 수신 동의 상세 보기" class="w-8 h-8 flex items-center justify-center text-secondary hover:text-on-surface rounded-full" type="button">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Row 4: 위치정보 이용약관 (선택) -->
+<div class="flex items-center justify-between p-2.5 rounded-[14px] hover:bg-surface-container transition-colors select-none group">
+<label class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+<input class="peer sr-only consent-item" id="consent-location" type="checkbox"/>
+<div class="w-6 h-6 rounded-full bg-surface-container-highest peer-checked:bg-primary-container flex items-center justify-center transition-all text-transparent peer-checked:text-on-primary">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface truncate group-hover:text-primary transition-colors">위치정보 이용약관</span>
+</label>
+<div class="flex items-center gap-2 flex-shrink-0">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-label-sm text-label-sm font-medium">선택</span>
+<button aria-label="위치정보 이용약관 상세 보기" class="w-8 h-8 flex items-center justify-center text-secondary hover:text-on-surface rounded-full" type="button">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Display Name Section -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold flex items-center gap-1.5" for="display-name-input">
+          표시명
+          <span class="w-1.5 h-1.5 rounded-full bg-primary-container inline-block"></span>
+</label>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-2 py-0.5 rounded-md">추후 언제든 변경 가능</span>
+</div>
+<!-- Name Input Field -->
+<div class="relative flex items-center w-full">
+<input class="w-full h-[52px] px-4 rounded-[14px] bg-surface-container-lowest text-on-surface font-body-lg text-body-lg outline-none shadow-sm focus:shadow-md transition-all placeholder:text-secondary/50 pr-11" id="display-name-input" maxlength="20" placeholder="사용하실 이름을 적어주세요" type="text" value="지민"/>
+<button aria-label="이름 지우기" class="absolute right-3 w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center text-secondary hover:text-on-surface active:scale-95 transition-all" id="clear-name-btn" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Helper & Counter Footnote -->
+<div class="flex items-center justify-between px-1">
+<span class="font-body-sm text-body-sm text-secondary">중복 표시명도 사용할 수 있어요. 최대 20자</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium tracking-tight" id="char-counter">2/20</span>
+</div>
+</div>
+<!-- Delight Tip Banner -->
+<div class="flex items-center gap-3 p-3.5 rounded-[16px] bg-surface-container-low shadow-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0 text-primary-container">
+<span class="material-symbols-outlined text-[18px]">group</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary leading-snug">
+        친구들과의 약속 캘린더에서 <span class="font-semibold text-on-surface">가장 친근한 별칭</span>으로 함께해보세요!
+      </p>
+</div>
+<!-- Bottom Action Space Buffer -->
+<div class="h-20 w-full"></div>
+<!-- Sticky Bottom CTA Bar -->
+<div class="fixed bottom-0 left-0 right-0 max-w-[390px] mx-auto px-margin pb-safe pt-3 bg-gradient-to-t from-surface via-surface/95 to-transparent z-20">
+<button class="w-full h-[56px] rounded-[14px] bg-primary-container active:bg-on-tertiary-container hover:bg-primary text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(241,112,107,0.35)] active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none disabled:shadow-none" id="submit-cta" type="button">
+<span>동의하고 시작하기</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</form>
+</div>
+<script>
+  (() => {
+    const input = document.getElementById('display-name-input');
+    const counter = document.getElementById('char-counter');
+    const clearBtn = document.getElementById('clear-name-btn');
+    const cta = document.getElementById('submit-cta');
+    const requiredCheckboxes = document.querySelectorAll('.consent-required');
+    const allCheckboxes = document.querySelectorAll('.consent-item');
+    const toggleAllBox = document.getElementById('toggle-all-box');
+    const selectAllIcon = document.getElementById('select-all-icon');
+
+    function updateFormState() {
+      const val = input.value.trim();
+      const len = input.value.length;
+      counter.textContent = `${len}/20`;
+      
+      clearBtn.style.visibility = len > 0 ? 'visible' : 'hidden';
+
+      const allRequiredChecked = Array.from(requiredCheckboxes).every(cb => cb.checked);
+      const isNameValid = val.length >= 1 && val.length <= 20;
+
+      if (allRequiredChecked && isNameValid) {
+        cta.removeAttribute('disabled');
+      } else {
+        cta.setAttribute('disabled', 'true');
+      }
+
+      // Check all state indicator
+      const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+      if (allChecked) {
+        selectAllIcon.classList.remove('bg-surface-container-highest', 'text-secondary');
+        selectAllIcon.classList.add('bg-primary-container', 'text-white');
+        selectAllIcon.innerHTML = '<span class="material-symbols-outlined text-[16px] text-white">check</span>';
+      } else {
+        selectAllIcon.classList.remove('bg-primary-container', 'text-white');
+        selectAllIcon.classList.add('bg-surface-container-highest', 'text-secondary');
+        selectAllIcon.innerHTML = '<span class="material-symbols-outlined text-[16px] text-secondary">done_all</span>';
+      }
+    }
+
+    input.addEventListener('input', updateFormState);
+
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      input.focus();
+      updateFormState();
+    });
+
+    allCheckboxes.forEach(cb => {
+      cb.addEventListener('change', updateFormState);
+    });
+
+    toggleAllBox.addEventListener('click', () => {
+      const allCurrentlyChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+      allCheckboxes.forEach(cb => {
+        cb.checked = !allCurrentlyChecked;
+      });
+      updateFormState();
+    });
+
+    cta.addEventListener('click', () => {
+      cta.innerHTML = '<span class="material-symbols-outlined animate-spin text-[22px]">progress_activity</span>';
+      setTimeout(() => {
+        cta.innerHTML = '<span>환영합니다!</span><span class="material-symbols-outlined text-[20px]">check_circle</span>';
+      }, 700);
+    });
+
+    updateFormState();
+  })();
+</script></main></div></body></html>
+
+<!-- UI01 시작과 로그인 -->
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_blank" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"inverse-primary":"#ffb3ae","on-primary-fixed":"#410004","on-primary":"#ffffff","surface-dim":"#d5dae7","surface-container-lowest":"#ffffff","background":"#f8f9ff","primary-fixed-dim":"#ffb3ae","secondary-fixed-dim":"#d2c3c1","on-secondary-container":"#6d6260","on-surface":"#161c25","surface-container-highest":"#dde3ef","surface":"#f8f9ff","surface-container-low":"#eff4ff","on-tertiary-container":"#66050d","surface-bright":"#f8f9ff","secondary":"#675c5b","tertiary-container":"#f26f69","outline":"#8a716f","inverse-on-surface":"#ebf1fe","primary-fixed":"#ffdad7","on-background":"#161c25","on-primary-fixed-variant":"#862122","primary-container":"#f1706b","surface-tint":"#a63837","on-tertiary":"#ffffff","surface-container":"#e9eefb","on-error-container":"#93000a","on-tertiary-fixed-variant":"#862021","error-container":"#ffdad6","secondary-container":"#efdfdd","secondary-fixed":"#efdfdd","on-error":"#ffffff","surface-container-high":"#e3e8f5","tertiary":"#a73836","on-secondary":"#ffffff","inverse-surface":"#2b313a","surface-variant":"#dde3ef","outline-variant":"#dec0bd","on-secondary-fixed-variant":"#4e4443","on-surface-variant":"#574240","on-tertiary-fixed":"#410004","error":"#ba1a1a","primary":"#a63837","tertiary-fixed":"#ffdad7","tertiary-fixed-dim":"#ffb3ae","on-primary-container":"#66060e","on-secondary-fixed":"#221a19"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xl":"1.5rem","space-md":"0.75rem",gutter:"1rem","space-sm":"0.5rem",margin:"1.25rem","space-lg":"1rem","space-xs":"0.25rem"},fontFamily:{"body-md":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-lg":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"]},fontSize:{"body-md":["15px",{lineHeight:"22px",letterSpacing:"-0.005em",fontWeight:"400"}],"headline-md":["20px",{lineHeight:"28px",letterSpacing:"-0.015em",fontWeight:"700"}],"label-md":["12px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"600"}],"body-sm":["13px",{lineHeight:"18px",letterSpacing:"0em",fontWeight:"400"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.02em",fontWeight:"500"}],"headline-lg":["26px",{lineHeight:"34px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-lg":["14px",{lineHeight:"20px",letterSpacing:"-0.005em",fontWeight:"600"}],"body-lg":["16px",{lineHeight:"24px",letterSpacing:"-0.01em",fontWeight:"500"}],"headline-sm":["18px",{lineHeight:"24px",letterSpacing:"-0.01em",fontWeight:"600"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased flex justify-center"><div class="w-full max-w-[390px] min-h-screen relative flex flex-col bg-surface shadow-[0_4px_24px_rgba(22,28,37,0.04)]"><main class="flex-1 flex flex-col relative w-full pt-safe pb-safe px-margin bg-surface"><div class="flex flex-col w-full justify-between pb-6">
+<!-- Brand & Intro Section -->
+<div class="flex flex-col w-full items-center text-center pt-8">
+<!-- App Logo & Visual Mark -->
+<div class="relative flex items-center justify-center mb-5">
+<div class="w-24 h-24 rounded-full bg-secondary-container/40 flex items-center justify-center p-2.5 shadow-sm">
+<img alt="AT THAT PLACE Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB63IoPrgfsOZBl--gSd6RlGulyPY2k_EcI4RosHBZqE5ElwA0P4V_4ZtFghJIwRehHJFnmA7Gfghvw1G3edQshNEi9zT_WL2J8MCSjKeXNTk_nToE2DO_PLtYllJ7jJvvKvNVcbRjDqFdcGhQBPmDf2ey0Qg8poeCEfcen6htIzbQ0J8aJZtooe4Y18BZN2czq0eGhqSqRJkexJciRrENI5F4183Keu0psQ51AqBwd"/>
+</div>
+<!-- Subtle ambient ping dot -->
+<span class="absolute top-1 right-2 flex h-3.5 w-3.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-primary"></span>
+</span>
+</div>
+<!-- Wordmark -->
+<div class="flex flex-col items-center mb-6">
+<span class="font-headline-sm text-headline-sm tracking-wider uppercase text-on-surface font-bold leading-none">
+        AT THAT PLACE
+      </span>
+<span class="text-label-sm font-label-sm text-primary tracking-widest mt-1 uppercase font-semibold">
+        Shared Memory Space
+      </span>
+</div>
+<!-- Main Headline -->
+<h1 class="font-headline-lg text-headline-lg font-bold text-on-surface mb-3 tracking-tight whitespace-pre-line">
+      함께한 순간을
+한곳에 모아요
+    </h1>
+<!-- Subtitle description -->
+<p class="font-body-md text-body-md text-secondary max-w-[280px]">
+      모임의 일정별로 사진과 영상을 함께 보관해요.
+    </p>
+<!-- Invite Support Notice Banner -->
+<div class="w-full mt-7 px-1">
+<div class="w-full bg-secondary-container/70 rounded-xl px-4 py-3.5 flex items-center gap-3 shadow-sm text-left">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest flex items-center justify-center shrink-0 text-primary shadow-xs">
+<span class="material-symbols-outlined text-[19px]">mark_email_unread</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface font-medium leading-snug">
+          초대받은 모임에 참여하려면 로그인해 주세요.
+        </p>
+</div>
+</div>
+</div>
+<!-- Dynamic Feedback Banner (Hidden by default, ready for toggle) -->
+<div class="w-full mt-6 px-1 hidden" id="auth-error-banner" role="alert">
+<div class="bg-error-container text-on-error-container rounded-xl px-4 py-3 flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-error shrink-0">error</span>
+<span class="font-body-sm text-body-sm font-medium" id="auth-error-text">로그인 중 오류가 발생했습니다. 다시 시도해 주세요.</span>
+</div>
+</div>
+<!-- Actions Area -->
+<div class="flex flex-col w-full gap-3 mt-10">
+<!-- Kakao Login Button -->
+<button aria-label="카카오 계정으로 로그인" class="w-full h-14 bg-[#FEE500] text-[#191600] rounded-[14px] font-label-lg text-label-lg font-semibold flex items-center justify-center relative active:scale-[0.98] transition-transform duration-150 shadow-sm focus:outline-none" id="kakao-login-btn" type="button">
+<div class="absolute left-5 flex items-center justify-center">
+<!-- Kakao Official Chat Bubble Icon -->
+<svg aria-hidden="true" fill="none" height="20" viewbox="0 0 22 20" width="22" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M11 0C4.925 0 0 3.86 0 8.623C0 11.605 1.954 14.225 4.939 15.688L3.935 19.385C3.843 19.721 4.223 19.988 4.516 19.794L8.91 16.883C9.59 16.974 10.287 17.022 11 17.022C17.075 17.022 22 13.162 22 8.623C22 3.86 17.075 0 11 0Z" fill="#000000" fill-rule="evenodd"></path>
+</svg>
+</div>
+<span class="font-medium">카카오로 시작하기</span>
+</button>
+<!-- Google Login Button -->
+<button aria-label="Google 계정으로 로그인" class="w-full h-14 bg-surface-container-lowest text-on-surface rounded-[14px] font-label-lg text-label-lg font-medium flex items-center justify-center relative shadow-sm active:scale-[0.98] transition-transform duration-150 focus:outline-none" id="google-login-btn" type="button">
+<div class="absolute left-5 flex items-center justify-center">
+<!-- Google Multicolor Vector Mark -->
+<svg aria-hidden="true" height="22" viewbox="0 0 24 24" width="22">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.36 24 12 24Z" fill="#34A853"></path>
+<path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27 0-.78.13-1.55.38-2.27V6.58H1.25C.45 8.16 0 10.02 0 12c0 1.98.45 3.84 1.25 5.42l4.03-3.15Z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.36 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z" fill="#EA4335"></path>
+</svg>
+</div>
+<span class="font-medium">Google로 시작하기</span>
+</button>
+<!-- Footer Agreement Links -->
+<div class="mt-4 text-center">
+<p class="font-body-sm text-body-sm text-secondary">
+        시작 시 
+        <a class="underline hover:text-on-surface transition-colors cursor-pointer" href="#terms">이용약관</a> 
+        및 
+        <a class="underline hover:text-on-surface transition-colors cursor-pointer" href="#privacy">개인정보처리방침</a>에 동의하게 됩니다.
+      </p>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const kakaoBtn = document.getElementById('kakao-login-btn');
+    const googleBtn = document.getElementById('google-login-btn');
+    const errorBanner = document.getElementById('auth-error-banner');
+    const errorText = document.getElementById('auth-error-text');
+
+    function simulateLogin(provider) {
+      // Micro tactile indication
+      if (errorBanner) {
+        errorBanner.classList.add('hidden');
+      }
+
+      const originalText = provider === 'kakao' ? '카카오로 시작하기' : 'Google로 시작하기';
+      const button = provider === 'kakao' ? kakaoBtn : googleBtn;
+      const labelSpan = button.querySelector('span');
+
+      labelSpan.textContent = '연결하는 중...';
+      button.style.opacity = '0.85';
+      button.disabled = true;
+
+      setTimeout(() => {
+        labelSpan.textContent = originalText;
+        button.style.opacity = '1';
+        button.disabled = false;
+      }, 1200);
+    }
+
+    if (kakaoBtn) {
+      kakaoBtn.addEventListener('click', () => simulateLogin('kakao'));
+    }
+
+    if (googleBtn) {
+      googleBtn.addEventListener('click', () => simulateLogin('google'));
+    }
+  })();
+</script></main></div></body></html>
+
+<!-- UI03 내 모임 목록 -->
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-secondary-container": "#6d6260", "tertiary": "#a73836", "on-secondary-fixed": "#221a19", "on-primary-fixed": "#410004", "on-secondary": "#ffffff", "tertiary-fixed-dim": "#ffb3ae", "primary-fixed": "#ffdad7", "secondary": "#675c5b", "on-tertiary-fixed-variant": "#862021", "error-container": "#ffdad6", "on-error": "#ffffff", "on-primary-fixed-variant": "#862122", "surface-container-highest": "#dde3ef", "inverse-primary": "#ffb3ae", "surface-bright": "#f8f9ff", "on-background": "#161c25", "on-tertiary": "#ffffff", "on-primary": "#ffffff", "primary-fixed-dim": "#ffb3ae", "secondary-fixed": "#efdfdd", "on-surface-variant": "#574240", "surface-tint": "#a63837", "primary-container": "#f1706b", "on-secondary-fixed-variant": "#4e4443", "surface-variant": "#dde3ef", "tertiary-container": "#f26f69", "surface-container-high": "#e3e8f5", "on-error-container": "#93000a", "on-primary-container": "#66060e", "surface-container-low": "#eff4ff", "surface-container": "#e9eefb", "on-tertiary-fixed": "#410004", "on-tertiary-container": "#66050d", "surface-container-lowest": "#ffffff", "on-surface": "#161c25", "primary": "#a63837", "inverse-on-surface": "#ebf1fe", "surface": "#f8f9ff", "tertiary-fixed": "#ffdad7", "outline-variant": "#dec0bd", "error": "#ba1a1a", "surface-dim": "#d5dae7", "outline": "#8a716f", "secondary-fixed-dim": "#d2c3c1", "inverse-surface": "#2b313a", "secondary-container": "#efdfdd", "background": "#f8f9ff" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-lg": "1rem", "gutter": "1rem", "space-xs": "0.25rem", "margin": "1.25rem", "space-sm": "0.5rem", "space-md": "0.75rem", "space-xl": "1.5rem" }, fontFamily: { "body-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"] }, fontSize: { "body-md": ["15px", { lineHeight: "22px", letterSpacing: "-0.005em", fontWeight: "400" }], "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "500" }], "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "700" }], "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "600" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "-0.005em", fontWeight: "600" }], "body-sm": ["13px", { lineHeight: "18px", letterSpacing: "0em", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "500" }], "headline-lg": ["26px", { lineHeight: "34px", letterSpacing: "-0.02em", fontWeight: "700" }] } } } };</script><style>@layer base{html,body{width:100%;margin:0;padding:0;min-height:100%;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><h1 class="text-headline-sm font-headline-sm text-on-surface">My Groups</h1></div><div class="flex items-center gap-space-sm"><button aria-label="Notifications" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined">notifications</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-20 bg-surface"><div class="flex flex-col w-full pb-32">
+<!-- Content Header Area -->
+<section class="px-margin pt-space-md pb-space-sm flex items-end justify-between">
+<div>
+<h2 class="text-headline-md font-headline-md text-on-surface tracking-tight">함께하는 모임</h2>
+<p class="text-body-sm font-body-sm text-on-secondary-container mt-0.5">총 4개의 모임에 참여하고 있어요</p>
+</div>
+<!-- Sorting Pill Button -->
+<button class="flex items-center gap-1 px-space-sm py-1.5 rounded-full bg-surface-container-high/80 text-on-surface-variant hover:text-on-surface transition-all active:scale-95 touch-manipulation" type="button">
+<span class="text-label-sm font-label-sm">최근 공동 활동순</span>
+<span class="material-symbols-outlined text-[16px] leading-none">expand_more</span>
+</button>
+</section>
+<!-- Group Cards Container -->
+<section class="px-margin flex flex-col gap-3 mt-space-sm">
+<!-- Card 1: 주말 산책 모임 (방장) -->
+<article class="group relative bg-surface-container-lowest rounded-[20px] p-space-lg shadow-sm hover:shadow-md transition-all active:scale-[0.985] cursor-pointer touch-manipulation">
+<div class="flex items-center gap-3.5">
+<!-- Thumbnail -->
+<div class="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A warm illustrative graphic of a sunny weekend trail hiking scene in South Korea. Gentle morning mist over soft green hills with minimalist stylized pine trees, rendered in warm coral, sage green, and creamy peach tones with a modern friendly Scandinavian-inspired lifestyle illustration aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG8QIAX4dYuFRsnsPB_7oB2Bf5kr7UJBWKt9dgIqTyq8pvQd8TM8zn041QYf_qk_hCO6qTl4Bqw2KVTY5-H3IkG5WQT6L3EODIQT3Dxak5dx8Vk8UF50DXr2vINUK-uI5wZ2d265Vn07cA3dAxGpiLNjxM_D9O0cepyT7nd26PYwS7HE7-HByMQ3XgxJ3k0pXxor9-y6UBqm0V-YXmNQRwfJxkcwKe-eZlETX3CZpB"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+</div>
+<!-- Info -->
+<div class="flex-1 min-w-0 pr-1">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary-fixed text-on-primary-fixed-variant text-label-sm font-label-sm tracking-tight shrink-0">
+              방장
+            </span>
+<h3 class="text-headline-sm font-headline-sm text-on-surface truncate">
+              주말 산책 모임
+            </h3>
+</div>
+<div class="flex items-center text-body-sm font-body-sm text-on-surface-variant truncate">
+<span class="font-medium text-on-surface">6/10명</span>
+<span class="mx-1 text-on-secondary-container">·</span>
+<span class="truncate">다음 일정: 북한산 둘레길</span>
+</div>
+</div>
+<!-- Arrow Chevron -->
+<div class="w-8 h-8 rounded-full flex items-center justify-center text-on-secondary-container group-hover:text-primary transition-colors shrink-0">
+<span class="material-symbols-outlined text-[22px]">chevron_right</span>
+</div>
+</div>
+</article>
+<!-- Card 2: 보관 안내 모임 (참여자 + 보관 만료 알림) -->
+<article class="group relative bg-surface-container-lowest rounded-[20px] overflow-hidden shadow-sm hover:shadow-md transition-all active:scale-[0.985] cursor-pointer touch-manipulation">
+<div class="p-space-lg pb-3">
+<div class="flex items-center gap-3.5">
+<!-- Thumbnail -->
+<div class="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="An inviting warm autumn picnic scene in a quiet Korean park under golden ginkgo and red maple foliage. Soft blanket on grass with ceramic mugs, a thermos, and fallen leaves, bathed in mellow late-afternoon golden sunshine with delicate coral and amber accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFtF1hhgbq1TZdznXuu_ckcoygZsTAl0R-76jaYsIxi0fECWP3B8XzZ6K3XfkBve_G2LvaRsQzivw-STrm14be935ICIeaQo7d4MxSFC9zMoptnQhc-A6EGim6FY6dTq267sxa3CYgbGNgstwBAQywhVgF8wDp6_0EgIiaZvnQDo2rWUTqZWm3XM3AM4U63UU5__lAZF59gNlVGTzu5foEXLUDvB77HD5m3XawZsrG"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+</div>
+<!-- Info -->
+<div class="flex-1 min-w-0 pr-1">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-surface-container-high text-on-surface-variant text-label-sm font-label-sm shrink-0">
+                참여자
+              </span>
+<h3 class="text-headline-sm font-headline-sm text-on-surface truncate">
+                보관 안내 모임
+              </h3>
+</div>
+<div class="flex items-center text-body-sm font-body-sm text-on-surface-variant truncate">
+<span class="font-medium text-on-surface">2/10명</span>
+<span class="mx-1 text-on-secondary-container">·</span>
+<span class="truncate">최근 일정: 가을 소풍</span>
+</div>
+</div>
+<!-- Arrow Chevron -->
+<div class="w-8 h-8 rounded-full flex items-center justify-center text-on-secondary-container group-hover:text-primary transition-colors shrink-0">
+<span class="material-symbols-outlined text-[22px]">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Retention Notice Bar -->
+<div class="mx-3 mb-3 px-3 py-2 rounded-xl bg-secondary-container/60 flex items-center justify-between text-tertiary">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-[17px] text-tertiary shrink-0 animate-pulse" style="font-variation-settings: 'FILL' 1;">schedule</span>
+<p class="text-label-md font-label-md truncate text-on-tertiary-container">
+            보관 안내 · 만료 7일 전 기록이 있어요
+          </p>
+</div>
+<span class="text-label-sm font-label-sm font-semibold text-tertiary underline decoration-tertiary/40 shrink-0 ml-2">
+          확인
+        </span>
+</div>
+</article>
+<!-- Card 3: 대학 동기 모임 (참여자) -->
+<article class="group relative bg-surface-container-lowest rounded-[20px] p-space-lg shadow-sm hover:shadow-md transition-all active:scale-[0.985] cursor-pointer touch-manipulation">
+<div class="flex items-center gap-3.5">
+<!-- Thumbnail -->
+<div class="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A modern artistic depiction of university friends on a road trip adventure towards Jeju Island coastline. Pastel teal turquoise waves meeting basalt rocks, a gentle breeze rustling palms, minimalist contemporary Korean editorial style illustration with soft coral highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkQlnBpMsn6IWiRUuY9fKRqarGdZjdWbj0o4xrrnowm24NWKE2KnQCxb7n25XdppNc6qQ-eYvAWfuY_7uq19uYb4Uo7Qtc6s_V321X8VVTo221VGcGeKjhI6IwamDptH45QfSrl9clC4bbpdtIidlNw5XOcr7tESjRS0ye3RYGdFG-HhoLUuG_0XzUKhwYa0SHvXk9gbAEU8_wASUCLc4XzwBo8veBI7jwu64Lx_TZ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+</div>
+<!-- Info -->
+<div class="flex-1 min-w-0 pr-1">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-surface-container-high text-on-surface-variant text-label-sm font-label-sm shrink-0">
+              참여자
+            </span>
+<h3 class="text-headline-sm font-headline-sm text-on-surface truncate">
+              대학 동기 모임
+            </h3>
+</div>
+<div class="flex items-center text-body-sm font-body-sm text-on-surface-variant truncate">
+<span class="font-medium text-on-surface">4/10명</span>
+<span class="mx-1 text-on-secondary-container">·</span>
+<span class="truncate">다음 일정: 제주 졸업 여행</span>
+</div>
+</div>
+<!-- Arrow Chevron -->
+<div class="w-8 h-8 rounded-full flex items-center justify-center text-on-secondary-container group-hover:text-primary transition-colors shrink-0">
+<span class="material-symbols-outlined text-[22px]">chevron_right</span>
+</div>
+</div>
+</article>
+<!-- Card 4: 회사 점심 모임 (방장) -->
+<article class="group relative bg-surface-container-lowest rounded-[20px] p-space-lg shadow-sm hover:shadow-md transition-all active:scale-[0.985] cursor-pointer touch-manipulation">
+<div class="flex items-center gap-3.5">
+<!-- Thumbnail -->
+<div class="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A cozy trendy Korean brunch cafe table top setting viewed from above. Artisanal coffee cups with latte art, fluffy baked pastries on ceramic plates, warm timber wood table texture, dappled natural window sunlight with warm terracotta and rose hues." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfvWBv9nSE3XwHhwJWP-VTiqzkVhy0KfdCIyBj63_NphHtU3zQ2_Zqc631J4-A6sJCo7r79ymjRCVYoVw_1bgftp2gom-IRNZ8SJ1HiSrKcy0hj5X4TBYWI7NO7VhNbXg6IpPSydeWkigE6Cr5yqTVmIJD5ViMt7X-kcmVGRrUloxEWt5Z-Lqi1atdHVMg2Zn021ch26EP6ImA2xHuRwofP0vZ-TsZm-h5Gtk-kc0Z"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+</div>
+<!-- Info -->
+<div class="flex-1 min-w-0 pr-1">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary-fixed text-on-primary-fixed-variant text-label-sm font-label-sm tracking-tight shrink-0">
+              방장
+            </span>
+<h3 class="text-headline-sm font-headline-sm text-on-surface truncate">
+              회사 점심 모임
+            </h3>
+</div>
+<div class="flex items-center text-body-sm font-body-sm text-on-secondary-container truncate">
+<span class="font-medium text-on-surface">3/10명</span>
+<span class="mx-1 text-on-secondary-container">·</span>
+<span class="truncate italic text-secondary">아직 일정이 없어요</span>
+</div>
+</div>
+<!-- Arrow Chevron -->
+<div class="w-8 h-8 rounded-full flex items-center justify-center text-on-secondary-container group-hover:text-primary transition-colors shrink-0">
+<span class="material-symbols-outlined text-[22px]">chevron_right</span>
+</div>
+</div>
+</article>
+</section>
+<!-- Fixed Bottom Dual Action Bar (positioned cleanly above tab navigation) -->
+<aside class="fixed bottom-16 inset-x-0 z-40 px-margin py-3 bg-surface/90 backdrop-blur-xl shadow-[0_-6px_20px_rgba(22,28,37,0.06)]">
+<div class="max-w-md mx-auto grid grid-cols-2 gap-2.5">
+<!-- Secondary Action: 초대 코드로 참여 -->
+<button class="h-14 px-3 rounded-xl bg-surface-container-lowest text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:bg-surface-container transition-all active:scale-[0.98] touch-manipulation min-h-[48px]" type="button">
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant">vpn_key</span>
+<span>초대 코드로 참여</span>
+</button>
+<!-- Primary Action: 모임 만들기 -->
+<button class="h-14 px-3 rounded-xl bg-primary-container text-on-primary font-headline-sm text-body-lg flex items-center justify-center gap-1.5 shadow-md shadow-primary-container/25 active:bg-tertiary transition-all active:scale-[0.98] touch-manipulation min-h-[48px]" type="button">
+<span class="material-symbols-outlined text-[22px]">add</span>
+<span>모임 만들기</span>
+</button>
+</div>
+</aside>
+</div>
+<script>
+  (function() {
+    // Subtle tactile card tap effect
+    const articles = document.querySelectorAll('article');
+    articles.forEach(card => {
+      card.addEventListener('click', () => {
+        card.classList.add('bg-surface-container-low');
+        setTimeout(() => {
+          card.classList.remove('bg-surface-container-low');
+        }, 150);
+      });
+    });
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-4px_16px_rgba(25,31,40,0.06)]" data-active-classes="text-primary font-label-md"><div class="flex justify-around items-center h-16 px-space-md"><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] min-h-[48px] gap-space-xs transition-colors text-primary font-label-md" data-path="my-groups" href="#"><span class="material-symbols-outlined text-[24px]">groups</span><span class="text-label-sm font-label-sm">모임</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[48px] gap-space-xs text-on-surface-variant transition-colors" data-path="my-records" href="#"><span class="material-symbols-outlined text-[24px]">auto_stories</span><span class="text-label-sm font-label-sm">내 기록</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[48px] gap-space-xs text-on-surface-variant transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[24px]">settings</span><span class="text-label-sm font-label-sm">설정</span></a></div></nav></body></html>
+
+<!-- UI04 모임과 첫 일정 생성 -->
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-secondary-container": "#6d6260", "tertiary": "#a73836", "on-secondary-fixed": "#221a19", "on-primary-fixed": "#410004", "on-secondary": "#ffffff", "tertiary-fixed-dim": "#ffb3ae", "primary-fixed": "#ffdad7", "secondary": "#675c5b", "on-tertiary-fixed-variant": "#862021", "error-container": "#ffdad6", "on-error": "#ffffff", "on-primary-fixed-variant": "#862122", "surface-container-highest": "#dde3ef", "inverse-primary": "#ffb3ae", "surface-bright": "#f8f9ff", "on-background": "#161c25", "on-tertiary": "#ffffff", "on-primary": "#ffffff", "primary-fixed-dim": "#ffb3ae", "secondary-fixed": "#efdfdd", "on-surface-variant": "#574240", "surface-tint": "#a63837", "primary-container": "#f1706b", "on-secondary-fixed-variant": "#4e4443", "surface-variant": "#dde3ef", "tertiary-container": "#f26f69", "surface-container-high": "#e3e8f5", "on-error-container": "#93000a", "on-primary-container": "#66060e", "surface-container-low": "#eff4ff", "surface-container": "#e9eefb", "on-tertiary-fixed": "#410004", "on-tertiary-container": "#66050d", "surface-container-lowest": "#ffffff", "on-surface": "#161c25", "primary": "#a63837", "inverse-on-surface": "#ebf1fe", "surface": "#f8f9ff", "tertiary-fixed": "#ffdad7", "outline-variant": "#dec0bd", "error": "#ba1a1a", "surface-dim": "#d5dae7", "outline": "#8a716f", "secondary-fixed-dim": "#d2c3c1", "inverse-surface": "#2b313a", "secondary-container": "#efdfdd", "background": "#f8f9ff" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-lg": "1rem", "gutter": "1rem", "space-xs": "0.25rem", "margin": "1.25rem", "space-sm": "0.5rem", "space-md": "0.75rem", "space-xl": "1.5rem" }, fontFamily: { "body-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"] }, fontSize: { "body-md": ["15px", { lineHeight: "22px", letterSpacing: "-0.005em", fontWeight: "400" }], "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "500" }], "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "700" }], "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "600" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "-0.005em", fontWeight: "600" }], "body-sm": ["13px", { lineHeight: "18px", letterSpacing: "0em", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "500" }], "headline-lg": ["26px", { lineHeight: "34px", letterSpacing: "-0.02em", fontWeight: "700" }] } } } };</script><style>@layer base{html,body{width:100%;margin:0;padding:0;min-height:100%;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><button aria-label="Back" class="w-11 h-11 -ml-space-sm flex items-center justify-center rounded-full text-on-surface hover:text-primary transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><h1 class="text-headline-sm font-headline-sm text-on-surface">Create Gathering</h1></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-safe bg-surface"><div class="flex flex-col w-full">
+<div class="px-margin pt-space-md pb-space-xl flex flex-col gap-space-xl">
+<!-- Warm Editorial Intro / Delightful Hook -->
+<div class="flex items-center gap-space-md bg-surface-container-low p-space-md rounded-xl">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center shrink-0 text-primary">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">celebration</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">함께할 순간을 시작해볼까요?</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">모임을 열고 첫 일정을 가볍게 등록해보세요.</span>
+</div>
+</div>
+<!-- Section 1: 모임 이름 -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1" for="group-name-input">
+          모임 이름 <span class="text-primary font-bold">*</span>
+</label>
+<span class="font-label-sm text-label-sm text-on-surface-variant">어떤 이름이든 좋아요</span>
+</div>
+<div class="relative flex flex-col mt-1">
+<input class="w-full h-12 px-space-md rounded-xl bg-surface-container-lowest text-on-surface font-body-lg text-body-lg shadow-sm placeholder:text-outline focus:outline-none focus:bg-surface-bright transition-all" id="group-name-input" maxlength="50" placeholder="예: 주말 산책 모임" type="text" value="주말 산책 모임"/>
+<div class="flex justify-end mt-1 px-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium" id="group-name-count">7/50</span>
+</div>
+</div>
+</div>
+<!-- Section 2: 첫 일정 제목 -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1" for="schedule-title-input">
+          첫 일정 제목 <span class="text-primary font-bold">*</span>
+</label>
+<span class="font-label-sm text-label-sm text-on-surface-variant">언제든 바꿀 수 있어요</span>
+</div>
+<div class="relative flex flex-col mt-1">
+<input class="w-full h-12 px-space-md rounded-xl bg-surface-container-lowest text-on-surface font-body-lg text-body-lg shadow-sm placeholder:text-outline focus:outline-none focus:bg-surface-bright transition-all" id="schedule-title-input" maxlength="100" placeholder="예: 우리의 서울 여행" type="text" value="우리의 서울 여행"/>
+<div class="flex justify-end mt-1 px-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium" id="schedule-title-count">9/100</span>
+</div>
+</div>
+</div>
+<!-- Section 3: 일정 기간 -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1">
+          일정 기간 <span class="text-primary font-bold">*</span>
+</label>
+<!-- Duration Pill Badge -->
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-md text-label-md">
+<span class="material-symbols-outlined text-[13px]">date_range</span>
+          3일 동안
+        </span>
+</div>
+<!-- Dual Date Box Row -->
+<div class="flex items-center gap-space-sm mt-1">
+<!-- Start Date Box -->
+<button class="flex-1 min-h-[56px] px-3.5 py-2.5 rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-center items-start text-left active:bg-surface-container-high transition-colors" id="btn-start-date" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant mb-0.5">시작 날짜</span>
+<div class="flex items-center justify-between w-full">
+<span class="font-headline-sm text-headline-sm text-on-surface">2026.10.17</span>
+<span class="material-symbols-outlined text-primary text-[20px] ml-1">calendar_today</span>
+</div>
+</button>
+<!-- Divider Dash -->
+<div class="text-outline font-headline-md text-headline-md px-1 select-none">
+          —
+        </div>
+<!-- End Date Box -->
+<button class="flex-1 min-h-[56px] px-3.5 py-2.5 rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-center items-start text-left active:bg-surface-container-high transition-colors" id="btn-end-date" type="button">
+<span class="font-label-sm text-label-sm text-on-surface-variant mb-0.5">종료 날짜</span>
+<div class="flex items-center justify-between w-full">
+<span class="font-headline-sm text-headline-sm text-on-surface">2026.10.19</span>
+<span class="material-symbols-outlined text-primary text-[20px] ml-1">calendar_today</span>
+</div>
+</button>
+</div>
+</div>
+<!-- Section 4: Guidance & Policy Box -->
+<div class="flex flex-col gap-2 p-space-md rounded-xl bg-surface-container-low text-on-surface-variant">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">info</span>
+<p class="font-body-sm text-body-sm leading-relaxed">
+          시간은 장소를 추가할 때 입력해요. 반복 설정은 없어요. 필요하면 일정을 더 추가해요.
+        </p>
+</div>
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary shrink-0 mt-0.5">groups</span>
+<p class="font-body-sm text-body-sm leading-relaxed text-secondary font-medium">
+          한국 시간 기준 · 최대 10명 고정 · 정원 변경 없음
+        </p>
+</div>
+</div>
+<!-- Visual Breathing Gap for Native Scroller -->
+<div class="h-16"></div>
+</div>
+<!-- Section 5: Fixed Bottom Sticky Action Bar -->
+<div class="sticky bottom-0 w-full px-margin pb-space-lg pt-space-sm bg-surface/95 backdrop-blur-md">
+<button class="w-full min-h-[56px] rounded-xl bg-primary-container text-on-primary font-headline-sm text-headline-sm shadow-md flex items-center justify-center gap-2 active:opacity-90 active:scale-[0.99] transition-all" id="submit-create-group" type="button">
+<span>모임과 첫 일정 만들기</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<script>
+  (function() {
+    const nameInput = document.getElementById('group-name-input');
+    const nameCount = document.getElementById('group-name-count');
+    const titleInput = document.getElementById('schedule-title-input');
+    const titleCount = document.getElementById('schedule-title-count');
+    const submitBtn = document.getElementById('submit-create-group');
+
+    function updateCount(input, counterEl, max) {
+      if (!input || !counterEl) return;
+      counterEl.textContent = input.value.length + '/' + max;
+    }
+
+    if (nameInput && nameCount) {
+      nameInput.addEventListener('input', () => updateCount(nameInput, nameCount, 50));
+    }
+
+    if (titleInput && titleCount) {
+      titleInput.addEventListener('input', () => updateCount(titleInput, titleCount, 100));
+    }
+
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => {
+        submitBtn.classList.add('scale-95');
+        setTimeout(() => submitBtn.classList.remove('scale-95'), 150);
+      });
+    }
+  })();
+</script></main></body></html>
+
+<!-- UI06 일정 추가와 변경 -->
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; background-color: #f8f9ff; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-tertiary-container": "#66050d", "on-primary-container": "#66060e", "surface-container-highest": "#dde3ef", "on-tertiary-fixed": "#410004", "on-secondary-container": "#6d6260", "on-surface": "#161c25", "outline-variant": "#dec0bd", "on-primary-fixed-variant": "#862122", "surface": "#f8f9ff", "primary-fixed-dim": "#ffb3ae", "on-secondary-fixed-variant": "#4e4443", "primary-container": "#f1706b", "primary": "#a63837", "surface-container-lowest": "#ffffff", "secondary-fixed": "#efdfdd", "secondary": "#675c5b", "primary-fixed": "#ffdad7", "on-secondary-fixed": "#221a19", "inverse-surface": "#2b313a", "inverse-primary": "#ffb3ae", "outline": "#8a716f", "tertiary-container": "#f26f69", "on-primary": "#ffffff", "surface-dim": "#d5dae7", "secondary-container": "#efdfdd", "surface-bright": "#f8f9ff", "surface-container-high": "#e3e8f5", "on-error-container": "#93000a", "on-primary-fixed": "#410004", "on-error": "#ffffff", "inverse-on-surface": "#ebf1fe", "on-background": "#161c25", "error": "#ba1a1a", "surface-tint": "#a63837", "on-secondary": "#ffffff", "background": "#f8f9ff", "surface-container": "#e9eefb", "secondary-fixed-dim": "#d2c3c1", "tertiary": "#a73836", "tertiary-fixed": "#ffdad7", "surface-variant": "#dde3ef", "surface-container-low": "#eff4ff", "on-surface-variant": "#574240", "error-container": "#ffdad6", "on-tertiary": "#ffffff", "tertiary-fixed-dim": "#ffb3ae", "on-tertiary-fixed-variant": "#862021" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-sm": "0.5rem", "gutter": "1rem", "space-xl": "1.5rem", "space-md": "0.75rem", "space-lg": "1rem", "space-xs": "0.25rem", "margin": "1.25rem" }, fontFamily: { "label-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"] }, fontSize: { "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "-0.005em", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "600" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "500" }], "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "500" }], "body-md": ["15px", { lineHeight: "22px", letterSpacing: "-0.005em", fontWeight: "400" }], "body-sm": ["13px", { lineHeight: "18px", letterSpacing: "0em", fontWeight: "400" }], "headline-lg": ["26px", { lineHeight: "34px", letterSpacing: "-0.02em", fontWeight: "700" }], "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen flex flex-col selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-margin flex items-center justify-between"><div class="flex items-center gap-space-xs"><button aria-label="뒤로 가기" class="w-11 h-11 -ml-2 flex items-center justify-center rounded-full text-secondary hover:text-on-surface hover:bg-surface-container transition-colors" onclick="window.history.back()" type="button"><span class="material-symbols-outlined text-[24px]">arrow_back_ios_new</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Schedule Edit</h1></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-safe bg-surface"><div class="flex flex-col w-full pb-10">
+<!-- Content Area -->
+<div class="px-margin flex flex-col gap-space-lg pt-space-md">
+<!-- Group Metadata Badge -->
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span>주말 산책 모임</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container inline-block"></span>
+<span>방장 지민 작성 중</span>
+</div>
+</div>
+<!-- Retention Notice Banner (Spec 4.7) -->
+<div class="w-full bg-secondary-container rounded-xl p-space-md flex items-start gap-space-sm shadow-sm">
+<div class="w-7 h-7 rounded-full bg-surface-container-lowest flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">history_toggle_off</span>
+</div>
+<div class="flex flex-col min-w-0">
+<p class="font-label-md text-label-md text-on-secondary-container">
+          최초 기록 완료 후 보관 기한은 바뀌지 않아요
+        </p>
+<p class="font-body-sm text-body-sm text-on-secondary-container/80 mt-0.5">
+          보관 마지막 날 <span class="font-label-md font-semibold text-primary">2027.01.19</span>
+</p>
+</div>
+</div>
+<!-- Main Form Section -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col gap-space-lg">
+<!-- Schedule Title Field -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center gap-1" for="schedule-title-input">
+            일정 제목 <span class="text-primary-container font-headline-sm leading-none">*</span>
+</label>
+<span class="font-label-sm text-label-sm text-on-surface-variant" id="char-counter">9/100</span>
+</div>
+<div class="relative flex items-center">
+<input class="w-full h-12 px-space-md rounded-xl bg-surface-container-low text-on-surface font-body-lg text-body-lg outline-none transition-all placeholder:text-secondary focus:bg-surface-container-lowest focus:shadow-md" id="schedule-title-input" maxlength="100" placeholder="어떤 모임인가요?" type="text" value="우리의 서울 여행"/>
+</div>
+</div>
+<!-- Date Range Field -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center gap-1">
+            일정 기간 <span class="text-primary-container font-headline-sm leading-none">*</span>
+</label>
+<div class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm">
+            3일 동안
+          </div>
+</div>
+<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+<!-- Start Date -->
+<button aria-label="시작 날짜 2026년 10월 17일" class="h-12 px-space-md rounded-xl bg-surface-container-low flex items-center justify-between text-left transition-colors active:bg-surface-container" type="button">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">시작</span>
+<span class="font-label-md text-label-md text-on-surface">2026.10.17</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-primary">calendar_today</span>
+</button>
+<!-- Range Dash -->
+<span class="font-body-md text-secondary select-none px-1 text-center">―</span>
+<!-- End Date -->
+<button aria-label="종료 날짜 2026년 10월 19일" class="h-12 px-space-md rounded-xl bg-surface-container-low flex items-center justify-between text-left transition-colors active:bg-surface-container" type="button">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">종료</span>
+<span class="font-label-md text-label-md text-on-surface">2026.10.19</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-primary">calendar_today</span>
+</button>
+</div>
+</div>
+<!-- Schedule Meta Details / Mini Notes -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-1.5">
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[17px] text-secondary">schedule</span>
+<span>시간은 각 장소에서 입력해요 · 반복 설정 없음</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[17px] text-secondary">public</span>
+<span>한국 표준시 (Asia/Seoul) 기준</span>
+</div>
+</div>
+<!-- Overlap / Outside-Range Notice Card (QA-S02 / Spec 4.7) -->
+<div class="bg-primary-fixed/30 rounded-xl p-space-md flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-primary shrink-0 mt-0.5">lightbulb</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">기간 밖 영향 안내</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-relaxed">
+            기간을 줄여 날짜가 벗어나는 기록은 삭제되지 않고 보관 기한까지 안전하게 보존돼요.
+          </p>
+</div>
+</div>
+</div>
+<!-- Attendees Quick Context Preview -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="flex -space-x-2 overflow-hidden">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm flex items-center justify-center ring-2 ring-surface-container-lowest font-bold">
+            지민
+          </div>
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm flex items-center justify-center ring-2 ring-surface-container-lowest font-bold">
+            민준
+          </div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm flex items-center justify-center ring-2 ring-surface-container-lowest font-bold">
+            수아
+          </div>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">3명의 멤버와 동기화 중</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-secondary">sync</span>
+</div>
+<!-- Primary Action Section -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<button class="w-full h-14 bg-primary-container active:bg-primary text-on-primary rounded-xl font-label-lg text-label-lg font-bold shadow-md flex items-center justify-center gap-2 transition-transform active:scale-[0.99]" id="save-schedule-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">check</span>
+<span>저장하기</span>
+</button>
+</div>
+<!-- Danger & Management Actions Group -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm flex flex-col gap-1 mt-space-sm">
+<!-- Action 1: Cancel Schedule (D3 Modal Trigger) -->
+<button class="w-full min-h-[48px] px-space-sm rounded-lg flex items-center justify-between text-left transition-colors active:bg-surface-container" id="open-cancel-modal-btn" type="button">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-[20px] text-error shrink-0">event_busy</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-error">일정 취소</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">기록 보관 기한까지 안전하게 유지돼요</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[18px] text-secondary">chevron_right</span>
+</button>
+<div class="h-px w-full bg-surface-container my-1"></div>
+<!-- Action 2: Delete Empty Schedule (Disabled State & Explanation) -->
+<div class="w-full min-h-[48px] px-space-sm rounded-lg flex items-center justify-between opacity-60">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-[20px] text-secondary shrink-0">delete_outline</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-secondary">빈 일정 삭제</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">기록이 있는 일정은 취소만 가능해요</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[18px] text-secondary">lock</span>
+</div>
+</div>
+<!-- Footer Space Filler for Native Ergonomics -->
+<div class="py-2 text-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant/70">
+        일정 수정 시 모임원 전체에게 동기화 알림이 전송됩니다.
+      </p>
+</div>
+</div>
+<!-- Cancel Confirmation Modal (D3 Spec Modal) -->
+<div aria-labelledby="modal-cancel-title" aria-modal="true" class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm hidden flex-col justify-end p-margin pb-safe" id="cancel-modal" role="dialog">
+<div class="w-full bg-surface-container-lowest rounded-2xl p-space-lg shadow-xl flex flex-col gap-space-md transform transition-all duration-200">
+<div class="flex items-center gap-space-sm text-error">
+<div class="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">warning</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold" id="modal-cancel-title">일정을 취소할까요?</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">우리의 서울 여행</p>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+        취소된 일정은 수정할 수 없지만, 이미 기록된 추억과 사진은 보관 기한(<span class="font-semibold text-on-surface">2027.01.19</span>)까지 모임원 모두 조회할 수 있어요.
+      </p>
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<button class="w-full h-12 rounded-xl bg-error text-on-error font-label-lg text-label-lg font-bold flex items-center justify-center active:brightness-95 transition-all" id="confirm-cancel-btn" type="button">
+          일정 취소하기
+        </button>
+<button class="w-full h-12 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold flex items-center justify-center active:bg-surface-container transition-all" id="close-cancel-modal-btn" type="button">
+          돌아가기
+        </button>
+</div>
+</div>
+</div>
+<!-- Micro-Toast Alert -->
+<div class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-full font-label-md text-label-md shadow-lg flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 transform translate-y-3" id="toast-notification">
+<span class="material-symbols-outlined text-[18px] text-primary-container">check_circle</span>
+<span id="toast-message">변경사항이 저장되었습니다.</span>
+</div>
+<script>
+    (function() {
+      // Dynamic Character Counter
+      var titleInput = document.getElementById('schedule-title-input');
+      var counter = document.getElementById('char-counter');
+      if (titleInput && counter) {
+        titleInput.addEventListener('input', function(e) {
+          var length = e.target.value.length;
+          counter.textContent = length + '/100';
+        });
+      }
+
+      // Toast Helper
+      var toast = document.getElementById('toast-notification');
+      var toastMessage = document.getElementById('toast-message');
+      var toastTimer = null;
+      function showToast(msg) {
+        if (!toast) return;
+        if (toastTimer) clearTimeout(toastTimer);
+        toastMessage.textContent = msg;
+        toast.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+        toast.classList.add('opacity-100', 'translate-y-0');
+        toastTimer = setTimeout(function() {
+          toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+          toast.classList.remove('opacity-100', 'translate-y-0');
+        }, 2500);
+      }
+
+      // Save schedule trigger
+      var saveBtn = document.getElementById('save-schedule-btn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+          showToast('일정 변경사항이 저장되었습니다.');
+        });
+      }
+
+      // Modal Controls
+      var openModalBtn = document.getElementById('open-cancel-modal-btn');
+      var closeModalBtn = document.getElementById('close-cancel-modal-btn');
+      var confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+      var modal = document.getElementById('cancel-modal');
+
+      if (openModalBtn && modal) {
+        openModalBtn.addEventListener('click', function() {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        });
+      }
+
+      if (closeModalBtn && modal) {
+        closeModalBtn.addEventListener('click', function() {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        });
+      }
+
+      if (confirmCancelBtn && modal) {
+        confirmCancelBtn.addEventListener('click', function() {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          showToast('일정이 취소 처리되었습니다.');
+        });
+      }
+
+      // Dismiss modal on backdrop tap
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          }
+        });
+      }
+    })();
+  </script>
+</div></main></body></html>
+
+<!-- UI05 모임 달력 -->
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; background-color: #f8f9ff; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-tertiary-container": "#66050d", "on-primary-container": "#66060e", "surface-container-highest": "#dde3ef", "on-tertiary-fixed": "#410004", "on-secondary-container": "#6d6260", "on-surface": "#161c25", "outline-variant": "#dec0bd", "on-primary-fixed-variant": "#862122", "surface": "#f8f9ff", "primary-fixed-dim": "#ffb3ae", "on-secondary-fixed-variant": "#4e4443", "primary-container": "#f1706b", "primary": "#a63837", "surface-container-lowest": "#ffffff", "secondary-fixed": "#efdfdd", "secondary": "#675c5b", "primary-fixed": "#ffdad7", "on-secondary-fixed": "#221a19", "inverse-surface": "#2b313a", "inverse-primary": "#ffb3ae", "outline": "#8a716f", "tertiary-container": "#f26f69", "on-primary": "#ffffff", "surface-dim": "#d5dae7", "secondary-container": "#efdfdd", "surface-bright": "#f8f9ff", "surface-container-high": "#e3e8f5", "on-error-container": "#93000a", "on-primary-fixed": "#410004", "on-error": "#ffffff", "inverse-on-surface": "#ebf1fe", "on-background": "#161c25", "error": "#ba1a1a", "surface-tint": "#a63837", "on-secondary": "#ffffff", "background": "#f8f9ff", "surface-container": "#e9eefb", "secondary-fixed-dim": "#d2c3c1", "tertiary": "#a73836", "tertiary-fixed": "#ffdad7", "surface-variant": "#dde3ef", "surface-container-low": "#eff4ff", "on-surface-variant": "#574240", "error-container": "#ffdad6", "on-tertiary": "#ffffff", "tertiary-fixed-dim": "#ffb3ae", "on-tertiary-fixed-variant": "#862021" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-sm": "0.5rem", "gutter": "1rem", "space-xl": "1.5rem", "space-md": "0.75rem", "space-lg": "1rem", "space-xs": "0.25rem", "margin": "1.25rem" }, fontFamily: { "label-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"] }, fontSize: { "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "-0.005em", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "600" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "500" }], "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "500" }], "body-md": ["15px", { lineHeight: "22px", letterSpacing: "-0.005em", fontWeight: "400" }], "body-sm": ["13px", { lineHeight: "18px", letterSpacing: "0em", fontWeight: "400" }], "headline-lg": ["26px", { lineHeight: "34px", letterSpacing: "-0.02em", fontWeight: "700" }], "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen flex flex-col selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-margin flex items-center justify-between"><div class="flex items-center gap-space-xs"><button aria-label="뒤로 가기" class="w-11 h-11 -ml-2 flex items-center justify-center rounded-full text-secondary hover:text-on-surface hover:bg-surface-container transition-colors" onclick="window.history.back()" type="button"><span class="material-symbols-outlined text-[24px]">arrow_back_ios_new</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Group Calendar</h1></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-safe bg-surface"><div class="flex flex-col w-full pb-28">
+<!-- Group Identity Banner -->
+<div class="px-margin pt-space-sm pb-space-xs">
+<div class="flex items-center justify-between bg-surface-container-low px-space-md py-space-sm rounded-xl">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="w-2 h-2 rounded-full bg-primary-container shrink-0"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">주말 산책 모임</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm shrink-0">방장 지민</span>
+</div>
+<div class="flex -space-x-1.5 items-center shrink-0">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center font-label-sm text-label-sm text-on-surface">김</div>
+<div class="w-6 h-6 rounded-full bg-secondary-fixed flex items-center justify-center font-label-sm text-label-sm text-on-secondary-fixed">이</div>
+<div class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-sm text-label-sm">+4</div>
+</div>
+</div>
+</div>
+<!-- Calendar Controls & Navigation -->
+<div class="px-margin pt-space-xs">
+<!-- Month Navigation -->
+<div class="flex items-center justify-between py-space-sm">
+<div class="flex items-center gap-space-xs">
+<button aria-label="이전 달" class="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container-low text-secondary hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<span class="font-headline-md text-headline-md text-on-surface px-1 tracking-tight">2026년 10월</span>
+<button aria-label="다음 달" class="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container-low text-secondary hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+<!-- Quick 'Today' pill -->
+<button class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface font-label-md text-label-md active:scale-95 transition-transform" type="button">
+        오늘
+      </button>
+</div>
+<!-- Segmented View Switcher & Invite / Admin Link -->
+<div class="flex items-center justify-between pt-space-xs pb-space-sm">
+<!-- Segmented Toggle (달력 | 일정 목록) -->
+<div class="flex p-1 bg-surface-container rounded-xl">
+<button class="px-3.5 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm" type="button">
+          달력
+        </button>
+<button class="px-3.5 py-1.5 rounded-lg text-secondary font-label-md text-label-md hover:text-on-surface transition-colors" type="button">
+          일정 목록
+        </button>
+</div>
+<!-- Manage / Invite Nav Button -->
+<button class="flex items-center gap-1 font-label-md text-label-md text-secondary hover:text-primary transition-colors py-2 px-1" type="button">
+<span>초대·관리</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward_ios</span>
+</button>
+</div>
+</div>
+<!-- Calendar Canvas / Grid (F06, CA-01) -->
+<div class="px-margin mt-1">
+<div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm">
+<!-- Weekday Headers (Monday start) -->
+<div class="grid grid-cols-7 mb-2 text-center">
+<span class="font-label-sm text-label-sm text-secondary">월</span>
+<span class="font-label-sm text-label-sm text-secondary">화</span>
+<span class="font-label-sm text-label-sm text-secondary">수</span>
+<span class="font-label-sm text-label-sm text-secondary">목</span>
+<span class="font-label-sm text-label-sm text-secondary">금</span>
+<span class="font-label-sm text-label-sm text-secondary">토</span>
+<span class="font-label-sm text-label-sm text-secondary">일</span>
+</div>
+<!-- 6-Week Calendar Body -->
+<div class="grid grid-cols-7 gap-y-1">
+<!-- WEEK 1: Sep 28 ~ Oct 4 (2026-10-01 is Thursday) -->
+<div class="flex flex-col items-center py-1 opacity-35">
+<span class="font-label-sm text-label-sm text-secondary">28</span>
+</div>
+<div class="flex flex-col items-center py-1 opacity-35">
+<span class="font-label-sm text-label-sm text-secondary">29</span>
+</div>
+<div class="flex flex-col items-center py-1 opacity-35">
+<span class="font-label-sm text-label-sm text-secondary">30</span>
+</div>
+<div class="flex flex-col items-center py-1">
+<span class="font-label-sm text-label-sm text-on-surface">1</span>
+</div>
+<div class="flex flex-col items-center py-1">
+<span class="font-label-sm text-label-sm text-on-surface">2</span>
+</div>
+<div class="flex flex-col items-center py-1">
+<span class="font-label-sm text-label-sm text-on-surface">3</span>
+</div>
+<div class="flex flex-col items-center py-1">
+<span class="font-label-sm text-label-sm text-on-surface">4</span>
+</div>
+<!-- WEEK 2: Oct 5 ~ Oct 11 -->
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">5</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">6</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">7</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">8</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">9</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">10</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">11</span></div>
+<!-- WEEK 3: Oct 12 ~ Oct 18 (Multi-day start on Sat 17, continues to Sun 18) -->
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">12</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">13</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">14</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">15</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">16</span></div>
+<!-- 17일 (Selected Date): Active circle + Multi-day Schedule start -->
+<div class="flex flex-col items-center py-0.5 relative">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-md text-label-md shadow-sm">
+            17
+          </div>
+<!-- Span bar start -->
+<div class="w-full mt-1 px-0.5">
+<div class="h-4 bg-primary-fixed text-on-primary-fixed-variant rounded-l-md px-1 flex items-center overflow-hidden">
+<span class="font-label-sm text-[10px] leading-none whitespace-nowrap truncate font-semibold">우리의 서울…</span>
+</div>
+</div>
+</div>
+<!-- 18일 (Multi-day Continued) -->
+<div class="flex flex-col items-center py-0.5 relative">
+<span class="w-7 h-7 flex items-center justify-center font-label-sm text-label-sm text-on-surface">18</span>
+<!-- Span bar middle/end of this row -->
+<div class="w-full mt-1">
+<div class="h-4 bg-primary-fixed text-on-primary-fixed-variant rounded-r-md px-1 flex items-center">
+<span class="font-label-sm text-[10px] leading-none opacity-0">.</span>
+</div>
+</div>
+</div>
+<!-- WEEK 4: Oct 19 ~ Oct 25 -->
+<!-- 19일 (Multi-day wrap to Monday, Oct 19) -->
+<div class="flex flex-col items-center py-0.5 relative">
+<span class="w-7 h-7 flex items-center justify-center font-label-sm text-label-sm text-on-surface">19</span>
+<div class="w-full mt-1 px-0.5">
+<div class="h-4 bg-primary-fixed text-on-primary-fixed-variant rounded-full px-1 flex items-center overflow-hidden">
+<span class="font-label-sm text-[10px] leading-none whitespace-nowrap truncate font-semibold">…서울 여행</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-center py-0.5"><span class="w-7 h-7 flex items-center justify-center font-label-sm text-label-sm text-on-surface">20</span></div>
+<div class="flex flex-col items-center py-0.5"><span class="w-7 h-7 flex items-center justify-center font-label-sm text-label-sm text-on-surface">21</span></div>
+<div class="flex flex-col items-center py-0.5"><span class="w-7 h-7 flex items-center justify-center font-label-sm text-label-sm text-on-surface">22</span></div>
+<div class="flex flex-col items-center py-0.5"><span class="w-7 h-7 flex items-center justify-center font-label-sm text-label-sm text-on-surface">23</span></div>
+<!-- 24일: 성수 당일치기 -->
+<div class="flex flex-col items-center py-0.5">
+<span class="w-7 h-7 flex items-center justify-center font-label-sm text-label-sm text-on-surface">24</span>
+<div class="w-full mt-1 px-0.5">
+<div class="h-4 bg-primary-fixed text-on-primary-fixed-variant rounded-md px-1 flex items-center justify-center overflow-hidden">
+<span class="font-label-sm text-[10px] leading-none whitespace-nowrap truncate">성수…</span>
+</div>
+</div>
+</div>
+<!-- 25일: 한강 피크닉 (취소됨) -->
+<div class="flex flex-col items-center py-0.5">
+<span class="w-7 h-7 flex items-center justify-center font-label-sm text-label-sm text-on-surface">25</span>
+<div class="w-full mt-1 px-0.5">
+<div class="h-4 bg-surface-container-highest text-secondary rounded-md px-1 flex items-center justify-center overflow-hidden">
+<span class="font-label-sm text-[10px] leading-none line-through whitespace-nowrap truncate">한강</span>
+</div>
+</div>
+</div>
+<!-- WEEK 5: Oct 26 ~ Nov 1 (Today: Oct 29 Thu) -->
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">26</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">27</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">28</span></div>
+<!-- 29일 (TODAY): Coral outline / ring badge -->
+<div class="flex flex-col items-center py-0.5">
+<div class="w-7 h-7 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-md text-label-md flex items-center justify-center">
+            29
+          </div>
+<div class="w-1.5 h-1.5 rounded-full bg-primary-container mt-1"></div>
+</div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">30</span></div>
+<div class="flex flex-col items-center py-1"><span class="font-label-sm text-label-sm text-on-surface">31</span></div>
+<div class="flex flex-col items-center py-1 opacity-35"><span class="font-label-sm text-label-sm text-secondary">1</span></div>
+<!-- WEEK 6: Nov 2 ~ Nov 8 (Dimmed next month) -->
+<div class="flex flex-col items-center py-1 opacity-35"><span class="font-label-sm text-label-sm text-secondary">2</span></div>
+<div class="flex flex-col items-center py-1 opacity-35"><span class="font-label-sm text-label-sm text-secondary">3</span></div>
+<div class="flex flex-col items-center py-1 opacity-35"><span class="font-label-sm text-label-sm text-secondary">4</span></div>
+<div class="flex flex-col items-center py-1 opacity-35"><span class="font-label-sm text-label-sm text-secondary">5</span></div>
+<div class="flex flex-col items-center py-1 opacity-35"><span class="font-label-sm text-label-sm text-secondary">6</span></div>
+<div class="flex flex-col items-center py-1 opacity-35"><span class="font-label-sm text-label-sm text-secondary">7</span></div>
+<div class="flex flex-col items-center py-1 opacity-35"><span class="font-label-sm text-label-sm text-secondary">8</span></div>
+</div>
+</div>
+</div>
+<!-- Selected Date Schedule List Section (CA-03) -->
+<div class="px-margin mt-space-xl flex flex-col gap-space-md">
+<!-- Header with Counter Badge -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">10월 17일 일정</h2>
+<span class="w-5 h-5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm flex items-center justify-center">3</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary">토요일</span>
+</div>
+<!-- Schedule Card 1: 우리의 서울 여행 -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex items-center justify-between">
+<div class="flex items-start gap-space-md min-w-0">
+<div class="w-11 h-11 rounded-xl bg-primary-fixed flex items-center justify-center text-primary-container shrink-0">
+<span class="material-symbols-outlined text-[24px]">luggage</span>
+</div>
+<div class="flex flex-col min-w-0 justify-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">우리의 서울 여행</h3>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5 truncate">10.17–10.19 · 장소 3곳</p>
+<div class="flex items-center gap-1 mt-1.5">
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface">남산타워 외 2</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm">진행 예정</span>
+</div>
+</div>
+</div>
+<!-- Role: 방장 (Owner) Menu button opens UI06 -->
+<button aria-label="일정 관리 메뉴" class="w-10 h-10 flex items-center justify-center rounded-full text-secondary hover:bg-surface-container-low transition-colors shrink-0" type="button">
+<span class="material-symbols-outlined text-[22px]">more_horiz</span>
+</button>
+</div>
+<!-- Schedule Card 2: 성수 당일치기 -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex items-center justify-between">
+<div class="flex items-start gap-space-md min-w-0">
+<div class="w-11 h-11 rounded-xl bg-surface-container flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[24px]">coffee</span>
+</div>
+<div class="flex flex-col min-w-0 justify-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">성수 당일치기</h3>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5 truncate">10.24 · 장소 2곳</p>
+<div class="flex items-center gap-1 mt-1.5">
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface">카페거리 투어</span>
+</div>
+</div>
+</div>
+<!-- Role: 방장 (Owner) Menu button -->
+<button aria-label="일정 관리 메뉴" class="w-10 h-10 flex items-center justify-center rounded-full text-secondary hover:bg-surface-container-low transition-colors shrink-0" type="button">
+<span class="material-symbols-outlined text-[22px]">more_horiz</span>
+</button>
+</div>
+<!-- Schedule Card 3: 한강 피크닉 (Cancelled) -->
+<div class="bg-surface-container-low rounded-2xl p-space-lg shadow-sm flex items-center justify-between opacity-80">
+<div class="flex items-start gap-space-md min-w-0">
+<div class="w-11 h-11 rounded-xl bg-surface-container-highest flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[24px]">block</span>
+</div>
+<div class="flex flex-col min-w-0 justify-center">
+<h3 class="font-headline-sm text-headline-sm text-secondary line-through truncate">한강 피크닉</h3>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5 truncate">10.25</p>
+<div class="flex items-center gap-1 mt-1.5">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-label-sm text-label-sm">취소된 일정</span>
+</div>
+</div>
+</div>
+<!-- No more menu button for cancelled events as specified -->
+<div class="w-10 h-10 shrink-0"></div>
+</div>
+</div>
+<!-- Bottom Floating Primary Action for 방장 (Owner) -->
+<div class="fixed bottom-0 left-0 right-0 p-margin bg-gradient-to-t from-surface via-surface/90 to-transparent pointer-events-none z-40">
+<div class="max-w-md mx-auto pointer-events-auto">
+<button class="w-full h-14 bg-primary-container hover:bg-primary text-on-primary rounded-2xl font-headline-sm text-headline-sm shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-[24px]">add</span>
+<span>일정 추가</span>
+</button>
+</div>
+</div>
+</div></main></body></html>
+
+<!-- UI23 초대 발급과 관리 -->
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary":"#a63837","on-secondary-container":"#6d6260","outline-variant":"#dec0bd","on-error-container":"#93000a","on-primary-fixed-variant":"#862122","surface-variant":"#dde3ef","on-secondary":"#ffffff","background":"#f8f9ff","inverse-primary":"#ffb3ae","secondary":"#675c5b","error-container":"#ffdad6","outline":"#8a716f","on-error":"#ffffff","tertiary":"#a73836","primary-container":"#f1706b","primary-fixed-dim":"#ffb3ae","on-surface-variant":"#574240","surface-container-lowest":"#ffffff","on-tertiary":"#ffffff","on-surface":"#161c25","surface-container-high":"#e3e8f5","on-secondary-fixed-variant":"#4e4443","inverse-on-surface":"#ebf1fe","surface-container-low":"#eff4ff","primary-fixed":"#ffdad7","on-background":"#161c25","surface-dim":"#d5dae7","tertiary-container":"#f26f69","on-tertiary-fixed-variant":"#862021","surface-container-highest":"#dde3ef","on-primary":"#ffffff","surface-container":"#e9eefb","surface-tint":"#a63837","tertiary-fixed-dim":"#ffb3ae","secondary-container":"#efdfdd","secondary-fixed":"#efdfdd","surface":"#f8f9ff","on-primary-fixed":"#410004","surface-bright":"#f8f9ff","on-secondary-fixed":"#221a19","on-tertiary-container":"#66050d","tertiary-fixed":"#ffdad7","on-tertiary-fixed":"#410004","inverse-surface":"#2b313a","error":"#ba1a1a","on-primary-container":"#66060e","secondary-fixed-dim":"#d2c3c1"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-xl":"1.5rem","gutter":"1rem","margin":"1.25rem","space-xs":"0.25rem","space-lg":"1rem","space-sm":"0.5rem","space-md":"0.75rem"},fontFamily:{"label-lg":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"]},fontSize:{"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"-0.005em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"500"}],"headline-lg":["26px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"18px","letterSpacing":"0em","fontWeight":"400"}],"body-md":["15px",{"lineHeight":"22px","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"500"}]}}}};</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-container-lowest text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="뒤로 가기" class="w-11 h-11 -ml-2 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back_ios_new</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">초대 발급과 관리</h1></div><div class="flex items-center gap-space-sm shrink-0"><button aria-label="더보기 옵션" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-safe bg-surface-container-lowest"><div class="flex flex-col w-full pb-28">
+<!-- Gathering Context Banner -->
+<section class="px-margin pt-4 pb-2">
+<div class="flex items-center justify-between mb-2">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-full">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-label-md text-label-md text-on-surface">주말 산책 모임</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-secondary-container">Asia/Seoul</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-secondary-container">
+      현재 6/10명 · 초대는 7일 유효 · 최대 확인 50회
+    </p>
+</section>
+<!-- Active Invite Section -->
+<section class="px-margin mt-3">
+<div class="bg-surface-container-lowest rounded-[20px] p-5 shadow-[0_2px_12px_rgba(22,28,37,0.06)] flex flex-col relative overflow-hidden">
+<!-- Top Meta -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-label-lg text-label-lg text-on-surface">대표 초대 코드</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-primary font-label-sm text-label-sm">
+            사용 가능
+          </span>
+</div>
+<button aria-label="코드 복사" class="w-8 h-8 rounded-full flex items-center justify-center text-on-secondary-container hover:bg-surface-container transition-colors" id="copy-btn-toast">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+<!-- Main Monospace Invite Code Display -->
+<div class="my-5 flex flex-col items-center justify-center bg-surface-container-low rounded-2xl py-5 px-4 cursor-pointer active:scale-[0.99] transition-transform" id="code-box">
+<div class="flex items-center gap-2 text-on-surface">
+<span class="font-headline-lg text-headline-lg tracking-[0.25em] font-mono select-all font-bold">
+            Q7KM2P8R
+          </span>
+</div>
+<div class="flex items-center gap-1 mt-1 text-primary">
+<span class="material-symbols-outlined text-[14px]">touch_app</span>
+<span class="font-label-sm text-label-sm">탭하여 코드 복사하기</span>
+</div>
+</div>
+<!-- Validity & Usage Metrics -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between text-on-secondary-container font-body-sm text-body-sm">
+<span>발급 10.28 12:00</span>
+<span>만료 11.04 12:00</span>
+</div>
+<!-- Progress Tracker Bar -->
+<div class="w-full bg-surface-container rounded-full h-2 overflow-hidden flex">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500" style="width: 24%;"></div>
+</div>
+<div class="flex items-center justify-between mt-0.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-primary">visibility</span>
+            확인 횟수
+          </span>
+<span class="font-label-md text-label-md text-on-surface">
+<strong class="text-primary font-semibold">12</strong> / 50회
+          </span>
+</div>
+</div>
+<!-- Main Action Buttons -->
+<div class="grid grid-cols-2 gap-2.5 mt-5">
+<button class="h-12 rounded-[14px] bg-surface-container text-on-surface flex items-center justify-center gap-1.5 active:bg-surface-container-high transition-colors font-label-lg text-label-lg" id="copy-link-btn">
+<span class="material-symbols-outlined text-[18px]">link</span>
+          링크 복사
+        </button>
+<button class="h-12 rounded-[14px] bg-primary text-on-primary flex items-center justify-center gap-1.5 active:opacity-90 shadow-sm transition-all font-label-lg text-label-lg" id="share-link-btn">
+<span class="material-symbols-outlined text-[18px]">share</span>
+          공유하기
+        </button>
+</div>
+<!-- Revoke Link -->
+<div class="flex justify-center mt-3 pt-2">
+<button class="inline-flex items-center gap-1 text-error font-label-sm text-label-sm py-1 px-2 rounded-lg hover:bg-error-container/40 transition-colors" id="revoke-active-btn">
+<span>이 초대 취소하기</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Security / Forwarding Policy Notice -->
+<section class="px-margin mt-4">
+<div class="bg-surface-container-low rounded-2xl p-3.5 flex items-start gap-2.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
+<p class="font-body-sm text-body-sm leading-snug">
+        초대장을 받은 사람이 다른 지인에게 전달해도 누구나 모임에 참여할 수 있으니 공유에 유의해주세요.
+      </p>
+</div>
+</section>
+<!-- Previous Invitations -->
+<section class="px-margin mt-6 flex flex-col">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-1.5">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">이전 초대 목록</h2>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">4</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-secondary-container">최근 30일</span>
+</div>
+<div class="flex flex-col gap-2.5">
+<!-- Item 1: Active (Nearing Limit) -->
+<div class="bg-surface-container-lowest rounded-2xl p-4 shadow-[0_1px_6px_rgba(22,28,37,0.04)] flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm tracking-wider font-mono text-on-surface font-semibold">M3XT9KQ2</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-primary font-label-sm text-label-sm">사용 가능</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1.5 rounded-xl bg-surface-container text-on-surface text-label-sm font-label-sm hover:bg-surface-container-high transition-colors">
+              공유
+            </button>
+<button class="px-2.5 py-1.5 rounded-xl bg-surface-container text-error text-label-sm font-label-sm hover:bg-error-container/40 transition-colors">
+              취소
+            </button>
+</div>
+</div>
+<div class="flex flex-col gap-1 text-body-sm font-body-sm text-on-secondary-container">
+<div class="flex items-center justify-between">
+<span>10.27 09:00 발급 → 11.03 09:00 만료</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-primary font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
+              확인 45/50회 · 5회 남음!
+            </span>
+<span class="font-label-sm text-label-sm text-on-secondary-container">만료 4일 전</span>
+</div>
+</div>
+</div>
+<!-- Item 2: Depleted -->
+<div class="bg-surface-container-lowest rounded-2xl p-4 shadow-[0_1px_6px_rgba(22,28,37,0.04)] flex flex-col gap-2 opacity-80">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm tracking-wider font-mono text-on-surface font-medium">H5TW8C2N</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-secondary-container font-label-sm text-label-sm">소진됨</span>
+</div>
+<span class="material-symbols-outlined text-on-secondary-container text-[20px]">block</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-on-secondary-container">
+<span>10.26 18:00 발급</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">확인 한도 소진 (50/50)</span>
+</div>
+</div>
+<!-- Item 3: Expired -->
+<div class="bg-surface-container-lowest rounded-2xl p-4 shadow-[0_1px_6px_rgba(22,28,37,0.04)] flex flex-col gap-2 opacity-75">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm tracking-wider font-mono text-on-surface font-medium">B2RD7NW4</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-secondary-container font-label-sm text-label-sm">만료됨</span>
+</div>
+<span class="material-symbols-outlined text-on-secondary-container text-[20px]">timer_off</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-on-secondary-container">
+<span>10.16 12:00 발급</span>
+<span class="font-label-sm text-label-sm text-on-secondary-container">확인 8/50회 · 기간 만료</span>
+</div>
+</div>
+<!-- Item 4: Revoked/Cancelled -->
+<div class="bg-surface-container-lowest rounded-2xl p-4 shadow-[0_1px_6px_rgba(22,28,37,0.04)] flex flex-col gap-2 opacity-75">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm tracking-wider font-mono text-on-surface font-medium line-through text-on-secondary-container">Z9PL4HC6</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-secondary-container font-label-sm text-label-sm">취소됨</span>
+</div>
+<span class="material-symbols-outlined text-on-secondary-container text-[20px]">cancel</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-on-secondary-container">
+<span>10.25 10:00 발급</span>
+<span class="font-label-sm text-label-sm text-on-secondary-container">확인 3/50회 · 관리자 취소</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Sticky Bottom Floating Action Anchor -->
+<div class="fixed bottom-0 left-0 right-0 p-margin bg-surface-container-lowest/90 backdrop-blur-md shadow-[0_-4px_16px_rgba(22,28,37,0.06)] z-40 flex flex-col gap-2">
+<button class="w-full h-14 rounded-[14px] bg-on-surface text-surface-container-lowest font-label-lg text-label-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-md" id="create-new-btn">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span>+ 새 초대 발급하기</span>
+</button>
+<p class="text-center font-label-sm text-label-sm text-on-secondary-container">
+      새 코드를 생성해도 기존 유효한 초대는 계속 유지됩니다
+    </p>
+</div>
+<!-- Toast Micro-Feedback Notification -->
+<div class="fixed top-20 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-full shadow-lg text-label-md font-label-md flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 z-50" id="toast-msg">
+<span class="material-symbols-outlined text-[18px] text-inverse-primary">check_circle</span>
+<span id="toast-text">초대 코드가 클립보드에 복사되었습니다!</span>
+</div>
+</div>
+<script>
+  (function() {
+    const toast = document.getElementById('toast-msg');
+    const toastText = document.getElementById('toast-text');
+    let toastTimeout;
+
+    function showToast(message) {
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastText.textContent = message;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2400);
+    }
+
+    const copyTrigger = document.getElementById('code-box');
+    if (copyTrigger) {
+      copyTrigger.addEventListener('click', () => {
+        showToast('초대 코드(Q7KM2P8R)가 복사되었습니다!');
+      });
+    }
+
+    const copyBtn = document.getElementById('copy-btn-toast');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        showToast('초대 코드(Q7KM2P8R)가 복사되었습니다!');
+      });
+    }
+
+    const copyLinkBtn = document.getElementById('copy-link-btn');
+    if (copyLinkBtn) {
+      copyLinkBtn.addEventListener('click', () => {
+        showToast('초대 전용 링크가 복사되었습니다.');
+      });
+    }
+
+    const shareLinkBtn = document.getElementById('share-link-btn');
+    if (shareLinkBtn) {
+      shareLinkBtn.addEventListener('click', () => {
+        if (navigator.share) {
+          navigator.share({
+            title: '주말 산책 모임 초대',
+            text: '주말 산책 모임에 초대합니다! 초대 코드: Q7KM2P8R',
+            url: window.location.href,
+          }).catch(() => {});
+        } else {
+          showToast('공유 링크가 준비되었습니다.');
+        }
+      });
+    }
+
+    const revokeBtn = document.getElementById('revoke-active-btn');
+    if (revokeBtn) {
+      revokeBtn.addEventListener('click', () => {
+        if (confirm('이 초대 코드를 취소하시겠습니까? 이후 링크로 접속할 수 없게 됩니다.')) {
+          showToast('초대 코드가 취소 처리되었습니다.');
+        }
+      });
+    }
+
+    const createNewBtn = document.getElementById('create-new-btn');
+    if (createNewBtn) {
+      createNewBtn.addEventListener('click', () => {
+        showToast('새 초대 코드가 발급되었습니다.');
+      });
+    }
+  })();
+</script></main></body></html>
+
+<!-- UI24 초대 확인과 참여 -->
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary":"#a63837","on-secondary-container":"#6d6260","outline-variant":"#dec0bd","on-error-container":"#93000a","on-primary-fixed-variant":"#862122","surface-variant":"#dde3ef","on-secondary":"#ffffff","background":"#f8f9ff","inverse-primary":"#ffb3ae","secondary":"#675c5b","error-container":"#ffdad6","outline":"#8a716f","on-error":"#ffffff","tertiary":"#a73836","primary-container":"#f1706b","primary-fixed-dim":"#ffb3ae","on-surface-variant":"#574240","surface-container-lowest":"#ffffff","on-tertiary":"#ffffff","on-surface":"#161c25","surface-container-high":"#e3e8f5","on-secondary-fixed-variant":"#4e4443","inverse-on-surface":"#ebf1fe","surface-container-low":"#eff4ff","primary-fixed":"#ffdad7","on-background":"#161c25","surface-dim":"#d5dae7","tertiary-container":"#f26f69","on-tertiary-fixed-variant":"#862021","surface-container-highest":"#dde3ef","on-primary":"#ffffff","surface-container":"#e9eefb","surface-tint":"#a63837","tertiary-fixed-dim":"#ffb3ae","secondary-container":"#efdfdd","secondary-fixed":"#efdfdd","surface":"#f8f9ff","on-primary-fixed":"#410004","surface-bright":"#f8f9ff","on-secondary-fixed":"#221a19","on-tertiary-container":"#66050d","tertiary-fixed":"#ffdad7","on-tertiary-fixed":"#410004","inverse-surface":"#2b313a","error":"#ba1a1a","on-primary-container":"#66060e","secondary-fixed-dim":"#d2c3c1"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-xl":"1.5rem","gutter":"1rem","margin":"1.25rem","space-xs":"0.25rem","space-lg":"1rem","space-sm":"0.5rem","space-md":"0.75rem"},fontFamily:{"label-lg":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"]},fontSize:{"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"-0.005em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"500"}],"headline-lg":["26px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"18px","letterSpacing":"0em","fontWeight":"400"}],"body-md":["15px",{"lineHeight":"22px","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"500"}]}}}};</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-container-lowest text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="뒤로 가기" class="w-11 h-11 -ml-2 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back_ios_new</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">초대 확인과 참여</h1></div><div class="flex items-center gap-space-sm shrink-0"><button aria-label="더보기 옵션" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-safe bg-surface-container-lowest"><div class="flex flex-col w-full">
+<!-- Interactive Canvas / Viewport Simulation -->
+<div class="w-full max-w-[440px] mx-auto px-margin pt-space-md pb-space-xl flex flex-col gap-space-lg">
+<!-- Step Badge & Welcome Banner -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">mark_email_read</span>
+          초대장 확인
+        </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+          코드 검증 완료
+        </span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">
+        모임에 초대받았어요!
+      </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+        초대 코드를 확인하고 모임에 참여해 보세요.
+      </p>
+</div>
+<!-- Section: Invite Code Verification Box -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center justify-between" for="invite-code-input">
+<span>초대 코드</span>
+<span class="text-primary font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+          유효한 코드 형식
+        </span>
+</label>
+<!-- Code Container -->
+<div class="relative flex items-center">
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-sm px-4 py-3.5 flex items-center justify-between">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<span class="material-symbols-outlined text-primary text-[22px]">vpn_key</span>
+<input aria-label="8자리 초대 코드" class="w-full font-mono text-[22px] font-bold tracking-[0.22em] text-on-surface bg-transparent outline-none uppercase placeholder:text-outline select-all" id="invite-code-input" maxlength="8" oninput="validateCode(this.value)" type="text" value="Q7KM2P8R"/>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<button aria-label="코드 지우기" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-95 transition-all" id="clear-btn" onclick="clearCodeInput()" type="button">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+</button>
+<div class="w-7 h-7 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between px-1">
+<span class="font-body-sm text-body-sm text-on-secondary-container">8자리 영문 대문자와 숫자 조합</span>
+<span class="font-label-sm text-label-sm text-outline" id="code-counter">8 / 8</span>
+</div>
+</div>
+<!-- Section: Preview Card (Strict Spec Compliance: No Cover, No Members, No Place, No Log) -->
+<div class="relative bg-surface-container-lowest rounded-[20px] shadow-md p-space-lg flex flex-col gap-space-md overflow-hidden">
+<!-- Decorative Coral Accent Top Bar -->
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-primary-container"></div>
+<!-- Card Header: Title & Privacy Status Badge -->
+<div class="flex items-start justify-between gap-space-sm pt-1">
+<div class="flex flex-col gap-1 min-w-0">
+<span class="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">
+            초대된 모임
+          </span>
+<h3 class="font-headline-md text-headline-md text-on-surface truncate">
+            주말 산책 모임
+          </h3>
+</div>
+<span class="shrink-0 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">lock</span>
+          비공개 모임
+        </span>
+</div>
+<!-- Schedule Meta Chip (Prominent next schedule info) -->
+<div class="bg-surface-container-low rounded-xl p-3 flex items-center justify-between">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant">다음 예정 일정</span>
+<span class="font-label-lg text-label-lg text-on-surface truncate">
+              우리의 서울 여행 · 10.17–10.19
+            </span>
+</div>
+</div>
+<span class="inline-flex px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-semibold shrink-0">
+          D-2
+        </span>
+</div>
+<!-- Spec Negative Constraint Notice: Explicit Shield Notice (F05 & Section 1.2 #15) -->
+<div class="bg-secondary-container/50 rounded-xl p-3.5 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">
+          security
+        </span>
+<div class="flex flex-col gap-0.5">
+<p class="font-label-md text-label-md text-on-surface font-semibold">
+            모임 정보 보호 중
+          </p>
+<p class="font-body-sm text-body-sm text-on-secondary-container leading-relaxed">
+            참여 후에 모임의 사진, 참여자 목록, 상세 장소 계획을 확인할 수 있어요.
+          </p>
+</div>
+</div>
+<!-- Protected Content Teaser Pill Rows (Blurred / Placeholder Indication without leakage) -->
+<div class="grid grid-cols-3 gap-2 pt-0.5 opacity-60 pointer-events-none select-none">
+<div class="flex items-center justify-center gap-1 py-1.5 px-2 bg-surface-container rounded-lg text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">photo_library</span>
+<span>앨범 보호</span>
+</div>
+<div class="flex items-center justify-center gap-1 py-1.5 px-2 bg-surface-container rounded-lg text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">group</span>
+<span>멤버 보호</span>
+</div>
+<div class="flex items-center justify-center gap-1 py-1.5 px-2 bg-surface-container rounded-lg text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">place</span>
+<span>장소 보호</span>
+</div>
+</div>
+</div>
+<!-- Verification & Retention Policy Info Card -->
+<div class="bg-surface-container rounded-xl p-space-md flex flex-col gap-2">
+<div class="flex items-start gap-2 text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">
+          check_circle
+        </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+          확인한 초대 내용은 로그인 후에도 계정에 안전하게 유지돼요.
+        </span>
+</div>
+<div class="flex items-start gap-2 text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">
+          timer
+        </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+          초대 코드는 발급 후 <strong>7일간 유효</strong>하며, 최대 50회까지 확인할 수 있어요.
+        </span>
+</div>
+</div>
+<!-- CTA & Authentication State Simulation Panel -->
+<div class="flex flex-col gap-space-sm pt-2">
+<!-- State Switcher (Logged-in vs Guest Demo Toggle) -->
+<div class="flex items-center justify-between px-1 py-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">로그인 상태 시뮬레이션</span>
+<div class="flex items-center gap-1 p-0.5 bg-surface-container rounded-full text-label-sm font-label-sm">
+<button class="px-2.5 py-1 rounded-full bg-surface-container-lowest text-on-surface font-semibold shadow-sm transition-all" id="tab-auth" onclick="setAuthState(true)" type="button">
+            로그인됨
+          </button>
+<button class="px-2.5 py-1 rounded-full text-on-secondary-container transition-all" id="tab-guest" onclick="setAuthState(false)" type="button">
+            미로그인
+          </button>
+</div>
+</div>
+<!-- Primary Action Button (Logged In Default State) -->
+<button class="w-full h-14 bg-primary-container hover:bg-primary active:scale-[0.98] text-on-primary rounded-[14px] font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer" id="cta-join-btn" onclick="handleJoinAction()" type="button">
+<span class="font-bold tracking-tight" id="cta-label">모임 참여하기</span>
+<span class="material-symbols-outlined text-[20px]" id="cta-icon">arrow_forward</span>
+</button>
+<!-- Alternate / Helper Action under CTA -->
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant" id="cta-subtext">
+        참여 즉시 팀 캘린더와 공유 앨범에 접근할 수 있습니다.
+      </p>
+</div>
+<!-- Exception & Verification Status Details Accordion (Spec Section 9 Verification Guide) -->
+<details class="group bg-surface-container-low rounded-xl overflow-hidden transition-all">
+<summary class="list-none px-4 py-3 flex items-center justify-between cursor-pointer select-none">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[18px]">verified_user</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">초대 상태 및 예외 정책 가이드</span>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px] transition-transform duration-200 group-open:rotate-180">
+          expand_more
+        </span>
+</summary>
+<div class="px-4 pb-4 pt-1 flex flex-col gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<!-- Case 1: Member Cap -->
+<div class="p-2.5 rounded-lg bg-surface-container-lowest flex items-start gap-2">
+<span class="inline-block px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-mono font-bold text-[10px] shrink-0 mt-0.5">
+            CAPACITY_FULL
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+            정원 10명 초과 시 '모임 인원이 마감되었습니다' 토스트 노출 및 참여 차단
+          </span>
+</div>
+<!-- Case 2: Already a member -->
+<div class="p-2.5 rounded-lg bg-surface-container-lowest flex items-start gap-2">
+<span class="inline-block px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-mono font-bold text-[10px] shrink-0 mt-0.5">
+            ALREADY_MEMBER
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+            이미 참여 중인 회원은 중복 가입 없이 해당 모임 캘린더로 즉시 이동
+          </span>
+</div>
+<!-- Case 3: Deferred Guest Join -->
+<div class="p-2.5 rounded-lg bg-surface-container-lowest flex items-start gap-2">
+<span class="inline-block px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-mono font-bold text-[10px] shrink-0 mt-0.5">
+            PENDING_INVITE
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+            미로그인 시 '보류 초대'로 로컬 저장 후 로그인 완료 시 자동 가입 연동 (UI01)
+          </span>
+</div>
+</div>
+</details>
+<!-- Feedback Toast Container (Micro-interaction Notification) -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-[360px] w-[90%] bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-xl flex items-center justify-between gap-3 opacity-0 pointer-events-none transition-all duration-300 z-50" id="toast-banner">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[20px]" id="toast-icon">check_circle</span>
+<span class="font-label-md text-label-md" id="toast-msg">주말 산책 모임에 가입되었습니다!</span>
+</div>
+<button class="text-inverse-on-surface/70 hover:text-inverse-on-surface p-1" onclick="hideToast()">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Micro-interaction Logics -->
+<script>
+    let isLoggedIn = true;
+
+    function validateCode(val) {
+      const cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const input = document.getElementById('invite-code-input');
+      input.value = cleaned;
+      document.getElementById('code-counter').innerText = cleaned.length + ' / 8';
+      
+      const ctaBtn = document.getElementById('cta-join-btn');
+      if (cleaned.length === 8) {
+        ctaBtn.disabled = false;
+        ctaBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        ctaBtn.disabled = true;
+        ctaBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    function clearCodeInput() {
+      const input = document.getElementById('invite-code-input');
+      input.value = '';
+      validateCode('');
+      input.focus();
+    }
+
+    function setAuthState(status) {
+      isLoggedIn = status;
+      const tabAuth = document.getElementById('tab-auth');
+      const tabGuest = document.getElementById('tab-guest');
+      const ctaLabel = document.getElementById('cta-label');
+      const ctaIcon = document.getElementById('cta-icon');
+      const ctaSubtext = document.getElementById('cta-subtext');
+
+      if (isLoggedIn) {
+        tabAuth.className = 'px-2.5 py-1 rounded-full bg-surface-container-lowest text-on-surface font-semibold shadow-sm transition-all';
+        tabGuest.className = 'px-2.5 py-1 rounded-full text-on-secondary-container transition-all';
+        ctaLabel.innerText = '모임 참여하기';
+        ctaIcon.innerText = 'arrow_forward';
+        ctaSubtext.innerText = '참여 즉시 팀 캘린더와 공유 앨범에 접근할 수 있습니다.';
+      } else {
+        tabGuest.className = 'px-2.5 py-1 rounded-full bg-surface-container-lowest text-on-surface font-semibold shadow-sm transition-all';
+        tabAuth.className = 'px-2.5 py-1 rounded-full text-on-secondary-container transition-all';
+        ctaLabel.innerText = '로그인하고 참여 계속하기';
+        ctaIcon.innerText = 'login';
+        ctaSubtext.innerText = '초대 코드가 임시 저장되며, 간편 로그인 후 모임에 가입됩니다.';
+      }
+    }
+
+    function showToast(msg, iconName = 'check_circle') {
+      const toast = document.getElementById('toast-banner');
+      document.getElementById('toast-msg').innerText = msg;
+      document.getElementById('toast-icon').innerText = iconName;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+
+      setTimeout(() => {
+        hideToast();
+      }, 3500);
+    }
+
+    function hideToast() {
+      const toast = document.getElementById('toast-banner');
+      toast.classList.add('opacity-0', 'pointer-events-none');
+      toast.classList.remove('opacity-100');
+    }
+
+    function handleJoinAction() {
+      const code = document.getElementById('invite-code-input').value;
+      if (code.length < 8) {
+        showToast('8자리 초대 코드를 입력해 주세요.', 'error');
+        return;
+      }
+
+      if (isLoggedIn) {
+        showToast('‘주말 산책 모임’ 참여가 완료되었습니다! 달력으로 이동합니다.', 'celebration');
+      } else {
+        showToast('초대 코드를 보류 저장했습니다. 로그인 화면으로 이동합니다.', 'lock_clock');
+      }
+    }
+  </script>
+</div></main></body></html>

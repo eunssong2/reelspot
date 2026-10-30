@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; background-color: #f8f9ff; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-tertiary-container": "#66050d", "on-primary-container": "#66060e", "surface-container-highest": "#dde3ef", "on-tertiary-fixed": "#410004", "on-secondary-container": "#6d6260", "on-surface": "#161c25", "outline-variant": "#dec0bd", "on-primary-fixed-variant": "#862122", "surface": "#f8f9ff", "primary-fixed-dim": "#ffb3ae", "on-secondary-fixed-variant": "#4e4443", "primary-container": "#f1706b", "primary": "#a63837", "surface-container-lowest": "#ffffff", "secondary-fixed": "#efdfdd", "secondary": "#675c5b", "primary-fixed": "#ffdad7", "on-secondary-fixed": "#221a19", "inverse-surface": "#2b313a", "inverse-primary": "#ffb3ae", "outline": "#8a716f", "tertiary-container": "#f26f69", "on-primary": "#ffffff", "surface-dim": "#d5dae7", "secondary-container": "#efdfdd", "surface-bright": "#f8f9ff", "surface-container-high": "#e3e8f5", "on-error-container": "#93000a", "on-primary-fixed": "#410004", "on-error": "#ffffff", "inverse-on-surface": "#ebf1fe", "on-background": "#161c25", "error": "#ba1a1a", "surface-tint": "#a63837", "on-secondary": "#ffffff", "background": "#f8f9ff", "surface-container": "#e9eefb", "secondary-fixed-dim": "#d2c3c1", "tertiary": "#a73836", "tertiary-fixed": "#ffdad7", "surface-variant": "#dde3ef", "surface-container-low": "#eff4ff", "on-surface-variant": "#574240", "error-container": "#ffdad6", "on-tertiary": "#ffffff", "tertiary-fixed-dim": "#ffb3ae", "on-tertiary-fixed-variant": "#862021" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-sm": "0.5rem", "gutter": "1rem", "space-xl": "1.5rem", "space-md": "0.75rem", "space-lg": "1rem", "space-xs": "0.25rem", "margin": "1.25rem" }, fontFamily: { "label-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"] }, fontSize: { "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "600" }], "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "-0.005em", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "600" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "500" }], "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "500" }], "body-md": ["15px", { lineHeight: "22px", letterSpacing: "-0.005em", fontWeight: "400" }], "body-sm": ["13px", { lineHeight: "18px", letterSpacing: "0em", fontWeight: "400" }], "headline-lg": ["26px", { lineHeight: "34px", letterSpacing: "-0.02em", fontWeight: "700" }], "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen flex flex-col selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-margin flex items-center justify-between"><div class="flex items-center gap-space-xs"><button aria-label="뒤로 가기" class="w-11 h-11 -ml-2 flex items-center justify-center rounded-full text-secondary hover:text-on-surface hover:bg-surface-container transition-colors" onclick="window.history.back()" type="button"><span class="material-symbols-outlined text-[24px]">arrow_back_ios_new</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Schedule Edit</h1></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-safe bg-surface"><div class="flex flex-col w-full pb-10">
+<!-- Content Area -->
+<div class="px-margin flex flex-col gap-space-lg pt-space-md">
+<!-- Group Metadata Badge -->
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span>주말 산책 모임</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container inline-block"></span>
+<span>방장 지민 작성 중</span>
+</div>
+</div>
+<!-- Retention Notice Banner (Spec 4.7) -->
+<div class="w-full bg-secondary-container rounded-xl p-space-md flex items-start gap-space-sm shadow-sm">
+<div class="w-7 h-7 rounded-full bg-surface-container-lowest flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">history_toggle_off</span>
+</div>
+<div class="flex flex-col min-w-0">
+<p class="font-label-md text-label-md text-on-secondary-container">
+          최초 기록 완료 후 보관 기한은 바뀌지 않아요
+        </p>
+<p class="font-body-sm text-body-sm text-on-secondary-container/80 mt-0.5">
+          보관 마지막 날 <span class="font-label-md font-semibold text-primary">2027.01.19</span>
+</p>
+</div>
+</div>
+<!-- Main Form Section -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col gap-space-lg">
+<!-- Schedule Title Field -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center gap-1" for="schedule-title-input">
+            일정 제목 <span class="text-primary-container font-headline-sm leading-none">*</span>
+</label>
+<span class="font-label-sm text-label-sm text-on-surface-variant" id="char-counter">9/100</span>
+</div>
+<div class="relative flex items-center">
+<input class="w-full h-12 px-space-md rounded-xl bg-surface-container-low text-on-surface font-body-lg text-body-lg outline-none transition-all placeholder:text-secondary focus:bg-surface-container-lowest focus:shadow-md" id="schedule-title-input" maxlength="100" placeholder="어떤 모임인가요?" type="text" value="우리의 서울 여행"/>
+</div>
+</div>
+<!-- Date Range Field -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center gap-1">
+            일정 기간 <span class="text-primary-container font-headline-sm leading-none">*</span>
+</label>
+<div class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm">
+            3일 동안
+          </div>
+</div>
+<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+<!-- Start Date -->
+<button aria-label="시작 날짜 2026년 10월 17일" class="h-12 px-space-md rounded-xl bg-surface-container-low flex items-center justify-between text-left transition-colors active:bg-surface-container" type="button">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">시작</span>
+<span class="font-label-md text-label-md text-on-surface">2026.10.17</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-primary">calendar_today</span>
+</button>
+<!-- Range Dash -->
+<span class="font-body-md text-secondary select-none px-1 text-center">―</span>
+<!-- End Date -->
+<button aria-label="종료 날짜 2026년 10월 19일" class="h-12 px-space-md rounded-xl bg-surface-container-low flex items-center justify-between text-left transition-colors active:bg-surface-container" type="button">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">종료</span>
+<span class="font-label-md text-label-md text-on-surface">2026.10.19</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-primary">calendar_today</span>
+</button>
+</div>
+</div>
+<!-- Schedule Meta Details / Mini Notes -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-1.5">
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[17px] text-secondary">schedule</span>
+<span>시간은 각 장소에서 입력해요 · 반복 설정 없음</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[17px] text-secondary">public</span>
+<span>한국 표준시 (Asia/Seoul) 기준</span>
+</div>
+</div>
+<!-- Overlap / Outside-Range Notice Card (QA-S02 / Spec 4.7) -->
+<div class="bg-primary-fixed/30 rounded-xl p-space-md flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-primary shrink-0 mt-0.5">lightbulb</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">기간 밖 영향 안내</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-relaxed">
+            기간을 줄여 날짜가 벗어나는 기록은 삭제되지 않고 보관 기한까지 안전하게 보존돼요.
+          </p>
+</div>
+</div>
+</div>
+<!-- Attendees Quick Context Preview -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="flex -space-x-2 overflow-hidden">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm flex items-center justify-center ring-2 ring-surface-container-lowest font-bold">
+            지민
+          </div>
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm flex items-center justify-center ring-2 ring-surface-container-lowest font-bold">
+            민준
+          </div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm flex items-center justify-center ring-2 ring-surface-container-lowest font-bold">
+            수아
+          </div>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">3명의 멤버와 동기화 중</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-secondary">sync</span>
+</div>
+<!-- Primary Action Section -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<button class="w-full h-14 bg-primary-container active:bg-primary text-on-primary rounded-xl font-label-lg text-label-lg font-bold shadow-md flex items-center justify-center gap-2 transition-transform active:scale-[0.99]" id="save-schedule-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">check</span>
+<span>저장하기</span>
+</button>
+</div>
+<!-- Danger & Management Actions Group -->
+<div class="bg-surface-container-lowest rounded-2xl p-space-md shadow-sm flex flex-col gap-1 mt-space-sm">
+<!-- Action 1: Cancel Schedule (D3 Modal Trigger) -->
+<button class="w-full min-h-[48px] px-space-sm rounded-lg flex items-center justify-between text-left transition-colors active:bg-surface-container" id="open-cancel-modal-btn" type="button">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-[20px] text-error shrink-0">event_busy</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-error">일정 취소</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">기록 보관 기한까지 안전하게 유지돼요</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[18px] text-secondary">chevron_right</span>
+</button>
+<div class="h-px w-full bg-surface-container my-1"></div>
+<!-- Action 2: Delete Empty Schedule (Disabled State & Explanation) -->
+<div class="w-full min-h-[48px] px-space-sm rounded-lg flex items-center justify-between opacity-60">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-[20px] text-secondary shrink-0">delete_outline</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-secondary">빈 일정 삭제</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">기록이 있는 일정은 취소만 가능해요</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[18px] text-secondary">lock</span>
+</div>
+</div>
+<!-- Footer Space Filler for Native Ergonomics -->
+<div class="py-2 text-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant/70">
+        일정 수정 시 모임원 전체에게 동기화 알림이 전송됩니다.
+      </p>
+</div>
+</div>
+<!-- Cancel Confirmation Modal (D3 Spec Modal) -->
+<div aria-labelledby="modal-cancel-title" aria-modal="true" class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm hidden flex-col justify-end p-margin pb-safe" id="cancel-modal" role="dialog">
+<div class="w-full bg-surface-container-lowest rounded-2xl p-space-lg shadow-xl flex flex-col gap-space-md transform transition-all duration-200">
+<div class="flex items-center gap-space-sm text-error">
+<div class="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">warning</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold" id="modal-cancel-title">일정을 취소할까요?</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">우리의 서울 여행</p>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+        취소된 일정은 수정할 수 없지만, 이미 기록된 추억과 사진은 보관 기한(<span class="font-semibold text-on-surface">2027.01.19</span>)까지 모임원 모두 조회할 수 있어요.
+      </p>
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<button class="w-full h-12 rounded-xl bg-error text-on-error font-label-lg text-label-lg font-bold flex items-center justify-center active:brightness-95 transition-all" id="confirm-cancel-btn" type="button">
+          일정 취소하기
+        </button>
+<button class="w-full h-12 rounded-xl bg-surface-container-low text-on-surface font-label-lg text-label-lg font-semibold flex items-center justify-center active:bg-surface-container transition-all" id="close-cancel-modal-btn" type="button">
+          돌아가기
+        </button>
+</div>
+</div>
+</div>
+<!-- Micro-Toast Alert -->
+<div class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-full font-label-md text-label-md shadow-lg flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 transform translate-y-3" id="toast-notification">
+<span class="material-symbols-outlined text-[18px] text-primary-container">check_circle</span>
+<span id="toast-message">변경사항이 저장되었습니다.</span>
+</div>
+<script>
+    (function() {
+      // Dynamic Character Counter
+      var titleInput = document.getElementById('schedule-title-input');
+      var counter = document.getElementById('char-counter');
+      if (titleInput && counter) {
+        titleInput.addEventListener('input', function(e) {
+          var length = e.target.value.length;
+          counter.textContent = length + '/100';
+        });
+      }
+
+      // Toast Helper
+      var toast = document.getElementById('toast-notification');
+      var toastMessage = document.getElementById('toast-message');
+      var toastTimer = null;
+      function showToast(msg) {
+        if (!toast) return;
+        if (toastTimer) clearTimeout(toastTimer);
+        toastMessage.textContent = msg;
+        toast.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+        toast.classList.add('opacity-100', 'translate-y-0');
+        toastTimer = setTimeout(function() {
+          toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+          toast.classList.remove('opacity-100', 'translate-y-0');
+        }, 2500);
+      }
+
+      // Save schedule trigger
+      var saveBtn = document.getElementById('save-schedule-btn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+          showToast('일정 변경사항이 저장되었습니다.');
+        });
+      }
+
+      // Modal Controls
+      var openModalBtn = document.getElementById('open-cancel-modal-btn');
+      var closeModalBtn = document.getElementById('close-cancel-modal-btn');
+      var confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+      var modal = document.getElementById('cancel-modal');
+
+      if (openModalBtn && modal) {
+        openModalBtn.addEventListener('click', function() {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        });
+      }
+
+      if (closeModalBtn && modal) {
+        closeModalBtn.addEventListener('click', function() {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        });
+      }
+
+      if (confirmCancelBtn && modal) {
+        confirmCancelBtn.addEventListener('click', function() {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          showToast('일정이 취소 처리되었습니다.');
+        });
+      }
+
+      // Dismiss modal on backdrop tap
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          }
+        });
+      }
+    })();
+  </script>
+</div></main></body></html>

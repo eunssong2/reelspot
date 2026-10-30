@@ -23,9 +23,22 @@ export type Route =
   // 설정(프로필 및 계정·초대코드·약관·로그아웃)과 프로필 및 계정 상세
   | { name: 'members'; tripId: string; itineraryId: string }
   | { name: 'settings' }
-  | { name: 'account' };
+  | { name: 'account' }
+  // 로그인 → 모임 → 달력 → 일정 → 초대 (docs/login-calendar-ui-spec.md). 'trips'(/prototype)가 로그인·내 모임 입구다.
+  | { name: 'onboarding' }
+  | { name: 'groupCreate' }
+  | { name: 'groupCalendar'; groupId: string; focusDate?: string }
+  // scheduleId 가 없으면 추가, 있으면 변경. date 는 추가할 때 시작·종료 기본값.
+  | { name: 'scheduleEdit'; groupId: string; scheduleId?: string; date?: string }
+  | { name: 'invites'; groupId: string }
+  // code 가 있으면 초대 링크로 연 것처럼 바로 확인한다.
+  | { name: 'inviteJoin'; code?: string };
 
 export interface Nav {
   push: (route: Route) => void;
   back: () => void;
+  /** 지금 화면을 route 로 바꾼다(뒤로가기로 돌아오지 않음). */
+  replace: (route: Route) => void;
+  /** 쌓인 화면을 모두 닫고 입구(/prototype: 로그인 또는 내 모임)로 돌아간다. */
+  home: () => void;
 }

@@ -19,6 +19,10 @@ interface PrototypeState {
   updateDay: (itineraryId: string, dayId: string, patch: { places: ItineraryPlace[]; memo: string; title?: string }) => void;
   /** 고른 날짜들(이어지지 않아도 됨)을 빈 날짜로 더한다. 실제로 더한 날짜 수를 돌려준다(이미 있는 날짜는 건너뜀). */
   addDays: (itineraryId: string, dates: string[]) => number;
+  /** 모임 달력(UI05·UI06)에서 만든 일정을 일정 요약에 등록한다. 같은 id 가 이미 있으면 그대로 둔다. */
+  addItinerary: (itinerary: Itinerary) => void;
+  /** 일정 변경(UI06): 이름·기간을 바꾸고 새 기간에 없는 날짜를 빈 날짜로 더한다. 기간 밖이 된 날짜는 지우지 않는다. */
+  updateItineraryInfo: (itineraryId: string, patch: { name: string; startDate: string; endDate: string }) => void;
   /** 일정 대표(배경) 사진. 일정 id → 이미지 URI(data URI). 없으면 기본 그림을 쓴다. */
   covers: Record<string, string>;
   /** 대표 사진을 바꾼다. null 이면 기본 그림으로 되돌린다. */
@@ -36,6 +40,9 @@ export interface MyProfile {
   /** 직접 고른 프로필 사진(data URI). 없으면 null. */
   avatarUri: string | null;
 }
+
+/** 'YYYY-MM-DD' 의 다음 날 */
+const nextDate = (date: string) => new Date(Date.parse(`${date}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
 
 const DEFAULT_PROFILE: MyProfile = { nickname: '나', avatarUri: null };
 
@@ -131,6 +138,34 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
     return result.addedDayIds.length;
   }, []);
 
+  const addItinerary = useCallback((itinerary: Itinerary) => {
+    if (itinerariesRef.current.some((it) => it.id === itinerary.id)) return;
+    const next = [...itinerariesRef.current, itinerary];
+    itinerariesRef.current = next;
+    setItineraries(next);
+  }, []);
+
+  const updateItineraryInfo = useCallback(
+    (itineraryId: string, patch: { name: string; startDate: string; endDate: string }) => {
+      const next = itinerariesRef.current.map((it) => {
+        if (it.id !== itineraryId) return it;
+        const days = [...it.days];
+        const existing = new Set(days.map((d) => d.date));
+        let nextNumber = days.reduce((max, d) => Math.max(max, d.dayNumber), 0) + 1;
+        for (let d = patch.startDate; d <= patch.endDate; d = nextDate(d)) {
+          if (existing.has(d)) continue;
+          days.push({ id: `day-${nextNumber}`, date: d, dayNumber: nextNumber, places: [] });
+          nextNumber += 1;
+        }
+        days.sort((a, b) => a.date.localeCompare(b.date));
+        return { ...it, ...patch, days };
+      });
+      itinerariesRef.current = next;
+      setItineraries(next);
+    },
+    [],
+  );
+
   const setCover = useCallback((itineraryId: string, uri: string | null) => {
     setCovers((prev) => {
       const next = { ...prev };
@@ -172,8 +207,22 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ itineraries, highlightId, addPlace, updateDay, addDays, resetDemo, covers, setCover, profile, setNickname, setAvatar }),
-    [itineraries, highlightId, addPlace, updateDay, addDays, resetDemo, covers, setCover, profile, setNickname, setAvatar],
+    () => ({
+      itineraries,
+      highlightId,
+      addPlace,
+      updateDay,
+      addDays,
+      addItinerary,
+      updateItineraryInfo,
+      resetDemo,
+      covers,
+      setCover,
+      profile,
+      setNickname,
+      setAvatar,
+    }),
+    [itineraries, highlightId, addPlace, updateDay, addDays, addItinerary, updateItineraryInfo, resetDemo, covers, setCover, profile, setNickname, setAvatar],
   );
 
   if (!hydrated) {
@@ -240,6 +289,24 @@ const toHref = (route: Route) => {
       return { pathname: '/prototype/settings' } as const;
     case 'account':
       return { pathname: '/prototype/account' } as const;
+    case 'onboarding':
+      return { pathname: '/prototype/onboarding' } as const;
+    case 'groupCreate':
+      return { pathname: '/prototype/group-new' } as const;
+    case 'groupCalendar':
+      return {
+        pathname: '/prototype/group-calendar',
+        params: { groupId: route.groupId, focusDate: route.focusDate ?? '' },
+      } as const;
+    case 'scheduleEdit':
+      return {
+        pathname: '/prototype/schedule-edit',
+        params: { groupId: route.groupId, scheduleId: route.scheduleId ?? '', date: route.date ?? '' },
+      } as const;
+    case 'invites':
+      return { pathname: '/prototype/invites', params: { groupId: route.groupId } } as const;
+    case 'inviteJoin':
+      return { pathname: '/prototype/invite', params: { code: route.code ?? '' } } as const;
   }
 };
 
@@ -250,6 +317,8 @@ export function usePrototypeNav(): Nav {
     () => ({
       push: (route) => router.push(toHref(route)),
       back: () => (router.canGoBack() ? router.back() : router.replace('/prototype')),
+      replace: (route) => router.replace(toHref(route)),
+      home: () => (router.canDismiss() ? router.dismissTo('/prototype') : router.replace('/prototype')),
     }),
     [router],
   );

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary":"#a63837","on-secondary-container":"#6d6260","outline-variant":"#dec0bd","on-error-container":"#93000a","on-primary-fixed-variant":"#862122","surface-variant":"#dde3ef","on-secondary":"#ffffff","background":"#f8f9ff","inverse-primary":"#ffb3ae","secondary":"#675c5b","error-container":"#ffdad6","outline":"#8a716f","on-error":"#ffffff","tertiary":"#a73836","primary-container":"#f1706b","primary-fixed-dim":"#ffb3ae","on-surface-variant":"#574240","surface-container-lowest":"#ffffff","on-tertiary":"#ffffff","on-surface":"#161c25","surface-container-high":"#e3e8f5","on-secondary-fixed-variant":"#4e4443","inverse-on-surface":"#ebf1fe","surface-container-low":"#eff4ff","primary-fixed":"#ffdad7","on-background":"#161c25","surface-dim":"#d5dae7","tertiary-container":"#f26f69","on-tertiary-fixed-variant":"#862021","surface-container-highest":"#dde3ef","on-primary":"#ffffff","surface-container":"#e9eefb","surface-tint":"#a63837","tertiary-fixed-dim":"#ffb3ae","secondary-container":"#efdfdd","secondary-fixed":"#efdfdd","surface":"#f8f9ff","on-primary-fixed":"#410004","surface-bright":"#f8f9ff","on-secondary-fixed":"#221a19","on-tertiary-container":"#66050d","tertiary-fixed":"#ffdad7","on-tertiary-fixed":"#410004","inverse-surface":"#2b313a","error":"#ba1a1a","on-primary-container":"#66060e","secondary-fixed-dim":"#d2c3c1"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-xl":"1.5rem","gutter":"1rem","margin":"1.25rem","space-xs":"0.25rem","space-lg":"1rem","space-sm":"0.5rem","space-md":"0.75rem"},fontFamily:{"label-lg":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"]},fontSize:{"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"-0.005em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"500"}],"headline-lg":["26px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"18px","letterSpacing":"0em","fontWeight":"400"}],"body-md":["15px",{"lineHeight":"22px","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"500"}]}}}};</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-container-lowest text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="뒤로 가기" class="w-11 h-11 -ml-2 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back_ios_new</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">초대 확인과 참여</h1></div><div class="flex items-center gap-space-sm shrink-0"><button aria-label="더보기 옵션" class="w-11 h-11 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-14 pb-safe bg-surface-container-lowest"><div class="flex flex-col w-full">
+<!-- Interactive Canvas / Viewport Simulation -->
+<div class="w-full max-w-[440px] mx-auto px-margin pt-space-md pb-space-xl flex flex-col gap-space-lg">
+<!-- Step Badge & Welcome Banner -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">mark_email_read</span>
+          초대장 확인
+        </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+          코드 검증 완료
+        </span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-1">
+        모임에 초대받았어요!
+      </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+        초대 코드를 확인하고 모임에 참여해 보세요.
+      </p>
+</div>
+<!-- Section: Invite Code Verification Box -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center justify-between" for="invite-code-input">
+<span>초대 코드</span>
+<span class="text-primary font-medium flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+          유효한 코드 형식
+        </span>
+</label>
+<!-- Code Container -->
+<div class="relative flex items-center">
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-sm px-4 py-3.5 flex items-center justify-between">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<span class="material-symbols-outlined text-primary text-[22px]">vpn_key</span>
+<input aria-label="8자리 초대 코드" class="w-full font-mono text-[22px] font-bold tracking-[0.22em] text-on-surface bg-transparent outline-none uppercase placeholder:text-outline select-all" id="invite-code-input" maxlength="8" oninput="validateCode(this.value)" type="text" value="Q7KM2P8R"/>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<button aria-label="코드 지우기" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-95 transition-all" id="clear-btn" onclick="clearCodeInput()" type="button">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+</button>
+<div class="w-7 h-7 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between px-1">
+<span class="font-body-sm text-body-sm text-on-secondary-container">8자리 영문 대문자와 숫자 조합</span>
+<span class="font-label-sm text-label-sm text-outline" id="code-counter">8 / 8</span>
+</div>
+</div>
+<!-- Section: Preview Card (Strict Spec Compliance: No Cover, No Members, No Place, No Log) -->
+<div class="relative bg-surface-container-lowest rounded-[20px] shadow-md p-space-lg flex flex-col gap-space-md overflow-hidden">
+<!-- Decorative Coral Accent Top Bar -->
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-primary-container"></div>
+<!-- Card Header: Title & Privacy Status Badge -->
+<div class="flex items-start justify-between gap-space-sm pt-1">
+<div class="flex flex-col gap-1 min-w-0">
+<span class="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">
+            초대된 모임
+          </span>
+<h3 class="font-headline-md text-headline-md text-on-surface truncate">
+            주말 산책 모임
+          </h3>
+</div>
+<span class="shrink-0 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">lock</span>
+          비공개 모임
+        </span>
+</div>
+<!-- Schedule Meta Chip (Prominent next schedule info) -->
+<div class="bg-surface-container-low rounded-xl p-3 flex items-center justify-between">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant">다음 예정 일정</span>
+<span class="font-label-lg text-label-lg text-on-surface truncate">
+              우리의 서울 여행 · 10.17–10.19
+            </span>
+</div>
+</div>
+<span class="inline-flex px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-semibold shrink-0">
+          D-2
+        </span>
+</div>
+<!-- Spec Negative Constraint Notice: Explicit Shield Notice (F05 & Section 1.2 #15) -->
+<div class="bg-secondary-container/50 rounded-xl p-3.5 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">
+          security
+        </span>
+<div class="flex flex-col gap-0.5">
+<p class="font-label-md text-label-md text-on-surface font-semibold">
+            모임 정보 보호 중
+          </p>
+<p class="font-body-sm text-body-sm text-on-secondary-container leading-relaxed">
+            참여 후에 모임의 사진, 참여자 목록, 상세 장소 계획을 확인할 수 있어요.
+          </p>
+</div>
+</div>
+<!-- Protected Content Teaser Pill Rows (Blurred / Placeholder Indication without leakage) -->
+<div class="grid grid-cols-3 gap-2 pt-0.5 opacity-60 pointer-events-none select-none">
+<div class="flex items-center justify-center gap-1 py-1.5 px-2 bg-surface-container rounded-lg text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">photo_library</span>
+<span>앨범 보호</span>
+</div>
+<div class="flex items-center justify-center gap-1 py-1.5 px-2 bg-surface-container rounded-lg text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">group</span>
+<span>멤버 보호</span>
+</div>
+<div class="flex items-center justify-center gap-1 py-1.5 px-2 bg-surface-container rounded-lg text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">place</span>
+<span>장소 보호</span>
+</div>
+</div>
+</div>
+<!-- Verification & Retention Policy Info Card -->
+<div class="bg-surface-container rounded-xl p-space-md flex flex-col gap-2">
+<div class="flex items-start gap-2 text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">
+          check_circle
+        </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+          확인한 초대 내용은 로그인 후에도 계정에 안전하게 유지돼요.
+        </span>
+</div>
+<div class="flex items-start gap-2 text-on-surface">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">
+          timer
+        </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+          초대 코드는 발급 후 <strong>7일간 유효</strong>하며, 최대 50회까지 확인할 수 있어요.
+        </span>
+</div>
+</div>
+<!-- CTA & Authentication State Simulation Panel -->
+<div class="flex flex-col gap-space-sm pt-2">
+<!-- State Switcher (Logged-in vs Guest Demo Toggle) -->
+<div class="flex items-center justify-between px-1 py-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">로그인 상태 시뮬레이션</span>
+<div class="flex items-center gap-1 p-0.5 bg-surface-container rounded-full text-label-sm font-label-sm">
+<button class="px-2.5 py-1 rounded-full bg-surface-container-lowest text-on-surface font-semibold shadow-sm transition-all" id="tab-auth" onclick="setAuthState(true)" type="button">
+            로그인됨
+          </button>
+<button class="px-2.5 py-1 rounded-full text-on-secondary-container transition-all" id="tab-guest" onclick="setAuthState(false)" type="button">
+            미로그인
+          </button>
+</div>
+</div>
+<!-- Primary Action Button (Logged In Default State) -->
+<button class="w-full h-14 bg-primary-container hover:bg-primary active:scale-[0.98] text-on-primary rounded-[14px] font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer" id="cta-join-btn" onclick="handleJoinAction()" type="button">
+<span class="font-bold tracking-tight" id="cta-label">모임 참여하기</span>
+<span class="material-symbols-outlined text-[20px]" id="cta-icon">arrow_forward</span>
+</button>
+<!-- Alternate / Helper Action under CTA -->
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant" id="cta-subtext">
+        참여 즉시 팀 캘린더와 공유 앨범에 접근할 수 있습니다.
+      </p>
+</div>
+<!-- Exception & Verification Status Details Accordion (Spec Section 9 Verification Guide) -->
+<details class="group bg-surface-container-low rounded-xl overflow-hidden transition-all">
+<summary class="list-none px-4 py-3 flex items-center justify-between cursor-pointer select-none">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[18px]">verified_user</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">초대 상태 및 예외 정책 가이드</span>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px] transition-transform duration-200 group-open:rotate-180">
+          expand_more
+        </span>
+</summary>
+<div class="px-4 pb-4 pt-1 flex flex-col gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<!-- Case 1: Member Cap -->
+<div class="p-2.5 rounded-lg bg-surface-container-lowest flex items-start gap-2">
+<span class="inline-block px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-mono font-bold text-[10px] shrink-0 mt-0.5">
+            CAPACITY_FULL
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+            정원 10명 초과 시 '모임 인원이 마감되었습니다' 토스트 노출 및 참여 차단
+          </span>
+</div>
+<!-- Case 2: Already a member -->
+<div class="p-2.5 rounded-lg bg-surface-container-lowest flex items-start gap-2">
+<span class="inline-block px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-mono font-bold text-[10px] shrink-0 mt-0.5">
+            ALREADY_MEMBER
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+            이미 참여 중인 회원은 중복 가입 없이 해당 모임 캘린더로 즉시 이동
+          </span>
+</div>
+<!-- Case 3: Deferred Guest Join -->
+<div class="p-2.5 rounded-lg bg-surface-container-lowest flex items-start gap-2">
+<span class="inline-block px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-mono font-bold text-[10px] shrink-0 mt-0.5">
+            PENDING_INVITE
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+            미로그인 시 '보류 초대'로 로컬 저장 후 로그인 완료 시 자동 가입 연동 (UI01)
+          </span>
+</div>
+</div>
+</details>
+<!-- Feedback Toast Container (Micro-interaction Notification) -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-[360px] w-[90%] bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-xl flex items-center justify-between gap-3 opacity-0 pointer-events-none transition-all duration-300 z-50" id="toast-banner">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-[20px]" id="toast-icon">check_circle</span>
+<span class="font-label-md text-label-md" id="toast-msg">주말 산책 모임에 가입되었습니다!</span>
+</div>
+<button class="text-inverse-on-surface/70 hover:text-inverse-on-surface p-1" onclick="hideToast()">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Micro-interaction Logics -->
+<script>
+    let isLoggedIn = true;
+
+    function validateCode(val) {
+      const cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const input = document.getElementById('invite-code-input');
+      input.value = cleaned;
+      document.getElementById('code-counter').innerText = cleaned.length + ' / 8';
+      
+      const ctaBtn = document.getElementById('cta-join-btn');
+      if (cleaned.length === 8) {
+        ctaBtn.disabled = false;
+        ctaBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        ctaBtn.disabled = true;
+        ctaBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    function clearCodeInput() {
+      const input = document.getElementById('invite-code-input');
+      input.value = '';
+      validateCode('');
+      input.focus();
+    }
+
+    function setAuthState(status) {
+      isLoggedIn = status;
+      const tabAuth = document.getElementById('tab-auth');
+      const tabGuest = document.getElementById('tab-guest');
+      const ctaLabel = document.getElementById('cta-label');
+      const ctaIcon = document.getElementById('cta-icon');
+      const ctaSubtext = document.getElementById('cta-subtext');
+
+      if (isLoggedIn) {
+        tabAuth.className = 'px-2.5 py-1 rounded-full bg-surface-container-lowest text-on-surface font-semibold shadow-sm transition-all';
+        tabGuest.className = 'px-2.5 py-1 rounded-full text-on-secondary-container transition-all';
+        ctaLabel.innerText = '모임 참여하기';
+        ctaIcon.innerText = 'arrow_forward';
+        ctaSubtext.innerText = '참여 즉시 팀 캘린더와 공유 앨범에 접근할 수 있습니다.';
+      } else {
+        tabGuest.className = 'px-2.5 py-1 rounded-full bg-surface-container-lowest text-on-surface font-semibold shadow-sm transition-all';
+        tabAuth.className = 'px-2.5 py-1 rounded-full text-on-secondary-container transition-all';
+        ctaLabel.innerText = '로그인하고 참여 계속하기';
+        ctaIcon.innerText = 'login';
+        ctaSubtext.innerText = '초대 코드가 임시 저장되며, 간편 로그인 후 모임에 가입됩니다.';
+      }
+    }
+
+    function showToast(msg, iconName = 'check_circle') {
+      const toast = document.getElementById('toast-banner');
+      document.getElementById('toast-msg').innerText = msg;
+      document.getElementById('toast-icon').innerText = iconName;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+
+      setTimeout(() => {
+        hideToast();
+      }, 3500);
+    }
+
+    function hideToast() {
+      const toast = document.getElementById('toast-banner');
+      toast.classList.add('opacity-0', 'pointer-events-none');
+      toast.classList.remove('opacity-100');
+    }
+
+    function handleJoinAction() {
+      const code = document.getElementById('invite-code-input').value;
+      if (code.length < 8) {
+        showToast('8자리 초대 코드를 입력해 주세요.', 'error');
+        return;
+      }
+
+      if (isLoggedIn) {
+        showToast('‘주말 산책 모임’ 참여가 완료되었습니다! 달력으로 이동합니다.', 'celebration');
+      } else {
+        showToast('초대 코드를 보류 저장했습니다. 로그인 화면으로 이동합니다.', 'lock_clock');
+      }
+    }
+  </script>
+</div></main></body></html>

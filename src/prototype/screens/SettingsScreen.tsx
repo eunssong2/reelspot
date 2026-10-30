@@ -6,6 +6,7 @@ import { AppHeader } from '../components/AppHeader';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { Toast, useToast } from '../components/Toast';
 import type { Nav } from '../navigation/routes';
+import { useGroups } from '../state/GroupsProvider';
 import { colors, GUTTER, MIN_TOUCH, radius } from '../styles/tokens';
 
 const TERMS = ['서비스 이용약관', '개인정보 처리방침', '위치정보 이용약관', '서비스 이용정책'];
@@ -14,6 +15,7 @@ const INVITE_CODE_MAX = 12;
 /** 설정: 프로필 및 계정 · 초대코드 입력 · 위치 서비스 · 서비스 약관 · 로그아웃 · 서비스 탈퇴. */
 export function SettingsScreen({ nav }: { nav: Nav }) {
   const toast = useToast();
+  const { logout } = useGroups();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
   const [confirm, setConfirm] = useState<'logout' | 'withdraw' | null>(null);
@@ -28,10 +30,11 @@ export function SettingsScreen({ nav }: { nav: Nav }) {
 
   const submitInvite = () => {
     if (!inviteCode.trim()) return;
+    const code = inviteCode.trim();
     setInviteOpen(false);
     setInviteCode('');
-    // 모임 참여는 서버 기능이라 아직 연결되지 않았다. 참여한 것처럼 꾸미지 않는다.
-    toast.show('초대코드로 참여하는 기능은 아직 준비 중이에요');
+    // 초대 확인·참여 화면(UI24)에서 코드를 확인한 뒤 참여한다.
+    nav.push({ name: 'inviteJoin', code });
   };
 
   return (
@@ -90,7 +93,7 @@ export function SettingsScreen({ nav }: { nav: Nav }) {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* 로그아웃·탈퇴 확인. 프로토타입은 로그인 기능이 없어 실제로 처리하지 않고 그렇게 안내한다. */}
+      {/* 로그아웃·탈퇴 확인. 로그아웃은 프로토타입 로그인으로 돌아가고, 탈퇴는 아직 안내만 한다. */}
       <NoticeModal
         visible={confirm !== null}
         title={confirm === 'withdraw' ? '서비스 탈퇴' : '로그아웃'}
@@ -102,7 +105,13 @@ export function SettingsScreen({ nav }: { nav: Nav }) {
         onConfirm={() => {
           const which = confirm;
           setConfirm(null);
-          toast.show(`${which === 'withdraw' ? '탈퇴' : '로그아웃'}는 로그인 기능이 연결되면 동작해요`);
+          if (which === 'logout') {
+            // 프로토타입 로그인(UI01)으로 돌아간다.
+            logout();
+            nav.home();
+            return;
+          }
+          toast.show('탈퇴는 계정 삭제 화면(UI30)이 연결되면 동작해요');
         }}
       />
       <Toast message={toast.message} bottom={24} />
