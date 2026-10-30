@@ -19,8 +19,8 @@ def main():
         checks.append({'check':'기준 사본과 패키지 내부 참조','passed':(isolated/'기준/기능명세서.md').exists() and (isolated/'09 구현 계약 보완.docx').exists()})
         applied=json.loads((isolated/'UI/화면 반영.json').read_text())
         checks.append({'check':'브랜치 체크아웃 없는 UI 화면 재생성',
-                       'passed':applied['source_commit']==prototype_before['commit'] and applied['captures']==19 and
-                       '99ab363' in (isolated/'UI/05 UI 화면 갤러리.html').read_text() and
+                       'passed':applied['source_commit']==prototype_before['commit'] and applied['captures']==len(prototype_before['screens']) and
+                       prototype_before['commit'][:7] in (isolated/'UI/05 UI 화면 갤러리.html').read_text() and
                        all(digest(isolated/'UI/프로토타입'/s['image'])==s['sha256'] for s in prototype_before['screens'])})
     result={'scope':'상위 원본·DayLog·APK 없는 복사본에서 핵심 설계서와 기존 실행 근거 유지 확인. 앱 빌드/서버 실행 검수 아님.','passed':all(c['passed'] for c in checks),'checks':checks}
     (ROOT/'부록/독립 패키지 검증.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))

@@ -37,12 +37,12 @@
     {
       "check": "화면 API 참조",
       "passed": true,
-      "detail": 33
+      "detail": 35
     },
     {
       "check": "패키지 내부 기능명세 SHA256",
       "passed": true,
-      "detail": "a682db16e2289d4258d3c232fd0245441fffecfdee42dd7df8759140be2c50f9"
+      "detail": "f1b4fd69cec2dda01465b428f10fc882f1c387061aa6017c7732e5c9e18996f0"
     },
     {
       "check": "업무 결과 키 operationId 통일",
@@ -94,7 +94,7 @@
           {
             "check": "build_design.py 독립 실행",
             "passed": true,
-            "output": " \"99ab363734236c16e3e16e6d8b7987cf1fced425\", \"main_screens\": 33, \"replaced_ui\": [\"UI08\", \"UI10\", \"UI12\", \"UI13\", \"UI09\", \"UI18\", \"UI14\"], \"captures\": 19, \"supplemental_screens\": 12, \"gallery_pages\": [\"UI01\", \"UI02\", \"UI03\", \"UI04\", \"UI05\", \"UI06\", \"UI08\", \"M4\", \"S02\", \"S02-empty\", \"S02-oneday\", \"S02-tabs\", \"UI09\", \"UI10\", \"S03-detail\", \"UI11\", \"UI12\", \"M1\", \"S05-empty\", \"UI13\", \"S04-empty\", \"UI14\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"UI24\", \"UI25\", \"UI26\", \"UI27\", \"UI28\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"S0\"], \"pdf_intro_pages\": 1, \"pdf_pages\": 46, \"pptx_slides\": 48}\n{\"screens\": 33, \"operations\": 73, \"tables\": 27, \"functional_cases\": 116, \"native_ui_pptx\": \"/tmp/atp-design-standalone-072h65et/package/UI/05 UI 설계.pptx\"}\n",
+            "output": " \"UI37\", \"UI26\", \"UI08\", \"UI10\", \"UI12\", \"UI13\", \"UI09\", \"UI18\", \"UI14\"], \"captures\": 27, \"supplemental_screens\": 16, \"gallery_pages\": [\"UI01\", \"UI02\", \"UI03\", \"UI04\", \"UI05\", \"UI06\", \"UI08\", \"M4\", \"S02\", \"S02-empty\", \"S02-oneday\", \"DATES\", \"S02-tabs\", \"UI09\", \"UI10\", \"S03-detail\", \"UI11\", \"UI12\", \"M1\", \"S05-empty\", \"UI13\", \"S04-select\", \"S04-empty\", \"UI14\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"UI24\", \"UI25\", \"UI26\", \"UI27\", \"UI28\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"MY-name\", \"UI37\", \"S0\"], \"pdf_intro_pages\": 1, \"pdf_pages\": 52, \"pptx_slides\": 54}\n{\"screens\": 35, \"operations\": 73, \"tables\": 27, \"functional_cases\": 116, \"native_ui_pptx\": \"/tmp/atp-design-standalone-ff13hzi_/package/UI/05 UI 설계.pptx\"}\n",
             "error": ""
           },
           {
@@ -127,8 +127,8 @@
       "check": "프로토타입 출처와 캡처 무결성",
       "passed": true,
       "detail": {
-        "commit": "99ab363734236c16e3e16e6d8b7987cf1fced425",
-        "captures": 19,
+        "commit": "c19f34c1c498cadfa171bb2d28d1700e0e9bdba0",
+        "captures": 27,
         "replaced": [
           "UI08",
           "UI09",
@@ -136,16 +136,20 @@
           "UI12",
           "UI13",
           "UI14",
-          "UI18"
+          "UI18",
+          "UI26",
+          "UI28",
+          "UI36",
+          "UI37"
         ]
       }
     },
     {
-      "check": "33개 SVG의 화면 출처별 구조",
+      "check": "35개 SVG의 화면 출처별 구조",
       "passed": true,
       "detail": {
-        "prototype_raster": 7,
-        "editable_vector": 26
+        "prototype_raster": 11,
+        "editable_vector": 24
       }
     },
     {
@@ -222,16 +226,8 @@
           25
         ],
         [
-          "UI26",
-          25
-        ],
-        [
           "UI27",
           25
-        ],
-        [
-          "UI28",
-          28
         ],
         [
           "UI29",
@@ -294,18 +290,34 @@
         [
           "UI18",
           true
+        ],
+        [
+          "UI26",
+          true
+        ],
+        [
+          "UI28",
+          true
+        ],
+        [
+          "UI36",
+          true
+        ],
+        [
+          "UI37",
+          true
         ]
       ]
     },
     {
       "check": "PPTX 기본·상세·상태 화면 수",
       "passed": true,
-      "detail": 48
+      "detail": 54
     },
     {
       "check": "PPTX 캡처 전체의 원본 이미지 포함",
       "passed": true,
-      "detail": 19
+      "detail": 27
     },
     {
       "check": "PPTX 도형 슬라이드 경계",
@@ -340,7 +352,7 @@
       "check": "Word 열기 09 구현 계약 보완",
       "passed": true,
       "detail": {
-        "paragraphs": 61,
+        "paragraphs": 66,
         "tables": 2
       }
     },
@@ -371,7 +383,8 @@
         "보완개발순서",
         "비기능검수",
         "검수계획",
-        "검증된데모범위"
+        "검증된데모범위",
+        "UI통합검수"
       ]
     },
     {
@@ -395,6 +408,8 @@
         "화면상태",
         "프로토타입대응",
         "정책차이",
+        "UI통합검수",
+        "적용기준",
         "화면전환",
         "디자인토큰"
       ]
@@ -429,7 +444,7 @@
     {
       "check": "PDF 열기 09 구현 계약 보완",
       "passed": true,
-      "detail": 6
+      "detail": 7
     },
     {
       "check": "PDF 열기 03 API 연동 설계",
@@ -454,17 +469,17 @@
     {
       "check": "PDF 열기 05 UI 설계",
       "passed": true,
-      "detail": 46
+      "detail": 52
     },
     {
       "check": "UI PDF 기본·상세·상태 화면수",
       "passed": true,
-      "detail": 46
+      "detail": 52
     },
     {
       "check": "UI PDF 출처와 적용 기준",
       "passed": true,
-      "detail": "99ab363734236c16e3e16e6d8b7987cf1fced425"
+      "detail": "c19f34c1c498cadfa171bb2d28d1700e0e9bdba0"
     },
     {
       "check": "UI PDF 화면 순서와 누락",
@@ -481,6 +496,7 @@
         "S02",
         "S02-empty",
         "S02-oneday",
+        "DATES",
         "S02-tabs",
         "UI09",
         "UI10",
@@ -490,6 +506,7 @@
         "M1",
         "S05-empty",
         "UI13",
+        "S04-select",
         "S04-empty",
         "UI14",
         "M3",
@@ -507,6 +524,7 @@
         "UI26",
         "UI27",
         "UI28",
+        "SET-invite",
         "UI29",
         "UI30",
         "UI31",
@@ -514,6 +532,9 @@
         "UI33",
         "UI34",
         "UI35",
+        "UI36",
+        "MY-name",
+        "UI37",
         "S0"
       ]
     },

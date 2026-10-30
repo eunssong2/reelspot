@@ -1,10 +1,10 @@
 {
-  "design_version": "0.3.1-design",
+  "design_version": "0.3.2-design",
   "policy_snapshot": "기능명세서.md",
-  "sha256": "a682db16e2289d4258d3c232fd0245441fffecfdee42dd7df8759140be2c50f9",
-  "bytes": 1370357,
-  "policy_version": "2.1",
-  "policy_date": "2026-10-24",
+  "sha256": "f1b4fd69cec2dda01465b428f10fc882f1c387061aa6017c7732e5c9e18996f0",
+  "bytes": 1374925,
+  "policy_version": "2.2",
+  "policy_date": "2026-10-30",
   "scope": "F01~F28/P01~P12/6절 한도/7절 제외",
   "upper_source": "../기능 명세서/기능명세서.md (정책 원본, 독립 패키지에서는 내부 기준 사본 사용)",
   "change_rule": "동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신"

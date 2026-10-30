@@ -13,7 +13,8 @@ E = html.escape
 FONT = 'Noto Sans CJK KR'
 RELATED = {'S0':None,'S02':'UI08','S02-empty':'UI08','S02-oneday':'UI08','S02-tabs':'UI08',
            'M4':'UI08','M1':'UI12','S05-empty':'UI12','S03-detail':'UI10',
-           'V1-video':'UI18','M3':'UI14','S04-empty':'UI13'}
+           'V1-video':'UI18','M3':'UI14','S04-empty':'UI13',
+           'MY-name':'UI36','SET-invite':'UI28','DATES':'UI08','S04-select':'UI13'}
 
 
 def load_source():
@@ -29,6 +30,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     manifest=load_source()
     shots=manifest['screens']; primary={s['ui']:s for s in shots if s['ui']}
     commit=manifest['commit']; short=commit[:7]
+    applied_count=len(primary); extra_count=len(shots)-applied_count; native_count=len(SCREENS)-applied_count
     prs=Presentation();prs.slide_width=Inches(16);prs.slide_height=Inches(9)
     def text(slide,x,y,w,h,value,size=18,color='191F28',bold=False):
         box=slide.shapes.add_textbox(Inches(x),Inches(y),Inches(w),Inches(h))
@@ -45,29 +47,29 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
         sh=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,0,prs.slide_width,Inches(.85))
         sh.fill.solid();sh.fill.fore_color.rgb=RGBColor.from_string('202A35');sh.line.fill.background()
         text(s,.5,.16,15,.5,title,25,'FFFFFF',True)
-        text(s,.5,8.57,15,.3,sub+' · 2026-10-26',10,'5F6B78')
+        text(s,.5,8.57,15,.3,sub+' · 2026-10-30',10,'5F6B78')
         return s
     cover=base('At that place · UI 설계 · 프로토타입 화면 반영',f'feature/ui-prototype @ {short}')
     text(cover,.7,1.25,10,1.2,'일정 요약에서 장소별 기록까지\n브랜치 화면을 설계 기준으로 반영합니다.',32,bold=True)
     text(cover,.7,3.15,9.3,3.4,
-         f'원격 브랜치: feature/ui-prototype\n기준 커밋: {commit}\n실행 캡처 {len(shots)}개 · 기존 UI ID {len(SCREENS)}개 유지\n7개 대응 화면은 캡처로 교체하고 관련 상태 12개를 추가했습니다.\n그 외 26개 화면은 기존 명세 기반 설계안으로 유지합니다.\n캡처 이미지는 원본 그대로이며 설명·계약 텍스트는 편집 가능합니다.',19)
-    text(cover,.7,7,9.4,.9,'제품 정책: 기능명세서 v2.1 · 시스템/API/DB 설계 v0.3.1\n화면 변경과 서비스 구현·검수 완료를 구분합니다.',17,'B8433F',True)
+         f'원격 브랜치: feature/ui-prototype\n기준 커밋: {commit}\n실행 캡처 {len(shots)}개 · 제품 UI ID {len(SCREENS)}개 (UI36·37 추가)\n{applied_count}개 화면에 캡처를 반영하고 관련 상태 {extra_count}개를 추가했습니다.\n그 외 {native_count}개 화면은 명세 기반 설계안으로 유지합니다.\n캡처 이미지는 원본 그대로이며 설명·계약 텍스트는 편집 가능합니다.',19)
+    text(cover,.7,7,9.4,.9,'제품 정책: 기능명세서 v2.2 · 시스템/API/DB 설계 v0.3.2\n화면 변경과 서비스 구현·검수 완료를 구분합니다.',17,'B8433F',True)
     cover.shapes.add_picture(str(ROOT/'UI/프로토타입/S01.png'),Inches(11.6),Inches(1.1),height=Inches(7.2))
     flow=base('화면 흐름과 원본 위치','브랜치 S 번호와 설계 UI 번호를 함께 표기')
     text(flow,.8,1.35,14.5,2.5,
          'S0 데모 선택 → S01 일정 요약(UI08) → S02 날짜별 장소(UI08 상세)\nS02 → S03 장소 추가(UI10) / S05 순서 편집(UI12) / M1 방문 시간\nS02 → S04 장소 기록(UI13) → 사진별·사람별(UI09) → V1 감상(UI18)\nS04 → M2 기록 추가(UI14) → M3 촬영·앨범 선택',23)
     text(flow,.8,4.25,14.5,2.2,
          '화면 원본: src/prototype/screens/*.tsx · 관련 시트/팝업: components/ 및 src/demo/\nUI/프로토타입/출처.json: 커밋·소스 해시·화면별 실행 경로·캡처 해시\nUI/프로토타입/demo-app-spec.txt · feature-spec.txt: 해당 커밋의 화면 명세 사본\n재생성은 저장된 캡처를 사용하며 원격 브랜치·Expo 실행이 필요하지 않습니다.',20)
-    text(flow,.8,7.05,14.3,.9,'UI09 캡처는 한 방문의 사람별 보기입니다. 일정 전체·미지정·기간 밖 조회는 제품 계약으로 남습니다.',17,'B8433F',True)
+    text(flow,.8,7.05,14.3,.9,'마이페이지(UI36) → 설정(UI28) → 계정(UI37) / 일정 → 참여자(UI26) → 초대(UI23)',17,'B8433F',True)
     differences=[
-        ['날짜 추가','S01 마지막 날 다음 날짜 추가·최대30일','UI06 새 일정 생성과 구분·제품 기간 최대366일'],
-        ['메모','S05 장소 메모 입력100자 남음','날짜 공통 메모 제외'],
+        ['날짜 추가','S01 비연속 날짜 다중 선택·30개','방장만 연속 기간366일·A01 결정 전 유지'],
+        ['사진 범위','일정 커버·프로필 사진 편집','모임 커버만·프로필 사진 보류(A04/A05)'],
         ['방문 시간','M1 휠·1분 단위','기존 제품 설계의5분 단위와 차이'],
         ['기록 정렬','게시물 시각 최신순·보기 전환은 진입마다 초기화','촬영 시각 오름차순·보기 방식 기기 기억'],
         ['파일 선택','M2 최대10개·실제 업로드 연결 지점','방문당 작성자 사진5/영상2·다중선택 최대120'],
         ['서버·권한·기한','예시 데이터·로컬 저장·예시 지도','권한·한도·검사·보관·버전·실패 복구 별도 구현'],
     ]
-    diff=base('화면과 제품 계약의 차이','화면을 반영하면서 기존 정책을 임의로 바꾸지 않습니다.')
+    diff=base('화면과 제품 계약의 차이','UI 통합 설계와 회의 안건 A01~A15 참조')
     y=1.25
     for name,actual,contract in differences:
         text(diff,.75,y,2,.7,name,18,'B8433F',True)
@@ -152,7 +154,20 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     source_rows=[[s['id'],s['title'],s['ui'] or RELATED.get(s['id']) or '데모 전용',s['source'],s['route'],s['actions'],s['captured_at'],s['sha256']] for s in shots]
     sheet(wb,'프로토타입대응',['브랜치화면','화면명','설계UI','소스','라우트','실행경로','캡처시각','캡처SHA256'],source_rows)
     sheet(wb,'정책차이',['항목','브랜치데모','기존제품계약'],differences,[25,75,75])
-    flows=[['UI05','UI08/S01','일정 선택','제품 진입'],['S0','S01','예시 일정 선택','데모 전용'],['S01','S02','날짜 카드 선택','tripId/itineraryId/dayId'],['S01','M4','배경 사진 변경','앨범 선택'],['S02','S03','장소 추가','선택 날짜'],['S03','S02','추가 성공','마지막 순서·시간 미정·추가됨'],['S02','S05','편집','빈 날짜에도 제공'],['S02/S05','M1','시간 수정','S05에서는 변경 저장 때 반영'],['S05','S02','변경 저장','순서·시각·제목'],['S02','S04','장소 카드','방문별 기록'],['S04','V1','파일 탭','사진 확대·영상 재생'],['S04','M2','올리기','업로드 연결 지점'],['M2','M3','추가 타일','촬영·앨범 선택']]
+    integration=(ROOT/'UI/2026-10-30_UI_통합_설계.md').read_text()
+    qa_rows=[]
+    for line in integration.splitlines():
+        if line.startswith('| U30-'):
+            qa_rows.append([v.strip() for v in line.strip('|').split('|')]+['미실행'])
+    sheet(wb,'UI통합검수',['ID','확인 항목','기대 결과','실제 앱 검수'],qa_rows,[18,65,100,22])
+    sheet(wb,'적용기준',['구분','내용'],[
+        ['기준','명세 v2.2 / 설계 v0.3.2 / UI c19f34c'],
+        ['필수 열람','UI/2026-10-30_UI_통합_설계.md — 제품 화면별 계약'],
+        ['미결정','회의록/10월 30일 회의 안건.md — A01~A15'],
+        ['주의','캡처는 데모. 기능 완료·권한·동의·출시 적합성 확인 아님.'],
+        ['출시 전','약관13과 종전 F02/F20/F24의 차이는 A13 별도 결정']], [28,110])
+
+    flows=[['UI05','UI08/S01','일정 선택','제품 진입'],['S0','S01','예시 일정 선택','데모 전용'],['S01','S02','날짜 카드 선택','tripId/itineraryId/dayId'],['S01','M4','배경 사진 변경','앨범 선택'],['S02','S03','장소 추가','선택 날짜'],['S03','S02','추가 성공','마지막 순서·제품은 예정 시각 선택·추가됨'],['S02','S05','편집','빈 날짜에도 제공'],['S02/S05','M1','시간 수정','S05에서는 변경 저장 때 반영'],['S05','S02','변경 저장','순서·시각·제목'],['S02','S04','장소 카드','방문별 기록'],['S04','V1','파일 탭','사진 확대·영상 재생'],['S04','M2','올리기','업로드 연결 지점'],['M2','M3','추가 타일','촬영·앨범 선택']]
     # 브랜치 전환과 기존 제품 계약을 구분해 모두 보존한다.
     flows+=json.loads((ROOT/'UI/제품 화면전환.json').read_text())
     sheet(wb,'화면전환',['출발','도착','이벤트','범위·전달'],flows,[25,25,35,80])
@@ -163,8 +178,8 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     css="""*{box-sizing:border-box}body{font:15px/1.8 'Noto Sans CJK KR',sans-serif;color:#191F28;background:#f4f5f7;margin:0}a{color:#B8433F}aside{position:fixed;inset:0 auto 0 0;width:260px;background:white;overflow:auto;padding:24px}aside a{display:block;font-size:12px;padding:6px;text-decoration:none}main{margin-left:260px}header{background:#202A35;color:white;padding:40px}header a{color:white}.screen,.intro{background:white;margin:28px;padding:28px;border-radius:18px;scroll-margin:20px}h2{font-size:25px;margin:0 0 8px}.meta{color:#B8433F;font-size:13px}.pair{display:flex;gap:32px;align-items:flex-start}figure{width:260px;flex-shrink:0;margin:0}figure img{width:100%;border:1px solid #dce1e6}figcaption,.small{font-size:11px;overflow-wrap:anywhere}.notes{max-width:760px}.notes p{margin:0 0 16px}.notes h3{font-size:15px;margin:15px 0 8px}details{background:#f2f4f6;padding:12px;margin-bottom:16px}details p{font-size:13px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #dce1e6;padding:8px;text-align:left}th{background:#f2f4f6}@media(max-width:1100px){aside{display:none}main{margin:0}.pair{flex-wrap:wrap}}@media print{@page{size:A4 landscape;margin:10mm}aside,header,.intro{display:none}main{margin:0}.screen{height:187mm;margin:0;padding:0;border-radius:0;break-after:page;break-inside:avoid}.screen:last-child{break-after:auto}.pair{flex-wrap:nowrap;gap:24px}figure{width:232px}figure img{height:502px;object-fit:contain}.notes{font-size:12px;line-height:1.7}.notes p{margin-bottom:11px}.notes h3{font-size:12px}.small{font-size:9px}details{display:none}body{background:white}h2{font-size:21px}.meta{margin:4px 0 12px}}"""
     table='<table><tr><th>항목</th><th>브랜치 데모</th><th>제품 구현 계약</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in row)+'</tr>' for row in differences)+'</table>'
     css+='@media print{.intro{display:block;height:187mm;margin:0;padding:0;break-after:page;font-size:12px}.intro table{font-size:10px}.intro td,.intro th{padding:6px}}'
-    intro=f'<section class="intro"><h2>화면 적용 기준</h2><p>feature/ui-prototype @ <b>{short}</b> · 2026-10-26 · 브랜치 실행 캡처 19개. 기존 33개 UI 중 7개를 교체하고 관련 상태 12개를 추가했습니다. 나머지 26개는 명세 기반 설계안입니다.</p><p>{E(manifest["environment"])}<br>{E(manifest["scope"])}</p><p><a href="프로토타입/출처.json">커밋·소스·캡처 해시와 경로</a> · <a href="프로토타입/demo-app-spec.txt">브랜치 화면 명세 원문</a> · <a href="프로토타입/feature-spec.txt">브랜치 기능 명세 원문</a></p><h3>제품 정책과 차이</h3>{table}<p>S01 → S02 → S03 장소 검색 / S05 편집 / S04 기록 → V1 감상 · S04 → M2 → M3</p></section>'
-    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · 프로토타입 반영</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-10-26 · feature/ui-prototype 기준 화면 교체</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
+    intro=f'<section class="intro"><h2>화면 적용 기준</h2><p>feature/ui-prototype @ <b>{short}</b> · 2026-10-30 · 실행 캡처 {len(shots)}개. 제품 UI {len(SCREENS)}개 중 {applied_count}개에 캡처를 반영하고 관련 상태 {extra_count}개를 추가했습니다. 나머지 {native_count}개는 명세 기반 설계안입니다.</p><p>{E(manifest["environment"])}<br>{E(manifest["scope"])}</p><p><a href="프로토타입/출처.json">커밋·소스·캡처 해시와 경로</a> · <a href="프로토타입/demo-app-spec.txt">브랜치 화면 명세 원문</a> · <a href="프로토타입/feature-spec.txt">브랜치 기능 명세 원문</a></p><p><a href="2026-10-30_UI_통합_설계.md">UI 통합 설계·추가 검수</a> · <a href="../../회의록/10월%2030일%20회의%20안건.md">기능 충돌·회의 안건</a></p><h3>제품 정책과 차이</h3>{table}<p>S01 → S02 → S03 장소 검색 / S05 편집 / S04 기록 → V1 감상 · S04 → M2 → M3</p></section>'
+    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · 프로토타입 반영</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-10-30 · feature/ui-prototype 기준 화면 교체</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
     (ROOT/'UI/05 UI 화면 갤러리.html').write_text(page)
     result=dict(source_commit=commit,main_screens=len(SCREENS),replaced_ui=list(primary),
                 captures=len(shots),supplemental_screens=len(shots)-len(primary),
@@ -174,15 +189,18 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
 
 
 def update_index():
-    """전체 설계서 재생성 시에도 UI 안내가 예전 편집용 도형 설명으로 돌아가지 않게 한다."""
+    """재생성 시 최신 manifest와 통합 설계로 안내한다."""
+    import re
     p=ROOT/'00 설계서 안내.html'
     s=p.read_text()
+    m=load_source(); applied=json.loads((ROOT/'UI/화면 반영.json').read_text())
     s=s.replace('UI 화면과 APK 캡처 함께 보기 →','최신 프로토타입 UI 화면 보기 →')
     s=s.replace('편집 가능한 UI 원본','UI 설계와 프로토타입 화면')
     s=s.replace('글자·버튼·필드·배경을 개별 도형으로 수정합니다. 실제 APK 캡처는 별도 근거 이미지입니다.',
-                'feature/ui-prototype의 7개 대응 UI를 실행 캡처로 교체하고 관련 상태 12개를 추가했습니다. 캡처는 앱 소스에서, 설명은 PowerPoint에서 편집합니다.')
-    s=s.replace('SVG 원본은 각 갤러리 화면에서 엽니다.','화면별 출처·실행 경로·제품 계약 차이는 갤러리와 Excel에서 확인합니다.')
-    s=s.replace('SVG는 벡터 편집기로 열어 수정합니다.','명세 기반 설계안의 SVG는 벡터 편집기로 수정합니다. 프로토타입 대응 SVG는 최신 화면을 담은 이미지 래퍼입니다.')
-    if '2026-10-26 UI 화면 반영' not in s:
-        s=s.replace('<h2>개발 설계서</h2>','<div class="info"><b>2026-10-26 UI 화면 반영</b><p>원격 feature/ui-prototype @ 99ab363 기준. 일정 요약·날짜별 장소·장소 검색·기록 보기·순서 편집과 관련 팝업을 반영했습니다. 웹 실행 캡처 19개, 기존 UI ID 33개와 제품 계약을 유지합니다. <a href="UI/프로토타입/출처.json">출처와 캡처 경로</a></p></div><h2>개발 설계서</h2>')
+                '최신 UI 캡처와 제품 적용 계약을 함께 제공합니다. 캡처는 데모이며 기능 검수 결과가 아닙니다.')
+    s=s.replace('SVG 원본은 각 갤러리 화면에서 엽니다.','화면 출처·제품 적용 기준·회의 안건을 함께 확인합니다.')
+    s=s.replace('SVG는 벡터 편집기로 열어 수정합니다.','명세 기반 SVG는 벡터 편집, 캡처 래퍼는 앱 소스 수정 후 재캡처합니다.')
+    s=re.sub(r'<div class="info"><b>2026-10-\d+ UI 화면 반영</b>.*?</div>', '',s,flags=re.S)
+    info=f'<div class="info"><b>2026-10-30 UI 화면 반영</b><p>feature/ui-prototype @ {m["commit"][:7]} · 실행 캡처 {applied["captures"]}개 · 제품 화면 {applied["main_screens"]}개. 명세 v2.2·설계 v0.3.2. <a href="UI/2026-10-30_UI_통합_설계.md">UI 통합 설계·회의 안건 연결</a> · <a href="UI/프로토타입/출처.json">출처</a>. 미합의 정책은 기존 기준을 유지하며 출시 전 약관 정합성은 별도 결정합니다.</p></div>'
+    s=s.replace('<h2>개발 설계서</h2>',info+'<h2>개발 설계서</h2>')
     p.write_text(s)

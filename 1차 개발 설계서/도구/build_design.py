@@ -35,7 +35,7 @@ def label(f):
     return m.group(1) if m else f
 
 class Doc:
-    def __init__(self,filename,title,sub='1차 개발 구현 설계 v0.3.1 · 기준 기능명세서 v2.1(2026-10-24) 우선'):
+    def __init__(self,filename,title,sub='1차 개발 구현 설계 v0.3.2 · 기준 기능명세서 v2.2(2026-10-30) 우선'):
         self.name=filename;self.doc=Document();self.parts=[]
         sec=self.doc.sections[0];sec.top_margin=DInches(.65);sec.bottom_margin=DInches(.65);sec.left_margin=DInches(.65);sec.right_margin=DInches(.65)
         normal=self.doc.styles['Normal'];normal.font.name=FONT;normal.font.size=DPt(10)
@@ -191,7 +191,7 @@ def build_docs():
     d.h('9 요구사항과 기술 근거')
     d.table(['ID','자료','반영 범위','우선순위'],SOURCES);d.save()
     d=Doc('02 데이터베이스 설계','At that place 1차 데이터베이스 설계')
-    d.p('PostgreSQL16 물리 설계 v0.3.1(반복 테이블 제거·초대 횟수·방문 15개·사진5/영상2 트리거). 컬럼별 정의의 원천은 도구/physical_model.py이며 부록/DB/001_initial.sql과 이 사전을 함께 생성한다. 초기 스키마와 DB 제약은 임시 DB에서 실행 검증했다. FK는 ON DELETE NO ACTION, 서버 역할은002_service_roles.sql을 따른다. API/worker의 업무 권한·검사·집계·최종 완료는 별도 구현 및 통합 검수가 필요하다.')
+    d.p('PostgreSQL16 물리 설계 v0.3.2(반복 테이블 제거·초대 횟수·방문 15개·사진5/영상2 트리거). 컬럼별 정의의 원천은 도구/physical_model.py이며 부록/DB/001_initial.sql과 이 사전을 함께 생성한다. 초기 스키마와 DB 제약은 임시 DB에서 실행 검증했다. FK는 ON DELETE NO ACTION, 서버 역할은002_service_roles.sql을 따른다. API/worker의 업무 권한·검사·집계·최종 완료는 별도 구현 및 통합 검수가 필요하다.')
     d.h('1 핵심 관계');d.image(ROOT/'부록/ERD.png');d.table(['부모','자식','관계'],RELATIONS)
     d.h('2 공통 데이터 규칙')
     for p in ['식별자는UUID, 순간은timestamptz(UTC저장), 기록일·방문일·일정의날짜는date, 표시는Asia/Seoul이다. 순수날짜를기기UTC Date 변환으로계산하지않는다.','모든수정대상은version을갖고초기1에서증가한다. 보관고정·소유자·완료시각·최초선택순서는수정가능정보와분리한다.','문자길이는SQL char_length가아닌NFC후grapheme단위애플리케이션검증을기준으로한다. DB의text크기/체크는보조장치다.','집계캐시는가속용이다. 사용자가볼수있는파일조건(완료·기한·삭제·운영·차단)과같은predicate로응답집계를구성한다.','representative cover는별도asset이며일반기록바이트/보관정책과혼동하지않는다. 모임종료후불필요한대표사진·계획은정리한다.']:d.p(p)
@@ -226,7 +226,7 @@ def build_docs():
     d.table(['동작','현재참여자','현재방장','참여종료작성자','운영자'],[
       ['공동조회/계획','가능','가능','불가','운영케이스최소범위'],['장소추가·예정시각·계획(15개/일)','가능','가능','불가','없음'],['업로드(방문당 사진5·영상2)','유효일정','동일','불가','없음'],['초대 조회·발급·공유·복사·개별 취소','가능(같은 모임 전체)','가능(같은 모임 전체)','불가','일반 초대 관리 권한 없음'],['일정추가/변경/취소/삭제·모임정보/역할','불가','가능','불가','복구만별도절차'],['본인정보수정','본인만','본인만','불가','콘텐츠조치별도'],['본인조회/삭제','가능','가능','본인파일만','위반조치예외'],['휴대폰 저장(길게 눌러 다중 선택)','조회가능본인·타인','동일','본인도불가','일반내보내기권한없음'],['개인차단/신고','가능','가능','본인보존문의','케이스처리'],['모임종료','불가','마지막1인만','불가','종료재개불가']])
     d.h('14 수정 가능한 다이어그램');d.p('부록/다이어그램/*.mmd는유스케이스가아닌실행시퀀스·상태도원본이다. Mermaid를지원하는IDE에서편집/렌더링한다. DB관계와구성도는부록/ERD.svg·아키텍처.svg의도형/텍스트를수정할수있다.');d.save()
-    d=Doc('09 구현 계약 보완','At that place 1차 구현 계약 보완','v0.3.1 · 2026-10-24 초대 권한 확대·기존 회의 반영·기준 명세 v2.1·물리 DB·전송·운영·검수')
+    d=Doc('09 구현 계약 보완','At that place 1차 구현 계약 보완','v0.3.2 · 2026-10-30 UI 통합·초대 권한·기존 회의 반영·기준 명세 v2.2·물리 DB·전송·운영·검수')
     for title,paragraphs in SECTIONS:
         d.h(title)
         for p in paragraphs:d.p(p)
@@ -282,6 +282,11 @@ def build_tracking():
     sheet(wb,'검수계획',['단계','목적','환경·준비','완료기준'],[
       ['1 도메인단위','보관/반복/문자/권한','고정KSTclock·경계벡터','명세경계일치'],['2 API통합','트랜잭션/멱등/파일검증','staging DB·스토리지·검사대체/실연동','실패주입과재시도결과일치'],['3 경쟁','정원·역할·보관·원자수정','동시클라이언트·DB장벽','불변식유지'],['4 Android','권한·촬영·선택기·백그라운드','에뮬레이터+API31최저/보급형실기기','120개혼합·강제종료복구'],['5 운영','신고·이의·복구·정리/복원','운영별도계정·연락처·SLAclock','실제큐/감사/문의연결'],['6 수락','F01~28 전체·성능','버전/기기/파일/네트워크증거','중대미해결0·전항목결과기록']],[25,55,85,70])
     sheet(wb,'검증된데모범위',['구분','이번 확인','확인하지 않은 범위'],[['관찰','근거/APK PNG·XML·JSON·실행검토.docx 참조','실제인증·서버동기화·실지도·미디어검사·보관·실기기성능'],['설계검증','산출물구조·화면/기능/API참조·OpenAPI스키마·SVG시각검토','기능테스트결과를성공으로기입하지않음']],[25,100,100])
+    ui_qa=[]
+    for line in (ROOT/'UI/2026-10-30_UI_통합_설계.md').read_text().splitlines():
+        if line.startswith('| U30-'):
+            ui_qa.append([v.strip() for v in line.strip('|').split('|')]+['미실행'])
+    sheet(wb,'UI통합검수',['ID','조건','기대 결과','실제 앱 검수'],ui_qa,[18,65,100,22])
     wb.save(ROOT/'06 검수 및 추적.xlsx')
     wb=Workbook();wb.remove(wb.active)
     sheet(wb,'자료차이와반영',['항목','이전근거','이전값','최신명세기준','기능근거','설계반영'],CONFLICTS,[24,50,65,75,25,75])
@@ -303,7 +308,7 @@ def build_tracking():
     wb.save(ROOT/'부록/DB/컬럼 및 제약.xlsx')
 
 def build_index():
-    files=[('09 구현 계약 보완','v0.3.1 변경 요약(2026-10-20 회의)·기준선·DayLog 선별 재사용·재개 업로드·개발 순서'),('01 시스템 설계','서비스 구조·확정한 도구·인증·파일접근·운영'),('02 데이터베이스 설계',f'{len(TABLES)}개 테이블의 컬럼별 물리 정의·실행 SQL·DB 제약'),('03 API 연동 설계',f'{len(APIS)}개 operation·typed 업무 결과·HEAD/PATCH 전송'),('04 업무 흐름 상태 설계','업로드·위치 제거·검사·보관·원자 수정·생명주기')]
+    files=[('09 구현 계약 보완','v0.3.2 변경 요약(2026-10-20 회의)·기준선·DayLog 선별 재사용·재개 업로드·개발 순서'),('01 시스템 설계','서비스 구조·확정한 도구·인증·파일접근·운영'),('02 데이터베이스 설계',f'{len(TABLES)}개 테이블의 컬럼별 물리 정의·실행 SQL·DB 제약'),('03 API 연동 설계',f'{len(APIS)}개 operation·typed 업무 결과·HEAD/PATCH 전송'),('04 업무 흐름 상태 설계','업로드·위치 제거·검사·보관·원자 수정·생명주기')]
     rows=''.join(f'<a class="card" href="{n}.docx"><b>{n}</b><span>{desc}</span></a><a class="pdf" href="{n}.pdf">PDF 열기</a>' for n,desc in files)
     index='''<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place 1차 개발 설계서</title><style>
     body{font-family:'Noto Sans CJK KR',sans-serif;color:#191F28;background:#f3f5f7;margin:0}header{padding:55px max(30px,calc((100vw - 1120px)/2));background:#202A35;color:white}header small{color:#F1706B}h1{font-size:42px;line-height:1.35}main{max-width:1120px;margin:35px auto;padding:0 24px}h2{margin-top:45px}p{line-height:1.9}.grid{display:grid;grid-template-columns:1fr 110px;gap:12px}.card,.pdf{display:block;background:white;padding:22px;border:1px solid #DCE1E6;border-radius:14px;text-decoration:none;color:#191F28}.card b{display:block;font-size:20px}.card span{display:block;color:#5F6B78;margin-top:8px}.pdf{color:#B8433F;display:flex;align-items:center}.primary{background:#B8433F;color:white;padding:22px;border-radius:14px;display:inline-block;text-decoration:none;font-size:22px}.info{background:#FDEDEB;padding:25px;border-radius:16px}a{color:#B8433F}li{margin:14px 0;line-height:1.7}code{background:#e9edf0;padding:2px 6px}footer{padding:35px;color:#5F6B78}
@@ -320,10 +325,10 @@ def build_index():
     <li><a href="근거/08 APK 실행 검토.docx">APK 실행 검토 Word</a> · <a href="근거/08 APK 실행 검토.pdf">실행 검토 PDF</a> · <a href="근거/APK/실행검토.json">실행 근거 JSON</a></li>
     <li><a href="부록/아키텍처.svg">아키텍처 SVG</a> · <a href="부록/ERD.svg">ERD SVG</a> · 업무 시퀀스/상태 원본은 <code>부록/다이어그램/</code></li>
     </ul><div class="info"><b>적용 기준과 수정 방법</b><p>루트 기능명세서가 정책 기준입니다. 소개 PDF·선행 XLSX·APK는 참고 자료이며 충돌은 최신 명세로 정리했습니다. 클라우드·검사 공급자·키·문서·문의 연락처·SDK 버전은 실제 환경에서 확정해야 합니다.</p><p>Word·Excel·PowerPoint 파일은 직접 편집할 수 있습니다. SVG는 벡터 편집기로 열어 수정합니다. 전체를 재생성하려면 <code>도구/사용법.txt</code>를 참고하세요. 직접 편집한 Office 파일은 재생성 전에 별도 보관하세요.</p></div><footer>설계 검토와 구현 검수를 구분합니다. PDF는 같은 내용의 HTML 인쇄 레이아웃이며 Office 원본과 줄바꿈이 다를 수 있습니다.</footer></main></html>'''
-    index=index.replace('1차 구현 설계안','1차 구현 설계 v0.3.1').replace('루트 기능명세서가 정책 기준입니다.','패키지 내부 기준/기능명세서.md(v2.1, 2026-10-24)가 정책 기준입니다. 정책 원본은 ../기능 명세서/기능명세서.md이며 동일한 SHA256 사본을 포함했습니다. v1 대비 변경은 명세 0절과 09 문서 0절을 보세요.').replace('112개 기능 시나리오·10개 비기능 항목.','112개 기능 시나리오·10개 비기능 항목·12개 계약 통합 시나리오와 실행 방식.').replace('클라우드·검사 공급자·키·문서·문의 연락처·SDK 버전은 실제 환경에서 확정해야 합니다.','서버 도구·전송·물리 스키마·재사용 범위는 v0.2에서 구체화했습니다. 운영 공급자·키·문서·문의 연락처·실기기/빌드 검증은 남아 있습니다.')
-    extra='''<h2>v0.3.1 구현 계약과 기준 자료</h2><ul><li><a href="기준/기능명세서.md">기준 기능명세서 사본</a> · <a href="기준/기준선.json">SHA256 기준선</a> · <a href="기준/재사용후보.json">DayLog 재사용 후보와 버전</a></li><li><a href="부록/DB/001_initial.sql">실행 가능한 초기 DB SQL</a> · <a href="부록/DB/검증결과.json">실제 PostgreSQL 검증 결과</a> · <a href="부록/DB/실제 컬럼 사전.json">실행 DB 컬럼 사전</a> · <a href="부록/DB/컬럼 및 제약.xlsx">컬럼·제약 Excel</a></li><li><a href="부록/계약예제/examples.json">정상·오류 JSON 예제</a> · <a href="부록/계약예제/검증결과.json">계약 검증 결과</a> · <a href="부록/계약예제/업로드.http">HEAD/PATCH 요청 예제</a></li></ul>'''
+    index=index.replace('1차 구현 설계안','1차 구현 설계 v0.3.2').replace('루트 기능명세서가 정책 기준입니다.','패키지 내부 기준/기능명세서.md(v2.2, 2026-10-30)가 정책 기준입니다. 정책 원본은 ../기능 명세서/기능명세서.md이며 동일한 SHA256 사본을 포함했습니다. v1 대비 변경은 명세 0절과 09 문서 0절을 보세요.').replace('112개 기능 시나리오·10개 비기능 항목.','112개 기능 시나리오·10개 비기능 항목·12개 계약 통합 시나리오와 실행 방식.').replace('클라우드·검사 공급자·키·문서·문의 연락처·SDK 버전은 실제 환경에서 확정해야 합니다.','서버 도구·전송·물리 스키마·재사용 범위는 v0.2에서 구체화했습니다. 운영 공급자·키·문서·문의 연락처·실기기/빌드 검증은 남아 있습니다.')
+    extra='''<h2>v0.3.2 구현 계약과 기준 자료</h2><ul><li><a href="기준/기능명세서.md">기준 기능명세서 사본</a> · <a href="기준/기준선.json">SHA256 기준선</a> · <a href="기준/재사용후보.json">DayLog 재사용 후보와 버전</a></li><li><a href="부록/DB/001_initial.sql">실행 가능한 초기 DB SQL</a> · <a href="부록/DB/검증결과.json">실제 PostgreSQL 검증 결과</a> · <a href="부록/DB/실제 컬럼 사전.json">실행 DB 컬럼 사전</a> · <a href="부록/DB/컬럼 및 제약.xlsx">컬럼·제약 Excel</a></li><li><a href="부록/계약예제/examples.json">정상·오류 JSON 예제</a> · <a href="부록/계약예제/검증결과.json">계약 검증 결과</a> · <a href="부록/계약예제/업로드.http">HEAD/PATCH 요청 예제</a></li></ul>'''
     index=index.replace('<h2>검수와 구현 결정</h2>',extra+'<h2>검수와 구현 결정</h2>')
-    index=index.replace('112개',str(sum(map(len,QA.values())))+'개').replace('12개 계약 통합',str(len(CONTRACT_CASES))+'개 계약 통합').replace('기능명세서 v2(', '기능명세서 v2.1(').replace('v2.1(2026-10-20 회의 반영)', 'v2.1(2026-10-24 초대 권한 확대)')
+    index=index.replace('112개',str(sum(map(len,QA.values())))+'개').replace('12개 계약 통합',str(len(CONTRACT_CASES))+'개 계약 통합').replace('기능명세서 v2(', '기능명세서 v2.2(').replace('v2.2(2026-10-20 회의 반영)', 'v2.2(2026-10-30 UI 통합)')
     (ROOT/'00 설계서 안내.html').write_text(index)
     from prototype_ui import update_index
     update_index()
