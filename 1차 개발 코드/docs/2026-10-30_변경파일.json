@@ -1,0 +1,222 @@
+[
+  {
+    "path": ".env.example",
+    "change": "added",
+    "sha256": "6dd6f885fbc3f9309570d778d0e315911dfbe86197faf9751411cb4771d41bdc"
+  },
+  {
+    "path": "README.md",
+    "change": "modified",
+    "sha256": "8d46251431a41a0c63c4d09d61563aa237ba18f6dc5bfbae20a87bc41241cb6e"
+  },
+  {
+    "path": "contracts/generated.ts",
+    "change": "modified",
+    "sha256": "eb08fd33efa83a58b540be8c411ac9c1150784b142f7846fc50dd95590c3ee8c"
+  },
+  {
+    "path": "contracts/openapi.json",
+    "change": "modified",
+    "sha256": "971fd547cfabad27727232918da6654ae0a09a32cd6b71ccec641f2af549a952"
+  },
+  {
+    "path": "deploy/nginx-app-locations.conf",
+    "change": "added",
+    "sha256": "8982da0a0f674349778fbe701ee02c11085d0d56565b1e11a40159f3ddeba232"
+  },
+  {
+    "path": "mobile/.env.example",
+    "change": "added",
+    "sha256": "299587fb5fb05162bd32a98fd8732090cfe2a36a22fe49491ab7addd1a412f7c"
+  },
+  {
+    "path": "mobile/app.config.ts",
+    "change": "modified",
+    "sha256": "5e95c0d877fb2d754608cced510d2b517cc71473de80e3ca475de5f51266804f"
+  },
+  {
+    "path": "mobile/modules/atp-transfer/android/src/main/java/expo/modules/atptransfer/AtpTransferModule.kt",
+    "change": "modified",
+    "sha256": "e4da6cb1bd29253db11ed1aa9afd4f88f7f226152b3d20f26cff830c975111f4"
+  },
+  {
+    "path": "mobile/scripts/build-preview.mjs",
+    "change": "modified",
+    "sha256": "a26c17221b87b04d34e944e3d8e657ea81b1e33f70c3f52f2a01db5dffb91fba"
+  },
+  {
+    "path": "mobile/src/app/_layout.tsx",
+    "change": "modified",
+    "sha256": "d868ac6ad1d761db4962e7cbd39b8ef8f53e34c081cccb19efce08e1b3a449d4"
+  },
+  {
+    "path": "mobile/src/app/account.tsx",
+    "change": "added",
+    "sha256": "f5267a644f57e0fdb1b36abeb09d81f89aaebd2e9b9d4f3f1aabfab5beaf50e8"
+  },
+  {
+    "path": "mobile/src/app/group/manage.tsx",
+    "change": "modified",
+    "sha256": "7f1663274f0d1a8f54a2eec33b76aa4b2333f4eb534c805353bf6d91dcf11184"
+  },
+  {
+    "path": "mobile/src/app/identities.tsx",
+    "change": "modified",
+    "sha256": "4277a946d5e5c38b659bbb55ec528c1b44b098f8a6113cde5689c2f34b574c8e"
+  },
+  {
+    "path": "mobile/src/app/index.tsx",
+    "change": "modified",
+    "sha256": "714bd657904b2c71bc542e8c58689e366ff73dd8c10aa1efefc23702b9e60c39"
+  },
+  {
+    "path": "mobile/src/app/login.tsx",
+    "change": "modified",
+    "sha256": "4c12701943fd59db87afd70a426b7e7a37562ada8e43e0d1f4f125cc4864306b"
+  },
+  {
+    "path": "mobile/src/app/my-page.tsx",
+    "change": "added",
+    "sha256": "807fb1f9bf13731aac5f40f83caab6e1d6fc3cd5dda42f144fe619e5b6674610"
+  },
+  {
+    "path": "mobile/src/app/oauth/kakao.tsx",
+    "change": "added",
+    "sha256": "9fcb16cf310718f1180184b01866631dd05f4572a8ed140381e91152c47af363"
+  },
+  {
+    "path": "mobile/src/app/places.tsx",
+    "change": "modified",
+    "sha256": "06a9737d66cf4c0c5d521653263a3be8aa3af79ce0008846b725f6511084ac17"
+  },
+  {
+    "path": "mobile/src/app/schedule/[id].tsx",
+    "change": "modified",
+    "sha256": "5108178626462fe6e16ebcbc36ed8b8bbe45e342ab3e363837ed497062ce0dc7"
+  },
+  {
+    "path": "mobile/src/app/settings.tsx",
+    "change": "modified",
+    "sha256": "8ace1b5d5b4dedbf348b97fc2ec8a8082f67f99eae9342797f23daf041b51f34"
+  },
+  {
+    "path": "mobile/src/components/place-map.tsx",
+    "change": "modified",
+    "sha256": "35f49e3307fdd044887fbbccdb64f61bd55ad00bff290906e972805df7b9ea7f"
+  },
+  {
+    "path": "mobile/src/components/profile-ui.tsx",
+    "change": "added",
+    "sha256": "2ce246880bd4dfffe90644870cc41463bb024d9d0797db4499f9de74a17d3a2c"
+  },
+  {
+    "path": "mobile/src/components/records.tsx",
+    "change": "modified",
+    "sha256": "cf994453a587391bb1abd27937a38348746d6e17b893e5bdc633861aa4c0974b"
+  },
+  {
+    "path": "mobile/src/components/schedule-plan.tsx",
+    "change": "added",
+    "sha256": "67286f97160a862dc8af24154bf6d6bdd15db29fe4cc99b3e2cccc213c844864"
+  },
+  {
+    "path": "mobile/src/components/ui.tsx",
+    "change": "modified",
+    "sha256": "19be3bd1221d675744ec692df1953411a7bc2ac266d3c0ab5cedd7e28190055d"
+  },
+  {
+    "path": "mobile/src/lib/api.ts",
+    "change": "modified",
+    "sha256": "4f3705895b008becf8ec634e15a8eb1d13c4bbbef8be4366efde4740148545a9"
+  },
+  {
+    "path": "mobile/src/lib/https.ts",
+    "change": "added",
+    "sha256": "b2a59d3c3fc494b84014c5893340d0a608a75e031e00384c52e324fe55de8b93"
+  },
+  {
+    "path": "mobile/src/lib/kakao-map-html.ts",
+    "change": "added",
+    "sha256": "04d78b692e074bafa10c380b2ee011a814ae26de1e6834a27d0e8ea2df22aa21"
+  },
+  {
+    "path": "mobile/src/lib/schedule-days.ts",
+    "change": "added",
+    "sha256": "3d598a2080e75c5254af4d35683fe63affa508b0f9fa2e673aac8ad91b1c6971"
+  },
+  {
+    "path": "mobile/src/lib/social.ts",
+    "change": "modified",
+    "sha256": "b34b6e66ea1c6d8eecdb5186cdb414f38d13a43d301c15c85ce7172d81855ad1"
+  },
+  {
+    "path": "mobile/tests/schedule-days.test.ts",
+    "change": "added",
+    "sha256": "fa88d117c1e6164dbfeffdc68ff65ea18f49416a6a83b0badd25e383426fe0e9"
+  },
+  {
+    "path": "ops-web/src/main.tsx",
+    "change": "modified",
+    "sha256": "7b2eb2cf82d9c99044c0de3098d8248773d9204d216b8794bbf76d1a4daf0195"
+  },
+  {
+    "path": "scripts/contract-extensions.mjs",
+    "change": "modified",
+    "sha256": "7432436d0fce74837ccd5894970b88191f623851c4f73df3e88f498189b3aed4"
+  },
+  {
+    "path": "server/adapters/auth.ts",
+    "change": "modified",
+    "sha256": "6969eb9dff2b1724b1f7a3c2ca154b60c3085d82aea88638526a94162d5ac72b"
+  },
+  {
+    "path": "server/adapters/places.ts",
+    "change": "modified",
+    "sha256": "ebd2e51ea81f62267f077179bc303eb7ebcef5b9685f7a5aaf85813e3450d96e"
+  },
+  {
+    "path": "server/api/app.ts",
+    "change": "modified",
+    "sha256": "7b846b51a50a56ab4d678ef0d56d3f10575479069057b595653a6e5bf6d031ac"
+  },
+  {
+    "path": "server/core/config.ts",
+    "change": "modified",
+    "sha256": "66b1ee437554c57860768251a9fa9f715d38791e5422a84c5a14e59da16b8f92"
+  },
+  {
+    "path": "server/db/migrations/008_kakao_login.sql",
+    "change": "added",
+    "sha256": "a0c8de510649d9bc8048ed436a2278a7379350292e125e37a8c923e257e715ca"
+  },
+  {
+    "path": "server/services/auth.ts",
+    "change": "modified",
+    "sha256": "90957a921c7f8befbb1279655bf1df223d959c0323d45ebe7548e93c4ffbcc07"
+  },
+  {
+    "path": "server/services/groups.ts",
+    "change": "modified",
+    "sha256": "c9e5af87a8174c0e397369bad25670555c64e6bd2e8ec90f9717afbdccc2ff5e"
+  },
+  {
+    "path": "server/services/kakao-login.ts",
+    "change": "added",
+    "sha256": "3c4f9a5383c18fe1072c25de8165d311781de77b227fee05dc1f972e823ac452"
+  },
+  {
+    "path": "server/worker/jobs.ts",
+    "change": "modified",
+    "sha256": "4eb73aac429db4d893d079b6f2712436849c396b353bce1cd9f8a3ef06769025"
+  },
+  {
+    "path": "tests/kakao-invites.test.ts",
+    "change": "added",
+    "sha256": "8689d6d28d3a20442c34d3fa9164cb2633cda465594013dc67d6b60210ebabdd"
+  },
+  {
+    "path": "tests/kakao-places.test.ts",
+    "change": "added",
+    "sha256": "9913106298bb90a4191573cbd70e3aced699b780960ffbe9ce6a84641fffde6e"
+  }
+]

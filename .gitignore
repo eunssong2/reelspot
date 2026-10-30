@@ -28,6 +28,5 @@ test-results/
 *.aab
 *.zip
 
-# This branch contains documentation; keep the implementation only in the local workspace.
-/1차 개발 코드/
+# Legacy standalone implementation workspace
 /mobile/

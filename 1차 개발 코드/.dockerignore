@@ -1,0 +1,12 @@
+node_modules
+mobile/node_modules
+mobile/android
+mobile/ios
+**/build
+**/.gradle
+**/.cxx
+.env
+.data
+dist
+artifacts
+ops-web/dist

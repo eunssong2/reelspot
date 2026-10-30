@@ -1,0 +1,23 @@
+{
+  "approvedForPublication": false,
+  "documents": [
+    {
+      "itemKey": "terms-service",
+      "version": "1.0",
+      "kind": "consent",
+      "title": "서비스 이용약관",
+      "required": true,
+      "file": "../published-documents/terms.md",
+      "effectiveAt": "2026-10-30T00:00:00+09:00"
+    },
+    {
+      "itemKey": "privacy",
+      "version": "1.0",
+      "kind": "notice",
+      "title": "개인정보 처리방침",
+      "required": false,
+      "file": "../published-documents/privacy.md",
+      "effectiveAt": "2026-10-30T00:00:00+09:00"
+    }
+  ]
+}

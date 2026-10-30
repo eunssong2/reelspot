@@ -1,0 +1,20 @@
+{
+  "members": [
+    {
+      "name": "Mina",
+      "owner": true
+    },
+    {
+      "name": "Jin",
+      "owner": false
+    }
+  ],
+  "invites": 2,
+  "mediaKinds": [
+    "photo",
+    "video"
+  ],
+  "inquiries": 1,
+  "profile": "Mina",
+  "assertions": "passed"
+}

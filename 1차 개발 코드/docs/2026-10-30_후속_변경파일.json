@@ -1,0 +1,230 @@
+{
+  "comparedWith": "/tmp/samsun-before-completion-20261030.tar.gz",
+  "files": [
+    {
+      "path": "server/worker/main.ts",
+      "sha256": "99ccffc3abf92d3e809b7fec07cdae3dd0e3c896a793c947f8f9197cca0609ec",
+      "change": "modified"
+    },
+    {
+      "path": "server/worker/jobs.ts",
+      "sha256": "a145fae2c48d6bd7f66ca3cc5b6b172e9dd56cb475ebd274de2c03819984e677",
+      "change": "modified"
+    },
+    {
+      "path": "server/db/seed.ts",
+      "sha256": "7a011e220343a0a3561c9276393cda32798e8174c9f1a33a646f70c627e83bad",
+      "change": "modified"
+    },
+    {
+      "path": "server/db/publish-documents.ts",
+      "sha256": "c182409116a6ad592700a66388e4318df77bd1f942c76599b440c55c364a306e",
+      "change": "added"
+    },
+    {
+      "path": "server/api/app.ts",
+      "sha256": "f6948aa23a1869fe7c62d3f05992c61ccdf8f01290c05326172645fb401f4785",
+      "change": "modified"
+    },
+    {
+      "path": "server/api/public-pages.ts",
+      "sha256": "73e8ef870a1e1246b32e282e44335850e2cbb57d4bc8cc718580ce708099897b",
+      "change": "added"
+    },
+    {
+      "path": "server/services/provider-unlink.ts",
+      "sha256": "83d4200b5f73f3d4cd71c7583186e8a5f4425c2a77fe9c3b446742cd300e5537",
+      "change": "added"
+    },
+    {
+      "path": "server/services/operations.ts",
+      "sha256": "973c2f189f40d236ae5a00640ca0dd060ab865e8f061806da77ecc9ecf3549f8",
+      "change": "modified"
+    },
+    {
+      "path": "server/services/kakao-login.ts",
+      "sha256": "22906dc5d18d96423b83b657a0ae5d555ac96832b42a4520345c116763e17059",
+      "change": "modified"
+    },
+    {
+      "path": "server/services/groups.ts",
+      "sha256": "352676a2729d8cc9d00188a88aa81a81da4ed8e65b222ed49f292b4cfeda42ab",
+      "change": "modified"
+    },
+    {
+      "path": "server/services/auth.ts",
+      "sha256": "71c1dd2f2398256748ad9243c2e6136de6c6f8c1bdd2322795f68865978dbbe9",
+      "change": "modified"
+    },
+    {
+      "path": "server/services/documents.ts",
+      "sha256": "440bb3515192bba488b191d419c2970d5106c7546c716ffa494c30945eb488c0",
+      "change": "added"
+    },
+    {
+      "path": "server/db/migrations/010_document_publication.sql",
+      "sha256": "c8c910e9e9e1ca91d406771c1b0d46d854aa3f18bbda65b0ddf5611d71342f0f",
+      "change": "added"
+    },
+    {
+      "path": "server/db/migrations/011_provider_unlink.sql",
+      "sha256": "d5778b67421025290db956bd5057ee833efbc458882423b5a98e169695e518b8",
+      "change": "added"
+    },
+    {
+      "path": "server/db/migrations/009_google_login.sql",
+      "sha256": "b4efb1cda6cef41d26387235e3c3e395ae5e3e057a2d24bc3d4382b066930758",
+      "change": "added"
+    },
+    {
+      "path": "mobile/src/components/oauth-return.tsx",
+      "sha256": "c7ac021226f632185bc5b362902a121bc0d878e8ca6862451a33f82687ce5fc2",
+      "change": "added"
+    },
+    {
+      "path": "mobile/src/app/consents.tsx",
+      "sha256": "bb409b5f9f3d7f206851539a10e43c22e7c7a03a0a463d34895b1f34cc1822aa",
+      "change": "modified"
+    },
+    {
+      "path": "mobile/src/app/settings.tsx",
+      "sha256": "a1278551594c7fdd3ef7a94ad8b27e9424ed8a879b3e35d08befc5507761a1f6",
+      "change": "modified"
+    },
+    {
+      "path": "mobile/src/app/onboarding.tsx",
+      "sha256": "b51008e263c9902faf091c1744fc3c584b32e216a7700cb85208a21555cf44b0",
+      "change": "modified"
+    },
+    {
+      "path": "mobile/src/app/invite.tsx",
+      "sha256": "07f951df2aaa7e4a3fad94e55a306dea435e4c64f9b6c1455e8fb944a4ddffac",
+      "change": "modified"
+    },
+    {
+      "path": "mobile/src/app/login.tsx",
+      "sha256": "93914d71b6a652e21972bf16f78a8408f7495ebbe19c0624a93ce5dfbba6e488",
+      "change": "modified"
+    },
+    {
+      "path": "mobile/src/lib/social.ts",
+      "sha256": "717558f3f4470bf84a0c920c1754fa9988c67f0efc4dbd4756beb2233d518d1f",
+      "change": "modified"
+    },
+    {
+      "path": "mobile/src/lib/device.ts",
+      "sha256": "0d230e3898c30f9dde900172907a2bdaa8043cf88a8055f0d07acfcb60ad2446",
+      "change": "added"
+    },
+    {
+      "path": "mobile/src/lib/api.ts",
+      "sha256": "4948fd160d2d93adc7061dc46c17445279cc218a24033e1e192671e0c77da0a2",
+      "change": "modified"
+    },
+    {
+      "path": "mobile/src/app/oauth/kakao.tsx",
+      "sha256": "e5886f381220e12f862e998123adfdf260c144a8e7e44c670d3c2017e49444e2",
+      "change": "modified"
+    },
+    {
+      "path": "mobile/src/app/oauth/google.tsx",
+      "sha256": "2437628e1113c6f55c950ed16f309633d601b1479b6e78ee8f2e8e3b2142577f",
+      "change": "added"
+    },
+    {
+      "path": "scripts/contract-extensions.mjs",
+      "sha256": "cd3596504b20a16cf35c2ad32729173b67b44b109ece96b06487f421c3fa67a2",
+      "change": "modified"
+    },
+    {
+      "path": "scripts/check-runtime.mjs",
+      "sha256": "8d9d0d1daa519b5af044521b29a2c3f4aa8900d5fd6b56e66fc67d73c3df6153",
+      "change": "added"
+    },
+    {
+      "path": "tests/mobile-auth.test.ts",
+      "sha256": "91b712a23d7dfac5e8658f41f254fb932d9c901ca996a1bb9a1f1eb14aaa80e1",
+      "change": "added"
+    },
+    {
+      "path": "tests/completion.test.ts",
+      "sha256": "7c64a91bf4bcd11134b0efdb15c0a5461dcb21a7d1a53d793eff766083192e62",
+      "change": "added"
+    },
+    {
+      "path": "tests/kakao-invites.test.ts",
+      "sha256": "b581a8ebf40300b05ffe16c0c41455bffa363beae808b6df30018861057baefe",
+      "change": "modified"
+    },
+    {
+      "path": "tests/media.test.ts",
+      "sha256": "cea393ede2e735b7e7615cb40f56e0724bfa1ea3875b94bd7365c6cad6757817",
+      "change": "modified"
+    },
+    {
+      "path": "tests/integration.test.ts",
+      "sha256": "5f5bf887a3147cb4c61d0f436bb2b6ce1ef950c3e43a87255d6e2f2c00485a93",
+      "change": "modified"
+    },
+    {
+      "path": "tests/provider-unlink.test.ts",
+      "sha256": "886f02da44fb62b461a3bce236020548548a0d9c48c2551e9bdc2f5ce7cdecfa",
+      "change": "added"
+    },
+    {
+      "path": "tests/non-auth.test.ts",
+      "sha256": "9136024e47b591f3820464a1636c1601b5d5b7fb832e726665a7d5bb58f3e317",
+      "change": "modified"
+    },
+    {
+      "path": "deploy/nginx-app-locations.conf",
+      "sha256": "febac84bda2a8059304e4816dc65c735da5636726b8cf3d533b4f82e34a7a821",
+      "change": "modified"
+    },
+    {
+      "path": "deploy/install-nginx.py",
+      "sha256": "07663e226585671053d675cb7acd86abd12e6e3fa0a79f3cd5ad18b4391ef77d",
+      "change": "added"
+    },
+    {
+      "path": "deploy/documents.example.json",
+      "sha256": "d2055ee81ba207c06627f9c0c06cf616feee84cf224c908be81abfab3f75b848",
+      "change": "added"
+    },
+    {
+      "path": "ops-web/src/main.tsx",
+      "sha256": "41042b0ee88d7fe2b7c85f8c0a0920aa85717eec23c04f4c6cc955a91c7f915e",
+      "change": "modified"
+    },
+    {
+      "path": "contracts/generated.ts",
+      "sha256": "54b10d5b98c83f85a1abe8664f387c77040e6cc5045c702214e3e4033fdfeb6e",
+      "change": "modified"
+    },
+    {
+      "path": "contracts/openapi.json",
+      "sha256": "614a052f81dbe5008bfd060cccba80937a9a5ee7abda424841e1d9509bb11f1e",
+      "change": "modified"
+    },
+    {
+      "path": "package.json",
+      "sha256": "cb8228b0c1c69c7f42ead2b41abb674b17e09b52a48cfa89b34edc49e255080e",
+      "change": "modified"
+    },
+    {
+      "path": "compose.yaml",
+      "sha256": "0a3d8882f4d00410f1b5b3a7b984fddb7b99522e7cbce49e9215f7523a5abb79",
+      "change": "modified"
+    },
+    {
+      "path": ".env.example",
+      "sha256": "cc63b48f48be9e1e6c1c27ad8e8fbbab1333d36bce5cc58f14b23115aa42ad1f",
+      "change": "modified"
+    },
+    {
+      "path": "mobile/app.config.ts",
+      "sha256": "2b7473ac67035336b3b95e3bd885dec9c8bb56eb84ce564fba7de6f573d1c7ef",
+      "change": "modified"
+    }
+  ]
+}

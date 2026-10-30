@@ -1,0 +1,70 @@
+{
+  "builtAt": "2026-10-30T11:15:01.715381+00:00",
+  "apk": "artifacts/at-that-place-preview.apk",
+  "sha256": "57ec6e5a070c4d2be74ca65488cf3c4fdc5969c2f43229e150c639e14692a831",
+  "bytes": 120245336,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "api": "https://sphan0325.ddns.net",
+  "cleartextTraffic": false,
+  "signing": "Android debug certificate; preview APK, not Play release signing",
+  "certificateSha256": "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C",
+  "checks": {
+    "serverFullSuiteWithRealMedia": {
+      "passed": 55,
+      "skipped": 0,
+      "log": "/tmp/samsun-completion-tests-final.log"
+    },
+    "subsequentAuthDocumentsAndMutations": {
+      "passed": 23,
+      "skipped": 0,
+      "log": "/tmp/samsun-completion-release-final.log",
+      "note": "includes 2 additional publication tests; overlaps the full suite"
+    },
+    "mobilePolicy": {
+      "passed": 4
+    },
+    "serverAndMobileTypecheck": "passed",
+    "mobileLint": "passed",
+    "serverAndOpsBuild": "passed",
+    "nginxSnippetSyntax": "passed",
+    "composeSyntax": "passed",
+    "privateSecretsInExpoPublicConfig": false,
+    "privateSecretsInApkBundle": false
+  },
+  "externalChecks": {
+    "kakaoCredentialsPresent": true,
+    "kakaoAuthorization": {
+      "status": 302,
+      "destination": "accounts.kakao.com"
+    },
+    "kakaoPlaces": {
+      "status": 200,
+      "results": 1
+    },
+    "kakaoMapSdk": 200,
+    "guacamole": 200,
+    "apiHealth": 404,
+    "apiConfig": 404,
+    "realUserLogin": "not verified; public API routing absent"
+  },
+  "deployment": {
+    "performed": false,
+    "reason": "Nginx requires root/sudo password; provider auth, operator OIDC/MFA, moderation and published documents need deployment configuration"
+  },
+  "deviceChecks": [
+    "Android 15: final APK installed and launched without React Native crash",
+    "Manifest: cleartext disabled; HTTPS /invite intent filter autoVerify enabled",
+    "Public API still returns 404; app shows readable connection error",
+    "Clean installation login screen and custom-scheme invitation entry checked on Android 15"
+  ],
+  "pending": [
+    "Google OAuth web client configuration",
+    "HTTPS API routes",
+    "Actual Kakao login and physical-device map/camera/save/background-transfer checks",
+    "Final published legal documents, age/operator info and A13 policy alignment",
+    "Production operator authentication/moderation setup and release signing"
+  ]
+}

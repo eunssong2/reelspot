@@ -1,0 +1,15 @@
+{
+  "publicApkSha256": "29e43f79447b38e9a240f80cc61c2e8275e7090ff6964b1d34b49ccb1fa7fe6f",
+  "publicApi": "https://sphan0325.ddns.net",
+  "qaApiAbsent": true,
+  "qaCertificateResourcesAbsent": true,
+  "emulatorPublic503KoreanMessage": "passed",
+  "nodeBuildScriptSyntax": "passed",
+  "mobileTypecheck": "passed",
+  "mobileLint": "passed",
+  "releaseBuild": "passed",
+  "abis": [
+    "x86_64",
+    "arm64-v8a"
+  ]
+}
