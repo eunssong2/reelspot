@@ -252,7 +252,8 @@ export async function buildApp(opts: { logging?: boolean } = {}) {
               : (actor?.id ??
                 `public:${id === 'authExchange' ? body.loginAttemptId : hash(body.refreshToken ?? '')}`);
           let verdict = 'passed';
-          const candidates = texts(body).filter(Boolean);
+          // Signup validates the name and consents in auth.onboard; it must not wait for moderation.
+          const candidates = id === 'onboard' ? [] : texts(body).filter(Boolean);
           if (candidates.length && operationKinds[id])
             verdict = await moderate({ text: candidates.join('\n') });
           demand(verdict !== 'rejected', 'TEXT_REJECTED');

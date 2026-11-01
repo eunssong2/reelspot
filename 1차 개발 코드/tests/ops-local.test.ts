@@ -34,7 +34,46 @@ test('문서 dry-run은 DB 접속 없이 본문·승인 검증, 해시 계산만
     (e: any) => e.code === 'DOCUMENT_REVIEW_REQUIRED');
 });
 
-test('수동 검토: 가입→모임 텍스트 승인→사진 증거 열람·승인·반려, 감사 기록과 중복 방지', { skip: !enabled }, async () => {
+test('가입은 판정 서비스 장애에도 즉시 완료하고 인증·약관·이름 검증은 유지', { skip: !enabled }, async (t) => {
+  const attempt = await call('/auth/attempts', { provider: 'google', deviceId: randomUUID() });
+  const login = await call('/auth/exchange', { provider: 'google', credential: 'dev:' + randomUUID(), ...attempt });
+  const token = login.session.accessToken;
+  const docs = await call('/consent-documents');
+  const consents = docs.documents.filter((d: any) => d.kind === 'consent').map((d: any) => ({ documentId: d.id, version: d.version, agreed: true }));
+  const previousUrl = process.env.MODERATION_URL;
+  process.env.MODERATION_URL = 'http://unavailable.invalid/moderate';
+  t.after(() => {
+    if (previousUrl === undefined) delete process.env.MODERATION_URL;
+    else process.env.MODERATION_URL = previousUrl;
+  });
+  const classifier = t.mock.method(globalThis, 'fetch', async () => { throw new Error('Classifier unavailable'); });
+  const submit = (body: any, authorization = token, key = randomUUID()) => app.inject({
+    method: 'POST', url: '/v1/onboarding', payload: body,
+    headers: { 'Idempotency-Key': key, ...(authorization ? { Authorization: `Bearer ${authorization}` } : {}) },
+  });
+  assert.equal((await submit({ displayName: '가입 확인', consents }, '')).statusCode, 401);
+  assert.equal((await submit({ displayName: '가입 확인', consents: [] })).statusCode, 400);
+  assert.equal((await submit({ displayName: '   ', consents })).statusCode, 400);
+  const before = await tx(db => one(db, 'SELECT status FROM users WHERE id=$1', [login.session.userId]));
+  assert.equal(before.status, 'onboarding');
+  const key = randomUUID();
+  const payload = { displayName: '가입 확인', consents };
+  const result = await submit(payload, token, key);
+  assert.equal(result.statusCode, 200, result.body);
+  assert.equal(result.json().user.displayName, '가입 확인');
+  assert.equal(result.json().operationId, undefined);
+  assert.equal(classifier.mock.callCount(), 0);
+  const replay = await submit(payload, token, key);
+  assert.equal(replay.statusCode, 200, replay.body);
+  assert.deepEqual(replay.json(), result.json());
+  assert.equal((await submit(payload)).statusCode, 409);
+  const after = await tx(db => one(db, 'SELECT status FROM users WHERE id=$1', [login.session.userId]));
+  assert.equal(after.status, 'active');
+  const pending = await tx(db => one(db, "SELECT count(*)::int AS count FROM operations WHERE actor_id=$1 AND state='review'", [login.session.userId]));
+  assert.equal(pending.count, 0);
+});
+
+test('즉시 가입→모임 텍스트 승인→사진 증거 열람·승인·반려, 감사 기록과 중복 방지', { skip: !enabled }, async () => {
   const dir = await mkdtemp(join(tmpdir(), 'atp-local-review-'));
   try {
     const attempt = await call('/auth/attempts', { provider:'google',deviceId:randomUUID() });
@@ -42,11 +81,10 @@ test('수동 검토: 가입→모임 텍스트 승인→사진 증거 열람·�
     const token = login.session.accessToken;
     const docs = await call('/consent-documents');
     const onboarding = await call('/onboarding', { displayName:'수동 검토 확인',consents:docs.documents.filter((d:any)=>d.kind==='consent').map((d:any)=>({documentId:d.id,version:d.version,agreed:true})) }, token);
-    assert.equal(onboarding.state,'review');
-    const onboardingCase = (await localReview(['list']) as any[]).find(r=>r.target_id===onboarding.operationId);
-    await localReview(['release',onboardingCase.id,String(onboardingCase.version),'테스트 표시명 확인']);
-    for(let i=0;i<50;i++) { await processOne(); if((await call(`/operations/${onboarding.operationId}`,undefined,token)).state==='succeeded') break; }
-    assert.equal((await call(`/operations/${onboarding.operationId}`,undefined,token)).state,'succeeded');
+    assert.equal(onboarding.user.displayName,'수동 검토 확인');
+    assert.equal(onboarding.operationId,undefined);
+    const account = await tx(db=>one(db,'SELECT status FROM users WHERE id=$1',[login.session.userId]));
+    assert.equal(account.status,'active');
     // Remote operator API remains closed without OIDC; local CLI uses OS/DB privileges.
     config.opsMode = 'oidc';
     delete process.env.OPS_ISSUER; delete process.env.OPS_AUDIENCE;
