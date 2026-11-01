@@ -163,6 +163,21 @@ for ui in SCREENS:
   ui['notes'].append('v2.2: 마이페이지→설정→UI37 계정, 초대코드→UI24, OS 위치 설정 이동. 내 기록·신고/차단·캐시·문의·동의 내역 유지. 약관13과 F02/F24 차이는 출시 전 안건 A13.')
   ui['rows'][0]=('row','① 프로필 및 계정  >')
 
+
+# 2026-11-01 화면 관찰과 제품 계약의 차이. API/DB 정책은 변경하지 않는다.
+LATEST_UI_NOTES = {
+ 'UI05': '11월1일: 데모는 하루 단위 카드→UI08 날짜별 장소, 상단 인원→UI26. 제품은 동일 날짜 겹침 허용·3개+N과 전체 계획 접근 유지(N01/N03).',
+ 'UI06': '11월1일: DAY-EDIT는 하루 제목100자·단일 날짜·취소/삭제 참고 상태. 제품의 기간 변경·일정 전체 취소/삭제와 날짜 제목30자를 대체하지 않는다(N02).',
+ 'UI08': '11월1일: 모임에서 들어오면 모든 활성 일정의 날짜 탭. 선택 일정/날짜 ID를 갱신하고 취소·미지정·기간 밖 기록 접근을 보존한다(N03).',
+ 'UI23': '11월1일: 방장 전용 모임 사진 변경 진입점을 UI25에 연결. 초대 관리 자체는 모든 현재 참여자에게 제공한다.',
+ 'UI25': '11월1일: 원본 초대 화면은4:3 선택·로컬 반영. 제품은16:9·검사·서버 성공 후 갱신을 유지하며 비율 변경은 N04 결정이 필요하다.',
+ 'UI26': '11월1일: 달력 상단 인원에서도 진입. 방장만 ⋯→내보내기 확인. 이름 대신 회원ID·모임 단위 재참여 차단·실시간 권한 검증을 적용한다(N05).',
+ 'UI36': '11월1일: 현재 참여한 모임 카드→UI03 연결. 0개를 예시 총계로 대체하지 않는다.',
+}
+for ui in SCREENS:
+ if ui['id'] in LATEST_UI_NOTES:
+  ui['notes'].append(LATEST_UI_NOTES[ui['id']])
+
 APIS=[]
 def api(id,method,path,features,auth,req,res,errors):
     APIS.append(dict(id=id,method=method,path=path,features=features.split(),auth=auth,request=req,response=res,errors=errors))
