@@ -235,18 +235,20 @@ export default function Record() {
             본인 기록 수정·삭제
           </Button>
         )}
-        <Button
-          secondary
-          onPress={() => {
-            setMenu(false);
-            router.push({
-              pathname: '/report',
-              params: { targetType: 'media', targetId: id, userId: actual?.media.authorUserId },
-            });
-          }}
-        >
-          신고
-        </Button>
+        {actual?.media.authorUserId !== currentSession()?.userId && (
+          <Button
+            secondary
+            onPress={() => {
+              setMenu(false);
+              router.push({
+                pathname: '/report',
+                params: { targetType: 'media', targetId: id, userId: actual?.media.authorUserId },
+              });
+            }}
+          >
+            신고
+          </Button>
+        )}
         {a.errorView}
       </Sheet>
     </SafeAreaView>

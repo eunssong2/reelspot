@@ -40,7 +40,12 @@ export default function Uploads() {
         file: q[id].file,
         local: native.find((n) => n.taskId === id),
       });
-    setTasks(all);
+    // Cover photos still need an explicit apply step, so keep them above record uploads,
+    // newest first (the queue keeps enqueue order).
+    setTasks([
+      ...all.filter((t) => t.coverGroupId).reverse(),
+      ...all.filter((t) => !t.coverGroupId),
+    ]);
     setLoaded(true);
     setRefreshError(
       failures.length
@@ -172,23 +177,25 @@ export default function Uploads() {
               검토 상태 문의
             </Button>
           )}
-          {t.coverAssetId && t.state === 'complete' && (
-            <Button
-              onPress={() =>
-                a.run(async () => {
-                  const g = await getGroup(t.coverGroupId);
-                  await api(
-                    `/groups/${g.id}`,
-                    { coverAssetId: t.coverAssetId, expectedVersion: g.version },
-                    'PATCH',
-                  );
-                  router.replace(`/group/${g.id}`);
-                })
-              }
-            >
-              이 사진을 모임에 적용
-            </Button>
-          )}
+          {t.coverAssetId &&
+            t.state === 'complete' &&
+            t === tasks.find((x) => x.coverGroupId === t.coverGroupId) && (
+              <Button
+                onPress={() =>
+                  a.run(async () => {
+                    const g = await getGroup(t.coverGroupId);
+                    await api(
+                      `/groups/${g.id}`,
+                      { coverAssetId: t.coverAssetId, expectedVersion: g.version },
+                      'PATCH',
+                    );
+                    router.replace(`/group/${g.id}`);
+                  })
+                }
+              >
+                이 사진을 모임 대표 사진으로 적용
+              </Button>
+            )}
         </Card>
       ))}
       {loaded && !refreshError && !tasks.length && <P>진행 중인 전송이 없습니다.</P>}

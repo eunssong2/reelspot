@@ -8,6 +8,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { api, currentSession, ApiError } from '../lib/api';
+import { formatBytes } from '../lib/preferences';
 import { candidate, enqueueTask, submissionFile, type Candidate } from '../lib/uploads';
 import {
   Screen,
@@ -188,7 +189,11 @@ export default function Upload() {
   return (
     <Screen
       title={p.coverGroupId ? '모임 대표 사진' : '파일 선택과 업로드 확인'}
-      subtitle="사진·영상마다 날짜와 장소를 확인해 주세요."
+      subtitle={
+        p.coverGroupId
+          ? '업로드가 끝나면 전송 상태 화면 맨 위에서 대표 사진으로 적용해요.'
+          : '사진·영상마다 날짜와 장소를 확인해 주세요.'
+      }
       footer={
         <>
           <Button
@@ -367,9 +372,11 @@ export default function Upload() {
               >
                 {i + 1}. {f.name}
               </Text>
-              <P>
-                {f.recordDate} · {visits.find((v) => v.id === f.visitId)?.name ?? '장소 미지정'}
-              </P>
+              {!p.coverGroupId && (
+                <P>
+                  {f.recordDate} · {visits.find((v) => v.id === f.visitId)?.name ?? '장소 미지정'}
+                </P>
+              )}
             </View>
             {!p.coverGroupId && (
               <TextButton onPress={() => setEditing(f.clientFileId)}>정보 수정</TextButton>
@@ -393,7 +400,7 @@ export default function Upload() {
             </Button>
           )}
           <P>
-            {(f.declaredBytes / 1000000).toFixed(1)}MB · {f.kind === 'photo' ? '사진' : '영상'}
+            {formatBytes(f.declaredBytes)} · {f.kind === 'photo' ? '사진' : '영상'}
             {f.durationMs ? ` · ${(f.durationMs / 1000).toFixed(1)}초` : ''}
           </P>
           {!p.coverGroupId &&

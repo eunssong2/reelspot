@@ -81,7 +81,7 @@ export default function Invite() {
         )
       }
     >
-      <H>모임에 초대받았어요!</H>
+      <H>{preview ? '모임에 초대받았어요!' : '초대 코드 입력'}</H>
       <Field
         label="초대 코드 또는 링크"
         placeholder="받은 코드 또는 링크를 입력해 주세요"

@@ -22,7 +22,7 @@ export function SchedulePlan({
   loading: boolean;
   onDate: (date: string) => void;
   onVisit: (visit: any) => void;
-  onEdit: (date: string) => void;
+  onEdit: (date: string, visitId?: string) => void;
   onAdd: (date: string) => void;
   active: boolean;
 }) {
@@ -120,7 +120,11 @@ export function SchedulePlan({
                 }}
               >
                 <H>
-                  {d.date}
+                  {Number(d.date.slice(5, 7))}월 {Number(d.date.slice(8))}일{' '}
+                  {new Date(`${d.date}T00:00:00+09:00`).toLocaleDateString('ko-KR', {
+                    weekday: 'long',
+                    timeZone: 'Asia/Seoul',
+                  })}
                   {d.outsideRange ? ' · 기간 밖' : ''}
                 </H>
                 {!d.outsideRange && (
@@ -172,7 +176,7 @@ export function SchedulePlan({
                         <Pressable
                           accessibilityRole="button"
                           accessibilityLabel={`${v.name} 방문 시간 수정`}
-                          onPress={() => onEdit(d.date)}
+                          onPress={() => onEdit(d.date, v.id)}
                           style={{ minHeight: 48, justifyContent: 'center' }}
                         >
                           <Text style={{ color: colors.accent, fontSize: 12 }}>수정</Text>

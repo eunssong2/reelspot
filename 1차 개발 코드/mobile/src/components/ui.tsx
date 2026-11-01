@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect, useContext, createContext } from 'react';
+import React, { useState, useRef, useEffect, useContext, createContext, useCallback } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   Modal,
   Platform,
   KeyboardAvoidingView,
@@ -15,7 +16,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { router, usePathname, useLocalSearchParams } from 'expo-router';
+import { router, usePathname, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { currentSession, PendingOperationError } from '../lib/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 const FooterContext = createContext<((content: React.ReactNode) => void) | null>(null);
@@ -51,6 +52,7 @@ export function Screen({
   headerRight,
   contentStyle,
   heading = false,
+  onBack,
 }: {
   title: string;
   subtitle?: string;
@@ -63,8 +65,20 @@ export function Screen({
   headerRight?: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
   heading?: boolean;
+  /** Return true to consume back (header button and Android back) inside the screen. */
+  onBack?: () => boolean;
 }) {
   const [childFooter, setChildFooter] = useState<React.ReactNode>(null);
+  const backRef = useRef(onBack);
+  useEffect(() => {
+    backRef.current = onBack;
+  });
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => !!backRef.current?.());
+      return () => sub.remove();
+    }, []),
+  );
   const subtitleInBody = !!subtitle && subtitle.length > 35;
   const pathname = usePathname(),
     params = useLocalSearchParams();
@@ -86,7 +100,11 @@ export function Screen({
                   accessibilityLabel="이전 화면"
                   hitSlop={4}
                   style={s.headerButton}
-                  onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+                  onPress={() => {
+                    if (backRef.current?.()) return;
+                    if (router.canGoBack()) router.back();
+                    else router.replace('/');
+                  }}
                 >
                   <Text style={{ fontSize: 30, color: colors.ink, lineHeight: 34 }}>‹</Text>
                 </Pressable>
@@ -467,8 +485,14 @@ export const H = ({ children }: { children: React.ReactNode }) => (
 export const P = ({ children }: { children: React.ReactNode }) => (
   <Text style={s.p}>{children}</Text>
 );
-export const Badge = ({ children }: { children: React.ReactNode }) => (
-  <View style={s.badge}>
+export const Badge = ({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) => (
+  <View style={[s.badge, style]}>
     <Text style={s.badgeText}>{children}</Text>
   </View>
 );
@@ -546,6 +570,11 @@ export function useAction({ inlineRetry = true }: { inlineRetry?: boolean } = {}
       <ActivityIndicator color={colors.accent} />
     ) : null,
   };
+}
+/** Replace the whole stack so screens of a closed group or ended session cannot be reopened. */
+export function resetTo(path: '/' | '/mine' | '/login') {
+  if (router.canDismiss()) router.dismissAll();
+  router.replace(path);
 }
 export function confirm(title: string, message: string, action: () => void) {
   Alert.alert(title, message, [

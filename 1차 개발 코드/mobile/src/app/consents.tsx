@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Linking } from 'react-native';
 import { router } from 'expo-router';
 import { api, documentUrl } from '../lib/api';
+import { formatMoment } from '../lib/preferences';
 import { Screen, Button, Card, H, P, useAction } from '../components/ui';
 export default function Consents() {
   const [docs, setDocs] = useState<any[]>([]),
@@ -27,7 +28,7 @@ export default function Consents() {
             <P>
               버전 {d.version} · {d.kind === 'notice' ? '동의 없이 제공하는 처리 안내' : receipt?.agreed ? '동의함' : '동의하지 않음'}
             </P>
-            <P>{receipt?.occurredAt}</P>
+            {!!receipt?.occurredAt && <P>{formatMoment(receipt.occurredAt)}</P>}
             <Button secondary onPress={() => Linking.openURL(documentUrl(d.url))}>
               문서 열람
             </Button>

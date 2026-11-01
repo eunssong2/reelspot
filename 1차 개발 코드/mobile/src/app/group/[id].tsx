@@ -96,7 +96,7 @@ export default function Group() {
             marginBottom: 10,
           }}
         >
-          <Badge>
+          <Badge style={{ alignSelf: 'center', marginBottom: 0 }}>
             {group.activeCount}/10명 {owner ? '· 방장' : '· 참여자'}
           </Badge>
           <TextButton onPress={() => router.push(`/group/manage?id=${id}`)}>

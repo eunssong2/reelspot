@@ -57,6 +57,8 @@ export default function Account() {
               );
               await refresh();
               setEditing(false);
+              // Opened from My page's nickname button: return there after saving.
+              if (edit === 'yes' && router.canGoBack()) router.back();
             })
           }
         >

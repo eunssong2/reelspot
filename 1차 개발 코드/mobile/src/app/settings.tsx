@@ -10,7 +10,7 @@ import { clearLocalAccount } from '../lib/uploads';
 import { api, documentUrl, setSession } from '../lib/api';
 import { useAccount } from '../lib/state';
 import { Transfer } from '../../modules/atp-transfer';
-import { Screen, Button, H, useAction, confirm } from '../components/ui';
+import { Screen, Button, H, useAction, confirm, resetTo } from '../components/ui';
 export default function Settings() {
   const { session } = useAccount();
   const a = useAction();
@@ -65,7 +65,7 @@ export default function Settings() {
                   await clearLocalAccount(session.userId);
                 }
                 await setSession(null);
-                router.replace('/login');
+                resetTo('/login');
               }),
           )
         }

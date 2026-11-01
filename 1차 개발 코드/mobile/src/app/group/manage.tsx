@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { inputText } from '../../lib/validation';
 import { View, Text, Pressable, Image } from 'react-native';
-import { api, API, currentSession, awaitOperation, getGroup } from '../../lib/api';
+import { api, awaitOperation, getGroup, coverSource } from '../../lib/api';
 import { useAccount } from '../../lib/state';
 import {
   Screen,
@@ -18,6 +18,7 @@ import {
   Sheet,
   Info,
   colors,
+  resetTo,
 } from '../../components/ui';
 export default function Manage() {
   const { id, mode = 'members' } = useLocalSearchParams<{ id: string; mode?: string }>(),
@@ -99,13 +100,15 @@ export default function Manage() {
             router.push('/storage');
           }}
         />
-        <MenuRow
-          label="방장 부재 복구 문의"
-          onPress={() => {
-            setMenu(false);
-            router.push(`/recovery?groupId=${id}`);
-          }}
-        />
+        {!owner && (
+          <MenuRow
+            label="방장 부재 복구 문의"
+            onPress={() => {
+              setMenu(false);
+              router.push(`/recovery?groupId=${id}`);
+            }}
+          />
+        )}
       </Sheet>
       {mode === 'members' && (
         <>
@@ -198,10 +201,7 @@ export default function Manage() {
         <Card style={{ borderWidth: 0, padding: 0 }}>
           {group.coverAssetId ? (
             <Image
-              source={{
-                uri: `${API}/v1/groups/${id}/cover`,
-                headers: { Authorization: `Bearer ${currentSession()?.accessToken}` },
-              }}
+              source={coverSource(id, group.version)}
               style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: 16, marginBottom: 20 }}
             />
           ) : (
@@ -256,7 +256,8 @@ export default function Manage() {
           </Button>
         </Card>
       )}
-      {mode === 'info' && group?.coverAssetId && (
+      {/* The owner can replace or restore the cover instead of reporting it. */}
+      {mode === 'info' && group?.coverAssetId && !owner && (
         <Button
           secondary
           onPress={() =>
@@ -337,7 +338,7 @@ export default function Manage() {
                         expectedVersion: me.version,
                       });
                     }
-                    router.replace('/');
+                    resetTo('/');
                   }),
               )
             }

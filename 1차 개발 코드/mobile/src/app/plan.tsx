@@ -21,14 +21,20 @@ import {
   colors,
 } from '../components/ui';
 export default function Plan() {
-  const { id, date } = useLocalSearchParams<{ id: string; date: string }>();
+  const { id, date, visit } = useLocalSearchParams<{ id: string; date: string; visit?: string }>();
   const [title, setTitle] = useState(''),
     [visits, setVisits] = useState<any[]>([]),
     [version, setVersion] = useState(1);
   const [baseline, setBaseline] = useState(''),
     [latest, setLatest] = useState<any>(null);
   const [editing, setEditing] = useState(''),
-    [time, setTime] = useState('');
+    [time, setTime] = useState(''),
+    [timeError, setTimeError] = useState('');
+  const editTime = (v: any) => {
+    setEditing(v.id);
+    setTime(v.plannedTime ?? '');
+    setTimeError('');
+  };
   const a = useAction();
   const shape = (title: string, visits: any[]) =>
     JSON.stringify({
@@ -47,6 +53,8 @@ export default function Plan() {
       setVisits(d.visits);
       setVersion(d.version);
       setBaseline(shape(d.title, d.visits));
+      const target = d.visits.find((v: any) => v.id === visit);
+      if (target) editTime(target);
     });
   }, [id, date]);
   async function save() {
@@ -124,22 +132,33 @@ export default function Plan() {
           placeholder="14:00"
           helper="5분 단위 · 비우면 시간 미정"
           value={time}
-          onChangeText={setTime}
+          onChangeText={(value) => {
+            setTime(value);
+            setTimeError('');
+          }}
         />
         <Button
-          onPress={() =>
-            a.run(async () => {
+          onPress={() => {
+            // Local validation only; keep it out of the screen-level action error.
+            try {
               validTime(time);
-              setVisits(
-                visits.map((v) => (v.id === editing ? { ...v, plannedTime: time || null } : v)),
-              );
-              setEditing('');
-            })
-          }
+            } catch (e) {
+              setTimeError((e as Error).message);
+              return;
+            }
+            setVisits(
+              visits.map((v) => (v.id === editing ? { ...v, plannedTime: time || null } : v)),
+            );
+            setEditing('');
+          }}
         >
           적용
         </Button>
-        {a.errorView}
+        {!!timeError && (
+          <Text accessibilityRole="alert" style={s.error}>
+            {timeError}
+          </Text>
+        )}
       </Sheet>
       {visits.map((v, i) => (
         <Card key={v.id} style={{ borderWidth: 0, paddingHorizontal: 0, paddingVertical: 8 }}>
@@ -161,13 +180,7 @@ export default function Plan() {
               {!!v.address && <P>{v.address}</P>}
             </View>
           </View>
-          <TextButton
-            color={colors.sub}
-            onPress={() => {
-              setEditing(v.id);
-              setTime(v.plannedTime ?? '');
-            }}
-          >
+          <TextButton color={colors.sub} onPress={() => editTime(v)}>
             방문 시각　{v.plannedTime ?? '시간 미정'} ✎
           </TextButton>
           <View style={s.row}>

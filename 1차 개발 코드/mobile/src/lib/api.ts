@@ -48,6 +48,14 @@ export async function restoreSession() {
   return session;
 }
 export const currentSession = () => session;
+// Android Image sends headers only for the array source form. The fragment is never sent
+// to the server (which rejects unknown query keys) but still changes the image cache key.
+export const coverSource = (groupId: string, version?: number) => [
+  {
+    uri: `${API}/v1/groups/${groupId}/cover${version === undefined ? '' : `#v=${version}`}`,
+    headers: { Authorization: `Bearer ${session?.accessToken}` },
+  },
+];
 export function documentUrl(value: string) {
   const u = new URL(value, API);
   if (['localhost', '127.0.0.1'].includes(u.hostname)) {

@@ -9,6 +9,7 @@ export function PlaceMap({
   places,
   selectedId,
   pin,
+  fitKey,
   onSelect,
   onRegion,
   onPin,
@@ -17,6 +18,8 @@ export function PlaceMap({
   places: any[];
   selectedId?: string;
   pin?: { lat: number; lng: number } | null;
+  /** Changing this zooms the map to show every place (new search results). */
+  fitKey?: number;
   onSelect: (id: string) => void;
   onRegion: (value: { lat: number; lng: number; bounds: string }) => void;
   onPin?: (p: { lat: number; lng: number }) => void;
@@ -31,9 +34,9 @@ export function PlaceMap({
   useEffect(() => {
     if (ready)
       ref.current?.injectJavaScript(
-        `window.updateMap && window.updateMap(${scriptJson({ center, places: places.filter((p) => p.lat != null && p.lng != null).map((p) => ({ id: p.id, name: p.name, lat: Number(p.lat), lng: Number(p.lng) })), selectedId, pin })});true;`,
+        `window.updateMap && window.updateMap(${scriptJson({ center, places: places.filter((p) => p.lat != null && p.lng != null).map((p) => ({ id: p.id, name: p.name, lat: Number(p.lat), lng: Number(p.lng) })), selectedId, pin, fitKey })});true;`,
       );
-  }, [ready, center, places, selectedId, pin]);
+  }, [ready, center, places, selectedId, pin, fitKey]);
   if (!key) return <P>지도 연결을 준비하고 있어요. 목록 검색이나 직접 등록을 이용해 주세요.</P>;
   return (
     <View>

@@ -2,12 +2,11 @@ import { clearVideoCacheAsync } from 'expo-video';
 import { clearLocalAccount } from '../lib/uploads';
 import { useInitialize } from '../lib/effects';
 import React, { useState } from 'react';
-import { router } from 'expo-router';
 import { api, setSession } from '../lib/api';
 import { reauth } from '../lib/social';
 import { useAccount } from '../lib/state';
 import { Transfer } from '../../modules/atp-transfer';
-import { Screen, Button, Card, H, P, useAction, confirm } from '../components/ui';
+import { Screen, Button, Card, H, P, useAction, confirm, resetTo } from '../components/ui';
 export default function DeleteAccount() {
   const [groups, setGroups] = useState<any[]>([]);
   const { session } = useAccount(),
@@ -92,7 +91,7 @@ export default function DeleteAccount() {
                 await clearLocalAccount(session.userId);
               }
               await setSession(null);
-              router.replace('/login');
+              resetTo('/login');
             }),
           )
         }

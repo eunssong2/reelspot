@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useFocusLoad } from '../lib/effects';
 import { api, currentSession } from '../lib/api';
+import { formatBytes } from '../lib/preferences';
 import * as FS from 'expo-file-system/legacy';
 import { getCurrentVideoCacheSize, clearVideoCacheAsync } from 'expo-video';
 import { Screen, Card, H, P, Button, Info, confirm, useAction } from '../components/ui';
@@ -45,17 +46,17 @@ export default function Storage() {
     >
       <Card>
         <H>이 기기</H>
-        <P>재생 캐시 {(cacheBytes / 1000000).toFixed(1)}MB · 설정 한도 500MB</P>
-        <P>선택 후보·전송용 파일 {(localBytes / 1000000).toFixed(1)}MB</P>
+        <P>재생 캐시 {formatBytes(cacheBytes)} · 설정 한도 500MB</P>
+        <P>선택 후보·전송용 파일 {formatBytes(localBytes)}</P>
         <P>캐시 정리는 선택 후보와 미완료 전송 원본을 삭제하지 않습니다.</P>
       </Card>
       {groups.map((g) => (
         <Card key={g.id}>
           <H>{g.name}</H>
-          <P>완료 원본 {(g.usage.completedOriginalBytes / 1000000000).toFixed(2)}GB</P>
+          <P>완료 원본 {formatBytes(g.usage.completedOriginalBytes)}</P>
           <P>
-            전송 예약 {(g.usage.reservedBytes / 1000000000).toFixed(2)}GB · 남은 공간{' '}
-            {(g.usage.availableBytes / 1000000000).toFixed(2)}GB
+            전송 예약 {formatBytes(g.usage.reservedBytes)} · 남은 공간{' '}
+            {formatBytes(g.usage.availableBytes)}
           </P>
         </Card>
       ))}

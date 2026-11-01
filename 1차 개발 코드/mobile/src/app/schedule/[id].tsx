@@ -4,7 +4,7 @@ import { View, Image, Text, Pressable } from 'react-native';
 import { SchedulePlan } from '../../components/schedule-plan';
 import { scheduleDays } from '../../lib/schedule-days';
 import { useLocalSearchParams, router } from 'expo-router';
-import { api, getGroup, API, currentSession } from '../../lib/api';
+import { api, getGroup, coverSource } from '../../lib/api';
 import { usePreference } from '../../lib/preferences';
 import { validDate } from '../../lib/validation';
 import { useAccount } from '../../lib/state';
@@ -114,12 +114,34 @@ export default function Schedule() {
     : { id };
   return (
     <Screen
-      title={tab === 'records' ? selectedVisit?.name || '함께 남긴 순간' : 'AT THAT PLACE'}
+      title={
+        tab === 'records'
+          ? selectedVisit?.name || '함께 남긴 순간'
+          : recordDate && detail
+            ? detail.schedule.title
+            : 'AT THAT PLACE'
+      }
       subtitle={
         tab === 'records'
           ? `${detail?.schedule.title ?? ''}${recordDate ? ' · ' + recordDate : ''}`
-          : undefined
+          : recordDate && detail
+            ? `${detail.schedule.startDate} - ${detail.schedule.endDate}`
+            : undefined
       }
+      onBack={() => {
+        // Visit and date views live in this screen's state, so step back through them first.
+        if (tab === 'records' && visitId) {
+          setVisit('');
+          setTab('plan');
+          return true;
+        }
+        if (tab === 'plan' && recordDate) {
+          setDate('');
+          setDateInput('');
+          return true;
+        }
+        return false;
+      }}
       contentStyle={tab === 'plan' && !recordDate ? { paddingTop: 0 } : undefined}
       headerRight={
         <Pressable
@@ -216,10 +238,7 @@ export default function Schedule() {
           >
             {group.coverAssetId ? (
               <Image
-                source={{
-                  uri: `${API}/v1/groups/${group.id}/cover?version=${group.version}`,
-                  headers: { Authorization: `Bearer ${currentSession()?.accessToken}` },
-                }}
+                source={coverSource(group.id, group.version)}
                 style={{ width: '100%', aspectRatio: 16 / 9 }}
               />
             ) : (
@@ -323,7 +342,12 @@ export default function Schedule() {
                 setOutside(false);
                 setTab('records');
               }}
-              onEdit={(date) => router.push({ pathname: '/plan', params: { id, date } })}
+              onEdit={(date, visit) =>
+                router.push({
+                  pathname: '/plan',
+                  params: { id, date, ...(visit ? { visit } : {}) },
+                })
+              }
               onAdd={(date) => {
                 setDate(date);
                 setDateInput(date);
@@ -373,7 +397,16 @@ export default function Schedule() {
             </TextButton>
           </View>
           <TextButton color={colors.sub} onPress={() => setFilters(true)}>
-            {recordDate || unassigned || outside || visitId ? '필터 변경' : '날짜·장소 필터'}
+            {recordDate || unassigned || outside || visitId
+              ? `필터: ${[
+                  selectedVisit?.name,
+                  !visitId && recordDate,
+                  unassigned && '장소 미지정',
+                  outside && '기간 밖',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')} · 변경`
+              : '날짜·장소 필터'}
           </TextButton>
           <Sheet visible={filters} title="기록 필터" onClose={() => setFilters(false)}>
             <Field

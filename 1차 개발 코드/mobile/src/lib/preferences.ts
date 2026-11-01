@@ -19,4 +19,10 @@ export function usePreference<T>(name: string, initial: T) {
   return [value, update, ready] as const;
 }
 export const todayInSeoul = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+export const formatBytes = (bytes: number) =>
+  bytes < 1000000
+    ? `${Math.max(bytes ? 1 : 0, Math.round(bytes / 1000))}KB`
+    : bytes < 1000000000
+      ? `${(bytes / 1000000).toFixed(1)}MB`
+      : `${(bytes / 1000000000).toFixed(2)}GB`;
 export const formatMoment = (value?: string | null) => value ? new Date(value).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', hour12: false }) : '정보 없음';

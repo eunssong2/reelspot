@@ -1,9 +1,15 @@
 import '@formatjs/intl-segmenter/polyfill.js';
 const segments = new Intl.Segmenter('ko', { granularity: 'grapheme' });
+// Picks the Korean particle from the label's last syllable; non-Hangul keeps both forms.
+function particle(word: string, batchim: string, plain: string) {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  if (code < 0 || code > 11171) return `${word}${batchim}(${plain})`;
+  return word + (code % 28 ? batchim : plain);
+}
 export function inputText(value: string, label: string, max: number, required = true, multiline = false) {
   const v = value.normalize('NFC').trim();
-  if (required && !v) throw new Error(`${label}을(를) 입력해 주세요.`);
-  if ([...segments.segment(v)].length > max) throw new Error(`${label}은(는) 최대 ${max}자입니다.`);
+  if (required && !v) throw new Error(`${particle(label, '을', '를')} 입력해 주세요.`);
+  if ([...segments.segment(v)].length > max) throw new Error(`${particle(label, '은', '는')} 최대 ${max}자입니다.`);
   if (!multiline && /[\r\n]/.test(v)) throw new Error(`${label}에는 줄바꿈을 사용할 수 없습니다.`);
   return v;
 }

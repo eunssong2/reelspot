@@ -30,6 +30,7 @@ export default function Places() {
     }>(),
     [query, setQuery] = useState(''),
     [results, setResults] = useState<any[]>([]),
+    [fitKey, setFitKey] = useState(0),
     [manual, setManual] = useState(false),
     [name, setName] = useState(''),
     [address, setAddress] = useState(''),
@@ -67,6 +68,8 @@ export default function Places() {
       if (sequence.current === seq) {
         setProvider(r.provider);
         setResults(r.places);
+        // A keyword search may return places outside the current view; area searches keep it.
+        if (!inArea) setFitKey(seq);
         setChosen(null);
         setSearched(true);
         setProviderMessage(r.searchContext?.message ?? '');
@@ -218,6 +221,7 @@ export default function Places() {
       <PlaceMap
         center={center}
         places={manual ? [] : results}
+        fitKey={fitKey}
         selectedId={chosen?.id}
         pin={
           manual && lat && lng && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))

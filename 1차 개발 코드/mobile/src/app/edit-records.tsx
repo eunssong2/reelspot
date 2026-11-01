@@ -169,7 +169,9 @@ export default function Edit() {
               <Switch
                 trackColor={{ false: '#D1D6DB', true: '#F9C9C6' }}
                 thumbColor={apply[k] ? '#F1706B' : '#FFFFFF'}
-                accessibilityLabel={`${k} 적용`}
+                accessibilityLabel={
+                  { description: '설명 변경', recordDate: '기록일 변경', visitId: '방문 변경' }[k]
+                }
                 value={apply[k]}
                 onValueChange={(v) => setApply({ ...apply, [k]: v })}
               />

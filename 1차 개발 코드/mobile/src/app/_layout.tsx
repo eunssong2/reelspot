@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
-import { Stack, router } from 'expo-router';
+import { Stack } from 'expo-router';
 import { Provider, useAccount } from '../lib/state';
 import { StatusBar } from 'expo-status-bar';
 import { AppState } from 'react-native';
 import { restorePendingTransfers } from '../lib/uploads';
 import { setVideoCacheSizeAsync } from 'expo-video';
 import { accessLostEvents } from '../lib/api';
+import { resetTo } from '../components/ui';
 function TransferRecovery() {
   const { ready, session } = useAccount();
   const userId = session?.userId;
@@ -36,7 +37,7 @@ function TransferRecovery() {
 export default function Layout() {
   useEffect(() => {
     void setVideoCacheSizeAsync(500000000).catch(() => {});
-    const leave = () => router.replace('/mine');
+    const leave = () => resetTo('/mine');
     accessLostEvents.add(leave);
     return () => {
       accessLostEvents.delete(leave);

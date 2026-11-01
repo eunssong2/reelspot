@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Image, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useAccount } from '../lib/state';
-import { api, API, currentSession } from '../lib/api';
+import { api, coverSource } from '../lib/api';
 import { todayInSeoul } from '../lib/preferences';
 import { Screen, Button, Card, H, P, colors, useAction } from '../components/ui';
 export default function Home() {
@@ -106,10 +106,7 @@ export default function Home() {
                 <Image
                   accessibilityLabel={`${g.name} 대표 사진`}
                   style={{ width: 48, height: 48, borderRadius: 12 }}
-                  source={{
-                    uri: `${API}/v1/groups/${g.id}/cover`,
-                    headers: { Authorization: `Bearer ${currentSession()?.accessToken}` },
-                  }}
+                  source={coverSource(g.id, g.version)}
                 />
               ) : (
                 <View

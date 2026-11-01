@@ -160,9 +160,10 @@ export default function Camera() {
           onCameraReady={() => setReady(true)}
         />
       )}
+      {!ready && <P>카메라를 준비하고 있어요…</P>}
       <View style={s.row}>
         <Button
-          secondary
+          secondary={mode !== 'picture'}
           small
           disabled={recording || preparing}
           onPress={() => {
@@ -175,7 +176,7 @@ export default function Camera() {
           사진
         </Button>
         <Button
-          secondary
+          secondary={mode !== 'video'}
           small
           disabled={recording || preparing}
           onPress={() => {
@@ -238,6 +239,9 @@ export default function Camera() {
             : mode === 'video'
               ? '영상 촬영 시작'
               : '사진 촬영'}
+      </Button>
+      <Button secondary disabled={recording || preparing} onPress={() => router.back()}>
+        취소
       </Button>
       {a.errorView}
     </Screen>
