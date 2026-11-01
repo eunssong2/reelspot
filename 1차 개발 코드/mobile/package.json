@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "export": "expo export --platform android"
+    "export": "expo export --platform android",
+    "release:android": "node scripts/build-release.mjs"
   },
   "dependencies": {
     "@formatjs/intl-segmenter": "^12.2.15",

@@ -2,59 +2,34 @@ import { Avatar } from '../../components/profile-ui';
 import { useFocusLoad } from '../../lib/effects';
 import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as Clipboard from 'expo-clipboard';
-import { formatMoment } from '../../lib/preferences';
 import { inputText } from '../../lib/validation';
-import { Share, View } from 'react-native';
+import { View } from 'react-native';
 import { api, awaitOperation, getGroup } from '../../lib/api';
 import { useAccount } from '../../lib/state';
-import {
-  Screen,
-  Field,
-  Button,
-  Card,
-  H,
-  P,
-  Badge,
-  confirm,
-  useAction,
-  s,
-} from '../../components/ui';
+import { Screen, Field, Button, Card, H, P, confirm, useAction, s } from '../../components/ui';
 export default function Manage() {
   const { id } = useLocalSearchParams<{ id: string }>(),
     { session } = useAccount(),
     [group, setGroup] = useState<any>(null),
     [members, setMembers] = useState<any[]>([]),
     [blocks, setBlocks] = useState<any[]>([]),
-    [invites, setInvites] = useState<any[]>([]),
     [name, setName] = useState(''),
-    [copied, setCopied] = useState('');
+    [latestName, setLatestName] = useState<string | null>(null);
   const a = useAction();
   async function refresh() {
-    setInvites([]);
     const g = await getGroup(id);
     setGroup(g);
     setName(g.name);
     const m = await api(`/groups/${id}/members`);
     setMembers(m.members);
     setBlocks(m.reentryBlocks);
-    setInvites((await api(`/groups/${id}/invites`)).invites);
   }
   useFocusLoad(() => {
     a.run(refresh);
   }, [id]);
-  async function liveInvite(inviteId: string) {
-    const fresh = await api(`/groups/${id}/invites`);
-    setInvites(fresh.invites);
-    const invitation = fresh.invites.find(
-      (item: any) => item.id === inviteId && item.state === 'active',
-    );
-    if (!invitation) throw new Error('현재 사용할 수 없는 초대입니다. 새 초대를 발급해 주세요.');
-    return invitation;
-  }
   const owner = group?.ownerUserId === session?.userId;
   return (
-    <Screen title="함께하는 친구" subtitle={group?.name}>
+    <Screen compact title="함께하는 친구" subtitle={group?.name}>
       <H>함께하는 사람들 · {members.length}/10명</H>
       {members.map((m) => (
         <Card key={m.id}>
@@ -125,87 +100,7 @@ export default function Manage() {
           )}
         </Card>
       ))}
-      {group && (
-        <>
-          <H>초대 관리 · 모든 참여자</H>
-          <P>
-            각 초대는 발급 후 7일, 확인 50회까지 유효해요. 새 초대를 만들어도 이전 초대는
-            유지됩니다.
-          </P>
-          <Button
-            disabled={a.busy}
-            onPress={() =>
-              a.run(async () => {
-                await api(`/groups/${id}/invites`, {});
-                await refresh();
-              })
-            }
-          >
-            새 초대 발급
-          </Button>
-          {invites.map((i) => (
-            <Card key={i.id}>
-              <Badge>
-                {{ active: '사용 가능', exhausted: '소진', expired: '만료', revoked: '취소' }[
-                  i.state as string
-                ] ?? i.state}{' '}
-                · {i.useCount}/50회
-              </Badge>
-              <H>{i.code}</H>
-              <P>발급 {formatMoment(i.issuedAt)}</P>
-              <P>만료 {formatMoment(i.expiresAt)}</P>
-              <P>{i.link}</P>
-              <Button
-                secondary
-                disabled={a.busy || i.state !== 'active'}
-                onPress={() =>
-                  a.run(async () => {
-                    const fresh = await liveInvite(i.id);
-                    await Clipboard.setStringAsync(
-                      `${group.name}에 초대합니다.\n${fresh.link}\n초대 코드 ${fresh.code}`,
-                    );
-                    setCopied(i.id);
-                  })
-                }
-              >
-                {copied === i.id ? '복사됨' : '초대 링크·코드 복사'}
-              </Button>
-              <Button
-                secondary
-                disabled={a.busy || i.state !== 'active'}
-                onPress={() =>
-                  a.run(async () => {
-                    const fresh = await liveInvite(i.id);
-                    await Share.share({
-                      message: `${group.name}에 초대합니다.\n${fresh.link}\n초대 코드 ${fresh.code}\n받은 초대는 재전달할 수 있습니다.`,
-                    });
-                  })
-                }
-              >
-                초대 공유
-              </Button>
-              {i.state === 'active' && (
-                <Button
-                  secondary
-                  onPress={() =>
-                    confirm(
-                      '이 초대를 취소할까요?',
-                      '기존 참여자와 다른 초대에는 영향을 주지 않습니다.',
-                      () =>
-                        a.run(async () => {
-                          await api(`/invites/${i.id}/revocation`, { expectedVersion: i.version });
-                          await refresh();
-                        }),
-                    )
-                  }
-                >
-                  이 초대 취소
-                </Button>
-              )}
-            </Card>
-          ))}
-        </>
-      )}
+      <Button onPress={() => router.push(`/group/invites?id=${id}`)}>초대·공유 관리</Button>
       {owner && (
         <Card>
           <Field label="모임 이름" value={name} onChangeText={setName} />
@@ -329,15 +224,15 @@ export default function Manage() {
             a.run(async () => {
               const latest = await getGroup(id);
               setGroup(latest);
-              setCopied(`latest:${latest.name}`);
+              setLatestName(latest.name);
             })
           }
         >
           최신 모임 상태 확인 · 입력 유지
         </Button>
       )}
-      {copied.startsWith('latest:') && (
-        <P>최신 모임 이름: {copied.slice(7)} · 현재 입력을 확인하고 저장해 주세요.</P>
+      {latestName !== null && (
+        <P>최신 모임 이름: {latestName} · 현재 입력을 확인하고 저장해 주세요.</P>
       )}
       {a.errorView}
     </Screen>

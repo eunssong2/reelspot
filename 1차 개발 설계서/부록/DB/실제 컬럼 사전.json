@@ -232,6 +232,27 @@
   },
   {
     "table_name": "consent_documents",
+    "column_name": "kind",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'consent'::text"
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "''::text"
+  },
+  {
+    "table_name": "consent_documents",
+    "column_name": "body",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "consent_documents",
     "column_name": "content_ref",
     "data_type": "text",
     "is_nullable": "NO",

@@ -144,7 +144,7 @@ export const groupHandlers: Record<string, Handler> = {
     period(c.query.from, c.query.to);
     const s = await rows(
       c.db,
-      "SELECT * FROM schedules WHERE group_id=$1 AND status<>'deleted' AND start_date<=$3 AND end_date>=$2 ORDER BY start_date,id",
+      "SELECT * FROM schedules WHERE group_id=$1 AND status<>'deleted' AND start_date<=$3 AND end_date>=$2 ORDER BY start_date,created_at,id",
       [c.params.groupId, c.query.from, c.query.to],
     );
     const counts: Record<string, number> = {};

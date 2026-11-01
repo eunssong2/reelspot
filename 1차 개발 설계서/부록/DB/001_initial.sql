@@ -86,11 +86,15 @@ CREATE TABLE consent_documents (
   item_key text NOT NULL,
   version text NOT NULL,
   required boolean NOT NULL,
+  kind text NOT NULL DEFAULT 'consent' CHECK (kind IN ('consent','notice')),
+  title text NOT NULL DEFAULT '',
+  body text,
   content_ref text NOT NULL,
   content_hash text NOT NULL,
   effective_at timestamptz NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(item_key,version)
+  UNIQUE(item_key,version),
+  CHECK (kind <> 'notice' OR NOT required)
 );
 
 COMMENT ON COLUMN consent_documents.id IS '내부 불변 식별자';
@@ -99,7 +103,13 @@ COMMENT ON COLUMN consent_documents.item_key IS '동의 항목';
 
 COMMENT ON COLUMN consent_documents.version IS '불변 문서 버전';
 
-COMMENT ON COLUMN consent_documents.required IS '필수 여부';
+COMMENT ON COLUMN consent_documents.required IS 'consent의 필수 여부; notice는 false';
+
+COMMENT ON COLUMN consent_documents.kind IS '동의와 고지 구분';
+
+COMMENT ON COLUMN consent_documents.title IS '공개 문서명';
+
+COMMENT ON COLUMN consent_documents.body IS '불변 게시 본문; 게시 시 필수·hash 검증';
 
 COMMENT ON COLUMN consent_documents.content_ref IS '문서 경로';
 

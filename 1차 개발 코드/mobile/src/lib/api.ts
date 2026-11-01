@@ -5,7 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Transfer } from '../../modules/atp-transfer';
 import type { components } from '../../../contracts/generated';
 export type Session = components['schemas']['Session'];
-export type Media = components['schemas']['Media'] & { displayName?: string; visitName?: string; durationMs?: number | null };
+export type Media = components['schemas']['Media'] & {
+  displayName?: string;
+  visitName?: string;
+  durationMs?: number | null;
+};
 export const API = requireHttps(process.env.EXPO_PUBLIC_API_URL ?? 'https://sphan0325.ddns.net');
 let session: Session | null = null;
 let refreshing: Promise<void> | null = null;
@@ -73,6 +77,7 @@ export class ApiError extends Error {
     public code: string,
     public requestId?: string,
     public details?: any,
+    public httpStatus?: number,
   ) {
     super(
       (
@@ -83,8 +88,10 @@ export class ApiError extends Error {
           DOCUMENT_UNAVAILABLE: '가입 문서를 불러올 수 없습니다. 잠시 후 다시 확인해 주세요.',
           AUTH_INVALID: '로그인 인증에 실패했습니다. 다시 시작해 주세요.',
           AUTH_CANCELLED: '카카오 로그인을 취소했습니다.',
-          PROVIDER_QUOTA_EXCEEDED: '장소 검색 무료 한도에 도달했습니다. 지금은 직접 등록을 이용해 주세요.',
-          PROVIDER_UNAVAILABLE: '외부 서비스에 연결할 수 없습니다. 잠시 후 다시 시도하거나 직접 등록해 주세요.',
+          PROVIDER_QUOTA_EXCEEDED:
+            '장소 검색 무료 한도에 도달했습니다. 지금은 직접 등록을 이용해 주세요.',
+          PROVIDER_UNAVAILABLE:
+            '외부 서비스에 연결할 수 없습니다. 잠시 후 다시 시도하거나 직접 등록해 주세요.',
           INVITE_INVALID: '유효하지 않은 초대입니다. 링크나 코드를 확인해 주세요.',
           INVITE_EXPIRED: '초대가 만료되었습니다. 새 초대를 받아 주세요.',
           INVITE_REVOKED: '취소된 초대입니다. 새 초대를 받아 주세요.',
@@ -103,7 +110,8 @@ export class ApiError extends Error {
           VERSION_CONFLICT:
             '다른 사람이 먼저 변경했어요. 입력을 유지했으니 최신 내용을 확인해 주세요.',
           EXPIRED: '기록 보관 기한이 지났습니다.',
-          INVITE_EXHAUSTED: '초대 확인 횟수를 모두 사용했어요. 현재 참여자에게 새 초대를 요청해 주세요.',
+          INVITE_EXHAUSTED:
+            '초대 확인 횟수를 모두 사용했어요. 현재 참여자에게 새 초대를 요청해 주세요.',
           MEDIA_LIMIT: '이 장소에 올릴 수 있는 사진·영상 개수를 초과했습니다.',
           FILE_INVALID:
             '지원하지 않거나 손상된 파일입니다. 파일 형식을 확인하거나 다시 촬영해 주세요.',
@@ -119,10 +127,17 @@ export class ApiError extends Error {
   }
 }
 async function fetchTimed(url: string, options: RequestInit) {
-  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 30000);
-  try { return await fetch(url, { ...options, signal: controller.signal }); }
-  catch { throw new Error('서버에 연결할 수 없습니다. 네트워크를 확인하고 다시 시도해 주세요. 입력과 대기 파일은 유지됩니다.'); }
-  finally { clearTimeout(timer); }
+  const controller = new AbortController(),
+    timer = setTimeout(() => controller.abort(), 30000);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch {
+    throw new Error(
+      '서버에 연결할 수 없습니다. 네트워크를 확인하고 다시 시도해 주세요. 입력과 대기 파일은 유지됩니다.',
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 }
 export async function api<T = any>(
   path: string,
@@ -155,7 +170,11 @@ export async function api<T = any>(
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   let r = await request();
-  if (r.status === 401 && session && (!path.startsWith('/auth/') || ['/auth/reauthentication', '/auth/logout'].includes(path))) {
+  if (
+    r.status === 401 &&
+    session &&
+    (!path.startsWith('/auth/') || ['/auth/reauthentication', '/auth/logout'].includes(path))
+  ) {
     if (!refreshing)
       refreshing = (async () => {
         const rr = await fetchTimed(API + '/v1/auth/refresh', {
@@ -182,8 +201,11 @@ export async function api<T = any>(
     await refreshing;
     r = await request();
   }
-  const data = await r.json().catch(() => { throw new Error('서버 응답을 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.'); });
-  const waitingOperation = data.operationId && data.kind && !['succeeded','failed'].includes(data.state);
+  const data = await r.json().catch(() => {
+    throw new Error('서버 응답을 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.');
+  });
+  const waitingOperation =
+    data.operationId && data.kind && !['succeeded', 'failed'].includes(data.state);
   if (mutation && waitingOperation) operationFingerprints.set(data.operationId, fingerprint);
   if (mutation && !waitingOperation && (r.ok || (r.status < 500 && r.status !== 429))) {
     pendingKeys.delete(fingerprint);
@@ -192,32 +214,61 @@ export async function api<T = any>(
   if (!r.ok) {
     if (method === 'GET' && /^\/(groups|schedules)\//.test(path) && [403, 410].includes(r.status))
       for (const listener of accessLostEvents) listener();
-    throw new ApiError(data.code, data.requestId, data.details);
+    throw new ApiError(data.code, data.requestId, data.details, r.status);
   }
   return data;
 }
 export class PendingOperationError extends ApiError {
-  constructor(public operationId: string, message: string) { super(message, operationId); }
+  constructor(
+    public operationId: string,
+    message: string,
+  ) {
+    super(message, operationId);
+  }
 }
 async function finishPending(id: string) {
   const fingerprint = operationFingerprints.get(id);
-  if (fingerprint) { pendingKeys.delete(fingerprint); await persistPending(fingerprint); operationFingerprints.delete(id); }
+  if (fingerprint) {
+    pendingKeys.delete(fingerprint);
+    await persistPending(fingerprint);
+    operationFingerprints.delete(id);
+  }
 }
 export async function awaitOperation(result: any) {
   if (!result?.operationId || !result.kind) return result;
-  if (!['succeeded','failed'].includes(result.state)) {
+  if (!['succeeded', 'failed'].includes(result.state)) {
     const key = `atp.operations:${currentSession()?.userId}`;
     const saved: string[] = JSON.parse((await AsyncStorage.getItem(key)) ?? '[]');
-    await AsyncStorage.setItem(key, JSON.stringify([...new Set([result.operationId,...saved])].slice(0,100)));
+    await AsyncStorage.setItem(
+      key,
+      JSON.stringify([...new Set([result.operationId, ...saved])].slice(0, 100)),
+    );
     result = await api(`/operations/${result.operationId}`);
   }
   for (let i = 0; i < 30; i++) {
-    if (result.state === 'succeeded') { await finishPending(result.operationId); return result.result; }
-    if (result.state === 'failed') { await finishPending(result.operationId); throw new ApiError(result.itemErrors?.[0]?.code ?? '처리에 실패했습니다.', result.operationId); }
-    if (result.state === 'review') throw new PendingOperationError(result.operationId, '운영 검토를 기다리고 있습니다. 처리 상태에서 결과를 확인해 주세요.');
-    await new Promise((r) => setTimeout(r, 1000)); result = await api(`/operations/${result.operationId}`);
+    if (result.state === 'succeeded') {
+      await finishPending(result.operationId);
+      return result.result;
+    }
+    if (result.state === 'failed') {
+      await finishPending(result.operationId);
+      throw new ApiError(
+        result.itemErrors?.[0]?.code ?? '처리에 실패했습니다.',
+        result.operationId,
+      );
+    }
+    if (result.state === 'review')
+      throw new PendingOperationError(
+        result.operationId,
+        '운영 검토를 기다리고 있습니다. 처리 상태에서 결과를 확인해 주세요.',
+      );
+    await new Promise((r) => setTimeout(r, 1000));
+    result = await api(`/operations/${result.operationId}`);
   }
-  throw new PendingOperationError(result.operationId, '처리 결과 확인이 필요합니다. 처리 상태에서 확인해 주세요.');
+  throw new PendingOperationError(
+    result.operationId,
+    '처리 결과 확인이 필요합니다. 처리 상태에서 확인해 주세요.',
+  );
 }
 export async function getGroup(id: string) {
   let cursor: string | null = null;

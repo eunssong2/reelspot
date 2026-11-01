@@ -1,6 +1,6 @@
 {
   "scope": "OpenAPI 3.1 JSON Schema 예제 검증. 서버의 권한·경쟁·파일 실제 전송 검수는 별도.",
-  "openapi_canonical_sha256": "0a335eebae9ba78fe0075bb2d6260bf7e53987f6a56738aa89f19d3bee1bda49",
+  "openapi_canonical_sha256": "5c8358f534c5f31890b20510cf0dbfca9489b745382fe010bfc1064fa9bc956b",
   "passed": true,
   "checks": [
     {
@@ -159,6 +159,47 @@
       "actual_valid": false,
       "validation_errors": [
         "'filename:size' does not match '^[0-9a-f]{64}$'"
+      ]
+    },
+    {
+      "name": "고지 문서 체크 제외",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "고지를 필수 동의로 표시 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "False was expected"
+      ]
+    },
+    {
+      "name": "서비스 이용약관 필수 체크",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "문서 종류 누락 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'kind' is a required property"
+      ]
+    },
+    {
+      "name": "HTTP 문서 URL 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'http://example.invalid/documents/privacy' does not match '^https://'"
       ]
     }
   ]

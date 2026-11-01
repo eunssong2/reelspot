@@ -1,0 +1,17 @@
+{
+  "apk": "at-that-place-release.apk",
+  "bytes": 120296316,
+  "sha256": "720369234306e3a30c0b998f28fb52be9ae6b9929f45dd8e276258a501e77fd5",
+  "version": "0.2.0",
+  "versionCode": 2,
+  "minSdk": 31,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "debuggable": false,
+  "cleartextAllowed": false,
+  "qaResourcesFound": false,
+  "bundledJsMatchesFinalBuild": true,
+  "rootCopyMatchesArtifact": true
+}

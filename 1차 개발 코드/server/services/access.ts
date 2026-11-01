@@ -126,6 +126,15 @@ export function visitDto(r: any) {
   };
 }
 export async function groupDto(c: Context, g: any) {
+  const warnings = await rows(
+    c.db,
+    `SELECT id,title,retention_last_date,expires_at,
+       CASE WHEN expires_at <= now() + interval '1 day' THEN 'last_day' ELSE 'week' END urgency
+     FROM schedules WHERE group_id=$1 AND status<>'deleted' AND retention_fixed_at IS NOT NULL
+       AND expires_at>now() AND expires_at<=now()+interval '7 days'
+     ORDER BY expires_at,id`,
+    [g.id],
+  );
   const n = await one(
     c.db,
     'SELECT count(*)::int n FROM memberships WHERE group_id=$1 AND ended_at IS NULL',
@@ -148,6 +157,7 @@ export async function groupDto(c: Context, g: any) {
     ...(s ? { scheduleSummary: scheduleDto(s) } : {}),
     membershipId: g.membership?.id,
     coverAssetId: g.cover_asset_id,
+    retentionWarnings: warnings.map((s) => ({ scheduleId: s.id, title: s.title, lastDate: s.retention_last_date, urgency: s.urgency })),
   };
 }
 export async function requireReauth(c: Context, proof: string) {

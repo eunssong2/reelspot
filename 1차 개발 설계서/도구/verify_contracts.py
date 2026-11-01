@@ -34,6 +34,12 @@ def main():
     file={'clientFileId':'f1','selectionIndex':0,'name':'one.jpg','mime':'image/jpeg','declaredBytes':100,'fingerprint':'a'*64,'checksum':'a'*64,'kind':'photo','recordDate':'2026-10-17'}
     add('원본 SHA256 후보','FileInput',file)
     bad=copy.deepcopy(file);bad['checksum']='filename:size';add('가짜 파일 해시 거부','FileInput',bad,False)
+    document={'id':U,'itemKey':'privacy','title':'개인정보 처리방침','version':'1','kind':'notice','required':False,'url':'https://example.invalid/documents/privacy','development':False}
+    add('고지 문서 체크 제외','ConsentDocument',document)
+    add('고지를 필수 동의로 표시 거부','ConsentDocument',{**document,'required':True},False)
+    add('서비스 이용약관 필수 체크','ConsentDocument',{**document,'itemKey':'terms-service','kind':'consent','required':True})
+    add('문서 종류 누락 거부','ConsentDocument',{k:v for k,v in document.items() if k!='kind'},False)
+    add('HTTP 문서 URL 거부','ConsentDocument',{**document,'url':'http://example.invalid/documents/privacy'},False)
     checks=[]
     for ex in examples:
         wrapper={'$ref':'#/components/schemas/'+ex['component'],'components':schema['components']}

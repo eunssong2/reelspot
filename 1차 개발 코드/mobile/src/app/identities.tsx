@@ -42,7 +42,7 @@ export default function Identities() {
         </Card>
       ))}
       {(['kakao', 'google'] as const)
-        .filter((p) => !identities.some((i) => i.provider === p))
+        .filter((p) => p !== 'google' && !identities.some((i) => i.provider === p))
         .map((provider) => (
           <Button
             key={provider}

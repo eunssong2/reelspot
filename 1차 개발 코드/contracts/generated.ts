@@ -1586,6 +1586,15 @@ export interface components {
                 /** Format: date */
                 endDate?: string;
             };
+            retentionWarnings?: {
+                /** Format: uuid */
+                scheduleId: string;
+                title: string;
+                /** Format: date */
+                lastDate: string;
+                /** @enum {unknown} */
+                urgency: "week" | "last_day";
+            }[];
         };
         Schedule: {
             /** Format: uuid */

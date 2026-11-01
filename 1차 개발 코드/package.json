@@ -27,6 +27,7 @@
     "setup": "node scripts/setup.mjs",
     "test:mobile-policy": "tsx --test mobile/tests/*.test.ts",
     "documents:publish": "tsx server/db/publish-documents.ts",
+    "ops:local": "tsx server/cli/ops-local.ts",
     "check:runtime": "node scripts/check-runtime.mjs"
   },
   "dependencies": {

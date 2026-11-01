@@ -370,5 +370,79 @@
       "kind": "photo",
       "recordDate": "2026-10-17"
     }
+  },
+  {
+    "name": "고지 문서 체크 제외",
+    "component": "ConsentDocument",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "itemKey": "privacy",
+      "title": "개인정보 처리방침",
+      "version": "1",
+      "kind": "notice",
+      "required": false,
+      "url": "https://example.invalid/documents/privacy",
+      "development": false
+    }
+  },
+  {
+    "name": "고지를 필수 동의로 표시 거부",
+    "component": "ConsentDocument",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "itemKey": "privacy",
+      "title": "개인정보 처리방침",
+      "version": "1",
+      "kind": "notice",
+      "required": true,
+      "url": "https://example.invalid/documents/privacy",
+      "development": false
+    }
+  },
+  {
+    "name": "서비스 이용약관 필수 체크",
+    "component": "ConsentDocument",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "itemKey": "terms-service",
+      "title": "개인정보 처리방침",
+      "version": "1",
+      "kind": "consent",
+      "required": true,
+      "url": "https://example.invalid/documents/privacy",
+      "development": false
+    }
+  },
+  {
+    "name": "문서 종류 누락 거부",
+    "component": "ConsentDocument",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "itemKey": "privacy",
+      "title": "개인정보 처리방침",
+      "version": "1",
+      "required": false,
+      "url": "https://example.invalid/documents/privacy",
+      "development": false
+    }
+  },
+  {
+    "name": "HTTP 문서 URL 거부",
+    "component": "ConsentDocument",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "itemKey": "privacy",
+      "title": "개인정보 처리방침",
+      "version": "1",
+      "kind": "notice",
+      "required": false,
+      "url": "http://example.invalid/documents/privacy",
+      "development": false
+    }
   }
 ]

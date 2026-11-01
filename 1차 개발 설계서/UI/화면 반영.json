@@ -1,5 +1,5 @@
 {
-  "source_commit": "c19f34c1c498cadfa171bb2d28d1700e0e9bdba0",
+  "source_commit": "a67ee60368819ce5a325b5fe2ace17f9c85140c1",
   "main_screens": 35,
   "replaced_ui": [
     "UI36",
@@ -12,15 +12,27 @@
     "UI13",
     "UI09",
     "UI18",
-    "UI14"
-  ],
-  "captures": 27,
-  "supplemental_screens": 16,
-  "gallery_pages": [
+    "UI14",
     "UI01",
     "UI02",
     "UI03",
     "UI04",
+    "UI05",
+    "UI06",
+    "UI23",
+    "UI24"
+  ],
+  "captures": 36,
+  "supplemental_screens": 17,
+  "gallery_pages": [
+    "UI01",
+    "UI01-PRODUCT",
+    "UI02",
+    "UI02-PRODUCT",
+    "UI03",
+    "UI03-PRODUCT",
+    "UI04",
+    "PERIOD",
     "UI05",
     "UI06",
     "UI08",
@@ -70,6 +82,6 @@
     "S0"
   ],
   "pdf_intro_pages": 1,
-  "pdf_pages": 52,
-  "pptx_slides": 54
+  "pdf_pages": 56,
+  "pptx_slides": 58
 }

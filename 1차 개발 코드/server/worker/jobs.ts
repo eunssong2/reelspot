@@ -111,7 +111,7 @@ export async function processOne() {
           'scan',
           'task',
           t.id,
-          '画像・영상 공개 전 검토',
+          '사진·영상 공개 전 검토',
           t.author_user_id,
         );
         await notify(

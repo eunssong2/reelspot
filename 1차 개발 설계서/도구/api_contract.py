@@ -25,12 +25,12 @@ TIME={'type':['string','null'],'pattern':'^([01][0-9]|2[0-3]):[0-5][05]$'}
 target=A(O({'id':UUID,'expectedVersion':V},['id','expectedVersion']),minItems=1,maxItems=120,uniqueItems=True)
 def field_apply(t): return O({'apply':B(),'value':t},['apply','value'])
 REQUESTS={
- 'authExchange':O({'provider':S(enum=['kakao','google']),'credential':S(),'nonce':S(),'loginAttemptId':S()},['provider','credential','nonce','loginAttemptId']),
+ 'authExchange':O({'provider':S(enum=['kakao','google'],description='현재 Google 활성화 보류. enum 보존은 신규 로그인 허용을 뜻하지 않는다.'),'credential':S(),'nonce':S(),'loginAttemptId':S()},['provider','credential','nonce','loginAttemptId']),
  'sessionRefresh':O({'refreshToken':S()},['refreshToken']),
  'onboard':O({'displayName':S(),'consents':A(O({'documentId':UUID,'version':S(),'agreed':B()},['documentId','version','agreed']))},['displayName','consents']),
  'profilePatch':O({'displayName':S(),'expectedVersion':V},['displayName','expectedVersion']),
  'consentUpdate':O({'items':A(O({'documentId':UUID,'version':S(),'agreed':B()},['documentId','version','agreed']))},['items']),
- 'identityLink':O({'provider':S(enum=['kakao','google']),'credential':S(),'reauthProof':S()},['provider','credential','reauthProof']),
+ 'identityLink':O({'provider':S(enum=['kakao','google'],description='현재 Google 활성화 보류. enum 보존은 신규 로그인 허용을 뜻하지 않는다.'),'credential':S(),'reauthProof':S()},['provider','credential','reauthProof']),
  'identityUnlink':O({'expectedVersion':V},['expectedVersion']),
  'groupCreate':O({'name':S(),'firstSchedule':R('ScheduleInput')},['name','firstSchedule']),
  'groupUpdate':O({'name':S(),'coverAssetId':UUID,'restoreDefault':B(),'expectedVersion':V},['expectedVersion'],description='이름/대표사진/기본복원 중 하나 이상. 새 텍스트·이미지는 검사 후 적용.'),
@@ -77,12 +77,12 @@ def page(items):return O({'items':A(items),'nextCursor':{'type':['string','null'
 RESPONSES={
  'authExchange':O({'session':R('Session'),'user':R('Profile'),'onboardingRequired':B()},['session','user','onboardingRequired']),
  'sessionRefresh':R('Session'),'onboard':O({'user':R('Profile'),'consentReceipts':A(O({'documentId':UUID,'version':S(),'agreed':B(),'occurredAt':DT}))},['user','consentReceipts']),
- 'consentDocs':O({'documents':A(O({'id':UUID,'version':S(),'required':B(),'url':S()},['id','version','required','url']))},['documents']),
+ 'consentDocs':O({'documents':A(O({'id':UUID,'itemKey':S(),'title':S(),'version':S(),'kind':S(enum=['consent','notice']),'required':B(),'url':S(format='uri',pattern='^https://'),'development':B()},['id','itemKey','title','version','kind','required','url','development'],allOf=[{'if':{'properties':{'kind':{'const':'notice'}}},'then':{'properties':{'required':{'const':False}}}}],description='게시 문서만 반환. consent는 체크 대상, notice는 고지 링크. 신규 가입 기본 필수 consent는 서비스 이용약관 1개이며 빈 목록은 가입 완료 조건이 아니다.'))},['documents']),
  'profilePatch':{'oneOf':[R('Profile'),R('Operation')]},
  'groupsList':page(R('Group')),
  'groupCreate':{'oneOf':[O({'group':R('Group'),'membershipId':UUID,'firstSchedule':R('Schedule')},['group','membershipId','firstSchedule']),R('Operation')]},
  'groupUpdate':{'oneOf':[R('Group'),R('Operation')]},
- 'calendar':O({'schedules':A(R('Schedule')),'dateCounts':O({})},['schedules','dateCounts']),
+ 'calendar':O({'schedules':A(R('Schedule')),'dateCounts':O({})},['schedules','dateCounts'],description='from/to 범위에 겹치는 전체 일정. 서버가 startDate/created_at/id 오름차순 정렬해 반환하며 앱은 월 목록에서 이 순서를 보존한다. 달력은 표시42일, 월 목록은 기준 월과 겹치는 항목으로 필터링. 셀의 시작일/긴 기간/id 정렬과 최대3개 표시는 조회 개수를 줄이지 않는다.'),
  'scheduleDetail':O({'schedule':R('Schedule'),'retention':O({'fixed':B(),'lastDate':DATE,'expiresAt':DT}),'plan':A(O({'date':DATE,'title':S(),'visits':A(R('Visit')),'visitCount':I(minimum=0,maximum=15),'visitLimit':I(const=15),'version':V},['date','title','visits','visitCount','visitLimit','version'],additionalProperties=False)),'version':V},['schedule','retention','plan','version']),
  'scheduleCreate':R('Schedule'),
  'scheduleUpdate':R('Schedule'),
@@ -130,7 +130,7 @@ RESPONSES={
 
 REQUESTS.update({
  'blockDelete':O({}),
- 'reauthenticate':O({'provider':S(enum=['kakao','google']),'credential':S(),'nonce':S()},['provider','credential','nonce']),
+ 'reauthenticate':O({'provider':S(enum=['kakao','google'],description='현재 Google 활성화 보류. enum 보존은 신규 로그인 허용을 뜻하지 않는다.'),'credential':S(),'nonce':S()},['provider','credential','nonce']),
  'notificationRead':O({}),
  'recoveryConsent':O({'agreed':B(),'reauthProof':S()},['agreed','reauthProof']),
  'recoveryResponse':O({'response':S(enum=['agree','object','contacted']),'reason':S()},['response','reason'])})
@@ -147,6 +147,9 @@ RESPONSES.update({
  'recoveryResponse':O({'state':S(),'receivedAt':DT},['state','receivedAt']),
  'opsCaseGet':O({'case':O({'id':UUID,'type':S(),'state':S(),'targetId':UUID,'version':V,'reason':S()}),'evidenceRefs':A(S()),'history':A(O({'actorId':UUID,'action':S(),'reason':S(),'createdAt':DT}))},['case','evidenceRefs','history'])})
 for key in ['blocksList','notificationsList']:QUERIES[key]={'cursor':S()}
+
+SCHEMAS['ConsentDocument']=RESPONSES['consentDocs']['properties']['documents']['items']
+RESPONSES['consentDocs']['properties']['documents']['items']=R('ConsentDocument')
 
 def build_openapi():
     import re
@@ -195,4 +198,4 @@ def build_openapi():
             assert a['id'] in REQUESTS,a['id']
             op['requestBody']={'required':True,'content':{'application/json':{'schema':REQUESTS[a['id']]}}}
         paths.setdefault(a['path'],{})[a['method'].lower()]=op
-    return dict(openapi='3.1.0',info={'title':'At that place 1차 개발 API 설계안','version':'0.3.2-design','description':'패키지 기준/기능명세서.md(v2.2, 2026-10-30)와09 구현계약 보완 기준. 반복 일정·외부 공유 없음, 초대 50회·방문 15개·사진5/영상2 한도 포함. 실제 배포 서버가 아니다. NFC grapheme 검증과 권한/상태/한도 검사는 서버 책임.'},servers=[{'url':'https://api.example.invalid/v1','description':'문서용 가상 주소·실서비스 없음'}],paths=paths,components={'securitySchemes':{'bearerAuth':{'type':'http','scheme':'bearer','bearerFormat':'JWT'}},'schemas':SCHEMAS})
+    return dict(openapi='3.1.0',info={'title':'At that place 1차 개발 API 설계안','version':'0.3.3-design','description':'패키지 기준/기능명세서.md(v2.3, 2026-10-30)와09 구현계약 보완 기준. 반복 일정·외부 공유 없음, 초대 50회·방문 15개·사진5/영상2 한도 포함. 실제 배포 서버가 아니다. NFC grapheme 검증과 권한/상태/한도 검사는 서버 책임.'},servers=[{'url':'https://api.example.invalid/v1','description':'문서용 가상 주소·실서비스 없음'}],paths=paths,components={'securitySchemes':{'bearerAuth':{'type':'http','scheme':'bearer','bearerFormat':'JWT'}},'schemas':SCHEMAS})

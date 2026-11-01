@@ -16,8 +16,8 @@ async def render(only_diagrams=False, ui_only=False):
             await browser.close();return
         (ROOT/'UI/미리보기').mkdir(exist_ok=True)
         issues=[]
-        for p in sorted((ROOT/'UI/SVG').glob('*.svg')):
-            await page.goto(p.as_uri());await page.locator('svg').screenshot(path=str(ROOT/'UI/미리보기'/(p.stem+'.png')))
+        for p in sorted((ROOT/'UI/SVG').glob('*.svg')) + sorted((ROOT/'UI/제품적용').glob('*.svg')):
+            await page.goto(p.as_uri());await page.locator('svg').screenshot(path=str((p.parent if p.parent.name=='제품적용' else ROOT/'UI/미리보기')/(p.stem+'.png')))
             bounds=await page.evaluate('''()=>[...document.querySelectorAll('text')].map(t=>({text:t.textContent,box:((b)=>({x:b.x,y:b.y,width:b.width,height:b.height}))(t.getBBox())})).filter(t=>t.box.x< -1||t.box.y< -1||t.box.x+t.box.width>391||t.box.y+t.box.height>845)''')
             if bounds:issues.append({'screen':p.stem,'outside':bounds})
         (ROOT/'부록/SVG 레이아웃 검사.json').write_text(json.dumps(issues,ensure_ascii=False,indent=2))

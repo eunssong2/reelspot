@@ -29,7 +29,7 @@ export function registerDocuments(app: FastifyInstance) {
       `<p>버전 ${escapeHtml(doc.version)} · 시행 ${new Date(doc.effective_at).toISOString().slice(0,10)}</p><pre>${escapeHtml(body)}</pre>`));
   });
 }
-export async function publishDocuments(manifestPath: string) {
+export async function publishDocuments(manifestPath: string, options: { dryRun?: boolean } = {}) {
   const path = resolve(manifestPath);
   const manifest = JSON.parse(await readFile(path, 'utf8'));
   demand(manifest.approvedForPublication === true && Array.isArray(manifest.documents), 'DOCUMENT_REVIEW_REQUIRED');
@@ -44,6 +44,7 @@ export async function publishDocuments(manifestPath: string) {
     return { ...d, body, digest: hash(body) };
   }));
   demand(new Set(documents.map((d) => d.itemKey)).size === documents.length, 'DUPLICATE_DOCUMENT');
+  if (options.dryRun) return documents.map((d) => ({ itemKey: d.itemKey, version: d.version, sha256: d.digest }));
   await tx(async (db) => {
     await db.query('SELECT pg_advisory_xact_lock(74103104)');
     for (const d of documents) {

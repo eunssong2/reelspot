@@ -55,7 +55,7 @@ async def capture(source, base_url):
         await shot('SET','설정','UI28',screens+'SettingsScreen.tsx','마이페이지 → 설정',[
             '프로필·초대코드·OS 위치 설정·문서·로그아웃·탈퇴 배치를 참고한다.',
             '제품에서는 내 기록·동의 내역·신고/차단·캐시·문의 경로도 유지. 준비 중 안내는 실제 기능 완료가 아니다.',
-            '약관13과 F02/F24의 차이는 출시 전 회의 안건 A13이다.'])
+            'F02의 가입 구성은 v2.3에서 반영했다. 연령·추가 동의·F24 등 남은 출시 조건은 A13이다.'])
         await page.get_by_role('button',name='초대코드 입력',exact=True).click()
         await shot('SET-invite','초대코드 입력',None,screens+'SettingsScreen.tsx','설정 → 초대코드 입력',[
             '제품에서는 UI24 초대 확인 후 명시적 참여로 연결. 코드만 입력하고 참여 완료로 처리하지 않는다.'])

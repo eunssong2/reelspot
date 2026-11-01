@@ -52,7 +52,7 @@ def main():
     isolated=json.loads((ROOT/'부록/독립 패키지 검증.json').read_text())
     check('상위 원본과 DayLog 없는 패키지 재생성',isolated['passed'],isolated)
     qa_count=sum(map(len,QA.values()))
-    check(f'{qa_count}개 기능 검수 시나리오',set(QA)==required and qa_count==116,qa_count)
+    check(f'{qa_count}개 기능 검수 시나리오',set(QA)==required and qa_count==120,qa_count)
     svg_paths=list((ROOT/'UI/SVG').glob('*.svg'))
     from prototype_ui import load_source
     prototype=load_source()

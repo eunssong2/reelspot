@@ -14483,6 +14483,37 @@
               }
             },
             "required": []
+          },
+          "retentionWarnings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "scheduleId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "lastDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "urgency": {
+                  "enum": [
+                    "week",
+                    "last_day"
+                  ]
+                }
+              },
+              "required": [
+                "scheduleId",
+                "title",
+                "lastDate",
+                "urgency"
+              ]
+            }
           }
         },
         "required": [

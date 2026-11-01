@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Alert,
   Pressable,
   ScrollView,
@@ -31,12 +32,18 @@ export function Screen({
   children,
   back = true,
   scrollKey,
+  footer,
+  compact = false,
+  tabs = false,
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
   back?: boolean;
   scrollKey?: string;
+  footer?: React.ReactNode;
+  compact?: boolean;
+  tabs?: boolean;
 }) {
   const pathname = usePathname(),
     params = useLocalSearchParams();
@@ -45,40 +52,87 @@ export function Screen({
     restored = useRef(false);
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView
-        ref={scroll}
-        contentContainerStyle={s.screen}
-        keyboardShouldPersistTaps="handled"
-        scrollEventThrottle={100}
-        onScroll={(e) => {
-          scrollPositions.set(key, e.nativeEvent.contentOffset.y);
-          if (scrollPositions.size > 100)
-            scrollPositions.delete(scrollPositions.keys().next().value!);
-        }}
-        onContentSizeChange={(_, height) => {
-          const y = scrollPositions.get(key) ?? 0;
-          if (!restored.current && height > y) {
-            restored.current = true;
-            scroll.current?.scrollTo({ y, animated: false });
-          }
-        }}
-      >
-        {back && (
-          <Pressable
-            accessibilityLabel="이전 화면"
-            android_ripple={{ color: '#F1706B20' }}
-            style={({ pressed }) => [s.back, pressed && s.pressed]}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView
+          ref={scroll}
+          contentContainerStyle={s.screen}
+          keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={100}
+          onScroll={(e) => {
+            scrollPositions.set(key, e.nativeEvent.contentOffset.y);
+            if (scrollPositions.size > 100)
+              scrollPositions.delete(scrollPositions.keys().next().value!);
+          }}
+          onContentSizeChange={(_, height) => {
+            const y = scrollPositions.get(key) ?? 0;
+            if (!restored.current && height > y) {
+              restored.current = true;
+              scroll.current?.scrollTo({ y, animated: false });
+            }
+          }}
+        >
+          {back && (
+            <Pressable
+              accessibilityLabel="이전 화면"
+              android_ripple={{ color: '#F1706B20' }}
+              style={({ pressed }) => [s.back, pressed && s.pressed]}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+            >
+              <Text style={s.link}>‹ 돌아가기</Text>
+            </Pressable>
+          )}
+          {!compact && <Text style={s.brand}>At that place</Text>}
+          {!!title && <Text style={[s.h1, compact && { fontSize: 24 }]}>{title}</Text>}
+          {subtitle && <Text style={s.subtitle}>{subtitle}</Text>}
+          {children}
+        </ScrollView>
+        {footer && (
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 8,
+              paddingBottom: 8,
+              borderTopWidth: 1,
+              borderColor: colors.line,
+              backgroundColor: colors.bg,
+            }}
           >
-            <Text style={s.link}>‹ 돌아가기</Text>
-          </Pressable>
+            {footer}
+          </View>
         )}
-        <Text style={s.brand}>At that place</Text>
-        <Text style={s.h1}>{title}</Text>
-        {subtitle && <Text style={s.subtitle}>{subtitle}</Text>}
-        {children}
-      </ScrollView>
+        {tabs && <BottomTabs />}
+      </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+export function BottomTabs() {
+  const path = usePathname();
+  return (
+    <View style={{ flexDirection: 'row', borderTopWidth: 1, borderColor: colors.line }}>
+      {(
+        [
+          ['/', '모임', '▦'],
+          ['/mine', '내 기록', '▧'],
+          ['/my-page', '마이페이지', '○'],
+        ] as const
+      ).map(([href, label, icon]) => (
+        <Pressable
+          key={href}
+          accessibilityRole="tab"
+          accessibilityLabel={label}
+          accessibilityState={{ selected: path === href }}
+          onPress={() => router.replace(href)}
+          style={{ flex: 1, minHeight: 64, alignItems: 'center', justifyContent: 'center', gap: 3 }}
+        >
+          <Text style={{ fontSize: 23, color: path === href ? colors.accent : colors.muted }}>
+            {icon}
+          </Text>
+          <Text style={{ fontSize: 12, color: path === href ? colors.accent : colors.muted }}>
+            {label}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
   );
 }
 export function Button({
@@ -144,6 +198,7 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
     <View style={{ marginBottom: 17 }}>
       <Text style={s.label}>{label}</Text>
       <TextInput
+        accessibilityLabel={label}
         placeholderTextColor="#9A9D93"
         {...props}
         style={[
@@ -245,7 +300,7 @@ export function confirm(title: string, message: string, action: () => void) {
 }
 export const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  screen: { padding: 20, paddingBottom: 48 },
+  screen: { padding: 20, paddingBottom: 32, flexGrow: 1 },
   back: { minHeight: 48, justifyContent: 'center' },
   brand: {
     fontWeight: '800',
@@ -260,7 +315,7 @@ export const s = StyleSheet.create({
   p: { fontSize: 15, lineHeight: 24, color: colors.muted, marginVertical: 5 },
   button: {
     backgroundColor: colors.accent,
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
     minHeight: 56,
     padding: 16,
@@ -268,7 +323,7 @@ export const s = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 7,
   },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  buttonText: { color: '#fff', fontWeight: '600', fontSize: 17 },
   secondary: { backgroundColor: '#F2F4F6' },
   card: {
     backgroundColor: colors.paper,

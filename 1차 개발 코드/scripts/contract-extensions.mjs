@@ -2,6 +2,12 @@ import { readFile, writeFile } from 'node:fs/promises';
 const dir = new URL('../contracts/', import.meta.url),
   design = JSON.parse(await readFile(new URL('design.openapi.json', dir), 'utf8'));
 const task = design.components.schemas.UploadTask;
+design.components.schemas.Group.properties.retentionWarnings = {
+  type: 'array', items: { type: 'object', properties: {
+    scheduleId: { type: 'string', format: 'uuid' }, title: { type: 'string' },
+    lastDate: { type: 'string', format: 'date' }, urgency: { enum: ['week', 'last_day'] },
+  }, required: ['scheduleId', 'title', 'lastDate', 'urgency'] },
+};
 task.properties.clientFileId = { type: 'string' };
 task.properties.selectionIndex = { type: ['integer', 'null'], minimum: 0, maximum: 119 };
 task.required.push('clientFileId', 'selectionIndex');

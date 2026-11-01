@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "integration": {
+    "passed": 58,
+    "failed": 0,
+    "skipped": 0
+  },
+  "mobilePolicies": {
+    "passed": 8,
+    "failed": 0
+  },
+  "emulator": "Android 15 x86_64, separate read-only AVD",
+  "checks": [
+    "Release installation and Metro-free startup",
+    "Kakao-only login; production 503 shown as error",
+    "42-day period sheet",
+    "same-day selection",
+    "cancel preserves previous dates",
+    "continue editing preserves observed input"
+  ],
+  "limits": [
+    "No real Kakao account sign-in completion",
+    "No authenticated public-server write flow",
+    "Initial emulator System UI delay resolved before app inspection"
+  ],
+  "screenshots": "PNG and UIAutomator XML pairs in this directory"
+}

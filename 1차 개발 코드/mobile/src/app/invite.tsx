@@ -1,69 +1,119 @@
 import { useInitialize } from '../lib/effects';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api } from '../lib/api';
+import { api, API } from '../lib/api';
+import { parseInviteInput } from '../lib/invite-input';
 import { useAccount } from '../lib/state';
-import { Screen, Field, Button, H, P, Card, useAction } from '../components/ui';
+import { Screen, Field, Button, H, P, Card, Badge, useAction } from '../components/ui';
 export default function Invite() {
-  const params = useLocalSearchParams<{ token?: string }>(),
-    [token, setToken] = useState(params.token ?? ''),
-    [preview, setPreview] = useState<any>(null);
+  const params = useLocalSearchParams<{ token?: string; code?: string }>(),
+    [token, setToken] = useState(params.token ?? params.code ?? ''),
+    [opaqueToken, setOpaqueToken] = useState(!!params.token),
+    [preview, setPreview] = useState<any>(null),
+    generation = useRef(0);
   const { session, profile } = useAccount(),
     a = useAction();
-  useInitialize(() => {
-    AsyncStorage.getItem('atp.pending-invite').then((v) => {
-      if (v && !params.token) {
-        const p = JSON.parse(v);
-        setToken(p.token);
-        setPreview(p.preview);
-      }
-    });
-  }, []);
-  async function check() {
+  async function check(input = token, preserveToken = opaqueToken) {
+    const request = ++generation.current;
+    setToken(input);
+    setOpaqueToken(preserveToken);
+    setPreview(null);
     await a.run(async () => {
-      let value = token.trim();
-      if (/^[a-z][a-z0-9+.-]*:/i.test(value)) { try { const url = new URL(value); if (!['https:', 'atthatplace:'].includes(url.protocol)) throw new Error(); value = url.searchParams.get('token') ?? ''; } catch { throw new Error('HTTPS 초대 링크 또는 코드를 입력해 주세요.'); } }
-      if (!value) throw new Error('초대 코드 또는 링크를 입력해 주세요.');
+      await AsyncStorage.removeItem('atp.pending-invite');
+      const value = parseInviteInput(input, API, preserveToken);
+      const result = await api(`/invite-preview?tokenOrCode=${encodeURIComponent(value)}`);
+      if (request !== generation.current) return;
       setToken(value);
-      const p = await api(`/invite-preview?tokenOrCode=${encodeURIComponent(value)}`);
-      setPreview(p);
-      await AsyncStorage.setItem('atp.pending-invite', JSON.stringify({ token: value, preview: p }));
+      setOpaqueToken(true);
+      setPreview(result);
+      await AsyncStorage.setItem(
+        'atp.pending-invite',
+        JSON.stringify({ token: value, preview: result }),
+      );
+    });
+  }
+  useInitialize(() => {
+    void a.run(async () => {
+      let saved: any = null;
+      try {
+        saved = JSON.parse((await AsyncStorage.getItem('atp.pending-invite')) ?? 'null');
+      } catch {
+        await AsyncStorage.removeItem('atp.pending-invite');
+      }
+      const incoming = params.token ?? params.code;
+      if (saved?.token && saved?.preview && (!incoming || incoming === saved.token)) {
+        setToken(saved.token);
+        setOpaqueToken(true);
+        setPreview(saved.preview);
+      } else if (incoming) await check(incoming, !!params.token);
+    });
+  }, [params.token, params.code]);
+  async function join() {
+    if (!session || profile?.status === 'onboarding') {
+      router.push(session ? '/onboarding' : '/login');
+      return;
+    }
+    await a.run(async () => {
+      const result = await api('/invitations/join', { tokenOrCode: token });
+      await AsyncStorage.removeItem('atp.pending-invite');
+      router.replace(`/group/${result.groupId}`);
     });
   }
   return (
-    <Screen title="모임에 초대받았어요" subtitle="초대를 확인한 뒤 참여할 수 있어요.">
+    <Screen
+      compact
+      title="초대 확인"
+      subtitle="초대를 확인하고 모임의 순간을 함께 남겨요."
+      footer={
+        preview ? (
+          <Button disabled={a.busy} onPress={join}>
+            {!session
+              ? '로그인하고 참여 계속하기'
+              : profile?.status === 'onboarding'
+                ? '가입하고 참여 계속하기'
+                : '모임 참여하기 →'}
+          </Button>
+        ) : (
+          <Button disabled={a.busy || !token.trim()} onPress={() => check()}>
+            초대 확인
+          </Button>
+        )
+      }
+    >
+      <H>모임에 초대받았어요!</H>
       <Field
         label="초대 코드 또는 링크"
+        placeholder="받은 코드 또는 링크를 입력해 주세요"
         value={token}
-        onChangeText={(v) => {
-          setToken(v);
-          setPreview(null);
-        }}
+        editable={!a.busy}
         autoCapitalize="none"
+        onChangeText={(v) => {
+          generation.current++;
+          setToken(v);
+          setOpaqueToken(false);
+          setPreview(null);
+          void AsyncStorage.removeItem('atp.pending-invite');
+        }}
       />
-      {!preview ? (
-        <Button onPress={check}>초대 확인</Button>
-      ) : (
-        <Card>
-          <H>{preview.groupName}</H>
-          <P>{preview.scheduleSummary?.title ?? '예정된 일정이 없어요.'}</P>
-          <P>받은 초대는 다른 사람에게 전달하면 그 사람도 참여할 수 있어요.</P>
-          <Button
-            disabled={a.busy}
-            onPress={() =>
-              session && profile?.status !== 'onboarding'
-                ? a.run(async () => {
-                    const r = await api('/invitations/join', { tokenOrCode: token });
-                    await AsyncStorage.removeItem('atp.pending-invite');
-                    router.replace(`/group/${r.groupId}`);
-                  })
-                : router.push(session ? '/onboarding' : '/login')
-            }
-          >
-            {session ? profile?.status === 'onboarding' ? '가입하고 참여하기' : '참여하기' : '로그인하고 참여하기'}
-          </Button>
-        </Card>
+      {preview && (
+        <>
+          <Card style={{ backgroundColor: '#FDEDEB', borderWidth: 0 }}>
+            <Badge>초대받은 모임</Badge>
+            <H>{preview.groupName}</H>
+            <P>{preview.scheduleSummary?.title ?? '예정된 일정이 없어요.'}</P>
+            {preview.scheduleSummary?.startDate && (
+              <P>
+                {preview.scheduleSummary.startDate} ~ {preview.scheduleSummary.endDate}
+              </P>
+            )}
+            <P>참여 후 이 모임의 일정과 기록을 볼 수 있어요.</P>
+          </Card>
+          <Card>
+            <P>참여 버튼을 눌러야 모임에 참여합니다. 로그인만으로 자동 참여하지 않아요.</P>
+            <P>받은 사람이 다른 사람에게 전달하면 그 사람도 참여할 수 있어요.</P>
+          </Card>
+        </>
       )}
       {a.errorView}
     </Screen>

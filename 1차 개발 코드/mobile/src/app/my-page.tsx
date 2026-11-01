@@ -33,7 +33,7 @@ export default function MyPage() {
     };
   }, []);
   return (
-    <Screen title="마이페이지">
+    <Screen title="마이페이지" compact back={false} tabs>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginVertical: 20 }}>
         <Avatar name={profile?.displayName ?? '나'} size={88} />
         <View style={{ flex: 1 }}>
