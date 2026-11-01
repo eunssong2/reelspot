@@ -135,6 +135,73 @@ async function user() {
   );
   return { ...r, token, credential };
 }
+test('검토 해제: 모임·일정·표시명 저장과 사진·영상·커버 공개에 운영 승인 불필요', { skip: !enabled }, async (t) => {
+  const previousMode = config.moderationMode;
+  config.moderationMode = 'disabled';
+  t.after(() => { config.moderationMode = previousMode; });
+  const classifier = t.mock.method(globalThis, 'fetch', async () => { throw new Error('No classifier needed'); });
+  const a = await user();
+  const group = await call('POST', '/groups', {
+    name: '[review] 모임',
+    firstSchedule: { title: '[reject] 일정', startDate: '2026-11-01', endDate: '2026-11-02', timezone: 'Asia/Seoul' },
+  }, a.token);
+  assert.ok(group.group.id);
+  assert.equal(group.operationId, undefined);
+  const profile = await call('GET', '/me/profile', undefined, a.token);
+  const updated = await call('PATCH', '/me/profile', { displayName: '[review] 이름', expectedVersion: profile.version }, a.token);
+  assert.equal(updated.displayName, '[review] 이름');
+  const prefix = `fixtures/${randomUUID()}`;
+  await mkdir(objects.path(prefix), { recursive: true });
+  const photoPath = objects.path(`${prefix}/photo.jpg`);
+  const videoPath = objects.path(`${prefix}/video.mp4`);
+  await tool('convert', ['-size', '80x60', 'xc:blue', photoPath]);
+  await tool('ffmpeg', ['-nostdin', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=blue:s=160x120:r=10', '-t', '0.3', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', videoPath]);
+  for (const target of ['photo', 'video', 'cover']) {
+    const video = target === 'video';
+    const data = await readFile(video ? videoPath : photoPath);
+    const file = {
+      clientFileId: randomUUID(), selectionIndex: 0, name: video ? 'video.mp4' : 'photo.jpg',
+      kind: video ? 'video' : 'photo', mime: video ? 'video/mp4' : 'image/jpeg',
+      declaredBytes: data.length, fingerprint: hash(data), checksum: hash(data),
+      recordDate: '2026-11-01', description: '[review] [reject]',
+    };
+    const prepared = target === 'cover'
+      ? await call('POST', `/groups/${group.group.id}/cover-uploads`, { file }, a.token)
+      : await call('POST', `/schedules/${group.firstSchedule.id}/submissions`, { files: [file] }, a.token);
+    const task = target === 'cover' ? prepared : prepared.tasks[0];
+    assert.ok(task, JSON.stringify(prepared));
+    const chunk = await app.inject({ method: 'PATCH', url: task.transport.uploadEndpoint, payload: data, headers: {
+      Authorization: `Bearer ${a.token}`, 'Content-Type': 'application/offset+octet-stream',
+      'Upload-Offset': '0', 'Upload-Generation': '1', 'Upload-Checksum': `sha256 ${hash(data)}`,
+    } });
+    assert.equal(chunk.statusCode, 204, chunk.body);
+    await call('POST', `/upload-tasks/${task.id}/commit`, { checksum: hash(data), actualBytes: data.length }, a.token);
+    let current: any;
+    for (let i = 0; i < 30; i++) {
+      await processOne();
+      current = await call('GET', `/upload-tasks/${task.id}`, undefined, a.token);
+      if (current.state !== 'verifying') break;
+    }
+    assert.equal(current.state, 'complete', JSON.stringify(current));
+    if (target !== 'cover') {
+      const content = await app.inject({ method: 'GET', url: `/v1/media/${current.mediaId}/content?variant=view&context=shared`, headers: { Authorization: `Bearer ${a.token}` } });
+      assert.equal(content.statusCode, 200);
+    } else {
+      assert.ok(current.coverAssetId);
+      const before = await tx(db => one(db, 'SELECT version FROM groups WHERE id=$1', [group.group.id]));
+      const applied = await call('PATCH', `/groups/${group.group.id}`, {
+        coverAssetId: current.coverAssetId, expectedVersion: Number(before.version), name: '[review] 커버 모임',
+      }, a.token);
+      assert.equal(applied.coverAssetId, current.coverAssetId);
+    }
+  }
+  const cover = await tx(db => one(db, 'SELECT cover_asset_id FROM groups WHERE id=$1', [group.group.id]));
+  assert.ok(cover.cover_asset_id);
+  const cases = await tx(db => one(db, "SELECT count(*)::int AS count FROM reports_and_cases WHERE type='scan' AND reporter_user_id=$1", [a.user.id]));
+  assert.equal(cases.count, 0);
+  assert.equal(classifier.mock.callCount(), 0);
+});
+
 test('실파일: GPS 제거·공개 검사·감상·한도·보존·삭제 정리', { skip: !enabled }, async (t) => {
   const a = await user(),
     b = await user(),
