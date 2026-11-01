@@ -9,7 +9,20 @@ import { usePreference } from '../../lib/preferences';
 import { validDate } from '../../lib/validation';
 import { useAccount } from '../../lib/state';
 import { Records } from '../../components/records';
-import { Screen, Button, H, P, Badge, Field, confirm, useAction, s } from '../../components/ui';
+import {
+  Screen,
+  Button,
+  H,
+  P,
+  Field,
+  confirm,
+  useAction,
+  s,
+  Sheet,
+  Chip,
+  TextButton,
+  colors,
+} from '../../components/ui';
 export default function Schedule() {
   const { id } = useLocalSearchParams<{ id: string }>(),
     { session } = useAccount(),
@@ -35,6 +48,9 @@ export default function Schedule() {
   const { view, order } = options;
   const setView = (view: string) => setOptions({ ...options, view });
   const setOrder = (order: string) => setOptions({ ...options, order });
+  const [menu, setMenu] = useState(false),
+    [filters, setFilters] = useState(false),
+    [adding, setAdding] = useState(false);
   const a = useAction();
   const previousVisits = useRef<Set<string> | null>(null);
   const [highlightedVisits, setHighlightedVisits] = useState<string[]>([]);
@@ -84,91 +100,202 @@ export default function Schedule() {
       live = false;
     };
   }, [id, view, order, recordDate, visitId, unassigned, outside, optionsReady]);
+  const selectedVisit = detail?.plan
+    .flatMap((d: any) => d.visits)
+    .find((v: any) => v.id === visitId);
+  const uploadParams = detail
+    ? {
+        id,
+        startDate: detail.schedule.startDate,
+        endDate: detail.schedule.endDate,
+        visitId,
+        recordDate: selectedVisit?.visitDate || recordDate || '',
+      }
+    : { id };
   return (
     <Screen
-      title={detail?.schedule.title ?? '일정'}
-      subtitle={detail ? `${detail.schedule.startDate} ~ ${detail.schedule.endDate}` : ''}
-    >
-      {group && (
-        <View style={{ marginHorizontal: -20, marginBottom: 16 }}>
-          {group.coverAssetId ? (
-            <Image
-              source={{
-                uri: `${API}/v1/groups/${group.id}/cover?version=${group.version}`,
-                headers: { Authorization: `Bearer ${currentSession()?.accessToken}` },
-              }}
-              style={{ width: '100%', aspectRatio: 16 / 9, backgroundColor: '#FDEDEB' }}
-            />
-          ) : (
-            <View
-              style={{
-                aspectRatio: 16 / 9,
-                backgroundColor: '#FDEDEB',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 20, fontWeight: '800', color: '#F1706B' }}>
-                AT THAT PLACE
-              </Text>
-              <P>{group.name}</P>
-            </View>
-          )}
-          {owner && (
-            <Button
-              secondary
-              onPress={() =>
-                confirm(
-                  '모임 대표 사진 변경',
-                  '이 모임의 모든 일정에 같은 대표 사진이 표시됩니다.',
-                  () => router.push({ pathname: '/group/manage', params: { id: group.id } }),
-                )
-              }
-            >
-              모임 배경 변경
-            </Button>
-          )}
-        </View>
-      )}
-      {group && (
+      title={tab === 'records' ? selectedVisit?.name || '함께 남긴 순간' : 'AT THAT PLACE'}
+      subtitle={
+        tab === 'records'
+          ? `${detail?.schedule.title ?? ''}${recordDate ? ' · ' + recordDate : ''}`
+          : undefined
+      }
+      contentStyle={tab === 'plan' && !recordDate ? { paddingTop: 0 } : undefined}
+      headerRight={
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="함께하는 친구 보기"
-          onPress={() => router.push({ pathname: '/group/manage', params: { id: group.id } })}
-          style={{ minHeight: 56, justifyContent: 'center' }}
+          accessibilityLabel="일정 메뉴"
+          style={{ padding: 10 }}
+          onPress={() => setMenu(true)}
         >
-          <H>함께하는 친구 {group.activeCount}명 ›</H>
+          <Text style={{ fontSize: 22 }}>⋯</Text>
         </Pressable>
-      )}
-      <Badge>
-        {detail?.schedule.status === 'cancelled'
-          ? '취소된 일정'
-          : `보관 ${detail?.retention.lastDate ?? '확인 중'}까지`}
-      </Badge>
-      {notice && <P>{notice}</P>}
-      {detail && (
-        <P>
-          {detail.retention.fixed ? '고정 보관 기한' : '첫 업로드 전 예상 보관 기한'} ·{' '}
-          {detail.retention.lastDate}
-        </P>
-      )}
-      <View style={s.row}>
-        <Button secondary onPress={() => setTab('plan')}>
-          장소 계획
+      }
+    >
+      <Sheet visible={menu} title="일정 메뉴" onClose={() => setMenu(false)}>
+        <Button
+          secondary
+          onPress={() => {
+            setMenu(false);
+            router.push('/uploads');
+          }}
+        >
+          파일 전송 상태
         </Button>
         <Button
           secondary
           onPress={() => {
-            setTab('records');
-            setDate('');
-            setDateInput('');
-            setVisit('');
-            setOutside(false);
-            setUnassigned(false);
+            setMenu(false);
+            router.push(`/group/manage?id=${group?.id}`);
           }}
         >
-          전체·장소별 기록
+          함께하는 친구
         </Button>
+        {owner && (
+          <Button
+            secondary
+            onPress={() => {
+              setMenu(false);
+              router.push(`/schedule/edit?id=${id}`);
+            }}
+          >
+            일정 변경·취소
+          </Button>
+        )}
+        <Button
+          secondary
+          onPress={() => {
+            setMenu(false);
+            router.push(`/edit-records?scheduleId=${id}`);
+          }}
+        >
+          내 기록 수정·삭제
+        </Button>
+        <P>
+          {detail?.retention.fixed ? '고정 보관 기한' : '첫 업로드 전 예상 보관 기한'} ·{' '}
+          {detail?.retention.lastDate ?? '확인 중'}까지
+        </P>
+      </Sheet>
+      <Sheet visible={adding} title="지금 이 순간 남기기" onClose={() => setAdding(false)}>
+        <Button
+          tone="outline"
+          onPress={() => {
+            setAdding(false);
+            router.push({ pathname: '/upload', params: uploadParams });
+          }}
+        >
+          ＋ 앨범에서 사진·영상 선택
+        </Button>
+        <Button
+          secondary
+          onPress={() => {
+            setAdding(false);
+            router.push({ pathname: '/camera', params: uploadParams });
+          }}
+        >
+          📷 지금 촬영하기
+        </Button>
+        <Button secondary onPress={() => setAdding(false)}>
+          취소
+        </Button>
+      </Sheet>
+      {tab === 'plan' && !recordDate && group && (
+        <>
+          <Pressable
+            disabled={!owner}
+            accessibilityRole="button"
+            accessibilityLabel="모임 배경 변경"
+            onPress={() =>
+              confirm(
+                '모임 대표 사진 변경',
+                '이 모임의 모든 일정에 같은 대표 사진이 표시됩니다.',
+                () => router.push(`/group/manage?id=${group.id}&mode=info`),
+              )
+            }
+            style={{ marginHorizontal: -20, marginBottom: 20 }}
+          >
+            {group.coverAssetId ? (
+              <Image
+                source={{
+                  uri: `${API}/v1/groups/${group.id}/cover?version=${group.version}`,
+                  headers: { Authorization: `Bearer ${currentSession()?.accessToken}` },
+                }}
+                style={{ width: '100%', aspectRatio: 16 / 9 }}
+              />
+            ) : (
+              <View
+                style={{
+                  aspectRatio: 16 / 9,
+                  backgroundColor: '#FFF0E6',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 58 }}>🌉</Text>
+              </View>
+            )}
+            {owner && (
+              <View
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  bottom: 12,
+                  backgroundColor: '#191F2899',
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 16,
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 11 }}>📷 배경 변경</Text>
+              </View>
+            )}
+          </Pressable>
+          <Text style={{ fontSize: 24, fontWeight: '700', color: colors.ink, marginBottom: 8 }}>
+            {detail?.schedule.title}
+          </Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 14,
+            }}
+          >
+            <P>
+              📅 {detail?.schedule.startDate} - {detail?.schedule.endDate}
+            </P>
+            <TextButton onPress={() => router.push(`/group/manage?id=${group.id}`)}>
+              👥 {group.activeCount}명 ›
+            </TextButton>
+          </View>
+        </>
+      )}
+      {!!notice && <P>{notice}</P>}
+      {detail?.schedule.status === 'cancelled' && (
+        <P>취소된 일정입니다. 보관 기한까지 기록을 볼 수 있어요.</P>
+      )}
+      {tab === 'records' && detail?.schedule.status === 'active' && (
+        <Button tone="outline" onPress={() => setAdding(true)}>
+          ＋ 사진·영상 올리기
+        </Button>
+      )}
+      <View style={{ flexDirection: 'row', gap: 8, marginVertical: 12 }}>
+        <Chip selected={tab === 'plan'} onPress={() => setTab('plan')}>
+          전체 계획
+        </Chip>
+        <Chip
+          selected={tab === 'records'}
+          onPress={() => {
+            setTab('records');
+            setVisit('');
+            setDate('');
+            setDateInput('');
+            setUnassigned(false);
+            setOutside(false);
+          }}
+        >
+          전체 기록
+        </Chip>
       </View>
       {tab === 'plan' ? (
         <>
@@ -214,47 +341,72 @@ export default function Schedule() {
               }}
             />
           )}
+          {!recordDate && owner && (
+            <Button
+              secondary
+              tone="outline"
+              onPress={() => router.push(`/schedule/edit?groupId=${group.id}`)}
+            >
+              일정 추가
+            </Button>
+          )}
         </>
       ) : (
         <>
-          <View style={s.row}>
-            <Button secondary onPress={() => setView(view === 'by_time' ? 'by_author' : 'by_time')}>
-              {view === 'by_time' ? '시간순' : '사람별 묶음'}
-            </Button>
-            <Button secondary onPress={() => setOrder(order === 'asc' ? 'desc' : 'asc')}>
-              {order === 'asc' ? '오래된 순' : '최신순'}
-            </Button>
-          </View>
-          <Field
-            label="기록일 필터 · 비우면 전체"
-            value={dateInput}
-            onChangeText={setDateInput}
-            placeholder="YYYY-MM-DD"
-          />
-          <Button
-            secondary
-            onPress={() =>
-              a.run(async () => {
-                if (dateInput) validDate(dateInput);
-                setDate(dateInput);
-                setVisit('');
-              })
-            }
+          <H>함께 남긴 순간</H>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
           >
-            날짜 필터 적용
-          </Button>
-          <View style={s.row}>
-            <Button
-              secondary={!unassigned}
-              onPress={() => {
-                setUnassigned(!unassigned);
-                setVisit('');
-              }}
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Chip selected={view === 'by_time'} onPress={() => setView('by_time')}>
+                ▦ 시간순
+              </Chip>
+              <Chip selected={view === 'by_author'} onPress={() => setView('by_author')}>
+                ♙ 사람별
+              </Chip>
+            </View>
+            <TextButton
+              color={colors.sub}
+              onPress={() => setOrder(order === 'asc' ? 'desc' : 'asc')}
             >
-              장소 미지정{unassigned ? ' ✓' : ''}
-            </Button>
-            <Button secondary={!outside} onPress={() => setOutside(!outside)}>
-              기간 밖 기록{outside ? ' ✓' : ''}
+              {order === 'asc' ? '오래된 순' : '최신순'} ↕
+            </TextButton>
+          </View>
+          <TextButton color={colors.sub} onPress={() => setFilters(true)}>
+            {recordDate || unassigned || outside || visitId ? '필터 변경' : '날짜·장소 필터'}
+          </TextButton>
+          <Sheet visible={filters} title="기록 필터" onClose={() => setFilters(false)}>
+            <Field
+              label="기록일"
+              value={dateInput}
+              onChangeText={setDateInput}
+              placeholder="전체 날짜"
+            />
+            <View style={s.row}>
+              <Chip
+                selected={unassigned}
+                onPress={() => {
+                  setUnassigned(!unassigned);
+                  setVisit('');
+                }}
+              >
+                장소 미지정
+              </Chip>
+              <Chip selected={outside} onPress={() => setOutside(!outside)}>
+                기간 밖 기록
+              </Chip>
+            </View>
+            <Button
+              onPress={() =>
+                a.run(async () => {
+                  if (dateInput) validDate(dateInput);
+                  setDate(dateInput);
+                  setVisit('');
+                  setFilters(false);
+                })
+              }
+            >
+              필터 적용
             </Button>
             <Button
               secondary
@@ -264,19 +416,16 @@ export default function Schedule() {
                 setVisit('');
                 setUnassigned(false);
                 setOutside(false);
+                setFilters(false);
               }}
             >
               전체 기록 보기
             </Button>
-          </View>
-          {visitId && (
-            <Button secondary onPress={() => setVisit('')}>
-              전체 장소 보기
-            </Button>
-          )}
+            {a.errorView}
+          </Sheet>
           {counts && !a.busy && (
             <P>
-              현재 범위 · 사진 {counts.photos}개 · 영상 {counts.videos}개
+              사진 {counts.photos}개 · 영상 {counts.videos}개
             </P>
           )}
           {!a.busy && !a.error && (
@@ -286,109 +435,11 @@ export default function Schedule() {
               groups={view === 'by_author' ? groups : undefined}
             />
           )}
-          {a.error && (
-            <P>기록을 불러오지 못했습니다. 입력한 필터를 확인하거나 다시 시도해 주세요.</P>
-          )}
-          <Button
-            secondary
-            onPress={() => router.push({ pathname: '/edit-records', params: { scheduleId: id } })}
-          >
-            내 기록 수정·삭제
-          </Button>
           {next && (
             <Button secondary onPress={() => a.run(() => load(next))}>
               기록 더 보기
             </Button>
           )}
-        </>
-      )}
-      {detail?.schedule.status === 'active' && (
-        <>
-          <Button
-            onPress={() =>
-              router.push({
-                pathname: '/upload',
-                params: {
-                  id,
-                  startDate: detail.schedule.startDate,
-                  endDate: detail.schedule.endDate,
-                  visitId,
-                  recordDate:
-                    detail.plan.flatMap((d: any) => d.visits).find((v: any) => v.id === visitId)
-                      ?.visitDate ||
-                    recordDate ||
-                    '',
-                },
-              })
-            }
-          >
-            사진·영상 올리기
-          </Button>
-          <Button
-            secondary
-            onPress={() =>
-              router.push({
-                pathname: '/camera',
-                params: {
-                  id,
-                  startDate: detail.schedule.startDate,
-                  endDate: detail.schedule.endDate,
-                  visitId,
-                },
-              })
-            }
-          >
-            지금 촬영하기
-          </Button>
-        </>
-      )}
-      <Button secondary onPress={() => router.push('/uploads')}>
-        파일 전송 상태
-      </Button>
-      {owner && (
-        <>
-          <Button
-            secondary
-            onPress={() => router.push({ pathname: '/schedule/edit', params: { id } })}
-          >
-            일정 변경
-          </Button>
-          <Button
-            secondary
-            onPress={() =>
-              confirm(
-                '일정을 취소할까요?',
-                '기록은 보관 기한까지 유지되고 새 업로드는 막힙니다.',
-                () =>
-                  a.run(async () => {
-                    await api(`/schedules/${id}/cancellation`, {
-                      expectedVersion: detail.schedule.version,
-                    });
-                    router.back();
-                  }),
-              )
-            }
-          >
-            일정 취소
-          </Button>
-          <Button
-            secondary
-            onPress={() =>
-              confirm(
-                '빈 일정을 삭제할까요?',
-                `함께 삭제할 빈 방문 계획 ${detail.plan.reduce((n: number, d: any) => n + d.visitCount, 0)}개가 있습니다. 기록이나 진행 중 업로드가 있으면 삭제할 수 없습니다.`,
-                () =>
-                  a.run(async () => {
-                    await api(`/schedules/${id}/deletion`, {
-                      expectedVersion: detail.schedule.version,
-                    });
-                    router.back();
-                  }),
-              )
-            }
-          >
-            빈 일정 삭제
-          </Button>
         </>
       )}
       {a.errorView}

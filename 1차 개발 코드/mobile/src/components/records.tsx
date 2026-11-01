@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Image, Text, View, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { API, api, currentSession, type Media } from '../lib/api';
+import { Avatar } from './profile-ui';
 import { formatMoment } from '../lib/preferences';
-import { Button, P, colors, s, useAction } from './ui';
+import { Button, P, colors, TextButton, ScreenFooter, useAction } from './ui';
 export function Records({
   items,
   context = 'shared',
@@ -149,13 +150,10 @@ export function Records({
                 : ' · 사진'}
             </Text>
             <Text numberOfLines={2} style={{ fontSize: 11, color: colors.muted, marginTop: 5 }}>
-              {m.description || '설명 없음'}
+              {m.description || ''}
             </Text>
+
             <Text style={{ fontSize: 11, color: colors.muted }}>
-              기록일 {m.recordDate} · {m.visitName || '장소 미지정'}
-            </Text>
-            <Text style={{ fontSize: 11, color: colors.muted }}>
-              {m.capturedAt ? '촬영 시각' : '업로드 시각'}{' '}
               {formatMoment(m.capturedAt ?? m.completedAt)}
             </Text>
           </View>
@@ -165,16 +163,15 @@ export function Records({
   );
   return (
     <>
-      <View style={s.row}>
-        <Button
-          secondary
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+        <TextButton
           onPress={() => {
             setMode(!mode);
             setSelected([]);
           }}
         >
-          {mode ? '선택 끝내기' : '여러 기록 선택'}
-        </Button>
+          {mode ? '선택 해제' : '선택'}
+        </TextButton>
         {mode && (
           <Button secondary onPress={() => setSelected(items.slice(0, 120).map((i) => i.id))}>
             불러온 기록 선택
@@ -184,7 +181,36 @@ export function Records({
       {groups?.length
         ? groups.map((g) => (
             <View key={g.authorUserId}>
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${g.displayName} 기록 펼치기·접기`}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                    paddingVertical: 10,
+                    flex: 1,
+                  }}
+                  onPress={() =>
+                    setFolded((old) =>
+                      old.includes(g.authorUserId)
+                        ? old.filter((id) => id !== g.authorUserId)
+                        : [...old, g.authorUserId],
+                    )
+                  }
+                >
+                  <Avatar name={g.displayName} size={32} />
+                  <View>
+                    <Text style={{ color: colors.ink, fontWeight: '600', fontSize: 14 }}>
+                      {g.displayName} {folded.includes(g.authorUserId) ? '▸' : '▾'}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: colors.muted }}>
+                      사진 {g.photos} · 영상 {g.videos}
+                    </Text>
+                  </View>
+                </Pressable>
+
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`${g.displayName} 기록 메뉴`}
@@ -219,19 +245,6 @@ export function Records({
                   <Text style={{ fontSize: 24, color: colors.ink }}>⋯</Text>
                 </Pressable>
               </View>
-              <Button
-                secondary
-                onPress={() =>
-                  setFolded((old) =>
-                    old.includes(g.authorUserId)
-                      ? old.filter((id) => id !== g.authorUserId)
-                      : [...old, g.authorUserId],
-                  )
-                }
-              >
-                {folded.includes(g.authorUserId) ? '▸' : '▾'} {g.displayName} · 사진 {g.photos} /
-                영상 {g.videos}
-              </Button>
               {!folded.includes(g.authorUserId) &&
                 renderItems(items.filter((m) => m.authorUserId === g.authorUserId))}
             </View>
@@ -239,7 +252,6 @@ export function Records({
         : renderItems(items)}
       {mode && (
         <>
-          <P>{selected.length}개 선택 · 최대 120개</P>
           {[...new Set(items.map((m) => m.submissionId))].map((submissionId) => (
             <Button
               key={submissionId}
@@ -268,32 +280,43 @@ export function Records({
               </Button>
             ))}
           {batchAction.errorView}
-          {allowSave &&
-            selected.every((id) => items.find((m) => m.id === id)?.accessState === 'available') && (
-              <Button
-                disabled={!selected.length}
-                onPress={() =>
-                  router.push({ pathname: '/save', params: { ids: selected.join(',') } })
-                }
-              >
-                휴대폰 저장
-              </Button>
-            )}
-          <Button
-            secondary
-            disabled={
-              !selected.length ||
-              selected.some((id) => items.find((m) => m.id === id)?.authorUserId !== own)
-            }
-            onPress={() =>
-              router.push({
-                pathname: '/edit-records',
-                params: { ids: selected.join(','), context },
-              })
-            }
-          >
-            본인 기록 수정·삭제
-          </Button>
+          <ScreenFooter>
+            <View>
+              <P>{selected.length}개 선택 · 최대 120개</P>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {allowSave &&
+                  selected.every(
+                    (id) => items.find((m) => m.id === id)?.accessState === 'available',
+                  ) && (
+                    <Button
+                      style={{ flex: 1 }}
+                      disabled={!selected.length}
+                      onPress={() =>
+                        router.push({ pathname: '/save', params: { ids: selected.join(',') } })
+                      }
+                    >
+                      휴대폰 저장
+                    </Button>
+                  )}
+                <Button
+                  style={{ flex: 1 }}
+                  secondary
+                  disabled={
+                    !selected.length ||
+                    selected.some((id) => items.find((m) => m.id === id)?.authorUserId !== own)
+                  }
+                  onPress={() =>
+                    router.push({
+                      pathname: '/edit-records',
+                      params: { ids: selected.join(','), context },
+                    })
+                  }
+                >
+                  본인 기록 수정·삭제
+                </Button>
+              </View>
+            </View>
+          </ScreenFooter>
         </>
       )}
       {!items.length && <P>아직 기록이 없어요.</P>}

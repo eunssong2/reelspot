@@ -1,7 +1,7 @@
 import { installationId } from '../lib/device';
 import { useInitialize } from '../lib/effects';
 import React, { useState } from 'react';
-import { Image, Linking, Text, View } from 'react-native';
+import { Image, Linking, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { signInWithProvider } from '../lib/social';
 import * as WebBrowser from 'expo-web-browser';
@@ -57,28 +57,41 @@ export default function Login() {
       footer={
         <>
           <Button tone="kakao" disabled={a.busy || !kakao} onPress={() => login()}>
-            카카오로 시작하기
+            ●　카카오로 시작하기
           </Button>
           {!kakao && !a.busy && <P>카카오 로그인 연결을 확인해 주세요.</P>}
-          {docs.map((d) => (
-            <Button
-              key={d.id}
-              secondary
-              onPress={() => a.run(() => Linking.openURL(documentUrl(d.url)))}
-            >
-              {d.title || d.itemKey}
-            </Button>
-          ))}
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: 14,
+              marginTop: 8,
+            }}
+          >
+            {docs.map((d) => (
+              <Pressable
+                key={d.id}
+                accessibilityRole="link"
+                onPress={() => a.run(() => Linking.openURL(documentUrl(d.url)))}
+                style={{ minHeight: 44, justifyContent: 'center' }}
+              >
+                <Text style={{ color: colors.sub, fontSize: 12, textDecorationLine: 'underline' }}>
+                  {d.kind === 'notice' ? '개인정보 처리방침' : '이용약관'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </>
       }
     >
-      <View style={{ alignItems: 'center', paddingTop: 32, gap: 14 }}>
+      <View style={{ alignItems: 'center', paddingTop: 44, gap: 10 }}>
         <Image
           source={require('../../assets/logo.jpg')}
           style={{ width: 90, height: 90, borderRadius: 45 }}
           accessibilityLabel="At that place 로고"
         />
-        <Text style={{ color: colors.accent, fontSize: 19, fontWeight: '800', letterSpacing: 3 }}>
+        <Text style={{ color: colors.ink, fontSize: 19, fontWeight: '800', letterSpacing: 1 }}>
           AT THAT PLACE
         </Text>
         <Text style={{ color: colors.muted, fontSize: 10, letterSpacing: 3 }}>
@@ -86,11 +99,11 @@ export default function Login() {
         </Text>
         <Text
           style={{
-            fontSize: 32,
+            fontSize: 24,
             fontWeight: '800',
             textAlign: 'center',
             color: colors.ink,
-            marginTop: 28,
+            marginTop: 24,
           }}
         >
           함께한 순간을{'\n'}한곳에 모아요
@@ -98,7 +111,7 @@ export default function Login() {
         <P>모임의 일정별로 사진과 영상을 함께 보관해요.</P>
       </View>
       {pending && <P>초대받은 모임에 참여하려면 로그인해 주세요.</P>}
-      <P>소셜 계정 식별정보로 계정을 연결합니다. 이용약관과 개인정보 처리 안내를 확인해 주세요.</P>
+
       {dev && (
         <>
           <Field label="테스트 사용자 식별자" value={name} onChangeText={setName} />

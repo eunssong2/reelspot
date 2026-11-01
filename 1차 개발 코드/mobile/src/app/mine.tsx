@@ -1,9 +1,10 @@
 import { useFocusLoad } from '../lib/effects';
 import React, { useState } from 'react';
+import { ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { api } from '../lib/api';
 import { Records } from '../components/records';
-import { Screen, Button, Card, H, P, useAction } from '../components/ui';
+import { Screen, Button, Card, H, P, useAction, Chip } from '../components/ui';
 export default function Mine() {
   const [items, setItems] = useState<any[]>([]),
     [next, setNext] = useState<string | null>(null),
@@ -34,16 +35,23 @@ export default function Mine() {
       >
         여러 모임의 내 기록 선택·삭제
       </Button>
-      {Object.entries({
-        '': '전체',
-        active_membership: '참여 중',
-        ended_membership: '참여 종료',
-        expired: '만료됨',
-      }).map(([value, label]) => (
-        <Button key={value} secondary={status !== value} onPress={() => setStatus(value)}>
-          {label}
-        </Button>
-      ))}
+      <ScrollView
+        horizontal
+        style={{ flexGrow: 0 }}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 8, paddingVertical: 8 }}
+      >
+        {Object.entries({
+          '': '전체',
+          active_membership: '참여 중',
+          ended_membership: '참여 종료',
+          expired: '만료됨',
+        }).map(([value, label]) => (
+          <Chip key={value} selected={status === value} onPress={() => setStatus(value)}>
+            {label}
+          </Chip>
+        ))}
+      </ScrollView>
       {a.hasRun && !a.busy && !a.error && !items.length && (
         <P>선택한 조건에 맞는 본인 기록이 없습니다.</P>
       )}

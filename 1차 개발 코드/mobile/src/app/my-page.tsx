@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useAccount } from '../lib/state';
 import { useFocusLoad } from '../lib/effects';
@@ -33,9 +33,34 @@ export default function MyPage() {
     };
   }, []);
   return (
-    <Screen title="마이페이지" compact back={false} tabs>
+    <Screen
+      title="마이페이지"
+      compact
+      back={false}
+      tabs
+      headerRight={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="설정"
+          onPress={() => router.push('/settings')}
+          style={{ padding: 10 }}
+        >
+          <Text style={{ fontSize: 24, color: colors.ink }}>⚙</Text>
+        </Pressable>
+      }
+      footer={
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+          <View style={{ flex: 1, marginRight: 20 }}>
+            <MenuRow label="내가 올린 기록" onPress={() => router.push('/mine')} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <MenuRow label="고객센터" onPress={() => router.push('/inquiry')} />
+          </View>
+        </View>
+      }
+    >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginVertical: 20 }}>
-        <Avatar name={profile?.displayName ?? '나'} size={88} />
+        <Avatar name={profile?.displayName ?? '나'} size={72} />
         <View style={{ flex: 1 }}>
           <H>{profile?.displayName ?? '불러오는 중'}</H>
           <P>함께한 순간을 기록하는 중</P>
@@ -46,17 +71,14 @@ export default function MyPage() {
           style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
         >
           <P>현재 참여 중인 모임</P>
-          <Text style={{ fontSize: 24, fontWeight: '800', color: colors.ink }}>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: colors.ink }}>
             {count === null ? '—' : `${count}개`}
           </Text>
         </View>
       </Card>
-      <Button secondary onPress={() => router.push('/account')}>
-        닉네임 변경 · 계정
+      <Button secondary onPress={() => router.push('/account?edit=yes')}>
+        닉네임 변경
       </Button>
-      <MenuRow label="내가 올린 기록" onPress={() => router.push('/mine')} />
-      <MenuRow label="설정" onPress={() => router.push('/settings')} />
-      <MenuRow label="고객센터" onPress={() => router.push('/inquiry')} />
       {a.errorView}
     </Screen>
   );

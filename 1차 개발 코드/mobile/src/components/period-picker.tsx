@@ -54,7 +54,7 @@ export function MonthGrid({
             onPress={() => onSelect(date)}
             style={{
               width: '14.2857%',
-              minHeight: schedules.length ? 84 : 48,
+              minHeight: schedules.length ? 64 : 48,
               padding: 3,
               backgroundColor: chosen || between ? colors.sage : 'transparent',
               borderRadius: 8,
@@ -108,16 +108,18 @@ export function MonthHeader({ month, onMove }: { month: string; onMove: (n: numb
         accessibilityRole="button"
         accessibilityLabel="이전 달"
         onPress={() => onMove(-1)}
-        style={{ padding: 16 }}
+        style={{ padding: 10 }}
       >
         <Text style={{ fontSize: 24 }}>‹</Text>
       </Pressable>
-      <H>{month.replace('-', '년 ')}월</H>
+      <Text style={{ fontSize: 18, fontWeight: '700', color: colors.ink }}>
+        {month.replace('-', '년 ')}월
+      </Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="다음 달"
         onPress={() => onMove(1)}
-        style={{ padding: 16 }}
+        style={{ padding: 10 }}
       >
         <Text style={{ fontSize: 24 }}>›</Text>
       </Pressable>
@@ -140,7 +142,9 @@ export function PeriodPicker({
     [range, setRange] = useState({ start: '', end: '', error: '' });
   return (
     <>
-      <P>일정 기간</P>
+      <Text style={[s.label, { marginBottom: 10 }]}>
+        일정 기간 <Text style={{ color: colors.accent }}>*</Text>
+      </Text>
       <Pressable
         disabled={disabled}
         accessibilityRole="button"
@@ -150,18 +154,40 @@ export function PeriodPicker({
           setMonth((start || todayInSeoul()).slice(0, 7));
           setOpen(true);
         }}
-        style={{ backgroundColor: '#F2F4F6', borderRadius: 16, padding: 18, marginBottom: 16 }}
+        style={{ marginBottom: 14 }}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
-          <View>
-            <P>시작 날짜</P>
-            <H>{start || '날짜 선택'}</H>
-          </View>
-          <P>→</P>
-          <View>
-            <P>종료 날짜</P>
-            <H>{end || '날짜 선택'}</H>
-          </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          {[
+            ['시작 날짜', start],
+            ['종료 날짜', end],
+          ].map(([label, value], i) => (
+            <React.Fragment key={label}>
+              {i === 1 && <Text style={{ color: colors.muted }}>—</Text>}
+              <View
+                style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 14, padding: 12 }}
+              >
+                <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 6 }}>{label}</Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: value ? '600' : '400',
+                      color: value ? colors.ink : colors.muted,
+                    }}
+                  >
+                    {value ? value.replaceAll('-', '.') : '날짜 선택'}
+                  </Text>
+                  <Text style={{ fontSize: 14 }}>📅</Text>
+                </View>
+              </View>
+            </React.Fragment>
+          ))}
         </View>
       </Pressable>
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>

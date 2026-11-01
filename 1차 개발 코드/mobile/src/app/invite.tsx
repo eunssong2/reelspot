@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, API } from '../lib/api';
 import { parseInviteInput } from '../lib/invite-input';
 import { useAccount } from '../lib/state';
-import { Screen, Field, Button, H, P, Card, Badge, useAction } from '../components/ui';
+import { Screen, Field, Button, H, P, Card, Badge, Info, useAction } from '../components/ui';
 export default function Invite() {
   const params = useLocalSearchParams<{ token?: string; code?: string }>(),
     [token, setToken] = useState(params.token ?? params.code ?? ''),
@@ -109,10 +109,7 @@ export default function Invite() {
             )}
             <P>참여 후 이 모임의 일정과 기록을 볼 수 있어요.</P>
           </Card>
-          <Card>
-            <P>참여 버튼을 눌러야 모임에 참여합니다. 로그인만으로 자동 참여하지 않아요.</P>
-            <P>받은 사람이 다른 사람에게 전달하면 그 사람도 참여할 수 있어요.</P>
-          </Card>
+          <Info>확인한 내용은 로그인 뒤에도 유지돼요. 참여 버튼을 눌러야 모임에 참여합니다.</Info>
         </>
       )}
       {a.errorView}

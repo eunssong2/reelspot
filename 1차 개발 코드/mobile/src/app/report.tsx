@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { inputText } from '../lib/validation';
 import { api, currentSession } from '../lib/api';
-import { Screen, Field, Button, useAction, confirm } from '../components/ui';
+import { Screen, Field, Button, Info, useAction, confirm } from '../components/ui';
 export default function Report() {
   const { targetType, targetId, userId } = useLocalSearchParams<{
       targetType: string;
@@ -13,7 +13,22 @@ export default function Report() {
   const a = useAction();
   return (
     <Screen title="신고와 개인 차단" subtitle="신고 접수만으로 파일을 삭제하지 않습니다.">
-      <Field label="신고 사유" value={reason} onChangeText={setReason} multiline />
+      <Info icon="">
+        신고 대상 ·{' '}
+        {targetType === 'media'
+          ? '사진·영상 기록'
+          : targetType === 'cover'
+            ? '모임 대표 사진'
+            : '모임 참여자'}
+      </Info>
+      <Field
+        label="신고 사유"
+        required
+        limit={2000}
+        value={reason}
+        onChangeText={setReason}
+        multiline
+      />
       <Button
         disabled={a.busy || !reason.trim()}
         onPress={() =>

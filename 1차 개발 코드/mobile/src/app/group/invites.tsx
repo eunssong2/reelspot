@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
-import { Share, Text, View } from 'react-native';
+import { Share, Text, View, Pressable } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { api, getGroup } from '../../lib/api';
 import { useFocusLoad } from '../../lib/effects';
 import { formatMoment } from '../../lib/preferences';
-import { Screen, Button, Card, H, P, Badge, confirm, useAction, colors } from '../../components/ui';
+import {
+  Screen,
+  Button,
+  Card,
+  H,
+  P,
+  Badge,
+  confirm,
+  useAction,
+  colors,
+  TextButton,
+  Info,
+} from '../../components/ui';
 export default function Invites() {
   const { id } = useLocalSearchParams<{ id: string }>(),
     [group, setGroup] = useState<any>(null),
@@ -52,19 +64,34 @@ export default function Invites() {
             item.state as string
           ] ?? item.state}
         </Badge>
-        <Text
-          selectable
-          style={{
-            fontSize: 26,
-            letterSpacing: 3,
-            fontWeight: '800',
-            textAlign: 'center',
-            marginVertical: 14,
-            color: colors.ink,
-          }}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="초대 코드 복사"
+          disabled={item.state !== 'active'}
+          onPress={() => send(item, 'code')}
+          style={{ backgroundColor: 'white', borderRadius: 12, marginVertical: 10 }}
         >
-          {item.code}
-        </Text>
+          <Text
+            selectable
+            style={{
+              fontSize: 26,
+              letterSpacing: 3,
+              fontWeight: '800',
+              textAlign: 'center',
+              marginVertical: 14,
+              color: colors.ink,
+            }}
+          >
+            {item.code}
+          </Text>
+          {item.state === 'active' && (
+            <Text
+              style={{ fontSize: 10, color: colors.accent, textAlign: 'center', marginBottom: 12 }}
+            >
+              👆 탭하여 코드 복사하기
+            </Text>
+          )}
+        </Pressable>
         <P>발급 {formatMoment(item.issuedAt)}</P>
         <P>
           만료 {formatMoment(item.expiresAt)} · 확인 {item.useCount}/50회
@@ -83,11 +110,8 @@ export default function Invites() {
                 </Button>
               </View>
             </View>
-            <Button secondary disabled={a.busy} onPress={() => send(item, 'code')}>
-              코드 복사
-            </Button>
-            <Button
-              secondary
+
+            <TextButton
               disabled={a.busy}
               onPress={() =>
                 confirm(
@@ -103,8 +127,8 @@ export default function Invites() {
                 )
               }
             >
-              이 초대 취소
-            </Button>
+              이 초대 취소하기 ›
+            </TextButton>
           </>
         )}
       </Card>
@@ -118,6 +142,7 @@ export default function Invites() {
       footer={
         <>
           <Button
+            tone="dark"
             disabled={a.busy || !group}
             onPress={() =>
               a.run(async () => {
@@ -143,9 +168,7 @@ export default function Invites() {
       {a.hasRun && !a.busy && !a.error && !items.some((x) => x.state === 'active') && (
         <P>지금 사용할 수 있는 초대가 없어요. 새 초대를 발급해 주세요.</P>
       )}
-      <Card>
-        <P>받은 사람이 다른 사람에게 전달하면 그 사람도 참여할 수 있어요.</P>
-      </Card>
+      <Info>받은 사람이 다른 사람에게 전달하면 그 사람도 참여할 수 있어요.</Info>
       <H>이전 초대</H>
       {items.filter((x) => x.state !== 'active').map(card)}
       {a.errorView}

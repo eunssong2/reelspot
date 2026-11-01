@@ -23,7 +23,7 @@ export default function EditSchedule() {
       pending: '',
       pendingBody: '',
     }),
-    a = useAction();
+    a = useAction({ inlineRetry: false });
   const [actualGroup, setActualGroup] = useState(groupId ?? ''),
     [latest, setLatest] = useState<any>(null),
     [detail, setDetail] = useState<any>(null),
@@ -145,7 +145,7 @@ export default function EditSchedule() {
       subtitle="시간은 장소에서 입력해요. 반복 설정은 없어요."
       footer={
         <Button disabled={!allowed || a.busy || !valid || !!latest} onPress={() => save()}>
-          {pending ? '같은 요청의 결과 확인' : '저장하기'}
+          {a.busy ? '저장 중…' : pending ? '저장 결과 확인' : '✓ 저장하기'}
         </Button>
       }
     >
@@ -161,6 +161,8 @@ export default function EditSchedule() {
       )}
       <Field
         label="일정 제목"
+        required
+        limit={100}
         value={v.title}
         editable={allowed && !a.busy && !pending}
         onChangeText={(t) => change('title', t)}

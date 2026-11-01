@@ -13,7 +13,10 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { api } from '../lib/api';
 import { Transfer } from '../../modules/atp-transfer';
 import { Screen, Button, P, useAction, s } from '../components/ui';
-function CaptureVideo({ uri }: { uri: string }) { const player = useVideoPlayer(uri); return <VideoView player={player} style={{ height: 360 }} nativeControls />; }
+function CaptureVideo({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri);
+  return <VideoView player={player} style={{ height: 360 }} nativeControls />;
+}
 export default function Camera() {
   const params = useLocalSearchParams<Record<string, string>>(),
     camera = useRef<CameraView>(null),
@@ -25,12 +28,19 @@ export default function Camera() {
     [recording, setRecording] = useState(false),
     [preparing, setPreparing] = useState(false),
     [sound, setSound] = useState(true),
-    [ready, setReady] = useState(false), [allowed, setAllowed] = useState(false),
-    [result, setResult] = useState<{ uri: string; mime: string } | null>(null), [quality, setQuality] = useState<'1080p' | '720p'>('1080p');
+    [ready, setReady] = useState(false),
+    [allowed, setAllowed] = useState(false),
+    [result, setResult] = useState<{ uri: string; mime: string } | null>(null),
+    [quality, setQuality] = useState<'1080p' | '720p'>('1080p');
   const focused = useIsFocused();
   const a = useAction();
   useInitialize(() => {
-    a.run(async () => { const d = await api(`/schedules/${params.id}`); if (d.schedule.status !== 'active' || Date.parse(d.retention.expiresAt) <= Date.now()) throw new Error('취소·만료된 일정에는 새로 촬영해 올릴 수 없습니다.'); setAllowed(true); });
+    a.run(async () => {
+      const d = await api(`/schedules/${params.id}`);
+      if (d.schedule.status !== 'active' || Date.parse(d.retention.expiresAt) <= Date.now())
+        throw new Error('취소·만료된 일정에는 새로 촬영해 올릴 수 없습니다.');
+      setAllowed(true);
+    });
     AsyncStorage.getItem('atp.camera-duration').then((v) => {
       if (v) setSeconds(Number(v));
     });
@@ -42,12 +52,43 @@ export default function Camera() {
       camera.current?.stopRecording();
     };
   }, []);
-  if (result) return <Screen title="촬영 결과 확인"><P>{result.mime.startsWith('video/') ? '영상의 전체 길이와 소리를 확인해 주세요.' : '이 사진을 업로드 후보로 추가할까요?'}</P>
-    {result.mime.startsWith('video/') ? <CaptureVideo uri={result.uri} /> : <Image source={{ uri: result.uri }} style={{ height: 360 }} resizeMode="contain" />}
-    <Button onPress={() => router.dismissTo({ pathname: '/upload', params: { ...params, uri: result.uri, mime: result.mime } })}>이 파일 사용</Button>
-    <Button secondary onPress={() => { setResult(null); setReady(false); }}>다시 촬영</Button>
-    <Button secondary onPress={() => router.back()}>촬영 취소</Button>
-  </Screen>;
+  if (result)
+    return (
+      <Screen title="촬영 결과 확인">
+        <P>
+          {result.mime.startsWith('video/')
+            ? '영상의 전체 길이와 소리를 확인해 주세요.'
+            : '이 사진을 업로드 후보로 추가할까요?'}
+        </P>
+        {result.mime.startsWith('video/') ? (
+          <CaptureVideo uri={result.uri} />
+        ) : (
+          <Image source={{ uri: result.uri }} style={{ height: 360 }} resizeMode="contain" />
+        )}
+        <Button
+          onPress={() =>
+            router.dismissTo({
+              pathname: '/upload',
+              params: { ...params, uri: result.uri, mime: result.mime },
+            })
+          }
+        >
+          이 파일 사용
+        </Button>
+        <Button
+          secondary
+          onPress={() => {
+            setResult(null);
+            setReady(false);
+          }}
+        >
+          다시 촬영
+        </Button>
+        <Button secondary onPress={() => router.back()}>
+          촬영 취소
+        </Button>
+      </Screen>
+    );
   if (!permission?.granted)
     return (
       <Screen title="지금의 순간 남기기">
@@ -76,50 +117,79 @@ export default function Camera() {
             const uri = await Transfer.normalizeCapture(v.uri);
             setResult({ uri, mime: 'video/mp4' });
           }
+        } catch (error) {
+          if (quality === '1080p') setQuality('720p');
+          if (
+            error instanceof Error &&
+            /before any data|no valid data|recording failed/i.test(error.message)
+          ) {
+            throw new Error(
+              '영상을 저장하지 못했습니다. 다시 촬영하거나 앨범에서 영상을 선택해 주세요.',
+            );
+          }
+          throw error;
         } finally {
           setRecording(false);
           setPreparing(false);
         }
       } else {
         const p = await camera.current!.takePictureAsync({ quality: 1, exif: true });
-        if (p)
-          setResult({ uri: p.uri, mime: 'image/jpeg' });
+        if (p) setResult({ uri: p.uri, mime: 'image/jpeg' });
       }
     });
   }
   return (
-    <Screen title={preparing ? '영상 준비 중' : recording ? '촬영 중' : '순간을 남겨요'}>
-      {focused && <CameraView
-        ref={camera}
-        style={{ height: 420, borderRadius: 18 }}
-        mode={mode}
-        facing={facing}
-        mute={!microphone?.granted || !sound}
-        videoQuality={quality}
-        onMountError={() => { if (quality === '1080p') setQuality('720p'); else a.run(async () => { throw new Error('카메라를 사용할 수 없습니다. 다른 앱의 카메라 사용이나 권한을 확인해 주세요.'); }); }}
-        onCameraReady={() => setReady(true)}
-      />}
+    <Screen title={preparing ? '영상 준비 중' : recording ? '촬영 중' : '사진과 짧은 영상 촬영'}>
+      {focused && (
+        <CameraView
+          ref={camera}
+          style={{ height: 340, borderRadius: 18 }}
+          mode={mode}
+          facing={facing}
+          mute={!microphone?.granted || !sound}
+          videoQuality={quality}
+          onMountError={() => {
+            if (quality === '1080p') setQuality('720p');
+            else
+              a.run(async () => {
+                throw new Error(
+                  '카메라를 사용할 수 없습니다. 다른 앱의 카메라 사용이나 권한을 확인해 주세요.',
+                );
+              });
+          }}
+          onCameraReady={() => setReady(true)}
+        />
+      )}
       <View style={s.row}>
         <Button
           secondary
+          small
           disabled={recording || preparing}
           onPress={() => {
-            if (mode !== 'picture') { setMode('picture'); setReady(false); }
+            if (mode !== 'picture') {
+              setMode('picture');
+              setReady(false);
+            }
           }}
         >
           사진
         </Button>
         <Button
           secondary
+          small
           disabled={recording || preparing}
           onPress={() => {
-            if (mode !== 'video') { setMode('video'); setReady(false); }
+            if (mode !== 'video') {
+              setMode('video');
+              setReady(false);
+            }
           }}
         >
           영상
         </Button>
         <Button
           secondary
+          small
           disabled={recording || preparing}
           onPress={() => setFacing(facing === 'back' ? 'front' : 'back')}
         >
@@ -132,6 +202,7 @@ export default function Camera() {
             {[1, 2, 3, 4, 5].map((n) => (
               <Button
                 key={n}
+                small
                 secondary={seconds !== n}
                 disabled={recording || preparing}
                 onPress={() => {

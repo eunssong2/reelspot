@@ -43,10 +43,9 @@ export default function Home() {
   return (
     <Screen
       compact
-      title="함께하는 모임"
+      title="내 모임"
       back={false}
       tabs
-      subtitle="최근 공동 활동순"
       footer={
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1 }}>
@@ -60,6 +59,37 @@ export default function Home() {
         </View>
       }
     >
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 12,
+        }}
+      >
+        <View>
+          <H>함께하는 모임</H>
+          {a.hasRun && !a.error ? (
+            <P>
+              총 {groups.length}
+              {next ? '+' : ''}개의 모임에 참여하고 있어요
+            </P>
+          ) : (
+            <P>모임을 불러오고 있어요</P>
+          )}
+        </View>
+        <Text
+          style={{
+            fontSize: 10,
+            color: colors.sub,
+            backgroundColor: colors.surface,
+            padding: 8,
+            borderRadius: 12,
+          }}
+        >
+          최근 공동 활동순
+        </Text>
+      </View>
       {groups.map((g) => {
         const x = g.scheduleSummary,
           summary = x
@@ -75,7 +105,7 @@ export default function Home() {
               {g.coverAssetId ? (
                 <Image
                   accessibilityLabel={`${g.name} 대표 사진`}
-                  style={{ width: 64, height: 64, borderRadius: 14 }}
+                  style={{ width: 48, height: 48, borderRadius: 12 }}
                   source={{
                     uri: `${API}/v1/groups/${g.id}/cover`,
                     headers: { Authorization: `Bearer ${currentSession()?.accessToken}` },
@@ -84,8 +114,8 @@ export default function Home() {
               ) : (
                 <View
                   style={{
-                    width: 64,
-                    height: 64,
+                    width: 48,
+                    height: 48,
                     borderRadius: 14,
                     backgroundColor: colors.sage,
                     justifyContent: 'center',
@@ -96,7 +126,22 @@ export default function Home() {
                 </View>
               )}
               <View style={{ flex: 1 }}>
-                <H>{g.name}</H>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      color: g.ownerUserId === session.userId ? colors.accent : colors.muted,
+                    }}
+                  >
+                    {g.ownerUserId === session.userId ? '방장' : '참여자'}
+                  </Text>
+                  <Text
+                    numberOfLines={1}
+                    style={{ fontSize: 15, fontWeight: '700', color: colors.ink, flex: 1 }}
+                  >
+                    {g.name}
+                  </Text>
+                </View>
                 <P>
                   {g.activeCount}/10명 · {summary}
                 </P>

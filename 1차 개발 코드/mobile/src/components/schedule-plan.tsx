@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView, useWindowDimensions } from 'react-native';
-import { Card, H, P, Button, colors } from './ui';
+import { Card, H, P, Button, colors, TextButton } from './ui';
 export function SchedulePlan({
   days,
   highlightedVisits = [],
@@ -28,14 +28,50 @@ export function SchedulePlan({
 }) {
   const width = (useWindowDimensions().width - 40) / 4;
   const within = days.filter((d) => !d.outsideRange);
+  if (!date)
+    return (
+      <>
+        {days.map((d) => {
+          const stats = counts?.find((c) => c.date === d.date);
+          return (
+            <Card
+              key={d.date}
+              onPress={() => onDate(d.date)}
+              style={{ borderRadius: 18, marginVertical: 6, padding: 16 }}
+            >
+              <Text style={{ fontSize: 12, color: colors.sub, marginBottom: 8 }}>
+                {Number(d.date.slice(5, 7))}월 {Number(d.date.slice(8))}일
+                {d.outsideRange ? ' · 기간 밖' : ''}
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink, flex: 1 }}>
+                  {d.title || `${Number(d.date.slice(5, 7))}월 ${Number(d.date.slice(8))}일의 장소`}
+                </Text>
+                <Text style={{ color: colors.muted, fontSize: 24 }}>›</Text>
+              </View>
+              <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>
+                {!d.visits.length
+                  ? '아직 정한 장소가 없어요'
+                  : `장소 ${d.visits.length}곳 · ${loading ? '기록 확인 중' : counts ? `사진 ${stats?.photos ?? 0} · 영상 ${stats?.videos ?? 0}` : '집계 확인 필요'}`}
+              </Text>
+            </Card>
+          );
+        })}
+      </>
+    );
   return (
     <>
-      <Button secondary onPress={() => onDate('')}>
-        전체 날짜 {date ? '보기' : '✓'}
-      </Button>
+      <TextButton onPress={() => onDate('')}>‹ 전체 일정 보기</TextButton>
       {within.length > 1 && (
         <ScrollView
           horizontal
+          style={{ flexGrow: 0 }}
           showsHorizontalScrollIndicator={false}
           snapToInterval={width}
           decelerationRate="fast"
@@ -49,12 +85,12 @@ export function SchedulePlan({
               onPress={() => onDate(d.date)}
               style={{
                 width,
-                minHeight: 64,
+                minHeight: 56,
                 padding: 8,
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: date === d.date ? colors.accent : '#F2F4F6',
-                borderRadius: 16,
+                borderRadius: 12,
               }}
             >
               <Text style={{ color: date === d.date ? 'white' : colors.ink, fontWeight: '700' }}>
@@ -120,7 +156,7 @@ export function SchedulePlan({
                       <View
                         style={{
                           backgroundColor: colors.accent,
-                          borderRadius: 16,
+                          borderRadius: 12,
                           width: 30,
                           height: 30,
                           alignItems: 'center',

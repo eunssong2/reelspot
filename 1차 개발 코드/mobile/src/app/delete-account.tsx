@@ -19,7 +19,9 @@ export default function DeleteAccount() {
     a.run(load);
   }, []);
   return (
-    <Screen title="계정을 삭제하기 전에" subtitle="방장인 모임을 먼저 정리해 주세요.">
+    <Screen title="계정 삭제">
+      <H>계정을 삭제하기 전에</H>
+      <P>방장인 모임을 먼저 정리해 주세요.</P>
       {groups.map((g) => (
         <Card key={g.groupId}>
           <H>{g.name}</H>
@@ -84,7 +86,11 @@ export default function DeleteAccount() {
                 reauthProof: await reauth(),
                 confirmAllOwnMediaDeletion: true,
               });
-              if (session) { await Transfer?.clearAccount(session.userId); await clearVideoCacheAsync(); await clearLocalAccount(session.userId); }
+              if (session) {
+                await Transfer?.clearAccount(session.userId);
+                await clearVideoCacheAsync();
+                await clearLocalAccount(session.userId);
+              }
               await setSession(null);
               router.replace('/login');
             }),

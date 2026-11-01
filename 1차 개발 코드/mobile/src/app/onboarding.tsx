@@ -7,7 +7,7 @@ import { api, awaitOperation, documentUrl, ApiError, setSession } from '../lib/a
 import { inputText } from '../lib/validation';
 import { useAccount } from '../lib/state';
 import { useFormExit } from '../lib/unsaved';
-import { Screen, Field, Button, P, Card, colors, useAction } from '../components/ui';
+import { Screen, Field, Button, P, Card, Info, colors, useAction } from '../components/ui';
 export default function Onboard() {
   const [docs, setDocs] = useState<any[]>([]),
     [agreed, setAgreed] = useState<Record<string, boolean>>({}),
@@ -72,6 +72,7 @@ export default function Onboard() {
   return (
     <Screen
       compact
+      heading
       title="처음 오셨네요 👋"
       subtitle="문서를 읽고 함께 사용할 이름을 정해 주세요."
       footer={
@@ -97,8 +98,8 @@ export default function Onboard() {
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontSize: 26, color: agreed[d.id] ? colors.accent : colors.muted }}>
-                  {agreed[d.id] ? '☑' : '□'}
+                <Text style={{ fontSize: 22, color: agreed[d.id] ? colors.accent : colors.muted }}>
+                  {agreed[d.id] ? '●' : '○'}
                 </Text>
               </Pressable>
             )}
@@ -119,18 +120,21 @@ export default function Onboard() {
       )}
       <Field
         label="표시명"
+        required
+        limit={20}
+        hint="추후 언제든 변경 가능"
+        helper="중복 표시명도 사용할 수 있어요. 최대 20자"
         placeholder="사용하실 이름을 적어주세요"
         value={name}
         editable={!a.busy}
         onChangeText={setName}
       />
-      <P>중복 표시명도 사용할 수 있어요. 최대 20자</P>
       {!!name && !!nameError && (
         <Text accessibilityRole="alert" style={{ color: '#B8433F' }}>
           {nameError}
         </Text>
       )}
-      <P>친구들과의 기록에 표시할 이름입니다. 나중에 변경할 수 있어요.</P>
+      <Info>친구들과의 기록에서 사용할 이름으로 참여해보세요!</Info>
       {a.errorView}
     </Screen>
   );

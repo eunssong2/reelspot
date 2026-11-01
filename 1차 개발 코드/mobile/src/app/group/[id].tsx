@@ -7,7 +7,17 @@ import { useAccount } from '../../lib/state';
 import { usePreference, todayInSeoul } from '../../lib/preferences';
 import { monthDays, moveMonth, inMonth } from '../../lib/calendar';
 import { MonthGrid, MonthHeader } from '../../components/period-picker';
-import { Screen, Button, Card, H, P, Badge, useAction, colors } from '../../components/ui';
+import {
+  Screen,
+  Button,
+  Card,
+  H,
+  P,
+  Badge,
+  useAction,
+  colors,
+  TextButton,
+} from '../../components/ui';
 export default function Group() {
   const { id, focusDate } = useLocalSearchParams<{ id: string; focusDate?: string }>(),
     { session } = useAccount();
@@ -76,14 +86,22 @@ export default function Group() {
     >
       {group && (
         <View
-          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: colors.surface,
+            paddingHorizontal: 12,
+            borderRadius: 14,
+            marginBottom: 10,
+          }}
         >
           <Badge>
             {group.activeCount}/10명 {owner ? '· 방장' : '· 참여자'}
           </Badge>
-          <Button secondary onPress={() => router.push(`/group/manage?id=${id}`)}>
-            참여자 ›
-          </Button>
+          <TextButton onPress={() => router.push(`/group/manage?id=${id}`)}>
+            함께하는 친구 ›
+          </TextButton>
         </View>
       )}
       <MonthHeader
@@ -104,7 +122,15 @@ export default function Group() {
           gap: 8,
         }}
       >
-        <View style={{ flexDirection: 'row', gap: 4 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 4,
+            backgroundColor: colors.surface,
+            padding: 3,
+            borderRadius: 12,
+          }}
+        >
           {[
             [false, '달력'],
             [true, '일정 목록'],
@@ -115,9 +141,9 @@ export default function Group() {
               accessibilityState={{ selected: list === value }}
               onPress={() => setCalendar({ ...calendar, list: !!value })}
               style={{
-                padding: 12,
-                minHeight: 48,
-                backgroundColor: list === value ? colors.sage : '#F2F4F6',
+                padding: 10,
+                minHeight: 36,
+                backgroundColor: list === value ? '#FFFFFF' : colors.surface,
                 borderRadius: 10,
               }}
             >
@@ -127,6 +153,7 @@ export default function Group() {
         </View>
         <Button
           secondary
+          small
           onPress={() =>
             setCalendar({
               ...calendar,
@@ -138,9 +165,11 @@ export default function Group() {
           오늘
         </Button>
       </View>
-      <Button secondary onPress={() => router.push(`/group/invites?id=${id}`)}>
-        초대·관리 ›
-      </Button>
+      <View style={{ alignItems: 'flex-end' }}>
+        <TextButton color={colors.sub} onPress={() => router.push(`/group/invites?id=${id}`)}>
+          초대·관리 ›
+        </TextButton>
+      </View>
       {!list && (
         <Card style={{ padding: 0, backgroundColor: '#F7F8FA', borderWidth: 0 }}>
           <MonthGrid
@@ -167,14 +196,13 @@ export default function Group() {
             <P>계획과 기록 보기 ›</P>
           </Card>
           {owner && x.status === 'active' && (
-            <Button
-              secondary
+            <TextButton
               onPress={() =>
                 router.push({ pathname: '/schedule/edit', params: { id: x.id, groupId: id } })
               }
             >
-              일정 변경 · {x.title}
-            </Button>
+              일정 변경 ›
+            </TextButton>
           )}
         </View>
       ))}

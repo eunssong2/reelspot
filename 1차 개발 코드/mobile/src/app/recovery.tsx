@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { api } from '../lib/api';
 import { reauth } from '../lib/social';
-import { Screen, Field, Button, Card, H, P, useAction } from '../components/ui';
+import { Screen, Field, Button, Card, H, P, Info, useAction } from '../components/ui';
 export default function Recovery() {
   const { groupId, requestId } = useLocalSearchParams<{ groupId?: string; requestId?: string }>(),
     [members, setMembers] = useState<any[]>([]),
@@ -21,10 +21,8 @@ export default function Recovery() {
     });
   }, []);
   return (
-    <Screen
-      title="방장 부재 복구 문의"
-      subtitle="운영자가 확인 자료·후임 동의·기존 방장 통지와 7일 대기를 거쳐 수동으로 검토합니다."
-    >
+    <Screen title="방장 부재 복구 문의">
+      <H>방장 부재 복구 요청</H>
       {request ? (
         <Card>
           <H>{request.state}</H>
@@ -32,39 +30,52 @@ export default function Recovery() {
           <P>
             통지 {request.noticeAt ?? '대기 전'} · 응답 기한 {request.responseDueAt ?? '대기 전'}
           </P>
-          {request.canConsent && <Button
-            secondary
-            onPress={() =>
-              a.run(async () => {
-                await api(`/recovery-requests/${requestId}/candidate-consent`, {
-                  agreed: !request.candidateConsentAt,
-                  reauthProof: await reauth(),
-                });
-                setRequest(await api(`/recovery-requests/${requestId}`));
-              })
-            }
-          >
-            {request.candidateConsentAt ? '후임 후보 동의 철회' : '후임 후보 동의'}
-          </Button>}
-          {request.canRespond && <><Field label="기존 방장 응답 사유" value={reason} onChangeText={setReason} />
-          {['agree', 'object', 'contacted'].map((response) => (
+          {request.canConsent && (
             <Button
               secondary
-              key={response}
               onPress={() =>
                 a.run(async () => {
-                  await api(`/recovery-requests/${requestId}/owner-response`, { response, reason });
+                  await api(`/recovery-requests/${requestId}/candidate-consent`, {
+                    agreed: !request.candidateConsentAt,
+                    reauthProof: await reauth(),
+                  });
                   setRequest(await api(`/recovery-requests/${requestId}`));
                 })
               }
             >
-              {
-                (
-                  { agree: '이전에 동의', object: '이의 제기', contacted: '운영자와 연락함' } as any
-                )[response]
-              }
+              {request.candidateConsentAt ? '후임 후보 동의 철회' : '후임 후보 동의'}
             </Button>
-          ))}</>}
+          )}
+          {request.canRespond && (
+            <>
+              <Field label="기존 방장 응답 사유" value={reason} onChangeText={setReason} />
+              {['agree', 'object', 'contacted'].map((response) => (
+                <Button
+                  secondary
+                  key={response}
+                  onPress={() =>
+                    a.run(async () => {
+                      await api(`/recovery-requests/${requestId}/owner-response`, {
+                        response,
+                        reason,
+                      });
+                      setRequest(await api(`/recovery-requests/${requestId}`));
+                    })
+                  }
+                >
+                  {
+                    (
+                      {
+                        agree: '이전에 동의',
+                        object: '이의 제기',
+                        contacted: '운영자와 연락함',
+                      } as any
+                    )[response]
+                  }
+                </Button>
+              ))}
+            </>
+          )}
         </Card>
       ) : (
         <>
@@ -75,6 +86,7 @@ export default function Recovery() {
             onChangeText={setReason}
           />
           <H>후임 후보</H>
+          {!members.length && <P>선택할 수 있는 후임 후보가 없습니다.</P>}
           {members.map((m) => (
             <Button key={m.id} secondary={candidate !== m.id} onPress={() => setCandidate(m.id)}>
               {m.displayName}
@@ -98,6 +110,7 @@ export default function Recovery() {
           </Button>
         </>
       )}
+      <Info>기존 방장에게 통지하고 7일간 응답을 기다린 뒤 담당자가 검토해요.</Info>
       {a.errorView}
     </Screen>
   );
