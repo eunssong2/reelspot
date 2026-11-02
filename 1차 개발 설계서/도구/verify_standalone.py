@@ -22,6 +22,10 @@ def main():
                        'passed':applied['source_commit']==prototype_before['commit'] and applied['captures']==len(prototype_before['screens']) and
                        prototype_before['commit'][:7] in (isolated/'UI/05 UI 화면 갤러리.html').read_text() and
                        all(digest(isolated/'UI/프로토타입'/s['image'])==s['sha256'] for s in prototype_before['screens'])})
+        overview=json.loads((isolated/'UI/전체화면정리/출처.json').read_text())
+        checks.append({'check':'UI 담당 전체 화면 정리(최우선) 이미지 보존',
+                       'passed':applied['overview_commit']==overview['commit'] and
+                       all(digest(isolated/'UI/전체화면정리'/i['image'])==i['sha256'] for i in overview['images'])})
     result={'scope':'상위 원본·DayLog·APK 없는 복사본에서 핵심 설계서와 기존 실행 근거 유지 확인. 앱 빌드/서버 실행 검수 아님.','passed':all(c['passed'] for c in checks),'checks':checks}
     (ROOT/'부록/독립 패키지 검증.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
     print(json.dumps({'passed':result['passed'],'checks':len(checks)},ensure_ascii=False))

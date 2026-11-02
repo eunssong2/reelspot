@@ -19,7 +19,16 @@ UI/2026-10-30_UI_통합_설계.md가 적용 기준이며 회의록/10월 30일 �
 Noto Sans CJK KR이 없으면 PowerPoint의 글꼴 바꾸기에서 맑은 고딕 등으로 바꿉니다.
 재생성은 기존 산출물을 덮어씁니다. Office에서 직접 수정한 파일은 먼저 별도 보관하세요.
 
+2026-11-01: UI 담당 docs/AT_THAT_PLACE_전체화면정리.pptx(feature/ui-prototype @ 870be87)를 UI 설계의 최우선 기준으로 반영했습니다.
+PPTX 이미지43개 → 설계 화면19개(새 화면 UI38 하루 일정 변경 포함). 이전 실행 캡처36개는 참고로 유지합니다.
+반영 기준과 제품 계약 차이(P1~P14)는 UI/2026-11-01_UI_전체화면정리_반영.md를 따릅니다.
+
+전체 화면 정리 PPTX가 바뀌었을 때
+.venv/bin/python 도구/capture_overview.py --pptx /절대경로/체크아웃/docs/AT_THAT_PLACE_전체화면정리.pptx --commit <커밋>
+슬라이드·이미지 구성이 바뀌면 capture_overview.py의 UI_MAP을 먼저 고칩니다(맞지 않으면 중단합니다). 그다음 아래 재생성 절차를 실행합니다.
+
 수정 원천
+- capture_overview.py: UI 담당 전체 화면 정리 PPTX에서 이미지·슬라이드 문구·해시를 UI/전체화면정리/에 추출(최우선 기준)
 - prototype_ui.py: 캡처 우선 UI PPTX·HTML·Excel·JSON·SVG 생성, 화면 출처와 제품 계약 차이 표시
 - capture_login_ui.py: 비데모 프로토타입에서 로그인·달력·초대8개 화면과 기간 시트를 캡처해 같은 커밋 manifest에 추가
 - capture_prototype.py: 원본 추적 파일 변경 없이 실행 중인 Expo 데모 웹을27개 상태로 캡처

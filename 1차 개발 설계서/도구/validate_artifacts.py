@@ -54,22 +54,27 @@ def main():
     qa_count=sum(map(len,QA.values()))
     check(f'{qa_count}개 기능 검수 시나리오',set(QA)==required and qa_count==120,qa_count)
     svg_paths=list((ROOT/'UI/SVG').glob('*.svg'))
-    from prototype_ui import load_source
-    prototype=load_source()
+    from prototype_ui import load_source, load_overview
+    prototype=load_source(); overview=load_overview()
+    ov_primary={}
+    for img in overview['images']:ov_primary.setdefault(img['ui'],img)
     applied=json.loads((ROOT/'UI/화면 반영.json').read_text())
     replaced=set(applied['replaced_ui'])
     check('프로토타입 출처와 캡처 무결성',len(prototype['screens'])==applied['captures'] and
           prototype['commit']==applied['source_commit'] and
-          replaced=={s['ui'] for s in prototype['screens'] if s['ui']},
-          {'commit':prototype['commit'],'captures':len(prototype['screens']),'replaced':sorted(replaced)})
+          overview['commit']==applied['overview_commit'] and len(overview['images'])==applied['overview_images'] and
+          replaced=={s['ui'] for s in prototype['screens'] if s['ui']}|set(ov_primary),
+          {'commit':prototype['commit'],'overview':overview['commit'],'captures':len(prototype['screens']),'overview_images':len(overview['images']),'replaced':sorted(replaced)})
     svg_ok=True
     for p in svg_paths:
         el=ET.parse(p)
         images=[x for x in el.iter() if x.tag.endswith('image')]
         if p.name.split('_')[0] in replaced:
             import base64
-            shot=next(s for s in prototype['screens'] if s['ui']==p.name.split('_')[0])
-            if len(images)!=1 or hashlib.sha256(base64.b64decode(images[0].get('href','').split(',')[-1])).hexdigest()!=shot['sha256']:svg_ok=False
+            ui=p.name.split('_')[0]
+            # 전체 화면 정리(최우선)가 있으면 그 대표 이미지, 없으면 이전 실행 캡처와 같아야 한다.
+            expected=ov_primary[ui]['sha256'] if ui in ov_primary else next(s for s in prototype['screens'] if s['ui']==ui)['sha256']
+            if len(images)!=1 or hashlib.sha256(base64.b64decode(images[0].get('href','').split(',')[-1])).hexdigest()!=expected:svg_ok=False
         elif images or not any(x.tag.endswith('text') for x in el.iter()):svg_ok=False
     check(f'{len(SCREENS)}개 SVG의 화면 출처별 구조',len(svg_paths)==len(SCREENS) and svg_ok,
           {'prototype_raster':len(replaced),'editable_vector':len(SCREENS)-len(replaced)})
@@ -90,7 +95,7 @@ def main():
     check('PPTX 브랜치 대응 화면의 캡처 이미지',len(capture_slides)==len(replaced) and all(ok for _,ok in capture_slides),capture_slides)
     check('PPTX 기본·상세·상태 화면 수',len(prs.slides)==applied['pptx_slides'],len(prs.slides))
     ppt_images={hashlib.sha256(sh.image.blob).hexdigest() for slide in prs.slides for sh in slide.shapes if sh.shape_type==13}
-    check('PPTX 캡처 전체의 원본 이미지 포함',all(s['sha256'] in ppt_images for s in prototype['screens']),len(prototype['screens']))
+    check('PPTX 캡처 전체의 원본 이미지 포함',all(s['sha256'] in ppt_images for s in prototype['screens']+overview['images']),len(prototype['screens'])+len(overview['images']))
     check('PPTX 도형 슬라이드 경계',not layout_issues,layout_issues)
     documents=list(ROOT.glob('*.docx'))+list((ROOT/'근거').glob('*.docx'))
     for p in documents:

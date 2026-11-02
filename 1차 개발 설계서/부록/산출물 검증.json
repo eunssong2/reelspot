@@ -37,7 +37,7 @@
     {
       "check": "화면 API 참조",
       "passed": true,
-      "detail": 35
+      "detail": 36
     },
     {
       "check": "패키지 내부 기능명세 SHA256",
@@ -94,7 +94,7 @@
           {
             "check": "build_design.py 독립 실행",
             "passed": true,
-            "output": "UI23\", \"UI24\"], \"captures\": 36, \"supplemental_screens\": 17, \"gallery_pages\": [\"UI01\", \"UI01-PRODUCT\", \"UI02\", \"UI02-PRODUCT\", \"UI03\", \"UI03-PRODUCT\", \"UI04\", \"PERIOD\", \"UI05\", \"UI06\", \"UI08\", \"M4\", \"S02\", \"S02-empty\", \"S02-oneday\", \"DATES\", \"S02-tabs\", \"UI09\", \"UI10\", \"S03-detail\", \"UI11\", \"UI12\", \"M1\", \"S05-empty\", \"UI13\", \"S04-select\", \"S04-empty\", \"UI14\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"UI24\", \"UI25\", \"UI26\", \"UI27\", \"UI28\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"MY-name\", \"UI37\", \"S0\"], \"pdf_intro_pages\": 1, \"pdf_pages\": 56, \"pptx_slides\": 58}\n{\"screens\": 35, \"operations\": 73, \"tables\": 27, \"functional_cases\": 120, \"native_ui_pptx\": \"/tmp/atp-design-standalone-r04v4er_/package/UI/05 UI 설계.pptx\"}\n",
+            "output": ", \"S02-empty\", \"S02-oneday\", \"DATES\", \"S02-tabs\", \"UI09\", \"P17-2\", \"S04-people\", \"UI10\", \"S03\", \"S03-detail\", \"UI11\", \"UI12\", \"S05\", \"M1\", \"S05-empty\", \"UI13\", \"P16-2\", \"S04\", \"S04-select\", \"S04-empty\", \"UI14\", \"M2\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"P11-2\", \"INVITES\", \"UI24\", \"P12-2\", \"P12-3\", \"P12-4\", \"INVITE-JOIN\", \"UI25\", \"UI26\", \"P13-2\", \"P13-3\", \"MEMBERS\", \"UI27\", \"UI28\", \"P19-2\", \"P19-3\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"UI37\", \"ACCOUNT\", \"S0\"], \"pdf_intro_pages\": 2, \"pdf_pages\": 100, \"pptx_slides\": 102}\n{\"screens\": 36, \"operations\": 73, \"tables\": 27, \"functional_cases\": 120, \"native_ui_pptx\": \"/tmp/atp-design-standalone-o4j8xozk/package/UI/05 UI 설계.pptx\"}\n",
             "error": ""
           },
           {
@@ -114,6 +114,10 @@
           {
             "check": "브랜치 체크아웃 없는 UI 화면 재생성",
             "passed": true
+          },
+          {
+            "check": "UI 담당 전체 화면 정리(최우선) 이미지 보존",
+            "passed": true
           }
         ]
       }
@@ -128,7 +132,9 @@
       "passed": true,
       "detail": {
         "commit": "a67ee60368819ce5a325b5fe2ace17f9c85140c1",
+        "overview": "870be871c97e8687a2ae7592fcbc48f59875e148",
         "captures": 36,
+        "overview_images": 43,
         "replaced": [
           "UI01",
           "UI02",
@@ -148,15 +154,16 @@
           "UI26",
           "UI28",
           "UI36",
-          "UI37"
+          "UI37",
+          "UI38"
         ]
       }
     },
     {
-      "check": "35개 SVG의 화면 출처별 구조",
+      "check": "36개 SVG의 화면 출처별 구조",
       "passed": true,
       "detail": {
-        "prototype_raster": 19,
+        "prototype_raster": 20,
         "editable_vector": 16
       }
     },
@@ -264,6 +271,10 @@
           true
         ],
         [
+          "UI38",
+          true
+        ],
+        [
           "UI08",
           true
         ],
@@ -320,12 +331,12 @@
     {
       "check": "PPTX 기본·상세·상태 화면 수",
       "passed": true,
-      "detail": 58
+      "detail": 102
     },
     {
       "check": "PPTX 캡처 전체의 원본 이미지 포함",
       "passed": true,
-      "detail": 36
+      "detail": 79
     },
     {
       "check": "PPTX 도형 슬라이드 경계",
@@ -360,7 +371,7 @@
       "check": "Word 열기 09 구현 계약 보완",
       "passed": true,
       "detail": {
-        "paragraphs": 73,
+        "paragraphs": 77,
         "tables": 2
       }
     },
@@ -411,10 +422,13 @@
       "passed": true,
       "detail": [
         "화면목록",
+        "전체화면정리",
+        "전체화면규칙",
         "구성요소명세",
         "화면API연결",
         "화면상태",
         "프로토타입대응",
+        "앱구현현황",
         "정책차이",
         "UI통합검수",
         "적용기준",
@@ -452,7 +466,7 @@
     {
       "check": "PDF 열기 09 구현 계약 보완",
       "passed": true,
-      "detail": 7
+      "detail": 8
     },
     {
       "check": "PDF 열기 03 API 연동 설계",
@@ -477,12 +491,12 @@
     {
       "check": "PDF 열기 05 UI 설계",
       "passed": true,
-      "detail": 56
+      "detail": 100
     },
     {
       "check": "UI PDF 기본·상세·상태 화면수",
       "passed": true,
-      "detail": 56
+      "detail": 100
     },
     {
       "check": "UI PDF 출처와 적용 기준",
@@ -494,16 +508,37 @@
       "passed": true,
       "detail": [
         "UI01",
+        "LOGIN",
         "UI01-PRODUCT",
         "UI02",
+        "P04-2",
+        "P04-3",
+        "ONBOARD",
         "UI02-PRODUCT",
         "UI03",
+        "P05-2",
+        "GROUPS",
         "UI03-PRODUCT",
         "UI04",
+        "P06-2",
+        "GROUP-NEW",
         "PERIOD",
         "UI05",
+        "P07-2",
+        "P07-3",
+        "P08-1",
+        "P08-2",
+        "CALENDAR",
         "UI06",
+        "P10-2",
+        "SCHEDULE-EDIT",
+        "UI38",
+        "P09-2",
+        "P09-3",
+        "P09-4",
         "UI08",
+        "P14-2",
+        "S01",
         "M4",
         "S02",
         "S02-empty",
@@ -511,16 +546,23 @@
         "DATES",
         "S02-tabs",
         "UI09",
+        "P17-2",
+        "S04-people",
         "UI10",
+        "S03",
         "S03-detail",
         "UI11",
         "UI12",
+        "S05",
         "M1",
         "S05-empty",
         "UI13",
+        "P16-2",
+        "S04",
         "S04-select",
         "S04-empty",
         "UI14",
+        "M2",
         "M3",
         "UI15",
         "UI16",
@@ -531,11 +573,23 @@
         "UI21",
         "UI22",
         "UI23",
+        "P11-2",
+        "INVITES",
         "UI24",
+        "P12-2",
+        "P12-3",
+        "P12-4",
+        "INVITE-JOIN",
         "UI25",
         "UI26",
+        "P13-2",
+        "P13-3",
+        "MEMBERS",
         "UI27",
         "UI28",
+        "P19-2",
+        "P19-3",
+        "SET",
         "SET-invite",
         "UI29",
         "UI30",
@@ -545,8 +599,11 @@
         "UI34",
         "UI35",
         "UI36",
+        "P18-2",
+        "MY",
         "MY-name",
         "UI37",
+        "ACCOUNT",
         "S0"
       ]
     },
