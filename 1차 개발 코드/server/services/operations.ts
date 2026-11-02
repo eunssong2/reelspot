@@ -7,7 +7,15 @@ import { text, businessDeadline } from '../core/policy.js';
 import { page } from '../core/paging.js';
 import { encrypt, decrypt } from '../core/crypto.js';
 import { objects } from '../adapters/object-store.js';
-import { activity, cancelPending, deleteFile, groupAccess, requireReauth } from './access.js';
+import {
+  activity,
+  cancelPending,
+  cleanup,
+  deleteFile,
+  groupAccess,
+  requireReauth,
+  taskGroupId,
+} from './access.js';
 export async function notify(
   c: Context,
   userId: string,
@@ -185,6 +193,16 @@ export const operationHandlers: Record<string, Handler> = {
     ]);
     await c.db.query('UPDATE sessions SET revoked_at=now() WHERE user_id=$1', [c.actor.id]);
     await cancelPending(c, 'author_user_id=$1', [c.actor.id]);
+    await c.db.query(
+      'UPDATE users SET avatar_asset_id=NULL,avatar_version=avatar_version+1 WHERE id=$1 AND avatar_asset_id IS NOT NULL',
+      [c.actor.id],
+    );
+    for (const a of await rows(
+      c.db,
+      "UPDATE assets SET state='delete_pending' WHERE avatar_user_id=$1 AND state<>'purged' RETURNING object_key",
+      [c.actor.id],
+    ))
+      await cleanup(c, 'avatar_task', a.object_key.split('/')[1], Date.now());
     const media = await rows(c.db, 'SELECT * FROM media WHERE author_user_id=$1 ORDER BY id', [
       c.actor.id,
     ]);
@@ -513,10 +531,8 @@ export const operationHandlers: Record<string, Handler> = {
         );
       } else {
         demand(['delete', 'restrict'].includes(action), 'VALIDATION_ERROR');
-        const gid =
-          t.cover_group_id ??
-          (await one(c.db, 'SELECT group_id FROM schedules WHERE id=$1', [t.schedule_id])).group_id;
-        await c.db.query('UPDATE groups SET reserved_bytes=reserved_bytes-$2 WHERE id=$1', [
+        const gid = await taskGroupId(c, t);
+        if (gid) await c.db.query('UPDATE groups SET reserved_bytes=reserved_bytes-$2 WHERE id=$1', [
           gid,
           t.reserved_bytes,
         ]);

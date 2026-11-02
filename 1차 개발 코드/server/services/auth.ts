@@ -6,10 +6,10 @@ import { config } from '../core/config.js';
 import { hash, randomToken } from '../core/crypto.js';
 import { one, rows, tx } from '../core/db.js';
 import type { Actor, Context, Handler } from '../core/context.js';
-import { demand } from '../core/errors.js';
+import { demand, version } from '../core/errors.js';
 import { text } from '../core/policy.js';
 import { verifyIdentity } from '../adapters/auth.js';
-import { cancelPending, profileDto, requireReauth } from './access.js';
+import { cancelPending, cleanupAvatar, profileDto, requireReauth } from './access.js';
 const jwtKey = new TextEncoder().encode(config.tokenSecret);
 async function accessToken(userId: string, sessionId: string) {
   return new SignJWT({ sid: sessionId })
@@ -179,12 +179,33 @@ export const authHandlers: Record<string, Handler> = {
   profileGet: async (c) =>
     profileDto(await one(c.db, 'SELECT * FROM users WHERE id=$1', [c.actor.id])),
   profilePatch: async (c) => {
+    const b = c.body;
+    demand(
+      b.displayName !== undefined || b.avatarAssetId || b.restoreDefaultAvatar,
+      'VALIDATION_ERROR',
+    );
+    demand(!(b.avatarAssetId && b.restoreDefaultAvatar), 'VALIDATION_ERROR');
+    const u = await one(c.db, 'SELECT * FROM users WHERE id=$1 FOR UPDATE', [c.actor.id]);
+    version(u, b.expectedVersion);
+    if (b.avatarAssetId)
+      demand(
+        await one(
+          c.db,
+          "SELECT 1 FROM assets WHERE id=$1 AND avatar_user_id=$2 AND variant='sanitized_original' AND state='ready' AND location_verified_absent AND moderation_state='passed'",
+          [b.avatarAssetId, u.id],
+        ),
+        'FILE_INVALID',
+      );
+    const avatar = b.restoreDefaultAvatar ? null : (b.avatarAssetId ?? u.avatar_asset_id);
     const r = await one(
       c.db,
-      'UPDATE users SET display_name=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *',
-      [c.actor.id, text(c.body.displayName, 20), c.body.expectedVersion],
+      'UPDATE users SET display_name=$2,avatar_asset_id=$3::uuid,avatar_version=avatar_version+CASE WHEN $3::uuid IS DISTINCT FROM avatar_asset_id THEN 1 ELSE 0 END,version=version+1 WHERE id=$1 RETURNING *',
+      [u.id, b.displayName === undefined ? u.display_name : text(b.displayName, 20), avatar],
     );
-    demand(r, 'VERSION_CONFLICT', 409);
+    if (u.avatar_asset_id && u.avatar_asset_id !== r.avatar_asset_id) {
+      await cleanupAvatar(c, u.avatar_asset_id);
+      await c.db.query("UPDATE assets SET state='delete_pending' WHERE id=$1", [u.avatar_asset_id]);
+    }
     return profileDto(r);
   },
   consentUpdate: async (c) => ({ consentReceipts: await consentEvents(c, c.body.items) }),

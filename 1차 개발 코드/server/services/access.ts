@@ -1,7 +1,7 @@
 import { one, rows, type DBRow } from '../core/db.js';
 import type { Context } from '../core/context.js';
 import { demand } from '../core/errors.js';
-import { isExpired } from '../core/policy.js';
+import { date, isExpired } from '../core/policy.js';
 export async function groupAccess(
   c: Context,
   id: string,
@@ -73,6 +73,8 @@ export async function taskAccess(c: Context, id: string, transfer = false) {
         410,
       );
     if (t.cover_group_id) await groupAccess(c, t.cover_group_id, true);
+    else if (t.avatar_user_id)
+      demand(t.avatar_user_id === c.actor.id && c.actor.status === 'active', 'ACCESS_REVOKED', 403);
     else {
       const s = await scheduleAccess(c, t.schedule_id);
       demand(!isExpired(s), 'EXPIRED', 410);
@@ -89,7 +91,16 @@ export async function activity(c: Context, groupId: string) {
   await c.db.query('UPDATE groups SET activity_at=now(),version=version+1 WHERE id=$1', [groupId]);
 }
 export function profileDto(r: any) {
-  return { id: r.id, displayName: r.display_name, status: r.status, version: Number(r.version) };
+  return {
+    id: r.id,
+    displayName: r.display_name,
+    status: r.status,
+    version: Number(r.version),
+    avatarVersion: avatarVersion(r),
+  };
+}
+export function avatarVersion(r: any): number | null {
+  return r.avatar_asset_id ? Number(r.avatar_version) : null;
 }
 export function scheduleDto(r: any) {
   return {
@@ -180,13 +191,12 @@ export async function cancelPending(c: Context, where: string, args: unknown[]) 
     args,
   );
   for (const t of tasks) {
-    const gid =
-      t.cover_group_id ??
-      (await one(c.db, 'SELECT group_id FROM schedules WHERE id=$1', [t.schedule_id])).group_id;
-    await c.db.query('UPDATE groups SET reserved_bytes=reserved_bytes-$2 WHERE id=$1', [
-      gid,
-      t.reserved_bytes,
-    ]);
+    const gid = await taskGroupId(c, t);
+    if (gid)
+      await c.db.query('UPDATE groups SET reserved_bytes=reserved_bytes-$2 WHERE id=$1', [
+        gid,
+        t.reserved_bytes,
+      ]);
     await c.db.query(
       "UPDATE upload_tasks SET state='cancelled',reserved_bytes=0,version=version+1 WHERE id=$1",
       [t.id],
@@ -199,6 +209,18 @@ export async function cleanup(c: Context, type: string, id: string, generation: 
     'INSERT INTO cleanup_jobs(target_type,target_id,generation,due_at) VALUES($1,$2,$3,now()) ON CONFLICT DO NOTHING',
     [type, id, generation],
   );
+}
+/** Group whose storage pays for the task. Profile photos are not counted against a group. */
+export async function taskGroupId(c: Context, t: any): Promise<string | null> {
+  if (t.avatar_user_id) return null;
+  return (
+    t.cover_group_id ??
+    (await one(c.db, 'SELECT group_id FROM schedules WHERE id=$1', [t.schedule_id])).group_id
+  );
+}
+export async function cleanupAvatar(c: Context, assetId: string) {
+  const a = await one(c.db, 'SELECT object_key FROM assets WHERE id=$1', [assetId]);
+  if (a) await cleanup(c, 'avatar_task', a.object_key.split('/')[1], Date.now());
 }
 export async function cleanupCover(c: Context, assetId: string) {
   const a = await one(c.db, 'SELECT object_key FROM assets WHERE id=$1', [assetId]);
@@ -221,4 +243,83 @@ export async function deleteFile(c: Context, m: any) {
   const s = await one(c.db, 'SELECT group_id FROM schedules WHERE id=$1', [m.schedule_id]);
   await activity(c, s.group_id);
   return 'deleted';
+}
+export function datesBetween(start: string, end: string) {
+  const out: string[] = [];
+  for (let d = Date.parse(start); d <= Date.parse(end); d += 86400000)
+    out.push(new Date(d).toISOString().slice(0, 10));
+  return out;
+}
+export type DayDto = {
+  date: string;
+  dayNo: number;
+  title: string | null;
+  status: 'active' | 'cancelled';
+  visitCount: number;
+};
+export async function scheduleDays(c: Context, ids: string[]) {
+  const all = await rows(
+    c.db,
+    `SELECT d.schedule_id,d.day_date,row_number() OVER (PARTITION BY d.schedule_id ORDER BY d.day_date)::int day_no,NULLIF(p.title,'') title,d.status,
+       (SELECT count(*)::int FROM visits v WHERE v.schedule_id=d.schedule_id AND v.visit_date=d.day_date AND v.deleted_at IS NULL) visit_count
+     FROM schedule_days d LEFT JOIN day_plans p ON p.schedule_id=d.schedule_id AND p.plan_date=d.day_date
+     WHERE d.schedule_id=ANY($1::uuid[]) ORDER BY d.schedule_id,d.day_date`,
+    [ids],
+  );
+  const map = new Map<string, DayDto[]>(ids.map((id) => [id, []]));
+  for (const d of all)
+    map.get(d.schedule_id)!.push({
+      date: d.day_date,
+      dayNo: d.day_no,
+      title: d.title,
+      status: d.status,
+      visitCount: d.visit_count,
+    });
+  return map;
+}
+/** A date accepts new visits/files only when it is an active day of the schedule. */
+export async function scheduleDay(c: Context, s: { id: string }, d: string, allowCancelled = false) {
+  date(d);
+  const day = await one(c.db, 'SELECT * FROM schedule_days WHERE schedule_id=$1 AND day_date=$2', [
+    s.id,
+    d,
+  ]);
+  demand(day, 'DATE_OUTSIDE_SCHEDULE');
+  demand(allowCancelled || day.status === 'active', 'DAY_CANCELLED', 409);
+  return day;
+}
+/** Rejects dates already used by an active day of another active schedule in the group. */
+export async function requireFreeDates(
+  c: Context,
+  groupId: string,
+  dates: string[],
+  exceptScheduleId: string | null = null,
+) {
+  if (!dates.length) return;
+  const taken = await rows(
+    c.db,
+    `SELECT d.day_date,s.id,s.title FROM schedule_days d JOIN schedules s ON s.id=d.schedule_id
+     WHERE d.group_id=$1 AND d.day_date=ANY($2::date[]) AND d.status='active' AND s.status='active'
+       AND s.id IS DISTINCT FROM $3::uuid ORDER BY d.day_date,s.id`,
+    [groupId, dates, exceptScheduleId],
+  );
+  demand(!taken.length, 'SCHEDULE_DATE_TAKEN', 409, {
+    dates: [...new Set(taken.map((t) => t.day_date))],
+    schedules: [...new Map(taken.map((t) => [t.id, { id: t.id, title: t.title }])).values()],
+  });
+}
+/** Keeps schedules.start_date/end_date as the envelope of the schedule's days. */
+export async function syncEnvelope(c: Context, scheduleId: string) {
+  const r = await one(
+    c.db,
+    'SELECT min(day_date) s,max(day_date) e FROM schedule_days WHERE schedule_id=$1',
+    [scheduleId],
+  );
+  if (!r?.s) return;
+  demand(Date.parse(r.e) - Date.parse(r.s) <= 365 * 86400000, 'VALIDATION_ERROR');
+  await c.db.query('UPDATE schedules SET start_date=$2,end_date=$3 WHERE id=$1', [
+    scheduleId,
+    r.s,
+    r.e,
+  ]);
 }

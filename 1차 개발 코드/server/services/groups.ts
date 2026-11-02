@@ -1,10 +1,10 @@
 import { config } from '../core/config.js';
-import { randomUUID, randomBytes } from 'node:crypto';
+import { randomBytes, randomInt } from 'node:crypto';
 import { one, rows } from '../core/db.js';
 import type { Handler, Context } from '../core/context.js';
 import { demand, version } from '../core/errors.js';
 import { hash, encrypt, decrypt } from '../core/crypto.js';
-import { date, period, plannedTime, rangeDate, text, retention } from '../core/policy.js';
+import { date, period, plannedTime, text, retention } from '../core/policy.js';
 import { page } from '../core/paging.js';
 import {
   groupAccess,
@@ -17,6 +17,12 @@ import {
   deleteFile,
   cleanupCover,
   requireReauth,
+  avatarVersion,
+  datesBetween,
+  requireFreeDates,
+  scheduleDay,
+  scheduleDays,
+  syncEnvelope,
 } from './access.js';
 import { searchPlaces } from '../adapters/places.js';
 function scheduleInput(b: any) {
@@ -25,11 +31,56 @@ function scheduleInput(b: any) {
   return text(b.title, 100);
 }
 async function addSchedule(c: Context, groupId: string, b: any) {
-  return one(
+  const title = scheduleInput(b);
+  await requireFreeDates(c, groupId, datesBetween(b.startDate, b.endDate));
+  const s = await one(
     c.db,
     'INSERT INTO schedules(group_id,title,start_date,end_date) VALUES($1,$2,$3,$4) RETURNING *',
-    [groupId, scheduleInput(b), b.startDate, b.endDate],
+    [groupId, title, b.startDate, b.endDate],
   );
+  await c.db.query(
+    'INSERT INTO schedule_days(schedule_id,group_id,day_date) SELECT $1,$2,d::date FROM generate_series($3::date,$4::date,\'1 day\') d',
+    [s.id, groupId, b.startDate, b.endDate],
+  );
+  return s;
+}
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+async function newInviteCode(c: Context) {
+  for (;;) {
+    const code = Array.from({ length: 8 }, () => ALPHABET[randomInt(ALPHABET.length)]).join('');
+    if (!(await one(c.db, 'SELECT 1 FROM invitations WHERE code_hash=$1', [hash(code)])))
+      return code;
+  }
+}
+/** Codes are shown in upper case: 8 letters/digits now, 12 hex digits for older invitations. */
+function inviteKey(v: string) {
+  return /^[a-z0-9]{8}$|^[0-9a-f]{12}$/i.test(v) ? v.toUpperCase() : v;
+}
+async function dayTarget(c: Context) {
+  const s = await scheduleAccess(c, c.params.scheduleId, true);
+  version(s, c.body.expectedVersion);
+  date(c.params.date);
+  const day = await one(
+    c.db,
+    'SELECT * FROM schedule_days WHERE schedule_id=$1 AND day_date=$2 FOR UPDATE',
+    [s.id, c.params.date],
+  );
+  demand(day, 'NOT_FOUND', 404);
+  return { s, day };
+}
+async function dayResult(c: Context, scheduleId: string, cancelIfAllCancelled = true) {
+  const left = await one(
+    c.db,
+    "SELECT count(*)::int n,count(*) FILTER (WHERE status='active')::int active FROM schedule_days WHERE schedule_id=$1",
+    [scheduleId],
+  );
+  const r = await one(
+    c.db,
+    `UPDATE schedules SET status=CASE WHEN $2 AND status='active' THEN 'cancelled' ELSE status END,version=version+1 WHERE id=$1 RETURNING *`,
+    [scheduleId, cancelIfAllCancelled && left.n > 0 && left.active === 0],
+  );
+  await activity(c, r.group_id);
+  return { schedule: scheduleDto(r), days: (await scheduleDays(c, [scheduleId])).get(scheduleId)! };
 }
 function invitationDto(i: any) {
   const state = i.revoked_at
@@ -59,7 +110,7 @@ function validInvite(i: any) {
 }
 async function findInvite(c: Context, token: string) {
   const i = await one(c.db, 'SELECT * FROM invitations WHERE token_hash=$1 OR code_hash=$1', [
-    hash(token),
+    hash(inviteKey(token)),
   ]);
   demand(i, 'INVITE_INVALID', 404);
   return i;
@@ -77,6 +128,7 @@ export const groupHandlers: Record<string, Handler> = {
       [g.id, c.actor.id],
     );
     const s = await addSchedule(c, g.id, c.body.firstSchedule);
+    // The group row was created in this transaction, so no other schedule can hold these dates.
     return {
       group: await groupDto(c, { ...g, membership: m }),
       membershipId: m.id,
@@ -147,12 +199,19 @@ export const groupHandlers: Record<string, Handler> = {
       "SELECT * FROM schedules WHERE group_id=$1 AND status<>'deleted' AND start_date<=$3 AND end_date>=$2 ORDER BY start_date,created_at,id",
       [c.params.groupId, c.query.from, c.query.to],
     );
+    const days = await scheduleDays(
+      c,
+      s.map((s) => s.id),
+    );
     const counts: Record<string, number> = {};
-    for (let d = Date.parse(c.query.from); d <= Date.parse(c.query.to); d += 86400000) {
-      const k = new Date(d).toISOString().slice(0, 10);
-      counts[k] = s.filter((s) => s.start_date <= k && s.end_date >= k).length;
-    }
-    return { schedules: s.map(scheduleDto), dateCounts: counts };
+    for (const k of datesBetween(c.query.from, c.query.to))
+      counts[k] = s.filter((s) => days.get(s.id)!.some((d) => d.date === k)).length;
+    return {
+      schedules: s
+        .map((s) => ({ ...scheduleDto(s), days: days.get(s.id)! }))
+        .filter((s) => s.days.some((d) => d.date >= c.query.from && d.date <= c.query.to)),
+      dateCounts: counts,
+    };
   },
   scheduleCreate: async (c) => {
     await groupAccess(c, c.params.groupId, true);
@@ -172,21 +231,14 @@ export const groupHandlers: Record<string, Handler> = {
       'SELECT v.*,p.name,p.address,p.latitude,p.longitude FROM visits v JOIN places p ON p.id=v.place_id WHERE schedule_id=$1 AND deleted_at IS NULL ORDER BY visit_date,position',
       [s.id],
     );
-    const dates = [
-      ...new Set([
-        ...Array.from(
-          {
-            length: Math.floor((Date.parse(s.end_date) - Date.parse(s.start_date)) / 86400000) + 1,
-          },
-          (_, i) => new Date(Date.parse(s.start_date) + i * 86400000).toISOString().slice(0, 10),
-        ),
-        ...plans.map((p) => p.plan_date),
-        ...visits.map((v) => v.visit_date),
-      ]),
-    ].sort();
+    const days = (await scheduleDays(c, [s.id])).get(s.id)!,
+      dayDates = new Set(days.map((d) => d.date));
+    // Days first; dates outside the days stay visible only while they still hold visits.
+    const dates = [...new Set([...dayDates, ...visits.map((v) => v.visit_date)])].sort();
     const r = retention(s.end_date);
     return {
       schedule: scheduleDto(s),
+      days,
       retention: {
         fixed: !!s.retention_fixed_at,
         lastDate: s.retention_last_date ?? r.lastDate,
@@ -199,7 +251,7 @@ export const groupHandlers: Record<string, Handler> = {
         visits: visits.filter((v) => v.visit_date === d).map(visitDto),
         visitCount: visits.filter((v) => v.visit_date === d).length,
         visitLimit: 15,
-        outsideRange: d < s.start_date || d > s.end_date,
+        outsideRange: !dayDates.has(d),
       })),
       version: Number(s.version),
     };
@@ -217,6 +269,13 @@ export const groupHandlers: Record<string, Handler> = {
       endDate: c.body.endDate ?? s.end_date,
     };
     scheduleInput(b);
+    const periodChanged = b.startDate !== s.start_date || b.endDate !== s.end_date;
+    const existing = (
+      await rows(c.db, 'SELECT day_date FROM schedule_days WHERE schedule_id=$1', [s.id])
+    ).map((d) => d.day_date);
+    const wanted = datesBetween(b.startDate, b.endDate);
+    const added = periodChanged ? wanted.filter((d) => !existing.includes(d)) : [];
+    await requireFreeDates(c, s.group_id, added, s.id);
     const v = await one(
       c.db,
       'SELECT count(*)::int n FROM visits WHERE schedule_id=$1 AND deleted_at IS NULL AND (visit_date<$2 OR visit_date>$3)',
@@ -233,6 +292,16 @@ export const groupHandlers: Record<string, Handler> = {
       409,
       { visits: v.n, media: m.n },
     );
+    if (periodChanged) {
+      await c.db.query(
+        'DELETE FROM schedule_days WHERE schedule_id=$1 AND NOT (day_date=ANY($2::date[]))',
+        [s.id, wanted],
+      );
+      await c.db.query(
+        'INSERT INTO schedule_days(schedule_id,group_id,day_date) SELECT $1,$2,d FROM unnest($3::date[]) d',
+        [s.id, s.group_id, added],
+      );
+    }
     const r = await one(
       c.db,
       'UPDATE schedules SET title=$2,start_date=$3,end_date=$4,version=version+1 WHERE id=$1 RETURNING *',
@@ -245,6 +314,10 @@ export const groupHandlers: Record<string, Handler> = {
     const s = await scheduleAccess(c, c.params.scheduleId, true);
     version(s, c.body.expectedVersion);
     demand(s.status !== 'cancelled', 'ALREADY_CANCELLED', 409);
+    await c.db.query(
+      "UPDATE schedule_days SET status='cancelled',cancelled_at=now() WHERE schedule_id=$1 AND status='active'",
+      [s.id],
+    );
     const r = await one(
       c.db,
       "UPDATE schedules SET status='cancelled',version=version+1 WHERE id=$1 RETURNING *",
@@ -264,6 +337,123 @@ export const groupHandlers: Record<string, Handler> = {
     );
     await activity(c, s.group_id);
     return { deletedId: s.id, deletedVisitIds: v.map((v) => v.id) };
+  },
+  dayUpdate: async (c) => {
+    const { s, day } = await dayTarget(c);
+    demand(s.status === 'active', 'SCHEDULE_CANCELLED', 409);
+    demand(c.body.title !== undefined || c.body.date !== undefined, 'VALIDATION_ERROR');
+    const n = (await one(c.db, 'SELECT count(*)::int n FROM schedule_days WHERE schedule_id=$1', [s.id])).n;
+    let from = day.day_date;
+    if (c.body.date !== undefined && c.body.date !== from) {
+      const to = date(c.body.date);
+      demand(
+        !(await one(c.db, 'SELECT 1 FROM schedule_days WHERE schedule_id=$1 AND day_date=$2', [s.id, to])),
+        'SCHEDULE_DATE_TAKEN',
+        409,
+        { dates: [to], schedules: [{ id: s.id, title: s.title }] },
+      );
+      if (day.status === 'active') await requireFreeDates(c, s.group_id, [to], s.id);
+      demand(
+        !(await one(
+          c.db,
+          "SELECT 1 FROM upload_tasks WHERE schedule_id=$1 AND record_date=$2 AND state NOT IN ('complete','failed','cancelled')",
+          [s.id, from],
+        )),
+        'DAY_BUSY',
+        409,
+      );
+      // A date left outside the days may still hold visits or files; never merge two days.
+      demand(
+        !(await one(
+          c.db,
+          "SELECT 1 FROM visits WHERE schedule_id=$1 AND visit_date=$2 AND deleted_at IS NULL UNION ALL SELECT 1 FROM media WHERE schedule_id=$1 AND record_date=$2 AND access_state IN ('available','restricted')",
+          [s.id, to],
+        )),
+        'TARGET_NOT_EMPTY',
+        409,
+        { date: to },
+      );
+      await c.db.query(
+        'SET CONSTRAINTS media_visit_id_schedule_id_record_date_fkey,upload_tasks_visit_id_schedule_id_record_date_fkey DEFERRED',
+      );
+      await c.db.query(
+        'UPDATE visits SET visit_date=$3,version=version+1 WHERE schedule_id=$1 AND visit_date=$2',
+        [s.id, from, to],
+      );
+      await c.db.query(
+        'UPDATE media SET record_date=$3,version=version+1 WHERE schedule_id=$1 AND record_date=$2',
+        [s.id, from, to],
+      );
+      await c.db.query(
+        'UPDATE upload_tasks SET record_date=$3,version=version+1 WHERE schedule_id=$1 AND record_date=$2',
+        [s.id, from, to],
+      );
+      await c.db.query('DELETE FROM day_plans WHERE schedule_id=$1 AND plan_date=$2', [s.id, to]);
+      await c.db.query(
+        'UPDATE day_plans SET plan_date=$3,version=version+1 WHERE schedule_id=$1 AND plan_date=$2',
+        [s.id, from, to],
+      );
+      await c.db.query(
+        'UPDATE schedule_days SET day_date=$3 WHERE schedule_id=$1 AND day_date=$2',
+        [s.id, from, to],
+      );
+      await c.db.query('SET CONSTRAINTS media_visit_id_schedule_id_record_date_fkey,upload_tasks_visit_id_schedule_id_record_date_fkey IMMEDIATE');
+      await syncEnvelope(c, s.id);
+      from = to;
+    }
+    if (c.body.title !== undefined) {
+      if (n === 1) {
+        demand(c.body.title !== null, 'VALIDATION_ERROR');
+        await c.db.query('UPDATE schedules SET title=$2 WHERE id=$1', [s.id, text(c.body.title, 100)]);
+      } else {
+        const title = c.body.title === null ? null : text(c.body.title, 30, false) || null;
+        await c.db.query(
+          'INSERT INTO day_plans(schedule_id,plan_date,title) VALUES($1,$2,$3) ON CONFLICT(schedule_id,plan_date) DO UPDATE SET title=excluded.title,version=day_plans.version+1',
+          [s.id, from, title],
+        );
+      }
+    }
+    return dayResult(c, s.id, false);
+  },
+  dayCancel: async (c) => {
+    const { s, day } = await dayTarget(c);
+    demand(s.status === 'active' && day.status === 'active', 'ALREADY_CANCELLED', 409);
+    await c.db.query(
+      "UPDATE schedule_days SET status='cancelled',cancelled_at=now() WHERE schedule_id=$1 AND day_date=$2",
+      [s.id, day.day_date],
+    );
+    return dayResult(c, s.id);
+  },
+  dayDelete: async (c) => {
+    const { s, day } = await dayTarget(c);
+    demand(
+      !(await one(
+        c.db,
+        "SELECT 1 FROM visits WHERE schedule_id=$1 AND visit_date=$2 AND deleted_at IS NULL UNION ALL SELECT 1 FROM media WHERE schedule_id=$1 AND record_date=$2 AND access_state IN ('available','restricted') UNION ALL SELECT 1 FROM upload_tasks WHERE schedule_id=$1 AND record_date=$2 AND state NOT IN ('complete','failed','cancelled')",
+        [s.id, day.day_date],
+      )),
+      'NOT_EMPTY',
+      409,
+    );
+    await c.db.query('DELETE FROM schedule_days WHERE schedule_id=$1 AND day_date=$2', [
+      s.id,
+      day.day_date,
+    ]);
+    await c.db.query('DELETE FROM day_plans WHERE schedule_id=$1 AND plan_date=$2', [
+      s.id,
+      day.day_date,
+    ]);
+    if (!(await one(c.db, 'SELECT 1 FROM schedule_days WHERE schedule_id=$1 LIMIT 1', [s.id]))) {
+      await c.db.query("UPDATE schedules SET status='deleted',version=version+1 WHERE id=$1", [s.id]);
+      await c.db.query(
+        'UPDATE visits SET deleted_at=now(),position=NULL,version=version+1 WHERE schedule_id=$1 AND deleted_at IS NULL',
+        [s.id],
+      );
+      await activity(c, s.group_id);
+      return { schedule: null, days: [] };
+    }
+    await syncEnvelope(c, s.id);
+    return dayResult(c, s.id);
   },
   placesSearch: async (c) => {
     await groupAccess(c, c.query.groupId);
@@ -298,7 +488,7 @@ export const groupHandlers: Record<string, Handler> = {
   },
   visitCreate: async (c) => {
     const s = await scheduleAccess(c, c.params.scheduleId, false, true);
-    rangeDate(s, c.body.visitDate);
+    await scheduleDay(c, s, c.body.visitDate);
     demand(Boolean(c.body.manual) !== Boolean(c.body.providerPlaceId), 'VALIDATION_ERROR');
     let p: any;
     if (c.body.manual) {
@@ -363,7 +553,7 @@ export const groupHandlers: Record<string, Handler> = {
   },
   planUpdate: async (c) => {
     const s = await scheduleAccess(c, c.params.scheduleId);
-    rangeDate(s, c.params.date);
+    await scheduleDay(c, s, c.params.date, true);
     await c.db.query(
       'INSERT INTO day_plans(schedule_id,plan_date) VALUES($1,$2) ON CONFLICT DO NOTHING',
       [s.id, c.params.date],
@@ -442,7 +632,7 @@ export const groupHandlers: Record<string, Handler> = {
   },
   inviteCreate: async (c) => {
     await groupAccess(c, c.params.groupId);
-    const code = randomBytes(6).toString('hex').toUpperCase(),
+    const code = await newInviteCode(c),
       token = randomBytes(32).toString('base64url');
     const i = await one(
       c.db,
@@ -492,11 +682,22 @@ export const groupHandlers: Record<string, Handler> = {
     demand(g.status === 'active', 'GROUP_CLOSED', 410);
     const i = await one(c.db, 'SELECT * FROM invitations WHERE id=$1 FOR UPDATE', [initial.id]);
     validInvite(i);
-    const next = await one(
-      c.db,
-      'UPDATE invitations SET use_count=use_count+1,version=version+1 WHERE id=$1 RETURNING *',
-      [i.id],
+    // Members (including the issuer) checking their own link do not spend one of the 50 uses.
+    const alreadyMember = !!(
+      c.viewer &&
+      (await one(
+        c.db,
+        'SELECT 1 FROM memberships WHERE group_id=$1 AND user_id=$2 AND ended_at IS NULL',
+        [g.id, c.viewer.id],
+      ))
     );
+    const next = alreadyMember
+      ? i
+      : await one(
+          c.db,
+          'UPDATE invitations SET use_count=use_count+1,version=version+1 WHERE id=$1 RETURNING *',
+          [i.id],
+        );
     const summary = (await groupDto(c, g)).scheduleSummary;
     return {
       groupName: g.name,
@@ -505,6 +706,7 @@ export const groupHandlers: Record<string, Handler> = {
         : null,
       inviteState: 'active',
       usesRemaining: 50 - next.use_count,
+      alreadyMember,
     };
   },
   inviteJoin: async (c) => {
@@ -539,11 +741,16 @@ export const groupHandlers: Record<string, Handler> = {
   membersList: async (c) => {
     const g = await groupAccess(c, c.params.groupId);
     return {
-      members: await rows(
-        c.db,
-        'SELECT m.id,m.user_id "userId",u.display_name "displayName",(m.user_id=$2) "isOwner",m.version FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.group_id=$1 AND m.ended_at IS NULL ORDER BY joined_at',
-        [g.id, g.owner_user_id],
-      ),
+      members: (
+        await rows(
+          c.db,
+          'SELECT m.id,m.user_id "userId",u.display_name "displayName",(m.user_id=$2) "isOwner",m.version,u.avatar_asset_id,u.avatar_version FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.group_id=$1 AND m.ended_at IS NULL ORDER BY joined_at',
+          [g.id, g.owner_user_id],
+        )
+      ).map(({ avatar_asset_id, avatar_version, ...m }) => ({
+        ...m,
+        avatarVersion: avatarVersion({ avatar_asset_id, avatar_version }),
+      })),
       reentryBlocks:
         g.owner_user_id === c.actor.id
           ? await rows(

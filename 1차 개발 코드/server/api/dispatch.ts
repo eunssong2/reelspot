@@ -21,6 +21,7 @@ export const operationKinds: Record<string, string> = {
   scheduleCreate: 'schedule_create',
   scheduleUpdate: 'schedule_update',
   planUpdate: 'plan_update',
+  dayUpdate: 'day_update',
   metadataPatch: 'metadata_change',
   uploadCommit: 'media_commit',
   mediaDelete: 'media_delete',

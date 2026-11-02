@@ -233,7 +233,7 @@ export async function prepareMedia(t: any): Promise<{
       `${sanitized}[0]`,
       '-auto-orient',
       '-resize',
-      t.cover_group_id ? '1600x1600>' : '1920x1920>',
+      t.avatar_user_id ? '1024x1024>' : t.cover_group_id ? '1600x1600>' : '1920x1920>',
       '-strip',
       actualView,
     ]);
@@ -245,7 +245,7 @@ export async function prepareMedia(t: any): Promise<{
       '-strip',
       thumb,
     ]);
-    if (t.cover_group_id) {
+    if (t.cover_group_id || t.avatar_user_id) {
       const b = await readFile(actualView);
       demand(b.length <= 5000000, 'FILE_INVALID');
       await objects.put(sanitizedKey, b);

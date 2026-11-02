@@ -4,18 +4,21 @@ import { one, rows } from '../core/db.js';
 import type { Context, Handler } from '../core/context.js';
 import { demand, DomainError, mapDbError, version } from '../core/errors.js';
 import { hash, readCursor } from '../core/crypto.js';
-import { isExpired, rangeDate, text } from '../core/policy.js';
+import { isExpired, text } from '../core/policy.js';
 import { page } from '../core/paging.js';
 import { config } from '../core/config.js';
 import { objects } from '../adapters/object-store.js';
 import {
   activity,
+  avatarVersion,
   cleanup,
   deleteFile,
   fileAccess,
   groupAccess,
   scheduleAccess,
+  scheduleDay,
   taskAccess,
+  taskGroupId,
 } from './access.js';
 const transferable = ['queued', 'uploading', 'failed'];
 export function operation(
@@ -29,19 +32,24 @@ export function operation(
 }
 export async function taskDto(c: Context, t: any) {
   const m = await one(c.db, 'SELECT id FROM media WHERE task_id=$1', [t.id]);
-  const asset = t.cover_group_id
-    ? await one(
-        c.db,
-        "SELECT id FROM assets WHERE cover_group_id=$1 AND object_key LIKE $2 AND variant='sanitized_original' ORDER BY created_at DESC LIMIT 1",
-        [t.cover_group_id, `assets/${t.id}/%`],
-      )
-    : null;
+  const asset =
+    t.cover_group_id || t.avatar_user_id
+      ? await one(
+          c.db,
+          "SELECT id FROM assets WHERE (cover_group_id=$1 OR avatar_user_id=$2) AND object_key LIKE $3 AND variant='sanitized_original' ORDER BY created_at DESC LIMIT 1",
+          [t.cover_group_id, t.avatar_user_id, `assets/${t.id}/%`],
+        )
+      : null;
   return {
     id: t.id,
     selectionIndex: t.selection_index,
     clientFileId: t.client_file_id,
-    targetType: t.cover_group_id ? 'cover' : 'record',
-    ...(t.cover_group_id ? { coverGroupId: t.cover_group_id } : { submissionId: t.submission_id }),
+    targetType: t.cover_group_id ? 'cover' : t.avatar_user_id ? 'avatar' : 'record',
+    ...(t.cover_group_id
+      ? { coverGroupId: t.cover_group_id }
+      : t.avatar_user_id
+        ? { avatarUserId: t.avatar_user_id }
+        : { submissionId: t.submission_id }),
     state: t.state,
     transferredBytes: t.upload_offset,
     actualBytes: t.actual_bytes,
@@ -49,7 +57,8 @@ export async function taskDto(c: Context, t: any) {
     reason: t.error_code,
     version: Number(t.version),
     mediaId: m?.id ?? null,
-    coverAssetId: asset?.id ?? null,
+    coverAssetId: t.cover_group_id ? (asset?.id ?? null) : null,
+    avatarAssetId: t.avatar_user_id ? (asset?.id ?? null) : null,
     transport: transferable.includes(t.state)
       ? {
           protocol: 'ATP-Upload/1',
@@ -83,8 +92,14 @@ async function remaining(
     videos: Math.max(0, 2 - r.videos),
   };
 }
-async function validVisit(c: Context, s: any, recordDate: string, visitId: string | null) {
-  rangeDate(s, recordDate);
+async function validVisit(
+  c: Context,
+  s: any,
+  recordDate: string,
+  visitId: string | null,
+  allowCancelled = false,
+) {
+  await scheduleDay(c, s, recordDate, allowCancelled);
   if (visitId)
     demand(
       await one(
@@ -152,9 +167,44 @@ export const recordHandlers: Record<string, Handler> = {
       file: { path: objects.path(a.object_key), mime: a.probe_result.mime, bytes: a.bytes },
     };
   },
+  avatarStream: async (c) => {
+    const u = await one(c.db, 'SELECT * FROM users WHERE id=$1', [c.params.userId]);
+    demand(u, 'NOT_FOUND', 404);
+    demand(
+      u.id === c.actor.id ||
+        (await one(
+          c.db,
+          "SELECT 1 FROM memberships a JOIN memberships b ON b.group_id=a.group_id JOIN groups g ON g.id=a.group_id WHERE a.user_id=$1 AND b.user_id=$2 AND a.ended_at IS NULL AND b.ended_at IS NULL AND g.status='active' LIMIT 1",
+          [c.actor.id, u.id],
+        )),
+      'FORBIDDEN',
+      403,
+    );
+    demand(u.avatar_asset_id && u.status !== 'deleted', 'NOT_FOUND', 404);
+    const a = await one(
+      c.db,
+      "SELECT * FROM assets WHERE id=$1 AND avatar_user_id=$2 AND state='ready' AND location_verified_absent AND moderation_state='passed'",
+      [u.avatar_asset_id, u.id],
+    );
+    demand(a, 'MODERATION_RESTRICTED', 403);
+    return {
+      file: { path: objects.path(a.object_key), mime: a.probe_result.mime, bytes: a.bytes },
+    };
+  },
   uploadPrepare: async (c) => {
     const s = await scheduleAccess(c, c.params.scheduleId, false, true);
     demand(!isExpired(s), 'EXPIRED', 410);
+    for (const d of new Set<string>(c.body.files.map((f: any) => f.recordDate)))
+      demand(
+        !(await one(
+          c.db,
+          "SELECT 1 FROM schedule_days WHERE schedule_id=$1 AND day_date=$2 AND status='cancelled'",
+          [s.id, d],
+        )),
+        'DAY_CANCELLED',
+        409,
+        { date: d },
+      );
     demand(
       new Set(c.body.files.map((f: any) => f.selectionIndex)).size === c.body.files.length &&
         new Set(c.body.files.map((f: any) => f.clientFileId)).size === c.body.files.length,
@@ -270,6 +320,30 @@ export const recordHandlers: Record<string, Handler> = {
     ]);
     return taskDto(c, t);
   },
+  avatarPrepare: async (c) => {
+    demand(c.actor.status === 'active', 'ACCESS_REVOKED', 403);
+    const f = c.body.file;
+    demand(
+      f.declaredBytes <= 50000000 &&
+        ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'].includes(f.mime) &&
+        /^[a-f0-9]{64}$/.test(f.fingerprint),
+      'FILE_INVALID',
+    );
+    const t = await one(
+      c.db,
+      `INSERT INTO upload_tasks(avatar_user_id,author_user_id,client_file_id,kind,fingerprint,checksum,reserved_bytes,declared_bytes,quarantine_key,transport_expires_at,declared_mime,file_name) VALUES($1,$1,$2,'photo',$3,$3,$4,$4,$5,now()+interval '24 hours',$6,$7) RETURNING *`,
+      [
+        c.actor.id,
+        randomUUID(),
+        f.fingerprint,
+        f.declaredBytes,
+        `quarantine/${randomUUID()}`,
+        f.mime,
+        f.name,
+      ],
+    );
+    return taskDto(c, t);
+  },
   uploadTasksList: async (c) => {
     const ids = c.query.ids ? String(c.query.ids).split(',') : null;
     demand(!ids || (ids.length <= 120 && new Set(ids).size === ids.length), 'VALIDATION_ERROR');
@@ -356,10 +430,8 @@ export const recordHandlers: Record<string, Handler> = {
     ]);
     demand(transferable.includes(t.state), 'TASK_NOT_TRANSFERABLE', 409);
     demand(t.fingerprint === c.body.sameFileFingerprint, 'FILE_CHANGED');
-    const gid =
-      t.cover_group_id ??
-      (await one(c.db, 'SELECT group_id FROM schedules WHERE id=$1', [t.schedule_id])).group_id;
-    if (t.reserved_bytes === 0) {
+    const gid = await taskGroupId(c, t);
+    if (gid && t.reserved_bytes === 0) {
       await c.db.query('UPDATE groups SET reserved_bytes=reserved_bytes+$2 WHERE id=$1', [
         gid,
         t.declared_bytes,
@@ -377,13 +449,12 @@ export const recordHandlers: Record<string, Handler> = {
       t = await one(c.db, 'SELECT * FROM upload_tasks WHERE id=$1 FOR UPDATE', [initial.id]);
     version(t, c.body.expectedVersion);
     demand(t.state !== 'complete', 'ALREADY_COMPLETE', 409);
-    const gid =
-      t.cover_group_id ??
-      (await one(c.db, 'SELECT group_id FROM schedules WHERE id=$1', [t.schedule_id])).group_id;
-    await c.db.query('UPDATE groups SET reserved_bytes=reserved_bytes-$2 WHERE id=$1', [
-      gid,
-      t.reserved_bytes,
-    ]);
+    const gid = await taskGroupId(c, t);
+    if (gid)
+      await c.db.query('UPDATE groups SET reserved_bytes=reserved_bytes-$2 WHERE id=$1', [
+        gid,
+        t.reserved_bytes,
+      ]);
     const r = await one(
       c.db,
       "UPDATE upload_tasks SET state='cancelled',reserved_bytes=0,cancel_requested_at=now(),version=version+1 WHERE id=$1 RETURNING *",
@@ -410,9 +481,14 @@ export const recordHandlers: Record<string, Handler> = {
         throw new DomainError('INVALID_CURSOR');
       }
     }
+    const days = new Set(
+      (
+        await rows(c.db, 'SELECT day_date FROM schedule_days WHERE schedule_id=$1', [s.id])
+      ).map((d) => d.day_date),
+    );
     let all = await rows(
       c.db,
-      `SELECT m.*,s.retention_last_date,s.expires_at,u.display_name,p.name visit_name FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN users u ON u.id=m.author_user_id LEFT JOIN visits v ON v.id=m.visit_id LEFT JOIN places p ON p.id=v.place_id WHERE m.schedule_id=$1 AND m.access_state='available' AND m.completed_at<=$3 AND NOT EXISTS(SELECT 1 FROM personal_blocks b WHERE b.blocker_user_id=$2 AND b.blocked_user_id=m.author_user_id)`,
+      `SELECT m.*,s.retention_last_date,s.expires_at,u.display_name,u.avatar_asset_id,u.avatar_version,p.name visit_name,(SELECT (a.probe_result->>'durationMs')::int FROM assets a WHERE a.media_id=m.id AND a.probe_result ? 'durationMs' ORDER BY a.created_at LIMIT 1) duration_ms FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN users u ON u.id=m.author_user_id LEFT JOIN visits v ON v.id=m.visit_id LEFT JOIN places p ON p.id=v.place_id WHERE m.schedule_id=$1 AND m.access_state='available' AND m.completed_at<=$3 AND NOT EXISTS(SELECT 1 FROM personal_blocks b WHERE b.blocker_user_id=$2 AND b.blocked_user_id=m.author_user_id)`,
       [s.id, c.actor.id, snapshot],
     );
     all = all.filter(
@@ -420,7 +496,7 @@ export const recordHandlers: Record<string, Handler> = {
         (!c.query.recordDate || m.record_date === c.query.recordDate) &&
         (!c.query.visitId || m.visit_id === c.query.visitId) &&
         (!c.query.unassigned || !m.visit_id) &&
-        (!c.query.outsideRange || m.record_date < s.start_date || m.record_date > s.end_date),
+        (!c.query.outsideRange || !days.has(m.record_date)),
     );
     const authors = [...new Set(all.map((m) => m.author_user_id))]
       .map((id) => {
@@ -428,6 +504,7 @@ export const recordHandlers: Record<string, Handler> = {
         return {
           authorUserId: id,
           displayName: a[0].display_name,
+          avatarVersion: avatarVersion(a[0]),
           photos: a.filter((m) => m.kind === 'photo').length,
           videos: a.filter((m) => m.kind === 'video').length,
           firstCompletedAt: new Date(
@@ -457,7 +534,7 @@ export const recordHandlers: Record<string, Handler> = {
   },
   mediaGet: async (c) => {
     await fileAccess(c, c.params.mediaId, c.query.context);
-    const m = await one(c.db, 'SELECT m.*,s.expires_at,s.retention_last_date,u.display_name,p.name visit_name FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN users u ON u.id=m.author_user_id LEFT JOIN visits v ON v.id=m.visit_id LEFT JOIN places p ON p.id=v.place_id WHERE m.id=$1', [c.params.mediaId]);
+    const m = await one(c.db, 'SELECT m.*,s.expires_at,s.retention_last_date,u.display_name,p.name visit_name,(SELECT (a.probe_result->>\'durationMs\')::int FROM assets a WHERE a.media_id=m.id AND a.probe_result ? \'durationMs\' ORDER BY a.created_at LIMIT 1) duration_ms FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN users u ON u.id=m.author_user_id LEFT JOIN visits v ON v.id=m.visit_id LEFT JOIN places p ON p.id=v.place_id WHERE m.id=$1', [c.params.mediaId]);
     const active = await one(c.db, "SELECT 1 FROM memberships mem JOIN schedules s ON s.group_id=mem.group_id JOIN groups g ON g.id=s.group_id WHERE s.id=$1 AND mem.user_id=$2 AND mem.ended_at IS NULL AND g.status='active'", [m.schedule_id, c.actor.id]);
     return { media: mediaDto(m), canSave: !!active, canEdit: !!active && m.author_user_id === c.actor.id };
   },
@@ -491,7 +568,8 @@ export const recordHandlers: Record<string, Handler> = {
       version(m, targets.find((t: any) => t.id === m.id).expectedVersion);
       const d = fields.recordDate?.apply ? fields.recordDate.value : m.record_date,
         v = fields.visitId?.apply ? fields.visitId.value : m.visit_id;
-      if (fields.recordDate?.apply || fields.visitId?.apply) await validVisit(c, s, d, v);
+      if (fields.recordDate?.apply || fields.visitId?.apply)
+        await validVisit(c, s, d, v, d === m.record_date);
     }
     // Validate the final distribution before moving files. A single UPDATE keeps atomic failure semantics.
     const result = await rows(

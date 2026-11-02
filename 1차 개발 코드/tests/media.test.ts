@@ -513,3 +513,43 @@ test('실파일: GPS 제거·공개 검사·감상·한도·보존·삭제 정�
     assert.equal(save.json().results[0].state, 'failed');
   });
 });
+test('실파일 프로필 사진: GPS 제거·적용·참여자 열람', { skip: !enabled }, async () => {
+  const a = await user(),
+    b = await user();
+  const g = await call('POST', '/groups', { name: '프로필 모임', firstSchedule: { title: '모임', startDate: '2027-03-01', endDate: '2027-03-01', timezone: 'Asia/Seoul' } }, a.token);
+  const invite = await call('POST', `/groups/${g.group.id}/invites`, {}, a.token);
+  await call('POST', '/invitations/join', { tokenOrCode: invite.code }, b.token);
+  const fixture = objects.path(`fixtures/${randomUUID()}.jpg`);
+  await mkdir(objects.path('fixtures'), { recursive: true });
+  await tool('convert', ['-size', '2000x1500', 'xc:#3366AA', fixture]);
+  await tool('exiftool', ['-overwrite_original', '-GPSLatitude=37.5', '-GPSLongitude=127', '-GPSLatitudeRef=N', '-GPSLongitudeRef=E', fixture]);
+  const data = await readFile(fixture);
+  const task = await call('POST', '/me/avatar-uploads', { file: { name: 'me.jpg', mime: 'image/jpeg', declaredBytes: data.length, fingerprint: hash(data) } }, a.token);
+  const r = await app.inject({ method: 'PATCH', url: task.transport.uploadEndpoint, payload: data, headers: {
+    Authorization: `Bearer ${a.token}`, 'Content-Type': 'application/offset+octet-stream',
+    'Upload-Offset': '0', 'Upload-Generation': '1', 'Upload-Checksum': `sha256 ${hash(data)}`,
+  } });
+  assert.equal(r.statusCode, 204, r.body);
+  await call('POST', `/upload-tasks/${task.id}/commit`, { checksum: hash(data), actualBytes: data.length }, a.token);
+  let current: any;
+  for (let i = 0; i < 30; i++) {
+    await processOne();
+    current = await call('GET', `/upload-tasks/${task.id}`, undefined, a.token);
+    if (current.state !== 'verifying') break;
+  }
+  assert.equal(current.state, 'complete', JSON.stringify(current));
+  assert.equal(current.targetType, 'avatar');
+  assert.ok(current.avatarAssetId);
+  const profile = await call('GET', '/me/profile', undefined, a.token);
+  const applied = await call('PATCH', '/me/profile', { avatarAssetId: current.avatarAssetId, expectedVersion: profile.version }, a.token);
+  assert.ok(Number.isInteger(applied.avatarVersion));
+  const stream = await app.inject({ method: 'GET', url: `/v1/users/${a.user.id}/avatar`, headers: { Authorization: `Bearer ${b.token}` } });
+  assert.equal(stream.statusCode, 200);
+  const out = objects.path(`fixtures/${randomUUID()}.jpg`);
+  await (await import('node:fs/promises')).writeFile(out, stream.rawPayload);
+  const meta = JSON.parse(await tool('exiftool', ['-j', '-G1', out]))[0];
+  assert.ok(!Object.keys(meta).some((k) => /GPS/i.test(k)));
+  assert.ok(Number(meta['File:ImageWidth']) <= 1024);
+  const group = await tx((db) => one(db, 'SELECT completed_bytes,reserved_bytes FROM groups WHERE id=$1', [g.group.id]));
+  assert.equal(Number(group.completed_bytes) + Number(group.reserved_bytes), 0);
+});

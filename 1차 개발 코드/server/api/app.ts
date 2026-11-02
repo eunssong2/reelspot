@@ -34,6 +34,7 @@ const restrictedIds = new Set([
   'mineList',
   'mediaStream',
   'mediaGet',
+  'avatarStream',
   'mediaDelete',
   'deletionPreconditions',
   'ownerTransfer',
@@ -56,6 +57,8 @@ const consentWriteIds = new Set([
   'visitCreate',
   'uploadPrepare',
   'coverPrepare',
+  'avatarPrepare',
+  'dayUpdate',
   'uploadCommit',
   'metadataPatch',
   'profilePatch',
@@ -219,7 +222,15 @@ export async function buildApp(opts: { logging?: boolean } = {}) {
           );
           const bearer = req.headers.authorization?.replace(/^Bearer /, '');
           const isOps = id.startsWith('ops');
-          let actor: any, operator: any;
+          let actor: any, operator: any, viewer: any;
+          if (id === 'invitePreview' && bearer) {
+            // Optional: a signed-in member previewing the group's own invite does not use it up.
+            try {
+              viewer = await authenticate(bearer);
+            } catch {
+              viewer = undefined;
+            }
+          }
           if (isOps) {
             demand(bearer, 'OPS_FORBIDDEN', 403);
             try {
@@ -329,7 +340,17 @@ export async function buildApp(opts: { logging?: boolean } = {}) {
               demand(!missing, 'CONSENT_REQUIRED', 409);
             }
             const opId = randomUUID(),
-              c: Context = { db, actor, operator, body, query, params, headers: req.headers, opId };
+              c: Context = {
+                db,
+                actor,
+                operator,
+                viewer,
+                body,
+                query,
+                params,
+                headers: req.headers,
+                opId,
+              };
             if (actor && mutation)
               await db.query(
                 'INSERT INTO operations(id,actor_id,idempotency_key,route,request_hash,kind) VALUES($1,$2,$3,$4,$5,$6)',

@@ -6,7 +6,7 @@ import { decrypt } from '../core/crypto.js';
 import { moderate } from '../adapters/moderation.js';
 import { objects } from '../adapters/object-store.js';
 import { prepareMedia } from './media.js';
-import { activity, cleanup, taskAccess } from '../services/access.js';
+import { activity, cleanup, taskAccess, taskGroupId } from '../services/access.js';
 import { newCase, notify } from '../services/operations.js';
 import { dispatch } from '../api/dispatch.js';
 const makeContext = (db: any, actor: any, opId: string): Context => ({
@@ -127,10 +127,8 @@ export async function processOne() {
       }
       demand(verdict === 'passed', 'MODERATION_REJECTED');
       let media: any = null;
-      const gid =
-        t.cover_group_id ??
-        (await one(db, 'SELECT group_id FROM schedules WHERE id=$1', [t.schedule_id])).group_id;
-      if (!t.cover_group_id) {
+      const gid = await taskGroupId(c, t);
+      if (!t.cover_group_id && !t.avatar_user_id) {
         const s = await one(db, 'SELECT * FROM schedules WHERE id=$1 FOR UPDATE', [t.schedule_id]);
         if (!s.retention_fixed_at)
           await db.query(
@@ -156,11 +154,12 @@ export async function processOne() {
           ],
         );
       }
-      let coverAssetId: string | null = null;
+      let coverAssetId: string | null = null,
+        avatarAssetId: string | null = null;
       for (const a of prepared.assets) {
         const r = await one(
           db,
-          `INSERT INTO assets(media_id,cover_group_id,variant,object_key,bytes,checksum,location_verified_absent,probe_result,state) VALUES($1,$2,$3,$4,$5,$6,$7,$8,'ready') RETURNING id`,
+          `INSERT INTO assets(media_id,cover_group_id,avatar_user_id,variant,object_key,bytes,checksum,location_verified_absent,probe_result,state) VALUES($1,$2,$9,$3,$4,$5,$6,$7,$8,'ready') RETURNING id`,
           [
             media?.id ?? null,
             t.cover_group_id,
@@ -170,29 +169,33 @@ export async function processOne() {
             a.checksum,
             a.variant !== 'original_private',
             JSON.stringify(a.probe),
+            t.avatar_user_id,
           ],
         );
         if (t.cover_group_id && a.variant === 'sanitized_original') coverAssetId = r.id;
+        if (t.avatar_user_id && a.variant === 'sanitized_original') avatarAssetId = r.id;
       }
       await db.query(
         "UPDATE upload_tasks SET state='complete',reserved_bytes=0,processing_claim=NULL,processing_until=NULL,version=version+1 WHERE id=$1",
         [t.id],
       );
-      await db.query(
-        'UPDATE groups SET reserved_bytes=reserved_bytes-$2,completed_bytes=completed_bytes+$3 WHERE id=$1',
-        [gid, current.reserved_bytes, t.declared_bytes],
-      );
+      if (gid)
+        await db.query(
+          'UPDATE groups SET reserved_bytes=reserved_bytes-$2,completed_bytes=completed_bytes+$3 WHERE id=$1',
+          [gid, current.reserved_bytes, t.declared_bytes],
+        );
       if (media) {
         await db.query(
           'UPDATE submissions SET first_completed_at=COALESCE(first_completed_at,now()) WHERE id=$1',
           [t.submission_id],
         );
-        await activity(c, gid);
+        await activity(c, gid!);
       }
       await finishOperation(db, e.operation_id, 'media_commit', 'succeeded', {
         taskId: t.id,
         mediaId: media?.id ?? null,
         coverAssetId,
+        ...(t.avatar_user_id ? { avatarAssetId } : {}),
       });
       await db.query('UPDATE outbox_events SET published_at=now() WHERE id=$1', [e.id]);
       await cleanup(c, 'task', t.id, Number(current.version) + 1);
@@ -201,14 +204,13 @@ export async function processOne() {
     await tx(async (db) => {
       const current = await one(db, 'SELECT * FROM upload_tasks WHERE id=$1 FOR UPDATE', [t.id]);
       if (current.processing_claim !== e.claim) return;
-      const gid =
-        t.cover_group_id ??
-        (await one(db, 'SELECT group_id FROM schedules WHERE id=$1', [t.schedule_id])).group_id;
+      const gid = await taskGroupId(makeContext(db, undefined, e.operation_id), t);
       if (current.state === 'verifying') {
-        await db.query('UPDATE groups SET reserved_bytes=reserved_bytes-$2 WHERE id=$1', [
-          gid,
-          current.reserved_bytes,
-        ]);
+        if (gid)
+          await db.query('UPDATE groups SET reserved_bytes=reserved_bytes-$2 WHERE id=$1', [
+            gid,
+            current.reserved_bytes,
+          ]);
         await db.query(
           "UPDATE upload_tasks SET state='failed',reserved_bytes=0,error_code=$2,processing_claim=NULL,processing_until=NULL,version=version+1 WHERE id=$1",
           [
@@ -302,18 +304,23 @@ export async function cleanupOne() {
         one(db, 'SELECT * FROM upload_tasks WHERE id=$1', [job.target_id]),
       );
       if (t && ['cancelled', 'complete'].includes(t.state)) await objects.remove(t.quarantine_key);
-    } else if (job.target_type === 'cover_task') {
+    } else if (job.target_type === 'cover_task' || job.target_type === 'avatar_task') {
       const pending = await tx(async (db) => {
         const initial = await one(db, 'SELECT * FROM upload_tasks WHERE id=$1', [job.target_id]);
         if (!initial) return null;
-        await db.query('SELECT id FROM groups WHERE id=$1 FOR UPDATE', [initial.cover_group_id]);
+        if (initial.avatar_user_id)
+          await db.query('SELECT id FROM users WHERE id=$1 FOR UPDATE', [initial.avatar_user_id]);
+        else
+          await db.query('SELECT id FROM groups WHERE id=$1 FOR UPDATE', [initial.cover_group_id]);
         const task = await one(db, 'SELECT * FROM upload_tasks WHERE id=$1 FOR UPDATE', [
           initial.id,
         ]);
         if (task.state !== 'complete' || task.storage_released_at) return null;
         const used = await one(
           db,
-          'SELECT 1 FROM groups g JOIN assets a ON a.id=g.cover_asset_id WHERE a.object_key LIKE $1',
+          task.avatar_user_id
+            ? 'SELECT 1 FROM users u JOIN assets a ON a.id=u.avatar_asset_id WHERE a.object_key LIKE $1'
+            : 'SELECT 1 FROM groups g JOIN assets a ON a.id=g.cover_asset_id WHERE a.object_key LIKE $1',
           [`assets/${task.id}/%`],
         );
         if (used) return null;
@@ -337,10 +344,11 @@ export async function cleanupOne() {
           await db.query("UPDATE assets SET state='purged' WHERE object_key LIKE $1", [
             `assets/${current.id}/%`,
           ]);
-          await db.query('UPDATE groups SET completed_bytes=completed_bytes-$2 WHERE id=$1', [
-            current.cover_group_id,
-            current.declared_bytes,
-          ]);
+          if (current.cover_group_id)
+            await db.query('UPDATE groups SET completed_bytes=completed_bytes-$2 WHERE id=$1', [
+              current.cover_group_id,
+              current.declared_bytes,
+            ]);
         });
       }
     } else if (job.target_type === 'media') {

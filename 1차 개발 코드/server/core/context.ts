@@ -15,5 +15,7 @@ export type Context = {
   headers: Record<string, any>;
   opId: string;
   operator?: { subject: string; roles: string[] };
+  /** Optional signed-in caller on public routes (invitePreview). */
+  viewer?: Actor;
 };
 export type Handler = (ctx: Context) => Promise<any>;

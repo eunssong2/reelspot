@@ -717,7 +717,7 @@
         "tags": [
           "F02"
         ],
-        "description": "권한: self. 도메인 오류: VALIDATION_ERROR TEXT_REJECTED VERSION_CONFLICT. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
+        "description": "권한: self. displayName(NFC 1~20 graphemes), avatarAssetId(완료된 본인 프로필 사진 작업의 결과) 또는 restoreDefaultAvatar=true 중 하나 이상. 이전 사진은 정리된다. 도메인 오류: VALIDATION_ERROR FILE_INVALID TEXT_REJECTED VERSION_CONFLICT.",
         "security": [
           {
             "bearerAuth": []
@@ -860,12 +860,19 @@
                   "expectedVersion": {
                     "type": "integer",
                     "minimum": 1
+                  },
+                  "avatarAssetId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "restoreDefaultAvatar": {
+                    "const": true
                   }
                 },
                 "required": [
-                  "displayName",
                   "expectedVersion"
-                ]
+                ],
+                "additionalProperties": false
               }
             }
           }
@@ -2027,7 +2034,7 @@
           "F03",
           "F07"
         ],
-        "description": "권한: authenticated. 도메인 오류: GROUP_LIMIT OWNER_CREATE_LIMIT VALIDATION_ERROR TEXT_REJECTED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
+        "description": "권한: authenticated. 도메인 오류: SCHEDULE_DATE_TAKEN GROUP_LIMIT OWNER_CREATE_LIMIT VALIDATION_ERROR TEXT_REJECTED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
         "security": [
           {
             "bearerAuth": []
@@ -2591,7 +2598,14 @@
                     "schedules": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/Schedule"
+                        "allOf": [
+                          {
+                            "$ref": "#/components/schemas/Schedule"
+                          }
+                        ],
+                        "required": [
+                          "days"
+                        ]
                       }
                     },
                     "dateCounts": {
@@ -2807,13 +2821,20 @@
                     "version": {
                       "type": "integer",
                       "minimum": 1
+                    },
+                    "days": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ScheduleDay"
+                      }
                     }
                   },
                   "required": [
                     "schedule",
                     "retention",
                     "plan",
-                    "version"
+                    "version",
+                    "days"
                   ]
                 }
               }
@@ -2917,7 +2938,7 @@
         "tags": [
           "F08"
         ],
-        "description": "권한: owner. 도메인 오류: VERSION_CONFLICT VALIDATION_ERROR OUTSIDE_RANGE_CONFIRMATION_REQUIRED TEXT_REJECTED FORBIDDEN SCHEDULE_CANCELLED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
+        "description": "권한: owner. 도메인 오류: SCHEDULE_DATE_TAKEN VERSION_CONFLICT VALIDATION_ERROR OUTSIDE_RANGE_CONFIRMATION_REQUIRED TEXT_REJECTED FORBIDDEN SCHEDULE_CANCELLED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다. 기간을 바꾸면 일차를 새 기간 전체로 다시 만든다(남는 날짜의 제목·방문·취소 상태 유지). 새로 들어오는 날짜가 다른 활성 일정의 활성 일차면 409 SCHEDULE_DATE_TAKEN.",
         "security": [
           {
             "bearerAuth": []
@@ -3101,7 +3122,7 @@
         "tags": [
           "F07"
         ],
-        "description": "권한: owner. 도메인 오류: VALIDATION_ERROR TEXT_REJECTED FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
+        "description": "권한: owner. 도메인 오류: SCHEDULE_DATE_TAKEN VALIDATION_ERROR TEXT_REJECTED FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
         "security": [
           {
             "bearerAuth": []
@@ -3856,7 +3877,7 @@
         "tags": [
           "F09"
         ],
-        "description": "권한: member. 도메인 오류: DUPLICATE_VISIT VISIT_LIMIT VALIDATION_ERROR TEXT_REJECTED SCHEDULE_CANCELLED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
+        "description": "권한: member. 도메인 오류: DAY_CANCELLED DUPLICATE_VISIT VISIT_LIMIT VALIDATION_ERROR TEXT_REJECTED SCHEDULE_CANCELLED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
         "security": [
           {
             "bearerAuth": []
@@ -4424,7 +4445,7 @@
           "F14",
           "F15"
         ],
-        "description": "권한: member. 도메인 오류: SCHEDULE_CANCELLED EXPIRED QUOTA_EXCEEDED FILE_INVALID MEDIA_LIMIT. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
+        "description": "권한: member. 도메인 오류: DAY_CANCELLED SCHEDULE_CANCELLED EXPIRED QUOTA_EXCEEDED FILE_INVALID MEDIA_LIMIT. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
         "security": [
           {
             "bearerAuth": []
@@ -5422,6 +5443,13 @@
                           "firstCompletedAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "avatarVersion": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
                           }
                         },
                         "required": [
@@ -7397,8 +7425,13 @@
         "tags": [
           "F05"
         ],
-        "description": "권한: public. 도메인 오류: INVITE_INVALID INVITE_EXPIRED INVITE_EXHAUSTED INVITE_REVOKED GROUP_CLOSED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.",
-        "security": [],
+        "description": "권한: public. 도메인 오류: INVITE_INVALID INVITE_EXPIRED INVITE_EXHAUSTED INVITE_REVOKED GROUP_CLOSED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다. 코드는 8자리 A-Z0-9(이전 12자리 16진 코드도 허용, 대소문자 무관). 로그인한 현재 참여자(발급자 포함)가 확인하면 사용 횟수를 쓰지 않고 alreadyMember=true. Authorization은 선택.",
+        "security": [
+          {},
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "tokenOrCode",
@@ -7453,15 +7486,19 @@
                     "usesRemaining": {
                       "type": "integer",
                       "minimum": 0,
-                      "maximum": 49,
+                      "maximum": 50,
                       "description": "이번 응답을 포함해 50회에서 뺀 값"
+                    },
+                    "alreadyMember": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
                     "groupName",
                     "scheduleSummary",
                     "inviteState",
-                    "usesRemaining"
+                    "usesRemaining",
+                    "alreadyMember"
                   ],
                   "additionalProperties": false
                 }
@@ -7772,12 +7809,25 @@
                           },
                           "isOwner": {
                             "type": "boolean"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "avatarVersion": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
                           }
                         },
                         "required": [
                           "id",
                           "displayName",
-                          "isOwner"
+                          "isOwner",
+                          "userId",
+                          "avatarVersion"
                         ]
                       }
                     },
@@ -13529,6 +13579,744 @@
           }
         }
       }
+    },
+    "/schedules/{scheduleId}/days/{date}": {
+      "patch": {
+        "operationId": "dayUpdate",
+        "summary": "expectedVersion(일정), title?, date? → schedule, days",
+        "tags": [
+          "F08"
+        ],
+        "description": "권한: owner. 일차 제목 변경(여러 날 일정은 최대 30, 빈값/null은 제목 없음; 하루짜리 일정은 일정 제목 1~100) 또는 다른 날짜로 이동. 이동하면 방문·기록 날짜가 함께 옮겨지고 일차 번호가 다시 매겨진다. 도메인 오류: SCHEDULE_DATE_TAKEN(대상 날짜를 다른 일정이 쓰거나 이미 이 일정의 날) DAY_BUSY(그 날짜 파일 전송 진행 중) TARGET_NOT_EMPTY(대상 날짜에 기간 밖 방문/기록 잔존) SCHEDULE_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN TEXT_REJECTED.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "title": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "expectedVersion(일정), title?, date? → schedule, days",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayChangeResult"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "공개전검사 접수",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력/규격 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 만료/재인증 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한/참여/차단/운영 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전/상태/멱등본문 충돌",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "삭제/만료/종료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "파일 크기 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청률 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공급자/서비스 일시 장애",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schedules/{scheduleId}/days/{date}/cancellation": {
+      "post": {
+        "operationId": "dayCancel",
+        "summary": "expectedVersion(일정) → schedule, days",
+        "tags": [
+          "F08"
+        ],
+        "description": "권한: owner. 하루 취소: 기록은 남고 그 날짜의 새 방문·파일은 409 DAY_CANCELLED. 모든 날이 취소되면 일정도 취소. 도메인 오류: ALREADY_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "expectedVersion(일정) → schedule, days",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayChangeResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력/규격 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 만료/재인증 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한/참여/차단/운영 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전/상태/멱등본문 충돌",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "삭제/만료/종료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "파일 크기 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청률 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공급자/서비스 일시 장애",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schedules/{scheduleId}/days/{date}/deletion": {
+      "post": {
+        "operationId": "dayDelete",
+        "summary": "expectedVersion(일정) → schedule|null, days",
+        "tags": [
+          "F08"
+        ],
+        "description": "권한: owner. 장소·방문·기록·진행 파일이 없는 날만 삭제(아니면 409 NOT_EMPTY). 마지막 날이면 일정 삭제(schedule=null). 남은 날이 모두 취소 상태면 일정 취소. 도메인 오류: NOT_EMPTY VERSION_CONFLICT NOT_FOUND FORBIDDEN.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "expectedVersion(일정) → schedule|null, days",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayChangeResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력/규격 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 만료/재인증 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한/참여/차단/운영 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전/상태/멱등본문 충돌",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "삭제/만료/종료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "파일 크기 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청률 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공급자/서비스 일시 장애",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/avatar-uploads": {
+      "post": {
+        "operationId": "avatarPrepare",
+        "tags": [
+          "F02"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "file:FileInput → UploadTask {targetType:avatar,avatarUserId,transport}",
+        "description": "권한: self(active). 완료되면 task.avatarAssetId를 PATCH /me/profile avatarAssetId로 적용. 위치 제거·검사는 대표 사진과 같다. 도메인 오류: FILE_INVALID ACCESS_REVOKED.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "mime": {
+                        "type": "string"
+                      },
+                      "declaredBytes": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "fingerprint": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "mime",
+                      "declaredBytes",
+                      "fingerprint"
+                    ]
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "UploadTask",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadTask"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력/규격 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 만료/재인증 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한/참여/차단/운영 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전/상태/멱등본문 충돌",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "삭제/만료/종료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "파일 크기 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청률 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공급자/서비스 일시 장애",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{userId}/avatar": {
+      "get": {
+        "operationId": "avatarStream",
+        "tags": [
+          "F02",
+          "F22"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "권한: 본인 또는 활성 모임을 함께하는 참여자. 사진이 없으면 404 NOT_FOUND, 비참여자는 403 FORBIDDEN.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "v",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 32
+            },
+            "description": "캐시 키(avatarVersion)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "위치 제거된 프로필 사진",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -13568,7 +14356,7 @@
             "properties": {},
             "required": [],
             "additionalProperties": true,
-            "description": "OUTSIDE_RANGE_CONFIRMATION_REQUIRED: {visits,media}; MEDIA_LIMIT: {photosRemaining,videosRemaining}; VISIT_LIMIT: {limit:15}"
+            "description": "OUTSIDE_RANGE_CONFIRMATION_REQUIRED: {visits,media}; MEDIA_LIMIT: {photosRemaining,videosRemaining}; VISIT_LIMIT: {limit:15}; SCHEDULE_DATE_TAKEN: {dates:[date], schedules:[{id,title}]}; DAY_CANCELLED(upload): {date}; TARGET_NOT_EMPTY: {date}"
           },
           "itemErrors": {
             "type": "array",
@@ -13840,7 +14628,8 @@
             "type": "string",
             "enum": [
               "record",
-              "cover"
+              "cover",
+              "avatar"
             ]
           },
           "submissionId": {
@@ -13937,6 +14726,21 @@
             ],
             "minimum": 0,
             "maximum": 119
+          },
+          "avatarUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "avatarAssetId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -13966,8 +14770,17 @@
               "submissionId"
             ],
             "not": {
-              "required": [
-                "coverGroupId"
+              "anyOf": [
+                {
+                  "required": [
+                    "coverGroupId"
+                  ]
+                },
+                {
+                  "required": [
+                    "avatarUserId"
+                  ]
+                }
               ]
             }
           },
@@ -13981,8 +14794,41 @@
               "coverGroupId"
             ],
             "not": {
-              "required": [
-                "submissionId"
+              "anyOf": [
+                {
+                  "required": [
+                    "submissionId"
+                  ]
+                },
+                {
+                  "required": [
+                    "avatarUserId"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "properties": {
+              "targetType": {
+                "const": "avatar"
+              }
+            },
+            "required": [
+              "avatarUserId"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "submissionId"
+                  ]
+                },
+                {
+                  "required": [
+                    "coverGroupId"
+                  ]
+                }
               ]
             }
           }
@@ -14054,6 +14900,32 @@
                 }
               }
             }
+          },
+          {
+            "if": {
+              "properties": {
+                "state": {
+                  "const": "complete"
+                },
+                "targetType": {
+                  "const": "avatar"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "avatarAssetId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "mediaId": {
+                  "type": "null"
+                },
+                "coverAssetId": {
+                  "type": "null"
+                }
+              }
+            }
           }
         ]
       },
@@ -14079,7 +14951,8 @@
               "account_delete",
               "group_close",
               "onboarding",
-              "visit_create"
+              "visit_create",
+              "day_update"
             ]
           },
           "state": {
@@ -14133,6 +15006,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/Visit"
+                  },
+                  {
+                    "$ref": "#/components/schemas/DayChangeResult"
                   }
                 ]
               },
@@ -14578,6 +15454,13 @@
           "version": {
             "type": "integer",
             "minimum": 1
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleDay"
+            },
+            "description": "달력 응답에서만 포함"
           }
         },
         "required": [
@@ -14677,13 +15560,22 @@
           "version": {
             "type": "integer",
             "minimum": 1
+          },
+          "avatarVersion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "null이면 기본 아이콘. 바뀔 때마다 증가(캐시 키)"
           }
         },
         "required": [
           "id",
           "displayName",
           "status",
-          "version"
+          "version",
+          "avatarVersion"
         ]
       },
       "Invitation": {
@@ -14697,7 +15589,9 @@
             "type": "string"
           },
           "code": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[A-Z0-9]{8}$|^[0-9A-F]{12}$",
+            "description": "새 코드는 8자리 A-Z0-9"
           },
           "issuedAt": {
             "type": "string",
@@ -14836,6 +15730,17 @@
             ]
           },
           "coverAssetId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "avatarAssetId": {
             "anyOf": [
               {
                 "type": "string",
@@ -15032,6 +15937,73 @@
           "expiresAt",
           "alignmentBytes",
           "maxChunkBytes"
+        ],
+        "additionalProperties": false
+      },
+      "ScheduleDay": {
+        "type": "object",
+        "description": "일정의 하루. dayNo는 날짜순 1부터(취소된 날 포함). 같은 모임에서 활성 일정의 활성 일차는 날짜마다 하나뿐이다.",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "dayNo": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "일차 제목(최대 30 graphemes). 없으면 null"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "cancelled"
+            ]
+          },
+          "visitCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15
+          }
+        },
+        "required": [
+          "date",
+          "dayNo",
+          "title",
+          "status",
+          "visitCount"
+        ],
+        "additionalProperties": false
+      },
+      "DayChangeResult": {
+        "type": "object",
+        "properties": {
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Schedule"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleDay"
+            }
+          }
+        },
+        "required": [
+          "schedule",
+          "days"
         ],
         "additionalProperties": false
       }
