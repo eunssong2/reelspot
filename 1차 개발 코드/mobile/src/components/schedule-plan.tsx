@@ -1,217 +1,194 @@
 import React from 'react';
-import { View, Text, Pressable, ScrollView, useWindowDimensions } from 'react-native';
-import { Card, H, P, Button, colors, TextButton } from './ui';
-export function SchedulePlan({
+import { View, Text, Pressable, ScrollView } from 'react-native';
+import { Button, colors } from './ui';
+import { weekday, type GroupDay } from '../lib/day-labels';
+/** Horizontal tabs with every active day of the group (all schedules). */
+export function DateTabs({
   days,
-  highlightedVisits = [],
   date,
-  counts,
+  onSelect,
+}: {
+  days: Pick<GroupDay, 'date' | 'scheduleId'>[];
+  date: string;
+  onSelect: (day: Pick<GroupDay, 'date' | 'scheduleId'>) => void;
+}) {
+  return (
+    <ScrollView
+      horizontal
+      style={{ flexGrow: 0, marginBottom: 12 }}
+      contentContainerStyle={{ gap: 8 }}
+      showsHorizontalScrollIndicator={false}
+    >
+      {days.map((d) => {
+        const on = d.date === date;
+        return (
+          <Pressable
+            key={`${d.scheduleId}:${d.date}`}
+            accessibilityRole="tab"
+            accessibilityLabel={`${d.date} 장소`}
+            accessibilityState={{ selected: on }}
+            onPress={() => onSelect(d)}
+            style={{
+              minWidth: 76,
+              minHeight: 52,
+              paddingHorizontal: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: on ? colors.accent : colors.surface,
+              borderRadius: 16,
+            }}
+          >
+            <Text style={{ color: on ? 'white' : colors.sub, fontWeight: '800', fontSize: 13 }}>
+              {Number(d.date.slice(5, 7))}월 {Number(d.date.slice(8))}일
+            </Text>
+            <Text style={{ color: on ? 'white' : colors.muted, fontSize: 12, marginTop: 2 }}>
+              {weekday(d.date, true)}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}
+/** One day's places as a numbered timeline (screen 14). */
+export function DayTimeline({
+  date,
+  title,
+  visits,
   visitCounts,
   loading,
-  onDate,
-  onVisit,
+  editable,
+  canAdd,
+  highlightedVisits = [],
   onEdit,
+  onVisit,
   onAdd,
-  active,
 }: {
-  days: any[];
-  highlightedVisits?: string[];
   date: string;
-  counts: any[] | null;
+  title: string;
+  visits: any[];
   visitCounts: any[] | null;
   loading: boolean;
-  onDate: (date: string) => void;
+  editable: boolean;
+  canAdd: boolean;
+  highlightedVisits?: string[];
+  onEdit: (visitId?: string) => void;
   onVisit: (visit: any) => void;
-  onEdit: (date: string, visitId?: string) => void;
-  onAdd: (date: string) => void;
-  active: boolean;
+  onAdd: () => void;
 }) {
-  const width = (useWindowDimensions().width - 40) / 4;
-  const within = days.filter((d) => !d.outsideRange);
-  if (!date)
-    return (
-      <>
-        {days.map((d) => {
-          const stats = counts?.find((c) => c.date === d.date);
-          return (
-            <Card
-              key={d.date}
-              onPress={() => onDate(d.date)}
-              style={{ borderRadius: 18, marginVertical: 6, padding: 16 }}
-            >
-              <Text style={{ fontSize: 12, color: colors.sub, marginBottom: 8 }}>
-                {Number(d.date.slice(5, 7))}월 {Number(d.date.slice(8))}일
-                {d.outsideRange ? ' · 기간 밖' : ''}
-              </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink, flex: 1 }}>
-                  {d.title || `${Number(d.date.slice(5, 7))}월 ${Number(d.date.slice(8))}일의 장소`}
-                </Text>
-                <Text style={{ color: colors.muted, fontSize: 24 }}>›</Text>
-              </View>
-              <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>
-                {!d.visits.length
-                  ? '아직 정한 장소가 없어요'
-                  : `장소 ${d.visits.length}곳 · ${loading ? '기록 확인 중' : counts ? `사진 ${stats?.photos ?? 0} · 영상 ${stats?.videos ?? 0}` : '집계 확인 필요'}`}
-              </Text>
-            </Card>
-          );
-        })}
-      </>
-    );
   return (
-    <>
-      <TextButton onPress={() => onDate('')}>‹ 전체 일정 보기</TextButton>
-      {within.length > 1 && (
-        <ScrollView
-          horizontal
-          style={{ flexGrow: 0 }}
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={width}
-          decelerationRate="fast"
-        >
-          {within.map((d) => (
-            <Pressable
-              key={d.date}
-              accessibilityRole="tab"
-              accessibilityLabel={`${d.date} 장소`}
-              accessibilityState={{ selected: date === d.date }}
-              onPress={() => onDate(d.date)}
-              style={{
-                width,
-                minHeight: 56,
-                padding: 8,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: date === d.date ? colors.accent : '#F2F4F6',
-                borderRadius: 12,
-              }}
-            >
-              <Text style={{ color: date === d.date ? 'white' : colors.ink, fontWeight: '700' }}>
-                {Number(d.date.slice(5, 7))}월 {Number(d.date.slice(8))}일
-              </Text>
-              <Text style={{ color: date === d.date ? 'white' : colors.muted, fontSize: 12 }}>
-                {new Date(`${d.date}T00:00:00+09:00`).toLocaleDateString('ko-KR', {
-                  weekday: 'long',
-                  timeZone: 'Asia/Seoul',
-                })}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+    <View>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 26, fontWeight: '900', color: colors.ink }}>
+          {Number(date.slice(5, 7))}월 {Number(date.slice(8))}일{' '}
+          <Text style={{ fontSize: 17, fontWeight: '700', color: colors.muted }}>
+            {weekday(date, true)}
+          </Text>
+        </Text>
+        {editable && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${date} 순서 편집`}
+            onPress={() => onEdit()}
+            style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' }}
+          >
+            <Text style={{ color: colors.sub, fontWeight: '700', fontSize: 15 }}>편집</Text>
+          </Pressable>
+        )}
+      </View>
+      {!!title && (
+        <Text style={{ fontSize: 14, fontWeight: '700', color: colors.sub, marginTop: 6, marginBottom: 14 }}>
+          {title}
+        </Text>
       )}
-      {days
-        .filter((d) => !date || d.date === date)
-        .map((d) => {
-          const stats = counts?.find((c) => c.date === d.date);
-          return (
-            <View key={d.date} style={{ marginTop: 24 }}>
+      {!visits.length && (
+        <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 20, marginVertical: 8 }}>
+          <Text style={{ color: colors.muted, fontSize: 13 }}>가고 싶은 곳을 담아 하루를 채워보세요.</Text>
+        </View>
+      )}
+      {visits.map((v: any, i: number) => {
+        const stat = visitCounts?.find((c) => c.visitId === v.id),
+          photos = stat?.photos ?? 0,
+          videos = stat?.videos ?? 0;
+        return (
+          <View key={v.id} style={{ flexDirection: 'row', gap: 10, alignItems: 'stretch' }}>
+            <View style={{ width: 52, alignItems: 'center', paddingTop: 4 }}>
               <View
                 style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
+                  backgroundColor: colors.accent,
+                  borderRadius: 14,
+                  width: 28,
+                  height: 28,
                   alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
-                <H>
-                  {Number(d.date.slice(5, 7))}월 {Number(d.date.slice(8))}일{' '}
-                  {new Date(`${d.date}T00:00:00+09:00`).toLocaleDateString('ko-KR', {
-                    weekday: 'long',
-                    timeZone: 'Asia/Seoul',
-                  })}
-                  {d.outsideRange ? ' · 기간 밖' : ''}
-                </H>
-                {!d.outsideRange && (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`${d.date} 계획 편집`}
-                    onPress={() => onEdit(d.date)}
-                    style={{ minHeight: 48, minWidth: 48, justifyContent: 'center' }}
-                  >
-                    <Text style={{ color: colors.accent }}>편집</Text>
-                  </Pressable>
-                )}
+                <Text style={{ color: 'white', fontWeight: '800', fontSize: 13 }}>{i + 1}</Text>
               </View>
-              {d.title ? <P>{d.title}</P> : null}
-              <P>
-                장소 {d.visits.length}/15곳 ·{' '}
-                {loading
-                  ? '집계 확인 중'
-                  : counts
-                    ? `사진 ${stats?.photos ?? 0} · 영상 ${stats?.videos ?? 0}`
-                    : '집계를 불러오지 못했어요'}
-              </P>
-              {!d.visits.length && (
-                <Card>
-                  <P>가고 싶은 곳을 담아 하루를 채워보세요.</P>
-                </Card>
+              <Text style={{ color: v.plannedTime ? colors.sub : colors.muted, fontSize: 12, fontWeight: '700', marginTop: 6 }}>
+                {v.plannedTime ?? '시간 미정'}
+              </Text>
+              {editable && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${v.name} 방문 시간 수정`}
+                  onPress={() => onEdit(v.id)}
+                  style={{ minHeight: 28, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={{ color: colors.accent, fontSize: 11 }}>수정</Text>
+                </Pressable>
               )}
-              {d.visits.map((v: any, i: number) => {
-                const stat = visitCounts?.find((c) => c.visitId === v.id);
-                return (
-                  <View key={v.id} style={{ flexDirection: 'row', gap: 12, alignItems: 'stretch' }}>
-                    <View style={{ width: 58, alignItems: 'center', paddingTop: 16 }}>
-                      <View
-                        style={{
-                          backgroundColor: colors.accent,
-                          borderRadius: 12,
-                          width: 30,
-                          height: 30,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Text style={{ color: 'white', fontWeight: '700' }}>{i + 1}</Text>
-                      </View>
-                      <Text style={{ color: colors.ink, fontSize: 12, marginTop: 6 }}>
-                        {v.plannedTime ?? '시간 미정'}
-                      </Text>
-                      {!d.outsideRange && (
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityLabel={`${v.name} 방문 시간 수정`}
-                          onPress={() => onEdit(d.date, v.id)}
-                          style={{ minHeight: 48, justifyContent: 'center' }}
-                        >
-                          <Text style={{ color: colors.accent, fontSize: 12 }}>수정</Text>
-                        </Pressable>
-                      )}
-                    </View>
-                    <Card
-                      style={{
-                        flex: 1,
-                        backgroundColor: highlightedVisits.includes(v.id)
-                          ? colors.sage
-                          : colors.paper,
-                      }}
-                      onPress={() => onVisit({ ...v, visitDate: d.date })}
-                    >
-                      <H>{v.name}</H>
-                      <P>
-                        {loading
-                          ? '집계 확인 중'
-                          : visitCounts
-                            ? `사진 ${stat?.photos ?? 0} · 영상 ${stat?.videos ?? 0} ›`
-                            : '집계 조회 실패 · 기록 보기 ›'}
-                      </P>
-                    </Card>
-                  </View>
-                );
-              })}
-              {active && !d.outsideRange && (
-                <Button secondary disabled={d.visits.length >= 15} onPress={() => onAdd(d.date)}>
-                  {d.visits.length >= 15 ? '장소 15개까지 등록할 수 있어요' : '＋ 장소 추가'}
-                </Button>
+              {i < visits.length - 1 && (
+                <View style={{ flex: 1, width: 2, backgroundColor: '#F9C9C6', marginVertical: 4 }} />
               )}
             </View>
-          );
-        })}
-    </>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${v.name} 기록 보기`}
+              onPress={() => onVisit(v)}
+              style={({ pressed }) => ({
+                flex: 1,
+                backgroundColor: highlightedVisits.includes(v.id) ? colors.sage : 'white',
+                borderRadius: 20,
+                padding: 18,
+                marginBottom: 14,
+                opacity: pressed ? 0.75 : 1,
+              })}
+            >
+              <Text style={{ fontSize: 17, fontWeight: '800', color: colors.ink }}>{v.name}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14 }}>
+                <Text
+                  style={{
+                    flex: 1,
+                    fontSize: 13,
+                    fontWeight: '700',
+                    color: photos + videos ? colors.accent : colors.muted,
+                  }}
+                >
+                  {loading
+                    ? '집계 확인 중'
+                    : !visitCounts
+                      ? '기록 보기'
+                      : photos + videos
+                        ? `사진 ${photos} · 동영상 ${videos}`
+                        : '아직 기록 없음'}
+                </Text>
+                <Text style={{ fontSize: 18, color: photos + videos ? colors.accent : colors.muted }}>›</Text>
+              </View>
+            </Pressable>
+          </View>
+        );
+      })}
+      {canAdd && (
+        <Button
+          secondary
+          style={{ backgroundColor: 'white', borderWidth: 1, borderColor: colors.line }}
+          disabled={visits.length >= 15}
+          onPress={onAdd}
+        >
+          {visits.length >= 15 ? '장소 15개까지 등록할 수 있어요' : '장소 추가'}
+        </Button>
+      )}
+    </View>
   );
 }

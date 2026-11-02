@@ -28,3 +28,11 @@ export function parseInviteInput(input: string, apiOrigin: string, fromTokenPara
   if (!/^[A-Z0-9]{1,64}$/.test(code)) throw new Error('초대 코드를 확인해 주세요.');
   return code;
 }
+/** Live hint for the code field: new codes are 8 × [A-Z0-9]; a link or legacy 12-hex code is also accepted. */
+export function inviteCodeHint(input: string) {
+  const value = input.trim();
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return { kind: 'link' as const, count: 0, valid: true };
+  const code = value.replace(/[\s-]/g, '').toUpperCase();
+  const valid = /^[A-Z0-9]{8}$/.test(code) || /^[0-9A-F]{12}$/.test(code);
+  return { kind: 'code' as const, code, count: code.length, valid };
+}

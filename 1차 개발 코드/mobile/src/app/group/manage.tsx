@@ -3,7 +3,8 @@ import { useFocusLoad } from '../../lib/effects';
 import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { inputText } from '../../lib/validation';
-import { View, Text, Pressable, Image } from 'react-native';
+import { Alert, View, Text, Pressable, Image, Share } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { api, awaitOperation, getGroup, coverSource } from '../../lib/api';
 import { useAccount } from '../../lib/state';
 import {
@@ -17,6 +18,7 @@ import {
   useAction,
   Sheet,
   Info,
+  Badge,
   colors,
   resetTo,
 } from '../../components/ui';
@@ -43,9 +45,34 @@ export default function Manage() {
     a.run(refresh);
   }, [id]);
   const owner = group?.ownerUserId === session?.userId;
+  const [copied, setCopied] = useState('');
+  /** Share or copy the newest active invite link, issuing one when none is active. */
+  async function shareInvite(action: 'share' | 'copy') {
+    await a.run(async () => {
+      const latest = async () =>
+        ((await api(`/groups/${id}/invites`)).invites as any[])
+          .filter((x) => x.state === 'active')
+          .sort((x, y) => y.issuedAt.localeCompare(x.issuedAt))[0];
+      let invite = await latest();
+      if (!invite) {
+        const created = await api(`/groups/${id}/invites`, {});
+        invite = created?.link ? created : await latest();
+      }
+      if (!invite) throw new Error('초대를 만들지 못했어요. 초대·관리에서 다시 시도해 주세요.');
+      if (action === 'share')
+        await Share.share({
+          message: `${group.name}에 초대합니다.\n${invite.link}\n초대 코드 ${invite.code}`,
+        });
+      else {
+        await Clipboard.setStringAsync(invite.link);
+        setCopied('초대 링크를 복사했어요.');
+      }
+    });
+  }
   return (
     <Screen
       compact
+      heading={mode === 'members'}
       title={
         mode === 'info'
           ? '모임 정보 변경'
@@ -53,9 +80,9 @@ export default function Manage() {
             ? '모임 나가기와 종료'
             : mode === 'access'
               ? '참여 관리'
-              : '함께하는 친구'
+              : (group?.name ?? '함께하는 친구')
       }
-      subtitle={group?.name}
+      subtitle={mode === 'members' ? undefined : group?.name}
       headerRight={
         <Pressable
           accessibilityRole="button"
@@ -112,89 +139,135 @@ export default function Manage() {
       </Sheet>
       {mode === 'members' && (
         <>
-          <H>
-            함께하는 친구 <Text style={{ color: colors.accent }}>{members.length}</Text>
-          </H>
-          <P>함께할 친구에게 초대를 보내보세요. 초대를 함께 전달할 수 있습니다. (최대 10명)</P>
-          <Button onPress={() => router.push(`/group/invites?id=${id}`)}>초대·공유하기</Button>
-          {members.map((m) => (
-            <Card
-              key={m.id}
-              style={{ borderWidth: 0, paddingVertical: 10, paddingHorizontal: 0 }}
-              onPress={() => setSelected(m.id)}
+          <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink, marginTop: 8 }}>
+            함께하는 친구 <Text style={{ color: '#3182F6' }}>{members.length}</Text>
+          </Text>
+          <Text style={{ fontSize: 14, lineHeight: 21, color: colors.muted, marginTop: 8 }}>
+            함께할 친구나 가족을 초대해보세요.{'\n'}일정을 함께 기록할 수 있습니다. (최대 10명)
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+            <Button
+              tone="kakao"
+              style={{ flex: 1, borderRadius: 28 }}
+              disabled={a.busy}
+              onPress={() => shareInvite('share')}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <Avatar name={m.displayName} size={48} />
-                <H>
-                  {m.displayName}
-                  {m.isOwner ? ' · 방장' : ''}
-                  {m.userId === session?.userId ? ' · 나' : ''}
-                </H>
-              </View>
+              💬 카카오톡 초대
+            </Button>
+            <Button
+              style={{ flex: 1, borderRadius: 28 }}
+              disabled={a.busy}
+              onPress={() => shareInvite('copy')}
+            >
+              🔗 초대링크 복사
+            </Button>
+          </View>
+          {!!copied && (
+            <Text accessibilityRole="alert" style={{ color: colors.accent, marginTop: 4 }}>
+              {copied}
+            </Text>
+          )}
+          <View style={{ height: 1, backgroundColor: colors.line, marginHorizontal: -20, marginVertical: 20 }} />
+          {members.map((m) => (
+            <View
+              key={m.id}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+                minHeight: 64,
+                borderBottomWidth: 1,
+                borderColor: colors.line,
+              }}
+            >
+              <Avatar initial name={m.displayName} size={40} userId={m.userId} avatarVersion={m.avatarVersion} />
+              <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: colors.ink, flexShrink: 1 }}>
+                {m.displayName}
+              </Text>
+              {m.isOwner && <Badge style={{ marginBottom: 0, alignSelf: 'center' }}>방장</Badge>}
+              {m.userId === session?.userId && <Badge style={{ marginBottom: 0, alignSelf: 'center' }}>나</Badge>}
+              <View style={{ flex: 1 }} />
               {m.userId !== session?.userId && (
-                <Sheet
-                  visible={selected === m.id}
-                  title={m.displayName}
-                  onClose={() => setSelected('')}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${m.displayName} 메뉴`}
+                  onPress={() => setSelected(m.id)}
+                  style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <Button
-                    secondary
-                    onPress={() => {
-                      setSelected('');
-                      router.push({
-                        pathname: '/report',
-                        params: { targetType: 'member', targetId: m.id, userId: m.userId },
-                      });
-                    }}
-                  >
-                    신고·개인 차단
-                  </Button>
-                  {owner && (
-                    <>
-                      <Button
-                        secondary
-                        onPress={() =>
-                          confirm(
-                            '방장을 이전할까요?',
-                            `${m.displayName}님이 즉시 새 방장이 됩니다.`,
-                            () =>
-                              a.run(async () => {
-                                await api(`/groups/${id}/owner-transfers`, {
-                                  targetMembershipId: m.id,
-                                  expectedVersion: group.version,
-                                });
-                                await refresh();
-                              }),
-                          )
-                        }
-                      >
-                        방장 이전
-                      </Button>
-                      <Button
-                        secondary
-                        onPress={() =>
-                          confirm(
-                            '참여자를 퇴장시킬까요?',
-                            '새 참여가 차단되며 기존 기록은 보관 기한까지 유지됩니다.',
-                            () =>
-                              a.run(async () => {
-                                await api(`/groups/${id}/member-removals`, {
-                                  targetMembershipId: m.id,
-                                  expectedVersion: group.version,
-                                });
-                                await refresh();
-                              }),
-                          )
-                        }
-                      >
-                        퇴장
-                      </Button>
-                    </>
-                  )}
-                </Sheet>
+                  <Text style={{ fontSize: 20, color: colors.muted }}>⋯</Text>
+                </Pressable>
               )}
-            </Card>
+            </View>
           ))}
+          {members
+            .filter((m) => m.id === selected)
+            .map((m) => (
+              <Sheet key={m.id} visible title={m.displayName} onClose={() => setSelected('')}>
+                {owner && (
+                  <>
+                    <Button
+                      tone="danger"
+                      onPress={() =>
+                        Alert.alert(
+                          '모임에서 내보낼까요?',
+                          '내보낸 사람은 같은 초대로 다시 참여할 수 없어요.',
+                          [
+                            { text: '취소', style: 'cancel' },
+                            {
+                              text: '내보내기',
+                              style: 'destructive',
+                              onPress: () =>
+                                a.run(async () => {
+                                  setSelected('');
+                                  await api(`/groups/${id}/member-removals`, {
+                                    targetMembershipId: m.id,
+                                    expectedVersion: group.version,
+                                  });
+                                  await refresh();
+                                }),
+                            },
+                          ],
+                        )
+                      }
+                    >
+                      내보내기
+                    </Button>
+                    <Button
+                      secondary
+                      onPress={() =>
+                        confirm('방장을 이전할까요?', `${m.displayName}님이 즉시 새 방장이 됩니다.`, () =>
+                          a.run(async () => {
+                            setSelected('');
+                            await api(`/groups/${id}/owner-transfers`, {
+                              targetMembershipId: m.id,
+                              expectedVersion: group.version,
+                            });
+                            await refresh();
+                          }),
+                        )
+                      }
+                    >
+                      방장 이전
+                    </Button>
+                  </>
+                )}
+                <Button
+                  secondary
+                  onPress={() => {
+                    setSelected('');
+                    router.push({
+                      pathname: '/report',
+                      params: { targetType: 'member', targetId: m.id, userId: m.userId },
+                    });
+                  }}
+                >
+                  신고·개인 차단
+                </Button>
+                <Button secondary onPress={() => setSelected('')}>
+                  닫기
+                </Button>
+              </Sheet>
+            ))}
         </>
       )}
       {mode === 'info' && owner && (

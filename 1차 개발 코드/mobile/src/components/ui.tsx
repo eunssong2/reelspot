@@ -167,8 +167,8 @@ export function BottomTabs() {
       {(
         [
           ['/', '모임', '👥'],
-          ['/mine', '내 기록', '▣'],
-          ['/my-page', '마이페이지', '●'],
+          ['/mine', '내 기록', '📖'],
+          ['/my-page', '마이페이지', '👤'],
         ] as const
       ).map(([href, label, icon]) => (
         <Pressable
@@ -179,34 +179,7 @@ export function BottomTabs() {
           onPress={() => router.replace(href)}
           style={{ flex: 1, minHeight: 56, alignItems: 'center', justifyContent: 'center', gap: 3 }}
         >
-          {href === '/my-page' ? (
-            <View
-              style={{ width: 24, height: 26, alignItems: 'center', justifyContent: 'flex-end' }}
-            >
-              <View
-                style={{
-                  width: 9,
-                  height: 9,
-                  borderRadius: 5,
-                  backgroundColor: path === href ? colors.accent : colors.muted,
-                  marginBottom: 2,
-                }}
-              />
-              <View
-                style={{
-                  width: 19,
-                  height: 11,
-                  borderTopLeftRadius: 10,
-                  borderTopRightRadius: 10,
-                  backgroundColor: path === href ? colors.accent : colors.muted,
-                }}
-              />
-            </View>
-          ) : (
-            <Text style={{ fontSize: 23, color: path === href ? colors.accent : colors.muted }}>
-              {icon}
-            </Text>
-          )}
+          <Text style={{ fontSize: 23, opacity: path === href ? 1 : 0.45 }}>{icon}</Text>
           <Text style={{ fontSize: 12, color: path === href ? colors.accent : colors.muted }}>
             {label}
           </Text>
@@ -343,6 +316,71 @@ export function Field({
           )}
         </View>
       )}
+    </View>
+  );
+}
+/** Round check mark used by consent rows and record selection. */
+export function CheckCircle({ checked, size = 26 }: { checked: boolean; size?: number }) {
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: checked ? colors.accent : 'white',
+        borderWidth: checked ? 2 : 1.5,
+        borderColor: checked ? 'white' : '#D1D6DB',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {checked && <Text style={{ color: 'white', fontSize: size * 0.55, fontWeight: '800' }}>✓</Text>}
+    </View>
+  );
+}
+/** Text input with a clear (✕) button and a grapheme counter, as in the deck's name fields. */
+export function ClearableInput({
+  value,
+  onChangeText,
+  limit,
+  helper,
+  ...props
+}: TextInputProps & { value: string; onChangeText: (v: string) => void; limit: number; helper?: string }) {
+  const count = [...new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(value)].length;
+  return (
+    <View style={{ marginBottom: 18 }}>
+      <View style={[s.input, { flexDirection: 'row', alignItems: 'center', paddingVertical: 0 }]}>
+        <TextInput
+          placeholderTextColor={colors.muted}
+          {...props}
+          value={value}
+          onChangeText={onChangeText}
+          style={{ flex: 1, fontSize: 16, color: colors.ink, minHeight: 52 }}
+        />
+        {!!value && props.editable !== false && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="입력 지우기"
+            onPress={() => onChangeText('')}
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 15,
+              backgroundColor: '#E5E8EB',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ color: colors.sub, fontSize: 14 }}>✕</Text>
+          </Pressable>
+        )}
+      </View>
+      <View style={{ flexDirection: 'row', marginTop: 6, gap: 8, paddingHorizontal: 4 }}>
+        <Text style={{ fontSize: 12, color: colors.muted, flex: 1 }}>{helper}</Text>
+        <Text style={{ fontSize: 12, fontWeight: '600', color: count > limit ? '#B8433F' : colors.muted }}>
+          {count}/{limit}
+        </Text>
+      </View>
     </View>
   );
 }

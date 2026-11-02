@@ -1,7 +1,8 @@
 import { useInitialize } from '../lib/effects';
 import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
-import { View, Text } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
+import { dateHeading } from '../lib/day-labels';
 import { api, awaitOperation, ApiError } from '../lib/api';
 import { inputText, validTime } from '../lib/validation';
 import { useUnsavedChanges } from '../lib/unsaved';
@@ -15,7 +16,6 @@ import {
   useAction,
   s,
   confirm,
-  Info,
   Sheet,
   TextButton,
   colors,
@@ -95,7 +95,7 @@ export default function Plan() {
   return (
     <Screen
       title="장소 순서 편집"
-      subtitle={date}
+      subtitle={dateHeading(date)}
       footer={
         <Button
           disabled={a.busy || !baseline}
@@ -110,11 +110,23 @@ export default function Plan() {
       <Field
         label="날짜 제목"
         limit={30}
-        helper="비워두면 날짜를 제목으로 표시해요"
+        helper="비워 두면 기본 이름으로 보여요"
         value={title}
         onChangeText={setTitle}
       />
-      <Info icon="">위·아래 버튼으로 방문 순서를 바꾸세요.</Info>
+      <Text
+        style={{
+          textAlign: 'center',
+          color: colors.accent,
+          fontWeight: '800',
+          backgroundColor: colors.sage,
+          borderRadius: 16,
+          overflow: 'hidden',
+          padding: 16,
+        }}
+      >
+        위·아래 버튼으로 방문 순서를 바꾸세요.
+      </Text>
       <TextButton
         onPress={() =>
           setVisits(
@@ -161,64 +173,105 @@ export default function Plan() {
         )}
       </Sheet>
       {visits.map((v, i) => (
-        <Card key={v.id} style={{ borderWidth: 0, paddingHorizontal: 0, paddingVertical: 8 }}>
-          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-            <View
-              style={{
-                backgroundColor: colors.accent,
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ color: 'white', fontSize: 12 }}>{i + 1}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <H>{v.name}</H>
-              {!!v.address && <P>{v.address}</P>}
+        <View
+          key={v.id}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.accent,
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ color: 'white', fontSize: 13, fontWeight: '800' }}>{i + 1}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 16, fontWeight: '800', color: colors.ink }}>{v.name}</Text>
+            {!!v.address && (
+              <Text numberOfLines={1} style={{ fontSize: 13, color: colors.muted, marginTop: 3 }}>
+                {v.address}
+              </Text>
+            )}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <Text style={{ fontSize: 13, color: colors.muted }}>방문 시간</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${v.name} 방문 시간 수정`}
+                onPress={() => editTime(v)}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 16,
+                  paddingHorizontal: 12,
+                  minHeight: 34,
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 15, fontWeight: '800', color: v.plannedTime ? colors.ink : colors.muted }}>
+                  {v.plannedTime ?? '시간 미정'} ✎
+                </Text>
+              </Pressable>
+              <TextButton
+                color={colors.muted}
+                onPress={() =>
+                  confirm(
+                    '이 장소를 뺄까요?',
+                    '기록이나 진행 중 업로드가 있는 장소는 뺄 수 없어요.',
+                    () =>
+                      a.run(async () => {
+                        await api(`/visits/${v.id}`, { expectedVersion: v.version }, 'DELETE');
+                        const d = await load();
+                        setVisits(
+                          visits
+                            .filter((x) => x.id !== v.id)
+                            .map((x) => ({
+                              ...x,
+                              version: d.visits.find((n: any) => n.id === x.id)?.version ?? x.version,
+                            })),
+                        );
+                        setVersion(d.version);
+                        setBaseline(shape(d.title, d.visits));
+                      }),
+                  )
+                }
+              >
+                빼기
+              </TextButton>
             </View>
           </View>
-          <TextButton color={colors.sub} onPress={() => editTime(v)}>
-            방문 시각　{v.plannedTime ?? '시간 미정'} ✎
-          </TextButton>
-          <View style={s.row}>
-            <Button secondary small disabled={i === 0} onPress={() => move(i, -1)}>
-              ▲
-            </Button>
-            <Button secondary small disabled={i === visits.length - 1} onPress={() => move(i, 1)}>
-              ▼
-            </Button>
-            <Button
-              secondary
-              small
-              onPress={() =>
-                confirm(
-                  '빈 방문 삭제',
-                  '기록이나 진행 중 업로드가 있으면 삭제할 수 없습니다.',
-                  () =>
-                    a.run(async () => {
-                      await api(`/visits/${v.id}`, { expectedVersion: v.version }, 'DELETE');
-                      const d = await load();
-                      setVisits(
-                        visits
-                          .filter((x) => x.id !== v.id)
-                          .map((x) => ({
-                            ...x,
-                            version: d.visits.find((n: any) => n.id === x.id)?.version ?? x.version,
-                          })),
-                      );
-                      setVersion(d.version);
-                      setBaseline(shape(d.title, d.visits));
-                    }),
-                )
-              }
-            >
-              삭제
-            </Button>
+          <View style={{ gap: 8 }}>
+            {(
+              [
+                [-1, '▲', '위로'],
+                [1, '▼', '아래로'],
+              ] as const
+            ).map(([delta, glyph, label]) => {
+              const off = delta < 0 ? i === 0 : i === visits.length - 1;
+              return (
+                <Pressable
+                  key={glyph}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${v.name} ${label}`}
+                  disabled={off}
+                  onPress={() => move(i, delta)}
+                  style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 12,
+                    backgroundColor: off ? '#F9FAFB' : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 16, color: off ? '#D1D6DB' : colors.ink }}>{glyph}</Text>
+                </Pressable>
+              );
+            })}
           </View>
-        </Card>
+        </View>
       ))}
       {latest && (
         <Card>
@@ -271,16 +324,6 @@ export default function Plan() {
           </Button>
         </Card>
       )}
-      <Button
-        secondary
-        onPress={() =>
-          confirm('편집을 그만둘까요?', '저장하지 않은 변경을 버리고 돌아갑니다.', () =>
-            leave(() => router.back()),
-          )
-        }
-      >
-        변경 버리기
-      </Button>
       {a.errorView}
     </Screen>
   );

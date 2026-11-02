@@ -1,29 +1,22 @@
 import React, { useState } from 'react';
-import { Share, Text, View, Pressable } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { Image, Share, Text, View, Pressable } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { api, getGroup } from '../../lib/api';
+import { api, coverSource, getGroup } from '../../lib/api';
 import { useFocusLoad } from '../../lib/effects';
-import { formatMoment } from '../../lib/preferences';
-import {
-  Screen,
-  Button,
-  Card,
-  H,
-  P,
-  Badge,
-  confirm,
-  useAction,
-  colors,
-  TextButton,
-  Info,
-} from '../../components/ui';
+import { useAccount } from '../../lib/state';
+import { monthDayTime } from '../../lib/day-labels';
+import { uploadAndApplyImage } from '../../lib/uploads';
+import { Screen, Button, P, confirm, useAction, colors, TextButton, Info } from '../../components/ui';
+const STATE: Record<string, string> = { active: '사용 가능', exhausted: '소진', expired: '만료', revoked: '취소' };
 export default function Invites() {
   const { id } = useLocalSearchParams<{ id: string }>(),
+    { session } = useAccount(),
     [group, setGroup] = useState<any>(null),
     [items, setItems] = useState<any[]>([]),
     [message, setMessage] = useState('');
-  const a = useAction();
+  const a = useAction(),
+    cover = useAction({ inlineRetry: false });
   async function load() {
     const [g, r] = await Promise.all([getGroup(id), api(`/groups/${id}/invites`)]);
     setGroup(g);
@@ -38,7 +31,11 @@ export default function Invites() {
   }, [id]);
   async function live(inviteId: string) {
     const r = await api(`/groups/${id}/invites`);
-    setItems(r.invites);
+    setItems(
+      r.invites.sort(
+        (x: any, y: any) => y.issuedAt.localeCompare(x.issuedAt) || y.id.localeCompare(x.id),
+      ),
+    );
     const item = r.invites.find((x: any) => x.id === inviteId && x.state === 'active');
     if (!item) throw new Error('현재 사용할 수 없는 초대입니다. 새 초대를 발급해 주세요.');
     return item;
@@ -56,89 +53,20 @@ export default function Invites() {
       }
     });
   }
-  function card(item: any) {
-    return (
-      <Card key={item.id} style={{ backgroundColor: '#F7F8FA', borderWidth: 0 }}>
-        <Badge>
-          {{ active: '사용 가능', exhausted: '소진', expired: '만료', revoked: '취소' }[
-            item.state as string
-          ] ?? item.state}
-        </Badge>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="초대 코드 복사"
-          disabled={item.state !== 'active'}
-          onPress={() => send(item, 'code')}
-          style={{ backgroundColor: 'white', borderRadius: 12, marginVertical: 10 }}
-        >
-          <Text
-            selectable
-            style={{
-              fontSize: 26,
-              letterSpacing: 3,
-              fontWeight: '800',
-              textAlign: 'center',
-              marginVertical: 14,
-              color: colors.ink,
-            }}
-          >
-            {item.code}
-          </Text>
-          {item.state === 'active' && (
-            <Text
-              style={{ fontSize: 10, color: colors.accent, textAlign: 'center', marginBottom: 12 }}
-            >
-              👆 탭하여 코드 복사하기
-            </Text>
-          )}
-        </Pressable>
-        <P>발급 {formatMoment(item.issuedAt)}</P>
-        <P>
-          만료 {formatMoment(item.expiresAt)} · 확인 {item.useCount}/50회
-        </P>
-        {item.state === 'active' && (
-          <>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <View style={{ flex: 1 }}>
-                <Button secondary disabled={a.busy} onPress={() => send(item, 'link')}>
-                  링크 복사
-                </Button>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button disabled={a.busy} onPress={() => send(item, 'share')}>
-                  공유하기
-                </Button>
-              </View>
-            </View>
-
-            <TextButton
-              disabled={a.busy}
-              onPress={() =>
-                confirm(
-                  '이 초대를 취소할까요?',
-                  '기존 참여자와 다른 초대에는 영향을 주지 않아요.',
-                  () =>
-                    a.run(async () => {
-                      await api(`/invites/${item.id}/revocation`, {
-                        expectedVersion: item.version,
-                      });
-                      await load();
-                    }),
-                )
-              }
-            >
-              이 초대 취소하기 ›
-            </TextButton>
-          </>
-        )}
-      </Card>
+  const revoke = (item: any) =>
+    confirm('이 초대를 취소할까요?', '기존 참여자와 다른 초대에는 영향을 주지 않아요.', () =>
+      a.run(async () => {
+        await api(`/invites/${item.id}/revocation`, { expectedVersion: item.version });
+        await load();
+      }),
     );
-  }
+  const owner = group?.ownerUserId === session?.userId;
+  const current = items.find((x) => x.state === 'active');
+  const previous = items.filter((x) => x !== current);
   return (
     <Screen
       compact
       title="모임에 초대하기"
-      subtitle={group?.name}
       footer={
         <>
           <Button
@@ -153,25 +81,256 @@ export default function Invites() {
           >
             ＋ 새 초대 발급하기
           </Button>
-          <P>새 코드를 만들어도 기존 초대는 유지돼요.</P>
+          <Text style={{ fontSize: 12, color: colors.muted, textAlign: 'center' }}>
+            새 코드를 만들어도 기존 초대는 그대로 쓸 수 있어요
+          </Text>
         </>
       }
     >
-      <P>모든 현재 참여자가 초대를 관리할 수 있어요. 발급 후 7일 · 초대 확인 50회까지</P>
+      {owner && group && (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
+            backgroundColor: colors.surface,
+            borderRadius: 20,
+            padding: 14,
+            marginBottom: 14,
+          }}
+        >
+          {group.coverAssetId ? (
+            <Image
+              accessibilityLabel="모임 대표 사진"
+              source={coverSource(group.id, group.version)}
+              style={{ width: 56, height: 40, borderRadius: 8 }}
+            />
+          ) : (
+            <View
+              style={{
+                width: 56,
+                height: 40,
+                borderRadius: 8,
+                backgroundColor: colors.sage,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ color: colors.accent, fontWeight: '800' }}>{[...group.name][0]}</Text>
+            </View>
+          )}
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>모임 사진</Text>
+            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>
+              {cover.busy ? '사진을 올리고 있어요…' : '내 모임 목록에 보이는 대표 사진이에요'}
+            </Text>
+          </View>
+          <TextButton
+            disabled={cover.busy}
+            onPress={() =>
+              cover.run(async () => {
+                const done = await uploadAndApplyImage({ kind: 'cover', groupId: id });
+                if (done === false)
+                  setMessage('업로드가 끝나면 파일 전송 상태에서 대표 사진으로 적용할 수 있어요.');
+                if (done) setMessage('모임 사진을 바꿨어요.');
+                await load();
+              })
+            }
+          >
+            변경
+          </TextButton>
+        </View>
+      )}
+      {cover.error ? cover.errorView : null}
+      {group && (
+        <>
+          <Text
+            numberOfLines={1}
+            style={{
+              alignSelf: 'flex-start',
+              fontSize: 13,
+              fontWeight: '700',
+              color: colors.sub,
+              backgroundColor: colors.surface,
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 18,
+              overflow: 'hidden',
+            }}
+          >
+            👥 {group.name}
+          </Text>
+          <Text style={{ fontSize: 13, color: colors.muted, marginVertical: 10 }}>
+            현재 {group.activeCount}/10명 · 초대는 7일 · 확인 50회까지
+          </Text>
+        </>
+      )}
       {!!message && (
-        <Text accessibilityRole="alert" style={{ color: colors.accent }}>
+        <Text accessibilityRole="alert" style={{ color: colors.accent, marginBottom: 8 }}>
           {message}
         </Text>
       )}
-      <H>사용 가능한 초대</H>
-      {items.filter((x) => x.state === 'active').map(card)}
-      {a.hasRun && !a.busy && !a.error && !items.some((x) => x.state === 'active') && (
-        <P>지금 사용할 수 있는 초대가 없어요. 새 초대를 발급해 주세요.</P>
+      {current ? (
+        <View style={{ backgroundColor: colors.surface, borderRadius: 22, padding: 18 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>초대 코드</Text>
+            <StateBadge state="active" />
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="초대 코드 복사"
+            onPress={() => send(current, 'code')}
+            style={({ pressed }) => ({
+              backgroundColor: 'white',
+              borderRadius: 18,
+              marginVertical: 14,
+              paddingVertical: 18,
+              alignItems: 'center',
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text
+              selectable
+              style={{ fontSize: 28, letterSpacing: 6, fontWeight: '900', color: colors.ink }}
+            >
+              {current.code}
+            </Text>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.accent, marginTop: 8 }}>
+              👆 탭하여 코드 복사하기
+            </Text>
+          </Pressable>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 13, color: colors.sub }}>발급 {monthDayTime(current.issuedAt)}</Text>
+            <Text style={{ fontSize: 13, color: colors.sub }}>만료 {monthDayTime(current.expiresAt)}</Text>
+          </View>
+          <View style={{ height: 8, backgroundColor: '#E5E8EB', borderRadius: 4, marginVertical: 10 }}>
+            <View
+              style={{
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: colors.accent,
+                width: `${Math.min(100, (current.useCount / 50) * 100)}%`,
+              }}
+            />
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 12, color: colors.muted }}>👁 확인 횟수</Text>
+            <Text style={{ fontSize: 13, fontWeight: '800', color: colors.ink }}>
+              <Text style={{ color: colors.accent }}>{current.useCount}</Text> / 50회
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+            <Button secondary style={{ flex: 1, backgroundColor: 'transparent' }} disabled={a.busy} onPress={() => send(current, 'link')}>
+              링크 복사
+            </Button>
+            <Button style={{ flex: 1 }} disabled={a.busy} onPress={() => send(current, 'share')}>
+              ↗ 공유하기
+            </Button>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <TextButton color="#E5484D" disabled={a.busy} onPress={() => revoke(current)}>
+              이 초대 취소하기 ›
+            </TextButton>
+          </View>
+        </View>
+      ) : (
+        a.hasRun &&
+        !a.busy &&
+        !a.error && <P>지금 사용할 수 있는 초대가 없어요. 아래에서 새 초대를 발급해 주세요.</P>
       )}
       <Info>받은 사람이 다른 사람에게 전달하면 그 사람도 참여할 수 있어요.</Info>
-      <H>이전 초대</H>
-      {items.filter((x) => x.state !== 'active').map(card)}
+      {previous.length > 0 && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, marginBottom: 6 }}>
+          <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink }}>이전 초대</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: '700',
+              color: colors.sub,
+              backgroundColor: colors.surface,
+              paddingHorizontal: 9,
+              paddingVertical: 3,
+              borderRadius: 10,
+              overflow: 'hidden',
+            }}
+          >
+            {previous.length}
+          </Text>
+        </View>
+      )}
+      {previous.map((item) => {
+        const active = item.state === 'active';
+        return (
+          <View
+            key={item.id}
+            style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginVertical: 6 }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text
+                selectable
+                style={{
+                  fontSize: 17,
+                  fontWeight: '900',
+                  letterSpacing: 3,
+                  color: active ? colors.ink : '#8B95A1',
+                  textDecorationLine: item.state === 'revoked' ? 'line-through' : 'none',
+                }}
+              >
+                {item.code}
+              </Text>
+              <StateBadge state={item.state} useCount={item.useCount} />
+              <View style={{ flex: 1 }} />
+              {active && (
+                <>
+                  <Button small secondary style={{ backgroundColor: 'white' }} disabled={a.busy} onPress={() => send(item, 'share')}>
+                    공유
+                  </Button>
+                  <Button small secondary style={{ backgroundColor: 'white' }} disabled={a.busy} onPress={() => revoke(item)}>
+                    <Text style={{ color: '#E5484D' }}>취소</Text>
+                  </Button>
+                </>
+              )}
+            </View>
+            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 8 }}>
+              {monthDayTime(item.issuedAt)} 발급 → {monthDayTime(item.expiresAt)} 만료
+            </Text>
+            <Text
+              style={{
+                fontSize: 12,
+                marginTop: 4,
+                fontWeight: active ? '700' : '400',
+                color: active ? colors.accent : colors.muted,
+              }}
+            >
+              확인 {item.useCount}/50회{active ? ` · ${50 - item.useCount}회 남음` : ''}
+            </Text>
+          </View>
+        );
+      })}
+      <TextButton color={colors.sub} onPress={() => router.push(`/group/manage?id=${id}`)}>
+        함께하는 친구 보기 ›
+      </TextButton>
       {a.errorView}
     </Screen>
+  );
+}
+function StateBadge({ state, useCount }: { state: string; useCount?: number }) {
+  const active = state === 'active';
+  return (
+    <Text
+      style={{
+        fontSize: 12,
+        fontWeight: '700',
+        color: active ? colors.accent : colors.sub,
+        backgroundColor: active ? colors.sage : 'transparent',
+        paddingHorizontal: active ? 9 : 2,
+        paddingVertical: 3,
+        borderRadius: 10,
+        overflow: 'hidden',
+      }}
+    >
+      {STATE[state] ?? state}
+      {state === 'exhausted' && useCount !== undefined ? ` ${useCount}/50` : ''}
+    </Text>
   );
 }

@@ -1,21 +1,22 @@
 import { useFocusLoad } from '../../lib/effects';
 import React, { useState, useRef } from 'react';
-import { View, Image, Text, Pressable } from 'react-native';
-import { SchedulePlan } from '../../components/schedule-plan';
-import { scheduleDays } from '../../lib/schedule-days';
+import { View, Text, Pressable } from 'react-native';
+import { DateTabs, DayTimeline } from '../../components/schedule-plan';
 import { useLocalSearchParams, router } from 'expo-router';
-import { api, getGroup, coverSource } from '../../lib/api';
-import { usePreference } from '../../lib/preferences';
+import { api, getGroup } from '../../lib/api';
+import { usePreference, todayInSeoul } from '../../lib/preferences';
+import { addDays } from '../../lib/calendar';
 import { validDate } from '../../lib/validation';
+import { dayLabel, groupDays, periodLabel, scheduleDayList, shortDate, weekday } from '../../lib/day-labels';
 import { useAccount } from '../../lib/state';
 import { Records } from '../../components/records';
+import { UploadSheet } from '../../components/upload-sheet';
 import {
   Screen,
   Button,
   H,
   P,
   Field,
-  confirm,
   useAction,
   s,
   Sheet,
@@ -23,28 +24,34 @@ import {
   TextButton,
   colors,
 } from '../../components/ui';
+/**
+ * Date view (screen 14) with the group's day tabs, and the place records view (16, 17).
+ * `date` picks the day; tabs list active days of every schedule in the group.
+ */
 export default function Schedule() {
-  const { id } = useLocalSearchParams<{ id: string }>(),
+  const { id, date: dateParam } = useLocalSearchParams<{ id: string; date?: string }>(),
     { session } = useAccount(),
     [detail, setDetail] = useState<any>(null),
     [files, setFiles] = useState<any[]>([]),
-    [tab, setTab] = useState('plan'),
-    [options, setOptions, optionsReady] = usePreference('record-view', {
+    [tab, setTab] = useState<'plan' | 'records'>('plan'),
+    [options, setOptions, optionsReady] = usePreference('record-view-v2', {
       view: 'by_time',
-      order: 'asc',
+      order: 'desc',
     }),
-    [recordDate, setDate] = useState(''),
+    [date, setDate] = useState(dateParam ?? ''),
+    [recordDate, setRecordDate] = useState(''),
     [visitId, setVisit] = useState(''),
     [next, setNext] = useState<string | null>(null),
     [groups, setGroups] = useState<any[]>([]),
     [owner, setOwner] = useState(false),
     [group, setGroup] = useState<any>(null),
+    [groupDayList, setGroupDayList] = useState<ReturnType<typeof groupDays>>([]),
+    [avatars, setAvatars] = useState<Record<string, number | null>>({}),
     [summary, setSummary] = useState<any>(null),
     [unassigned, setUnassigned] = useState(false),
     [outside, setOutside] = useState(false),
     [counts, setCounts] = useState<any>(null),
-    [dateInput, setDateInput] = useState(''),
-    [notice, setNotice] = useState('');
+    [dateInput, setDateInput] = useState('');
   const { view, order } = options;
   const setView = (view: string) => setOptions({ ...options, view });
   const setOrder = (order: string) => setOptions({ ...options, order });
@@ -81,68 +88,96 @@ export default function Schedule() {
       );
       previousVisits.current = new Set(visitIds);
       setDetail(d);
-      if (recordDate && (recordDate < d.schedule.startDate || recordDate > d.schedule.endDate)) {
-        setDate('');
-        setDateInput('');
-        setNotice('일정 기간이 변경되어 날짜 필터를 전체 보기로 바꿨습니다.');
-        return;
+      const own = (Array.isArray(d.days) ? d.days : scheduleDayList(d.schedule)) as any[];
+      if (!date || !own.some((x) => x.date === date)) {
+        const active = own.filter((x) => x.status === 'active'),
+          today = todayInSeoul();
+        setDate(
+          (active.find((x) => x.date === today) ?? active.find((x) => x.date > today) ?? active[0] ?? own[0])
+            ?.date ?? d.schedule.startDate,
+        );
       }
       const g = await getGroup(d.schedule.groupId);
       if (!live) return;
       setGroup(g);
       setOwner(g.ownerUserId === session?.userId);
-      const totals = await api(`/schedules/${id}/media?limit=1`);
+      const around = d.schedule.startDate;
+      const [cal, members, totals] = await Promise.all([
+        api(`/groups/${g.id}/calendar?from=${addDays(around, -182)}&to=${addDays(around, 183)}`).catch(
+          () => null,
+        ),
+        api(`/groups/${g.id}/members`).catch(() => null),
+        api(`/schedules/${id}/media?limit=1`),
+      ]);
       if (!live) return;
+      if (cal) setGroupDayList(groupDays(cal.schedules));
+      if (members)
+        setAvatars(Object.fromEntries(members.members.map((m: any) => [m.userId, m.avatarVersion ?? null])));
       setSummary(totals);
-      await load(undefined, () => live);
+      if (tab === 'records') await load(undefined, () => live);
     });
     return () => {
       live = false;
     };
-  }, [id, view, order, recordDate, visitId, unassigned, outside, optionsReady]);
-  const selectedVisit = detail?.plan
-    .flatMap((d: any) => d.visits)
-    .find((v: any) => v.id === visitId);
-  const uploadParams = detail
+  }, [id, view, order, recordDate, visitId, unassigned, outside, optionsReady, tab]);
+  const ownDays = detail ? ((Array.isArray(detail.days) ? detail.days : scheduleDayList(detail.schedule)) as any[]) : [];
+  const day = ownDays.find((x) => x.date === date);
+  const plan = detail?.plan.find((p: any) => p.date === date);
+  const single = ownDays.length === 1;
+  const scheduleActive = detail?.schedule.status === 'active';
+  const dayActive = scheduleActive && day?.status !== 'cancelled';
+  // Tabs: every active day in the group; this schedule's days stand in until the calendar loads.
+  const tabs = (
+    groupDayList.length
+      ? groupDayList.filter((x) => x.status === 'active' || (x.scheduleId === id && x.date === date))
+      : ownDays.filter((x) => x.status === 'active' || x.date === date).map((x) => ({ ...x, scheduleId: id }))
+  ) as { date: string; scheduleId: string }[];
+  const activeTabs = tabs.filter((t) => t.date);
+  const selectedVisit = detail?.plan.flatMap((d: any) => d.visits).find((v: any) => v.id === visitId);
+  const visitDate = selectedVisit?.visitDate ?? recordDate;
+  const uploadParams: Record<string, string> = detail
     ? {
         id,
         startDate: detail.schedule.startDate,
         endDate: detail.schedule.endDate,
         visitId,
-        recordDate: selectedVisit?.visitDate || recordDate || '',
+        recordDate: visitDate || date,
       }
     : { id };
+  const title =
+    tab === 'records'
+      ? selectedVisit?.name || '함께 남긴 순간'
+      : (group?.name ?? '');
+  const subtitle =
+    tab === 'records'
+      ? `${detail?.schedule.title ?? ''}${visitDate ? ` · ${shortDate(visitDate).replace(/^0/, '')} ${weekday(visitDate)}` : ''}`
+      : activeTabs.length
+        ? periodLabel(activeTabs[0].date, activeTabs[activeTabs.length - 1].date)
+        : undefined;
+  function openRecords(v?: any) {
+    setVisit(v?.id ?? '');
+    setRecordDate(v ? date : '');
+    setDateInput(v ? date : '');
+    setUnassigned(false);
+    setOutside(false);
+    setFiles([]);
+    setTab('records');
+  }
   return (
     <Screen
-      title={
-        tab === 'records'
-          ? selectedVisit?.name || '함께 남긴 순간'
-          : recordDate && detail
-            ? detail.schedule.title
-            : 'AT THAT PLACE'
-      }
-      subtitle={
-        tab === 'records'
-          ? `${detail?.schedule.title ?? ''}${recordDate ? ' · ' + recordDate : ''}`
-          : recordDate && detail
-            ? `${detail.schedule.startDate} - ${detail.schedule.endDate}`
-            : undefined
-      }
+      title={title}
+      subtitle={subtitle}
       onBack={() => {
-        // Visit and date views live in this screen's state, so step back through them first.
-        if (tab === 'records' && visitId) {
+        // The records view lives in this screen's state, so step back to the date view first.
+        if (tab === 'records') {
           setVisit('');
+          setRecordDate('');
           setTab('plan');
-          return true;
-        }
-        if (tab === 'plan' && recordDate) {
-          setDate('');
-          setDateInput('');
           return true;
         }
         return false;
       }}
-      contentStyle={tab === 'plan' && !recordDate ? { paddingTop: 0 } : undefined}
+      contentStyle={tab === 'plan' ? { paddingBottom: 0 } : undefined}
       headerRight={
         <Pressable
           accessibilityRole="button"
@@ -155,6 +190,35 @@ export default function Schedule() {
       }
     >
       <Sheet visible={menu} title="일정 메뉴" onClose={() => setMenu(false)}>
+        {owner && day && day.status === 'active' && scheduleActive && (
+          <Button
+            secondary
+            onPress={() => {
+              setMenu(false);
+              router.push({ pathname: '/schedule/day', params: { scheduleId: id, date } });
+            }}
+          >
+            이 날 일정 변경
+          </Button>
+        )}
+        <Button
+          secondary
+          onPress={() => {
+            setMenu(false);
+            openRecords();
+          }}
+        >
+          이 일정의 모든 기록
+        </Button>
+        <Button
+          secondary
+          onPress={() => {
+            setMenu(false);
+            router.push(`/edit-records?scheduleId=${id}`);
+          }}
+        >
+          내 기록 수정·삭제
+        </Button>
         <Button
           secondary
           onPress={() => {
@@ -173,299 +237,162 @@ export default function Schedule() {
         >
           함께하는 친구
         </Button>
-        {owner && (
-          <Button
-            secondary
-            onPress={() => {
-              setMenu(false);
-              router.push(`/schedule/edit?id=${id}`);
-            }}
-          >
-            일정 변경·취소
-          </Button>
-        )}
-        <Button
-          secondary
-          onPress={() => {
-            setMenu(false);
-            router.push(`/edit-records?scheduleId=${id}`);
-          }}
-        >
-          내 기록 수정·삭제
-        </Button>
         <P>
           {detail?.retention.fixed ? '고정 보관 기한' : '첫 업로드 전 예상 보관 기한'} ·{' '}
           {detail?.retention.lastDate ?? '확인 중'}까지
         </P>
       </Sheet>
-      <Sheet visible={adding} title="지금 이 순간 남기기" onClose={() => setAdding(false)}>
-        <Button
-          tone="outline"
-          onPress={() => {
-            setAdding(false);
-            router.push({ pathname: '/upload', params: uploadParams });
-          }}
-        >
-          ＋ 앨범에서 사진·영상 선택
-        </Button>
-        <Button
-          secondary
-          onPress={() => {
-            setAdding(false);
-            router.push({ pathname: '/camera', params: uploadParams });
-          }}
-        >
-          📷 지금 촬영하기
-        </Button>
-        <Button secondary onPress={() => setAdding(false)}>
-          취소
-        </Button>
-      </Sheet>
-      {tab === 'plan' && !recordDate && group && (
-        <>
-          <Pressable
-            disabled={!owner}
-            accessibilityRole="button"
-            accessibilityLabel="모임 배경 변경"
-            onPress={() =>
-              confirm(
-                '모임 대표 사진 변경',
-                '이 모임의 모든 일정에 같은 대표 사진이 표시됩니다.',
-                () => router.push(`/group/manage?id=${group.id}&mode=info`),
-              )
-            }
-            style={{ marginHorizontal: -20, marginBottom: 20 }}
-          >
-            {group.coverAssetId ? (
-              <Image
-                source={coverSource(group.id, group.version)}
-                style={{ width: '100%', aspectRatio: 16 / 9 }}
-              />
-            ) : (
-              <View
-                style={{
-                  aspectRatio: 16 / 9,
-                  backgroundColor: '#FFF0E6',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontSize: 58 }}>🌉</Text>
-              </View>
-            )}
-            {owner && (
-              <View
-                style={{
-                  position: 'absolute',
-                  right: 12,
-                  bottom: 12,
-                  backgroundColor: '#191F2899',
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
-                  borderRadius: 16,
-                }}
-              >
-                <Text style={{ color: 'white', fontSize: 11 }}>📷 배경 변경</Text>
-              </View>
-            )}
-          </Pressable>
-          <Text style={{ fontSize: 24, fontWeight: '700', color: colors.ink, marginBottom: 8 }}>
-            {detail?.schedule.title}
-          </Text>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 14,
-            }}
-          >
-            <P>
-              📅 {detail?.schedule.startDate} - {detail?.schedule.endDate}
-            </P>
-            <TextButton onPress={() => router.push(`/group/manage?id=${group.id}`)}>
-              👥 {group.activeCount}명 ›
-            </TextButton>
-          </View>
-        </>
+      {detail && (
+        <UploadSheet
+          visible={adding}
+          onClose={() => setAdding(false)}
+          scheduleId={id}
+          visitId={visitId || null}
+          recordDate={visitDate || date}
+          cameraParams={uploadParams}
+        />
       )}
-      {!!notice && <P>{notice}</P>}
-      {detail?.schedule.status === 'cancelled' && (
-        <P>취소된 일정입니다. 보관 기한까지 기록을 볼 수 있어요.</P>
-      )}
-      {tab === 'records' && detail?.schedule.status === 'active' && (
-        <Button tone="outline" onPress={() => setAdding(true)}>
-          ＋ 사진·영상 올리기
-        </Button>
-      )}
-      <View style={{ flexDirection: 'row', gap: 8, marginVertical: 12 }}>
-        <Chip selected={tab === 'plan'} onPress={() => setTab('plan')}>
-          전체 계획
-        </Chip>
-        <Chip
-          selected={tab === 'records'}
-          onPress={() => {
-            setTab('records');
-            setVisit('');
-            setDate('');
-            setDateInput('');
-            setUnassigned(false);
-            setOutside(false);
-          }}
-        >
-          전체 기록
-        </Chip>
-      </View>
       {tab === 'plan' ? (
         <>
-          {detail && (
-            <SchedulePlan
-              highlightedVisits={highlightedVisits}
-              days={scheduleDays(detail.schedule.startDate, detail.schedule.endDate, detail.plan)}
-              date={recordDate}
-              counts={summary?.countsByDate ?? null}
-              visitCounts={summary?.countsByVisit ?? null}
-              loading={a.busy}
-              active={detail.schedule.status === 'active'}
-              onDate={(date) => {
-                setDate(date);
-                setDateInput(date);
-                setVisit('');
-                setUnassigned(false);
-                setOutside(false);
-              }}
-              onVisit={(v) => {
-                setVisit(v.id);
-                setDate(v.visitDate);
-                setDateInput(v.visitDate);
-                setUnassigned(false);
-                setOutside(false);
-                setTab('records');
-              }}
-              onEdit={(date, visit) =>
-                router.push({
-                  pathname: '/plan',
-                  params: { id, date, ...(visit ? { visit } : {}) },
-                })
-              }
-              onAdd={(date) => {
-                setDate(date);
-                setDateInput(date);
-                setVisit('');
-                router.push({
-                  pathname: '/places',
-                  params: {
-                    id,
-                    groupId: detail.schedule.groupId,
-                    startDate: detail.schedule.startDate,
-                    endDate: detail.schedule.endDate,
-                    visitDate: date,
-                  },
-                });
+          {activeTabs.length > 0 && (
+            <DateTabs
+              days={activeTabs}
+              date={date}
+              onSelect={(t) => {
+                if (t.scheduleId === id) setDate(t.date);
+                else router.replace({ pathname: '/schedule/[id]', params: { id: t.scheduleId, date: t.date } });
               }}
             />
           )}
-          {!recordDate && owner && (
-            <Button
-              secondary
-              tone="outline"
-              onPress={() => router.push(`/schedule/edit?groupId=${group.id}`)}
-            >
-              일정 추가
-            </Button>
-          )}
+          <View
+            style={{
+              flexGrow: 1,
+              marginHorizontal: -20,
+              paddingHorizontal: 20,
+              paddingTop: 24,
+              paddingBottom: 24,
+              backgroundColor: '#F7F8FA',
+            }}
+          >
+            {detail && date && (
+              <>
+                {day?.status === 'cancelled' && (
+                  <P>취소된 날이에요. 보관 기한까지 기록을 볼 수 있어요.</P>
+                )}
+                {detail.schedule.status === 'cancelled' && (
+                  <P>취소된 일정입니다. 보관 기한까지 기록을 볼 수 있어요.</P>
+                )}
+                <DayTimeline
+                  date={date}
+                  title={
+                    day
+                      ? dayLabel({
+                          title: day.title || plan?.title || null,
+                          dayNo: day.dayNo,
+                          scheduleTitle: detail.schedule.title,
+                          single,
+                        })
+                      : (plan?.title ?? '')
+                  }
+                  visits={plan?.visits ?? []}
+                  visitCounts={summary?.countsByVisit ?? null}
+                  loading={a.busy && !summary}
+                  editable={!!dayActive}
+                  canAdd={!!dayActive}
+                  highlightedVisits={highlightedVisits}
+                  onEdit={(visit) =>
+                    router.push({ pathname: '/plan', params: { id, date, ...(visit ? { visit } : {}) } })
+                  }
+                  onVisit={(v) => openRecords(v)}
+                  onAdd={() =>
+                    router.push({
+                      pathname: '/places',
+                      params: {
+                        id,
+                        groupId: detail.schedule.groupId,
+                        startDate: detail.schedule.startDate,
+                        endDate: detail.schedule.endDate,
+                        visitDate: date,
+                      },
+                    })
+                  }
+                />
+                <TextButton color={colors.sub} onPress={() => openRecords()}>
+                  이 일정의 모든 기록 보기 ›
+                </TextButton>
+              </>
+            )}
+            {a.errorView}
+          </View>
         </>
       ) : (
         <>
-          <H>함께 남긴 순간</H>
-          <View
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <Chip selected={view === 'by_time'} onPress={() => setView('by_time')}>
-                ▦ 시간순
-              </Chip>
-              <Chip selected={view === 'by_author'} onPress={() => setView('by_author')}>
-                ♙ 사람별
-              </Chip>
-            </View>
-            <TextButton
-              color={colors.sub}
-              onPress={() => setOrder(order === 'asc' ? 'desc' : 'asc')}
-            >
-              {order === 'asc' ? '오래된 순' : '최신순'} ↕
-            </TextButton>
-          </View>
-          <TextButton color={colors.sub} onPress={() => setFilters(true)}>
-            {recordDate || unassigned || outside || visitId
-              ? `필터: ${[
-                  selectedVisit?.name,
-                  !visitId && recordDate,
-                  unassigned && '장소 미지정',
-                  outside && '기간 밖',
-                ]
-                  .filter(Boolean)
-                  .join(' · ')} · 변경`
-              : '날짜·장소 필터'}
-          </TextButton>
-          <Sheet visible={filters} title="기록 필터" onClose={() => setFilters(false)}>
-            <Field
-              label="기록일"
-              value={dateInput}
-              onChangeText={setDateInput}
-              placeholder="전체 날짜"
-            />
-            <View style={s.row}>
-              <Chip
-                selected={unassigned}
-                onPress={() => {
-                  setUnassigned(!unassigned);
-                  setVisit('');
-                }}
-              >
-                장소 미지정
-              </Chip>
-              <Chip selected={outside} onPress={() => setOutside(!outside)}>
-                기간 밖 기록
-              </Chip>
-            </View>
-            <Button
-              onPress={() =>
-                a.run(async () => {
-                  if (dateInput) validDate(dateInput);
-                  setDate(dateInput);
-                  setVisit('');
-                  setFilters(false);
-                })
-              }
-            >
-              필터 적용
+          {dayActive && (
+            <Button tone="outline" onPress={() => setAdding(true)}>
+              ＋ 사진·동영상 올리기
             </Button>
-            <Button
-              secondary
-              onPress={() => {
-                setDate('');
-                setDateInput('');
-                setVisit('');
-                setUnassigned(false);
-                setOutside(false);
-                setFilters(false);
-              }}
-            >
-              전체 기록 보기
-            </Button>
-            {a.errorView}
-          </Sheet>
-          {counts && !a.busy && (
-            <P>
-              사진 {counts.photos}개 · 영상 {counts.videos}개
-            </P>
+          )}
+          {!dayActive && detail && <P>취소된 날에는 새 사진·동영상을 올릴 수 없어요.</P>}
+          <Text style={{ fontSize: 19, fontWeight: '800', color: colors.ink, marginTop: 14, marginBottom: 10 }}>
+            함께 남긴 순간
+          </Text>
+          {!visitId && (
+            <>
+              <TextButton color={colors.sub} onPress={() => setFilters(true)}>
+                {recordDate || unassigned || outside
+                  ? `필터: ${[recordDate, unassigned && '장소 미지정', outside && '기간 밖']
+                      .filter(Boolean)
+                      .join(' · ')} · 변경`
+                  : '날짜·장소 필터'}
+              </TextButton>
+              <Sheet visible={filters} title="기록 필터" onClose={() => setFilters(false)}>
+                <Field label="기록일" value={dateInput} onChangeText={setDateInput} placeholder="전체 날짜" />
+                <View style={s.row}>
+                  <Chip selected={unassigned} onPress={() => setUnassigned(!unassigned)}>
+                    장소 미지정
+                  </Chip>
+                  <Chip selected={outside} onPress={() => setOutside(!outside)}>
+                    기간 밖 기록
+                  </Chip>
+                </View>
+                <Button
+                  onPress={() =>
+                    a.run(async () => {
+                      if (dateInput) validDate(dateInput);
+                      setRecordDate(dateInput);
+                      setFilters(false);
+                    })
+                  }
+                >
+                  필터 적용
+                </Button>
+                <Button
+                  secondary
+                  onPress={() => {
+                    setRecordDate('');
+                    setDateInput('');
+                    setUnassigned(false);
+                    setOutside(false);
+                    setFilters(false);
+                  }}
+                >
+                  전체 기록 보기
+                </Button>
+              </Sheet>
+              {counts && !a.busy && (
+                <P>
+                  사진 {counts.photos}개 · 동영상 {counts.videos}개
+                </P>
+              )}
+            </>
           )}
           {!a.busy && !a.error && (
             <Records
-              key={`${id}:${recordDate}:${visitId}:${unassigned}:${outside}`}
+              key={`${id}:${recordDate}:${visitId}:${unassigned}:${outside}:${view}`}
               items={files}
               groups={view === 'by_author' ? groups : undefined}
+              avatars={avatars}
+              toolbar={{ view, onView: setView, order, onOrder: setOrder }}
             />
           )}
           {next && (
@@ -473,9 +400,10 @@ export default function Schedule() {
               기록 더 보기
             </Button>
           )}
+          {a.errorView}
         </>
       )}
-      {a.errorView}
+      {!detail && !a.busy && !a.error && <H>일정을 불러오고 있어요</H>}
     </Screen>
   );
 }

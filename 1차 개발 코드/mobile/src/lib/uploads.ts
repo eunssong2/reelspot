@@ -3,7 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { Transfer } from '../../modules/atp-transfer';
-import { API, api, currentSession } from './api';
+import * as ImagePicker from 'expo-image-picker';
+import { API, api, awaitOperation, currentSession, getGroup } from './api';
 export type Candidate = {
   uri: string;
   name: string;
@@ -106,4 +107,58 @@ export async function clearLocalAccount(userId: string) {
   const keys = (await AsyncStorage.getAllKeys()).filter((k) => k === `atp.queue:${userId}` || k.startsWith(`atp.upload-draft:${userId}:`) || k.startsWith(`atp.draft:${userId}:`));
   await AsyncStorage.multiRemove(keys);
   await FileSystem.deleteAsync(`${FileSystem.documentDirectory}uploads/${userId}/`, { idempotent: true });
+}
+
+/**
+ * Pick one photo, upload it as a group cover or the user's avatar and apply it once the
+ * transfer completes. Returns false when the upload is still running (the transfer status
+ * screen keeps an apply button) and null when the picker was cancelled.
+ */
+export async function uploadAndApplyImage(
+  target: { kind: 'cover'; groupId: string } | { kind: 'avatar' },
+) {
+  const picked = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsMultipleSelection: false,
+    quality: 1,
+  });
+  if (picked.canceled || !picked.assets[0]) return null;
+  const x = picked.assets[0];
+  const file = await candidate(
+    x.uri,
+    x.fileName ?? 'photo.jpg',
+    x.mimeType ?? 'image/jpeg',
+    new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }),
+    null,
+    0,
+  );
+  const body = {
+    file: { name: file.name, mime: file.mime, declaredBytes: file.declaredBytes, fingerprint: file.fingerprint },
+  };
+  const task = await api(
+    target.kind === 'cover' ? `/groups/${target.groupId}/cover-uploads` : '/me/avatar-uploads',
+    body,
+  );
+  await enqueueTask(task, file);
+  for (let i = 0; i < 60; i++) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const current = (await api(`/me/upload-tasks?ids=${task.id}`)).tasks?.[0];
+    if (!current) continue;
+    if (['failed', 'cancelled'].includes(current.state))
+      throw new Error('사진을 올리지 못했어요. 파일 전송 상태에서 확인해 주세요.');
+    if (current.state !== 'complete') continue;
+    if (target.kind === 'cover') {
+      const g = await getGroup(target.groupId);
+      await awaitOperation(
+        await api(`/groups/${g.id}`, { coverAssetId: current.coverAssetId, expectedVersion: g.version }, 'PATCH'),
+      );
+    } else {
+      const profile = await api('/me/profile');
+      await awaitOperation(
+        await api('/me/profile', { avatarAssetId: current.avatarAssetId, expectedVersion: profile.version }, 'PATCH'),
+      );
+    }
+    return true;
+  }
+  return false;
 }

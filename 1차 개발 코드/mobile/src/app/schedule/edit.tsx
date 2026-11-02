@@ -7,7 +7,10 @@ import { useDraft, useAccount } from '../../lib/state';
 import { useFormExit } from '../../lib/unsaved';
 import { PeriodPicker } from '../../components/period-picker';
 import { todayInSeoul } from '../../lib/preferences';
-import { Screen, Field, Button, Card, confirm, P, useAction } from '../../components/ui';
+import { addDays } from '../../lib/calendar';
+import { datesBetween, groupDays, shortDate } from '../../lib/day-labels';
+import { View, Text } from 'react-native';
+import { Screen, Field, Button, Card, confirm, P, colors, useAction } from '../../components/ui';
 export default function EditSchedule() {
   const { id, groupId, date } = useLocalSearchParams<{
       id?: string;
@@ -28,7 +31,10 @@ export default function EditSchedule() {
     [latest, setLatest] = useState<any>(null),
     [detail, setDetail] = useState<any>(null),
     [allowed, setAllowed] = useState(false),
-    [dirty, setDirty] = useState(false);
+    [dirty, setDirty] = useState(false),
+    [groupName, setGroupName] = useState(''),
+    [ownerName, setOwnerName] = useState(''),
+    [takenDays, setTakenDays] = useState<ReturnType<typeof groupDays>>([]);
   const pending = v.pending === 'yes',
     leave = useFormExit(dirty || draft.hasDraft || pending, clear, pending);
   useInitialize(() => {
@@ -43,7 +49,16 @@ export default function EditSchedule() {
       if (g.ownerUserId !== session.userId) throw new Error('방장만 일정을 바꿀 수 있어요.');
       if (r?.schedule.status === 'cancelled') throw new Error('취소된 일정은 바꿀 수 없어요.');
       setActualGroup(gid);
+      setGroupName(g.name);
       setAllowed(true);
+      api(`/groups/${gid}/members`)
+        .then((m) => setOwnerName(m.members.find((x: any) => x.isOwner)?.displayName ?? ''))
+        .catch(() => {});
+      // One schedule per date: fade dates already used by other schedules in the period sheet.
+      const around = r?.schedule.startDate ?? date ?? todayInSeoul();
+      api(`/groups/${gid}/calendar?from=${addDays(around, -182)}&to=${addDays(around, 183)}`)
+        .then((c) => setTakenDays(groupDays(c.schedules).filter((x) => x.status === 'active' && x.scheduleId !== id)))
+        .catch(() => {});
       setDetail(r);
       if (r) {
         setVersion(r.schedule.version);
@@ -52,27 +67,18 @@ export default function EditSchedule() {
       }
     });
   }, [id, groupId, draft.ready, session?.userId]);
-  async function save(confirmed = false, overlapConfirmed = false) {
+  async function save(confirmed = false) {
     await a.run(async () => {
       try {
         if (!allowed) throw new Error('일정 변경 권한을 확인해 주세요.');
         inputText(v.title, '일정 제목', 100);
         validPeriod(v.startDate, v.endDate);
-        if (!overlapConfirmed && !pending) {
-          const calendar = await api(
-            `/groups/${actualGroup}/calendar?from=${v.startDate}&to=${v.endDate}`,
-          );
-          const overlaps = calendar.schedules.filter(
-            (x: any) => x.id !== id && x.status !== 'cancelled',
-          );
-          if (overlaps.length) {
-            confirm(
-              '기간이 겹치는 일정이 있어요',
-              overlaps.map((x: any) => x.title).join('\n') + '\n별도 일정으로 저장할까요?',
-              () => save(confirmed, true),
+        if (!pending) {
+          const clash = takenDays.filter((x) => datesBetween(v.startDate, v.endDate).includes(x.date));
+          if (clash.length)
+            throw new Error(
+              `이미 일정이 있는 날짜가 들어 있어요: ${clash.map((x) => `${shortDate(x.date)} ${x.scheduleTitle}`).join(', ')}\n하루에는 일정을 하나만 만들 수 있어요.`,
             );
-            return;
-          }
         }
         const body = {
           title: inputText(v.title, '일정 제목', 100),
@@ -94,7 +100,7 @@ export default function EditSchedule() {
         );
         await clear();
         leave(() =>
-          router.replace({
+          router.dismissTo({
             pathname: '/group/[id]',
             params: { id: actualGroup, focusDate: v.startDate },
           }),
@@ -106,11 +112,18 @@ export default function EditSchedule() {
           (!e.httpStatus || (e.httpStatus < 500 && e.httpStatus !== 429))
         )
           set('pending', '');
+        if (e instanceof ApiError && e.code === 'SCHEDULE_DATE_TAKEN') {
+          const dates: string[] = e.details?.dates ?? [],
+            titles = (e.details?.schedules ?? []).map((x: any) => x.title).join(', ');
+          throw new Error(
+            `이미 일정이 있는 날짜가 들어 있어요${dates.length ? `: ${dates.map(shortDate).join(', ')}` : ''}${titles ? ` (${titles})` : ''}\n하루에는 일정을 하나만 만들 수 있어요. 기간을 다시 골라 주세요.`,
+          );
+        }
         if (e instanceof ApiError && e.code === 'OUTSIDE_RANGE_CONFIRMATION_REQUIRED') {
           confirm(
             '기간 밖 기록을 유지할까요?',
             `방문 ${e.details.visits}개 · 기록 ${e.details.media}개가 새 기간 밖에 남습니다. 삭제되지 않습니다.`,
-            () => save(true, true),
+            () => save(true),
           );
         } else {
           if (id && e instanceof ApiError && e.code === 'VERSION_CONFLICT')
@@ -128,7 +141,7 @@ export default function EditSchedule() {
     await a.run(async () => {
       await api(`/schedules/${id}/${kind}`, { expectedVersion: version });
       await clear();
-      leave(() => router.replace(`/group/${actualGroup}`));
+      leave(() => router.dismissTo(`/group/${actualGroup}`));
     });
   }
   let valid = true;
@@ -142,13 +155,38 @@ export default function EditSchedule() {
     <Screen
       compact
       title={id ? '일정 변경' : '일정 추가'}
-      subtitle="시간은 장소에서 입력해요. 반복 설정은 없어요."
-      footer={
-        <Button disabled={!allowed || a.busy || !valid || !!latest} onPress={() => save()}>
-          {a.busy ? '저장 중…' : pending ? '저장 결과 확인' : '✓ 저장하기'}
-        </Button>
-      }
+      subtitle={groupName}
     >
+      {!!groupName && (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 18,
+          }}
+        >
+          <Text
+            numberOfLines={1}
+            style={{
+              flexShrink: 1,
+              fontSize: 13,
+              fontWeight: '700',
+              color: colors.sub,
+              backgroundColor: colors.surface,
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 18,
+              overflow: 'hidden',
+            }}
+          >
+            👥 {groupName}
+          </Text>
+          {!!ownerName && (
+            <Text style={{ fontSize: 12, color: colors.muted }}>● 방장 {ownerName}</Text>
+          )}
+        </View>
+      )}
       {detail?.retention && (
         <Card style={{ backgroundColor: '#F2F4F6', borderWidth: 0 }}>
           <P>
@@ -163,6 +201,7 @@ export default function EditSchedule() {
         label="일정 제목"
         required
         limit={100}
+        placeholder="예: 북한산 둘레길"
         value={v.title}
         editable={allowed && !a.busy && !pending}
         onChangeText={(t) => change('title', t)}
@@ -171,12 +210,21 @@ export default function EditSchedule() {
         start={v.startDate}
         end={v.endDate}
         disabled={!allowed || a.busy || pending}
+        disabledDates={new Set(takenDays.map((x) => x.date))}
         onChange={(start, end) => {
           change('startDate', start);
           change('endDate', end);
         }}
       />
-      <P>한국 시간 · 시작일과 종료일 포함 최대 366일</P>
+      <View
+        style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 16, gap: 12, marginBottom: 6 }}
+      >
+        <Text style={{ color: colors.sub, fontSize: 13 }}>🕘　시간은 각 장소에서 입력해요 · 반복 설정 없음</Text>
+        <Text style={{ color: colors.sub, fontSize: 13 }}>🌏　한국 표준시(Asia/Seoul) 기준</Text>
+      </View>
+      <Button disabled={!allowed || a.busy || !valid || !!latest} onPress={() => save()}>
+        {a.busy ? '저장 중…' : pending ? '저장 결과 확인' : '✓ 저장하기'}
+      </Button>
       {pending && (
         <P>처리 결과를 확인하는 동안 입력을 보관합니다. 같은 요청으로 결과를 다시 확인해 주세요.</P>
       )}

@@ -5,24 +5,19 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { api, getGroup } from '../../lib/api';
 import { useAccount } from '../../lib/state';
 import { usePreference, todayInSeoul } from '../../lib/preferences';
-import { monthDays, moveMonth, inMonth } from '../../lib/calendar';
-import { MonthGrid, MonthHeader } from '../../components/period-picker';
-import {
-  Screen,
-  Button,
-  Card,
-  H,
-  P,
-  Badge,
-  useAction,
-  colors,
-  TextButton,
-} from '../../components/ui';
+import { monthDays, moveMonth } from '../../lib/calendar';
+import { dateHeading, dayLabel, groupDays, shortDate, type GroupDay } from '../../lib/day-labels';
+import { MonthGrid, MonthHeader, type DayChip } from '../../components/period-picker';
+import { Avatar } from '../../components/profile-ui';
+import { Screen, Button, Card, P, Sheet, useAction, colors, TextButton } from '../../components/ui';
 export default function Group() {
   const { id, focusDate } = useLocalSearchParams<{ id: string; focusDate?: string }>(),
     { session } = useAccount();
   const [group, setGroup] = useState<any>(null),
-    [schedules, setSchedules] = useState<any[]>([]);
+    [schedules, setSchedules] = useState<any[]>([]),
+    [members, setMembers] = useState<any[]>([]),
+    [plans, setPlans] = useState<Record<string, any[]>>({}),
+    [menuDay, setMenuDay] = useState<GroupDay | null>(null);
   const [calendar, setCalendar, ready] = usePreference(`calendar:${id}`, {
     month: todayInSeoul().slice(0, 7),
     selected: todayInSeoul(),
@@ -48,10 +43,27 @@ export default function Group() {
           getGroup(id),
           api(`/groups/${id}/calendar?from=${days[0]}&to=${days[41]}`),
         ]);
-        if (live) {
-          setGroup(g);
-          setSchedules(r.schedules);
-        }
+        if (!live) return;
+        setGroup(g);
+        setSchedules(r.schedules);
+        api(`/groups/${id}/members`)
+          .then((m) => live && setMembers(m.members))
+          .catch(() => {});
+        // Day cards show the first place of each date, which only the schedule detail has.
+        const details = await Promise.allSettled(
+          r.schedules
+            .filter((x: any) => x.status !== 'deleted')
+            .slice(0, 20)
+            .map((x: any) => api(`/schedules/${x.id}`)),
+        );
+        if (live)
+          setPlans(
+            Object.fromEntries(
+              details
+                .filter((d) => d.status === 'fulfilled')
+                .map((d: any) => [d.value.schedule.id, d.value.plan]),
+            ),
+          );
       } catch (e) {
         if (live) throw e;
       }
@@ -61,9 +73,81 @@ export default function Group() {
     };
   }, [id, month, ready]);
   const owner = group?.ownerUserId === session?.userId;
-  const visible = schedules.filter((x) =>
-    list ? inMonth(x, month) : x.startDate <= selected && x.endDate >= selected,
-  );
+  const ownerMember = members.find((m) => m.isOwner);
+  const days = groupDays(schedules);
+  const labels: Record<string, DayChip> = {};
+  for (const d of days)
+    if (!labels[d.date] || (labels[d.date].cancelled && d.status === 'active'))
+      labels[d.date] = { text: dayLabel(d), cancelled: d.status === 'cancelled' };
+  const visible = list
+    ? days.filter((d) => d.date.startsWith(month))
+    : days.filter((d) => d.date === selected);
+  function dayCard(d: GroupDay) {
+    const plan = plans[d.scheduleId]?.find((p) => p.date === d.date),
+      count = plan?.visitCount ?? d.visitCount,
+      first = plan?.visits?.[0]?.name,
+      cancelled = d.status === 'cancelled';
+    return (
+      <Card
+        key={`${d.scheduleId}:${d.date}`}
+        onPress={() =>
+          router.push({ pathname: '/schedule/[id]', params: { id: d.scheduleId, date: d.date } })
+        }
+        style={{ backgroundColor: colors.surface, borderWidth: 0, borderRadius: 22, padding: 18 }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 17,
+                fontWeight: '800',
+                color: cancelled ? colors.muted : colors.ink,
+                textDecorationLine: cancelled ? 'line-through' : 'none',
+              }}
+            >
+              {dayLabel(d)}
+            </Text>
+            <Text style={{ fontSize: 13, color: colors.muted, marginTop: 6 }}>
+              {shortDate(d.date)}
+              {count ? ` · 장소 ${count}곳` : ''}
+              {cancelled ? ' · 취소된 일정' : ''}
+            </Text>
+            {!!first && (
+              <Text
+                numberOfLines={1}
+                style={{
+                  alignSelf: 'flex-start',
+                  marginTop: 10,
+                  fontSize: 12,
+                  fontWeight: '700',
+                  color: colors.sub,
+                  backgroundColor: 'white',
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                }}
+              >
+                {first}
+                {count > 1 ? ` 외 ${count - 1}` : ''}
+              </Text>
+            )}
+          </View>
+          {owner && !cancelled && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${dayLabel(d)} 메뉴`}
+              onPress={() => setMenuDay(d)}
+              style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Text style={{ fontSize: 22, color: colors.sub }}>⋯</Text>
+            </Pressable>
+          )}
+        </View>
+      </Card>
+    );
+  }
   return (
     <Screen
       compact
@@ -84,76 +168,113 @@ export default function Group() {
         ) : undefined
       }
     >
+      <Sheet
+        visible={!!menuDay}
+        title={menuDay ? dayLabel(menuDay) : ''}
+        onClose={() => setMenuDay(null)}
+      >
+        {menuDay && <P>{shortDate(menuDay.date)}</P>}
+        <Button
+          onPress={() => {
+            const d = menuDay!;
+            setMenuDay(null);
+            router.push({
+              pathname: '/schedule/day',
+              params: { scheduleId: d.scheduleId, date: d.date },
+            });
+          }}
+        >
+          일정 변경
+        </Button>
+        <Button secondary onPress={() => setMenuDay(null)}>
+          닫기
+        </Button>
+      </Sheet>
       {group && (
-        <View
-          style={{
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`함께하는 친구 ${group.activeCount}명 보기`}
+          onPress={() => router.push(`/group/manage?id=${id}`)}
+          style={({ pressed }) => ({
             flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            gap: 10,
             backgroundColor: colors.surface,
-            paddingHorizontal: 12,
-            borderRadius: 14,
-            marginBottom: 10,
-          }}
+            paddingHorizontal: 14,
+            minHeight: 48,
+            borderRadius: 16,
+            marginBottom: 12,
+            opacity: pressed ? 0.72 : 1,
+          })}
         >
-          <Badge style={{ alignSelf: 'center', marginBottom: 0 }}>
-            {group.activeCount}/10명 {owner ? '· 방장' : '· 참여자'}
-          </Badge>
-          <TextButton onPress={() => router.push(`/group/manage?id=${id}`)}>
-            함께하는 친구 ›
-          </TextButton>
-        </View>
+          <Text style={{ color: colors.accent, fontSize: 12 }}>●</Text>
+          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>
+            {group.activeCount}/10명
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={{
+              flexShrink: 1,
+              fontSize: 12,
+              fontWeight: '700',
+              color: colors.accent,
+              backgroundColor: colors.sage,
+              paddingHorizontal: 9,
+              paddingVertical: 4,
+              borderRadius: 12,
+              overflow: 'hidden',
+            }}
+          >
+            방장{ownerMember ? ` ${ownerMember.displayName}` : ''}
+          </Text>
+          <View style={{ flex: 1 }} />
+          <View style={{ flexDirection: 'row' }}>
+            {members.slice(0, 2).map((m, i) => (
+              <View key={m.id} style={{ marginLeft: i ? -6 : 0 }}>
+                <Avatar
+                  initial
+                  name={m.displayName}
+                  size={26}
+                  userId={m.userId}
+                  avatarVersion={m.avatarVersion}
+                />
+              </View>
+            ))}
+            {members.length > 2 && (
+              <View
+                style={{
+                  marginLeft: -6,
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  backgroundColor: colors.accent,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 10, fontWeight: '800' }}>
+                  +{members.length - 2}
+                </Text>
+              </View>
+            )}
+          </View>
+        </Pressable>
       )}
-      <MonthHeader
-        month={month}
-        onMove={(n) =>
-          setCalendar({
-            ...calendar,
-            month: moveMonth(month, n),
-            selected: `${moveMonth(month, n)}-01`,
-          })
-        }
-      />
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <View
-          style={{
-            flexDirection: 'row',
-            gap: 4,
-            backgroundColor: colors.surface,
-            padding: 3,
-            borderRadius: 12,
-          }}
-        >
-          {[
-            [false, '달력'],
-            [true, '일정 목록'],
-          ].map(([value, label]) => (
-            <Pressable
-              key={String(label)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: list === value }}
-              onPress={() => setCalendar({ ...calendar, list: !!value })}
-              style={{
-                padding: 10,
-                minHeight: 36,
-                backgroundColor: list === value ? '#FFFFFF' : colors.surface,
-                borderRadius: 10,
-              }}
-            >
-              <Text>{label}</Text>
-            </Pressable>
-          ))}
-        </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <MonthHeader
+          month={month}
+          onMove={(n) =>
+            setCalendar({
+              ...calendar,
+              month: moveMonth(month, n),
+              selected: `${moveMonth(month, n)}-01`,
+            })
+          }
+        />
         <Button
           secondary
           small
+          style={{ borderRadius: 20, minHeight: 40, paddingHorizontal: 16 }}
           onPress={() =>
             setCalendar({
               ...calendar,
@@ -165,49 +286,82 @@ export default function Group() {
           오늘
         </Button>
       </View>
-      <View style={{ alignItems: 'flex-end' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: 12,
+          marginBottom: 8,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 4,
+            backgroundColor: colors.surface,
+            padding: 4,
+            borderRadius: 14,
+          }}
+        >
+          {(
+            [
+              [false, '달력'],
+              [true, '일정 목록'],
+            ] as const
+          ).map(([value, label]) => (
+            <Pressable
+              key={label}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: list === value }}
+              onPress={() => setCalendar({ ...calendar, list: value })}
+              style={{
+                paddingHorizontal: 14,
+                minHeight: 36,
+                justifyContent: 'center',
+                backgroundColor: list === value ? '#FFFFFF' : colors.surface,
+                borderRadius: 10,
+              }}
+            >
+              <Text
+                style={{
+                  fontWeight: list === value ? '800' : '500',
+                  color: list === value ? colors.ink : colors.muted,
+                }}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         <TextButton color={colors.sub} onPress={() => router.push(`/group/invites?id=${id}`)}>
           초대·관리 ›
         </TextButton>
       </View>
       {!list && (
-        <Card style={{ padding: 0, backgroundColor: '#F7F8FA', borderWidth: 0 }}>
+        <Card style={{ padding: 4, backgroundColor: colors.surface, borderWidth: 0, borderRadius: 22 }}>
           <MonthGrid
             month={month}
             selected={selected}
-            schedules={schedules}
+            labels={labels}
             onSelect={(date) =>
               setCalendar({ ...calendar, month: date.slice(0, 7), selected: date })
             }
           />
         </Card>
       )}
-      <H>{list ? `${month}의 일정` : `${selected} 일정`}</H>
-      {visible.map((x) => (
-        <View key={x.id}>
-          <Card
-            onPress={() => router.push(`/schedule/${x.id}`)}
-            style={{ backgroundColor: '#F2F4F6', borderWidth: 0 }}
-          >
-            <Badge>
-              {x.status === 'cancelled' ? '취소된 일정' : `${x.startDate} ~ ${x.endDate}`}
-            </Badge>
-            <H>{x.title}</H>
-            <P>계획과 기록 보기 ›</P>
-          </Card>
-          {owner && x.status === 'active' && (
-            <TextButton
-              onPress={() =>
-                router.push({ pathname: '/schedule/edit', params: { id: x.id, groupId: id } })
-              }
-            >
-              일정 변경 ›
-            </TextButton>
-          )}
-        </View>
-      ))}
+      {list
+        ? [...new Set(visible.map((d) => d.date))].map((date) => (
+            <View key={date}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: colors.sub, marginTop: 14 }}>
+                {dateHeading(date)}
+              </Text>
+              {visible.filter((d) => d.date === date).map(dayCard)}
+            </View>
+          ))
+        : visible.map(dayCard)}
       {a.hasRun && !a.busy && !a.error && !visible.length && (
-        <P>{list ? '이 달에 등록된 일정이 없어요.' : '이 날짜에 등록된 일정이 없어요.'}</P>
+        <P>{list ? '이 달에 등록된 일정이 없어요.' : `${dateHeading(selected)}에는 일정이 없어요.`}</P>
       )}
       {a.errorView}
     </Screen>

@@ -14,6 +14,7 @@ export default function Login() {
   const [dev, setDev] = useState(false),
     [name, setName] = useState('demo'),
     [kakao, setKakao] = useState(false),
+    [google, setGoogle] = useState(false),
     [docs, setDocs] = useState<any[]>([]),
     [pending, setPending] = useState(false);
   const a = useAction();
@@ -21,13 +22,14 @@ export default function Login() {
     const config = await api('/app-config');
     setDev(__DEV__ && config.authMode === 'development');
     setKakao(config.providers?.kakao === true);
+    setGoogle(config.providers?.google === true);
     setPending(!!(await AsyncStorage.getItem('atp.pending-invite')));
     setDocs((await api('/consent-documents')).documents);
   }
   useInitialize(() => {
     void a.run(load);
   }, []);
-  async function login(development = false) {
+  async function login(development = false, provider: 'kakao' | 'google' = 'kakao') {
     await a.run(async () => {
       let r;
       if (development && __DEV__) {
@@ -39,7 +41,7 @@ export default function Login() {
         r = await api('/auth/exchange', { provider: 'kakao', credential, ...attempt });
         await SecureStore.setItemAsync('atp.dev-credential', credential);
         await setSession(r.session);
-      } else r = await signInWithProvider('kakao');
+      } else r = await signInWithProvider(provider);
       router.replace(
         r.onboardingRequired
           ? '/onboarding'
@@ -57,30 +59,43 @@ export default function Login() {
       footer={
         <>
           <Button tone="kakao" disabled={a.busy || !kakao} onPress={() => login()}>
-            ●　카카오로 시작하기
+            💬　카카오로 시작하기
           </Button>
+          {google && (
+            <Button tone="outline" style={{ borderColor: colors.line }} disabled={a.busy} onPress={() => login(false, 'google')}>
+              <Text style={{ color: '#4285F4', fontWeight: '800' }}>G</Text>
+              <Text style={{ color: colors.ink }}>　Google로 시작하기</Text>
+            </Button>
+          )}
           {!kakao && !a.busy && <P>카카오 로그인 연결을 확인해 주세요.</P>}
           <View
             style={{
               flexDirection: 'row',
               flexWrap: 'wrap',
               justifyContent: 'center',
-              gap: 14,
+              gap: 8,
               marginTop: 8,
             }}
           >
-            {docs.map((d) => (
-              <Pressable
-                key={d.id}
-                accessibilityRole="link"
-                onPress={() => a.run(() => Linking.openURL(documentUrl(d.url)))}
-                style={{ minHeight: 44, justifyContent: 'center' }}
-              >
-                <Text style={{ color: colors.sub, fontSize: 12, textDecorationLine: 'underline' }}>
-                  {d.kind === 'notice' ? '개인정보 처리방침' : '이용약관'}
-                </Text>
-              </Pressable>
-            ))}
+            {[
+              docs.find((d) => ['terms', 'terms-service'].includes(d.itemKey)),
+              docs.find((d) => d.itemKey?.startsWith('privacy')) ?? docs.find((d) => d.kind === 'notice'),
+            ]
+              .filter(Boolean)
+              .map((d, i) => (
+                <React.Fragment key={d.id}>
+                  {i > 0 && <Text style={{ color: colors.muted, alignSelf: 'center' }}>·</Text>}
+                  <Pressable
+                    accessibilityRole="link"
+                    onPress={() => a.run(() => Linking.openURL(documentUrl(d.url)))}
+                    style={{ minHeight: 44, justifyContent: 'center' }}
+                  >
+                    <Text style={{ color: colors.sub, fontSize: 12, textDecorationLine: 'underline' }}>
+                      {i === 0 && ['terms', 'terms-service'].includes(d.itemKey) ? '이용약관' : '개인정보처리방침'}
+                    </Text>
+                  </Pressable>
+                </React.Fragment>
+              ))}
           </View>
         </>
       }

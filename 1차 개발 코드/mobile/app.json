@@ -2,7 +2,7 @@
   "expo": {
     "name": "At that place",
     "slug": "at-that-place",
-    "version": "0.2.3",
+    "version": "0.2.7",
     "scheme": "atthatplace",
     "platforms": [
       "android"
@@ -24,7 +24,7 @@
         "android.permission.READ_EXTERNAL_STORAGE"
       ],
       "allowBackup": false,
-      "versionCode": 5
+      "versionCode": 9
     },
     "plugins": [
       "expo-router",

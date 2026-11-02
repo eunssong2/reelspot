@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Text, View, Pressable } from 'react-native';
+import { Alert, Text, View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useAccount } from '../lib/state';
 import { useFocusLoad } from '../lib/effects';
-import { api } from '../lib/api';
-import { Avatar, MenuRow } from '../components/profile-ui';
-import { Screen, Card, P, H, Button, colors, useAction } from '../components/ui';
+import { api, awaitOperation } from '../lib/api';
+import { inputText } from '../lib/validation';
+import { uploadAndApplyImage } from '../lib/uploads';
+import { EditableAvatar } from '../components/profile-ui';
+import { Screen, Button, ClearableInput, Sheet, colors, useAction } from '../components/ui';
 export default function MyPage() {
   const { profile, refresh } = useAccount();
   const [count, setCount] = useState<number | null>(null);
@@ -32,6 +34,10 @@ export default function MyPage() {
       live = false;
     };
   }, []);
+  const photo = useAction({ inlineRetry: false }),
+    save = useAction({ inlineRetry: false });
+  const [editing, setEditing] = useState(false),
+    [name, setName] = useState('');
   return (
     <Screen
       title="마이페이지"
@@ -49,36 +55,113 @@ export default function MyPage() {
         </Pressable>
       }
       footer={
-        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-          <View style={{ flex: 1, marginRight: 20 }}>
-            <MenuRow label="내가 올린 기록" onPress={() => router.push('/mine')} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <MenuRow label="고객센터" onPress={() => router.push('/inquiry')} />
-          </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => Alert.alert('공지사항', '공지사항은 준비 중이에요.')}
+            style={{ flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>공지사항</Text>
+          </Pressable>
+          <View style={{ width: 1, height: 24, backgroundColor: colors.line }} />
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/inquiry')}
+            style={{ flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>고객센터</Text>
+          </Pressable>
         </View>
       }
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginVertical: 20 }}>
-        <Avatar name={profile?.displayName ?? '나'} size={72} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginVertical: 16 }}>
+        <EditableAvatar
+          name={profile?.displayName ?? '나'}
+          size={96}
+          userId={profile?.id}
+          avatarVersion={profile?.avatarVersion}
+          disabled={photo.busy || !profile}
+          onPress={() =>
+            photo.run(async () => {
+              const done = await uploadAndApplyImage({ kind: 'avatar' });
+              if (done === false)
+                throw new Error('사진을 올리고 있어요. 끝나면 파일 전송 상태에서 프로필 사진으로 적용할 수 있어요.');
+              if (done) await refresh();
+            })
+          }
+        />
         <View style={{ flex: 1 }}>
-          <H>{profile?.displayName ?? '불러오는 중'}</H>
-          <P>함께한 순간을 기록하는 중</P>
-        </View>
-      </View>
-      <Card style={{ backgroundColor: '#F2F4F6' }}>
-        <View
-          style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-        >
-          <P>현재 참여 중인 모임</P>
-          <Text style={{ fontSize: 20, fontWeight: '800', color: colors.ink }}>
-            {count === null ? '—' : `${count}개`}
+          <Text style={{ fontSize: 24, fontWeight: '800', color: colors.ink }}>
+            {profile?.displayName ?? '불러오는 중'}
+          </Text>
+          <Text style={{ fontSize: 14, color: colors.muted, marginTop: 6 }}>
+            {photo.busy ? '사진을 올리고 있어요…' : '함께한 순간을 기록하는 중'}
           </Text>
         </View>
-      </Card>
-      <Button secondary onPress={() => router.push('/account?edit=yes')}>
+      </View>
+      {photo.error ? photo.errorView : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`참여한 모임 ${count ?? ''}개, 내 모임으로 이동`}
+        onPress={() => router.replace('/')}
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.surface,
+          borderRadius: 22,
+          paddingHorizontal: 20,
+          minHeight: 76,
+          marginVertical: 7,
+          opacity: pressed ? 0.72 : 1,
+        })}
+      >
+        <Text style={{ flex: 1, fontSize: 15, fontWeight: '700', color: colors.sub }}>참여한 모임</Text>
+        <Text style={{ fontSize: 24, fontWeight: '900', color: colors.ink }}>
+          {count === null ? '—' : `${count}개`}
+        </Text>
+        <Text style={{ fontSize: 20, color: colors.muted, marginLeft: 10 }}>›</Text>
+      </Pressable>
+      <Button
+        secondary
+        onPress={() => {
+          setName(profile?.displayName ?? '');
+          setEditing(true);
+        }}
+      >
         닉네임 변경
       </Button>
+      <Sheet visible={editing} title="닉네임 변경" onClose={() => setEditing(false)}>
+        <ClearableInput
+          accessibilityLabel="닉네임"
+          limit={20}
+          value={name}
+          onChangeText={setName}
+          editable={!save.busy}
+          autoFocus
+        />
+        {save.errorView}
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Button style={{ flex: 1 }} secondary onPress={() => setEditing(false)}>
+            취소
+          </Button>
+          <Button
+            style={{ flex: 1 }}
+            disabled={save.busy || !profile || !name.trim()}
+            onPress={() =>
+              save.run(async () => {
+                const displayName = inputText(name, '닉네임', 20);
+                await awaitOperation(
+                  await api('/me/profile', { displayName, expectedVersion: profile.version }, 'PATCH'),
+                );
+                await refresh();
+                setEditing(false);
+              })
+            }
+          >
+            저장
+          </Button>
+        </View>
+      </Sheet>
       {a.errorView}
     </Screen>
   );

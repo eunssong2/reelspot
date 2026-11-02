@@ -56,6 +56,12 @@ export const coverSource = (groupId: string, version?: number) => [
     headers: { Authorization: `Bearer ${session?.accessToken}` },
   },
 ];
+export const avatarSource = (userId: string, version: number) => [
+  {
+    uri: `${API}/v1/users/${userId}/avatar?v=${version}`,
+    headers: { Authorization: `Bearer ${session?.accessToken}` },
+  },
+];
 export function documentUrl(value: string) {
   const u = new URL(value, API);
   if (['localhost', '127.0.0.1'].includes(u.hostname)) {
@@ -129,6 +135,13 @@ export class ApiError extends Error {
           VISIT_LIMIT: '이 날짜에는 장소를 15개까지 추가할 수 있어요.',
           CONSENT_REQUIRED: '최신 필수 약관을 확인하고 동의해 주세요.',
           OWNER_ROLES_REMAIN: '방장인 모임의 역할을 먼저 정리해 주세요.',
+          SCHEDULE_DATE_TAKEN: '이미 일정이 있는 날짜예요. 하루에는 일정을 하나만 만들 수 있어요.',
+          DAY_BUSY: '이 날짜에 진행 중인 업로드가 있어요. 잠시 후 다시 시도해 주세요.',
+          DAY_CANCELLED: '취소된 날에는 새 사진·영상이나 장소를 추가할 수 없어요.',
+          NOT_EMPTY: '장소나 기록이 담긴 날은 삭제할 수 없어요.',
+          TARGET_NOT_EMPTY: '옮길 날짜에 이 일정의 기존 장소나 기록이 남아 있어 옮길 수 없어요.',
+          SCHEDULE_CANCELLED: '취소된 일정은 바꿀 수 없어요.',
+          ALREADY_CANCELLED: '이미 취소된 날이에요.',
         } as Record<string, string>
       )[code] ?? code,
     );

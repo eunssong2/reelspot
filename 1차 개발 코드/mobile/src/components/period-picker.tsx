@@ -3,22 +3,29 @@ import { Modal, Pressable, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { monthDays, moveMonth, rangeTap } from '../lib/calendar';
 import { todayInSeoul } from '../lib/preferences';
+import { datesBetween, periodBadge } from '../lib/day-labels';
 import { Button, H, P, colors, s } from './ui';
+export type DayChip = { text: string; cancelled: boolean };
 export function MonthGrid({
   month,
   selected,
   start,
   end,
   onSelect,
-  schedules = [],
+  labels,
+  disabledDates,
 }: {
   month: string;
   selected?: string;
   start?: string;
   end?: string;
   onSelect: (date: string) => void;
-  schedules?: any[];
+  /** One label per date (the group calendar shows a single day title per date). */
+  labels?: Record<string, DayChip>;
+  /** Dates that cannot be picked (held by another schedule); shown faded. */
+  disabledDates?: Set<string>;
 }) {
+  const today = todayInSeoul();
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
       {['월', '화', '수', '목', '금', '토', '일'].map((d) => (
@@ -35,28 +42,25 @@ export function MonthGrid({
         </Text>
       ))}
       {monthDays(month).map((date) => {
-        const events = schedules
-          .filter((x) => x.startDate <= date && x.endDate >= date)
-          .sort(
-            (a, b) =>
-              a.startDate.localeCompare(b.startDate) ||
-              b.endDate.localeCompare(a.endDate) ||
-              a.id.localeCompare(b.id),
-          );
+        const chip = labels?.[date],
+          off = disabledDates?.has(date) ?? false,
+          inside = date.startsWith(month);
         const chosen = date === selected || date === start || date === end,
           between = !!start && !!end && date > start && date < end;
         return (
           <Pressable
             key={date}
             accessibilityRole="button"
-            accessibilityLabel={`${date}${schedules.length ? ` 일정 ${events.length}개` : ''}`}
-            accessibilityState={{ selected: chosen }}
+            accessibilityLabel={`${date}${chip ? ` ${chip.cancelled ? '취소된 일정 ' : ''}${chip.text}` : ''}${off ? ' 다른 일정이 있는 날짜' : ''}`}
+            accessibilityState={{ selected: chosen, disabled: off }}
+            disabled={off}
             onPress={() => onSelect(date)}
             style={{
               width: '14.2857%',
-              minHeight: schedules.length ? 64 : 48,
-              padding: 3,
-              backgroundColor: chosen || between ? colors.sage : 'transparent',
+              minHeight: labels ? 76 : 46,
+              paddingVertical: 3,
+              paddingHorizontal: 2,
+              backgroundColor: between ? colors.sage : 'transparent',
               borderRadius: 8,
             }}
           >
@@ -64,65 +68,95 @@ export function MonthGrid({
               style={{
                 alignSelf: 'center',
                 textAlign: 'center',
-                minWidth: 28,
-                padding: 4,
-                borderRadius: 14,
+                minWidth: 34,
+                lineHeight: 26,
+                paddingVertical: 2,
+                borderRadius: 17,
                 overflow: 'hidden',
-                backgroundColor: chosen ? colors.accent : 'transparent',
+                fontWeight: chosen ? '800' : '500',
+                borderWidth: !chosen && date === today ? 1.5 : 0,
+                borderColor: colors.accent,
+                backgroundColor: chosen ? colors.accent : off ? colors.sage : 'transparent',
                 color: chosen
                   ? 'white'
-                  : date === todayInSeoul()
-                    ? colors.accent
-                    : date.startsWith(month)
-                      ? colors.ink
-                      : colors.muted,
+                  : off
+                    ? '#F5A9A5'
+                    : date === today
+                      ? colors.accent
+                      : inside
+                        ? colors.ink
+                        : '#B0B8C1',
               }}
             >
               {Number(date.slice(-2))}
             </Text>
-            {events.slice(0, 3).map((x) => (
+            {chip && (
               <Text
                 numberOfLines={1}
-                key={x.id}
                 style={{
+                  marginTop: 6,
                   fontSize: 10,
-                  color: x.status === 'cancelled' ? colors.muted : colors.accent,
-                  textDecorationLine: x.status === 'cancelled' ? 'line-through' : 'none',
+                  fontWeight: '700',
+                  paddingHorizontal: 3,
+                  paddingVertical: 2,
+                  borderRadius: 5,
+                  overflow: 'hidden',
+                  color: chip.cancelled ? colors.muted : colors.accent,
+                  backgroundColor: chip.cancelled ? '#E5E8EB' : colors.sage,
+                  textDecorationLine: chip.cancelled ? 'line-through' : 'none',
+                  opacity: inside ? 1 : 0.5,
                 }}
               >
-                {x.status === 'cancelled' ? '취소 ' : ''}
-                {x.title}
+                {chip.text}
               </Text>
-            ))}
-            {events.length > 3 && <Text style={{ fontSize: 11 }}>+{events.length - 3}</Text>}
+            )}
           </Pressable>
         );
       })}
     </View>
   );
 }
-export function MonthHeader({ month, onMove }: { month: string; onMove: (n: number) => void }) {
+export function MonthHeader({
+  month,
+  onMove,
+  spread = false,
+}: {
+  month: string;
+  onMove: (n: number) => void;
+  spread?: boolean;
+}) {
+  const arrow = (n: number, label: string, glyph: string) => (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={() => onMove(n)}
+      style={({ pressed }) => ({
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: colors.surface,
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: pressed ? 0.7 : 1,
+      })}
+    >
+      <Text style={{ fontSize: 20, color: colors.sub }}>{glyph}</Text>
+    </Pressable>
+  );
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="이전 달"
-        onPress={() => onMove(-1)}
-        style={{ padding: 10 }}
-      >
-        <Text style={{ fontSize: 24 }}>‹</Text>
-      </Pressable>
-      <Text style={{ fontSize: 18, fontWeight: '700', color: colors.ink }}>
-        {month.replace('-', '년 ')}월
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        justifyContent: spread ? 'space-between' : 'flex-start',
+      }}
+    >
+      {arrow(-1, '이전 달', '‹')}
+      <Text style={{ fontSize: 20, fontWeight: '800', color: colors.ink }}>
+        {Number(month.slice(0, 4))}년 {Number(month.slice(5, 7))}월
       </Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="다음 달"
-        onPress={() => onMove(1)}
-        style={{ padding: 10 }}
-      >
-        <Text style={{ fontSize: 24 }}>›</Text>
-      </Pressable>
+      {arrow(1, '다음 달', '›')}
     </View>
   );
 }
@@ -131,20 +165,48 @@ export function PeriodPicker({
   end,
   onChange,
   disabled,
+  disabledDates,
 }: {
   start: string;
   end: string;
   onChange: (start: string, end: string) => void;
   disabled?: boolean;
+  /** Dates already used by other schedules; a period may not include them. */
+  disabledDates?: Set<string>;
 }) {
   const [open, setOpen] = useState(false),
     [month, setMonth] = useState(todayInSeoul().slice(0, 7)),
     [range, setRange] = useState({ start: '', end: '', error: '' });
   return (
     <>
-      <Text style={[s.label, { marginBottom: 10 }]}>
-        일정 기간 <Text style={{ color: colors.accent }}>*</Text>
-      </Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 10,
+        }}
+      >
+        <Text style={s.label}>
+          일정 기간 <Text style={{ color: colors.accent }}>*</Text>
+        </Text>
+        {!!start && !!end && end >= start && (
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: '700',
+              color: colors.accent,
+              backgroundColor: colors.sage,
+              paddingHorizontal: 12,
+              paddingVertical: 5,
+              borderRadius: 14,
+              overflow: 'hidden',
+            }}
+          >
+            📅 {periodBadge(start, end)}
+          </Text>
+        )}
+      </View>
       <Pressable
         disabled={disabled}
         accessibilityRole="button"
@@ -210,35 +272,52 @@ export function PeriodPicker({
               <H>일정 기간</H>
               <P>
                 {range.end
-                  ? `${range.start} ~ ${range.end} · ${1 + (Date.parse(range.end) - Date.parse(range.start)) / 86400000}일`
+                  ? `${range.start.replaceAll('-', '.')}${range.end === range.start ? '' : ` ~ ${range.end.replaceAll('-', '.')}`} · ${periodBadge(range.start, range.end)}`
                   : range.start
                     ? '종료 날짜를 선택해 주세요. 당일이면 같은 날짜를 한 번 더 눌러요.'
                     : '시작 날짜를 선택해 주세요.'}
               </P>
-              <MonthHeader month={month} onMove={(n) => setMonth(moveMonth(month, n))} />
+              <MonthHeader spread month={month} onMove={(n) => setMonth(moveMonth(month, n))} />
               <MonthGrid
                 month={month}
                 start={range.start}
                 end={range.end}
-                onSelect={(date) => setRange(rangeTap(range.start, range.end, date))}
+                disabledDates={disabledDates}
+                onSelect={(date) => {
+                  const next = rangeTap(range.start, range.end, date);
+                  if (
+                    next.end &&
+                    disabledDates &&
+                    datesBetween(next.start, next.end).some((d) => disabledDates.has(d))
+                  )
+                    setRange({
+                      start: date,
+                      end: '',
+                      error: '이미 일정이 있는 날짜가 들어 있어요. 하루에는 일정을 하나만 만들 수 있어요.',
+                    });
+                  else setRange(next);
+                }}
               />
               {!!range.error && (
                 <Text accessibilityRole="alert" style={s.error}>
                   {range.error}
                 </Text>
               )}
-              <Button
-                disabled={!range.start || !range.end}
-                onPress={() => {
-                  onChange(range.start, range.end);
-                  setOpen(false);
-                }}
-              >
-                선택 완료
-              </Button>
-              <Button secondary onPress={() => setOpen(false)}>
-                취소
-              </Button>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Button style={{ flex: 1 }} secondary onPress={() => setOpen(false)}>
+                  취소
+                </Button>
+                <Button
+                  style={{ flex: 1 }}
+                  disabled={!range.start || !range.end}
+                  onPress={() => {
+                    onChange(range.start, range.end);
+                    setOpen(false);
+                  }}
+                >
+                  선택 완료
+                </Button>
+              </View>
             </ScrollView>
           </SafeAreaView>
         </View>

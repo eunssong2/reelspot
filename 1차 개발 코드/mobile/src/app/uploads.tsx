@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import * as FS from 'expo-file-system/legacy';
 import { router } from 'expo-router';
-import { api, getGroup, ApiError, currentSession } from '../lib/api';
+import { api, awaitOperation, getGroup, ApiError, currentSession } from '../lib/api';
 import { queue, resumeTask } from '../lib/uploads';
 import { Transfer } from '../../modules/atp-transfer';
 import { Screen, Button, Card, H, P, Badge, useAction, confirm } from '../components/ui';
@@ -42,10 +42,8 @@ export default function Uploads() {
       });
     // Cover photos still need an explicit apply step, so keep them above record uploads,
     // newest first (the queue keeps enqueue order).
-    setTasks([
-      ...all.filter((t) => t.coverGroupId).reverse(),
-      ...all.filter((t) => !t.coverGroupId),
-    ]);
+    const photo = (t: any) => t.coverGroupId || t.avatarUserId;
+    setTasks([...all.filter(photo).reverse(), ...all.filter((t) => !photo(t))]);
     setLoaded(true);
     setRefreshError(
       failures.length
@@ -194,6 +192,27 @@ export default function Uploads() {
                 }
               >
                 이 사진을 모임 대표 사진으로 적용
+              </Button>
+            )}
+          {t.avatarAssetId &&
+            t.state === 'complete' &&
+            t === tasks.find((x) => x.avatarUserId) && (
+              <Button
+                onPress={() =>
+                  a.run(async () => {
+                    const profile = await api('/me/profile');
+                    await awaitOperation(
+                      await api(
+                        '/me/profile',
+                        { avatarAssetId: t.avatarAssetId, expectedVersion: profile.version },
+                        'PATCH',
+                      ),
+                    );
+                    router.replace('/my-page');
+                  })
+                }
+              >
+                이 사진을 프로필 사진으로 적용
               </Button>
             )}
         </Card>

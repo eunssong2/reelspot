@@ -42,7 +42,8 @@ export default function Places() {
     [chosen, setChosen] = useState<any>(null),
     [provider, setProvider] = useState('kakao'),
     [searched, setSearched] = useState(false),
-    [providerMessage, setProviderMessage] = useState('');
+    [providerMessage, setProviderMessage] = useState(''),
+    [planned, setPlanned] = useState<any[]>([]);
   const [center, setCenter] = useState({ lat: 37.5665, lng: 126.978 }),
     [bounds, setBounds] = useState(''),
     [sort, setSort] = useState('relevance');
@@ -52,6 +53,7 @@ export default function Places() {
     (async () => {
       const detail = await api(`/schedules/${p.id}`),
         first = detail.plan.flatMap((d: any) => d.visits).find((v: any) => v.lat != null);
+      setPlanned(detail.plan.flatMap((d: any) => d.visits.map((v: any) => ({ ...v, visitDate: d.date }))));
       if (first) setCenter({ lat: first.lat, lng: first.lng });
       else {
         const saved = await AsyncStorage.getItem('atp.last-map');
@@ -76,9 +78,20 @@ export default function Places() {
       }
     });
   }
+  // Same place twice on one date is not allowed (screen 15); match by name and address.
+  const alreadyOn = (place: any) =>
+    !!place &&
+    planned.some(
+      (v) =>
+        v.visitDate === date &&
+        v.name?.trim() === place.name?.trim() &&
+        (v.address ?? '').trim() === (place.address ?? '').trim(),
+    );
   async function addPlace() {
     await a.run(async () => {
       validDate(date);
+      if (alreadyOn(manual ? { name, address } : chosen))
+        throw new Error('같은 날짜에 이미 담은 장소예요. 다른 장소를 골라 주세요.');
       validTime(time);
       if (date < p.startDate || date > p.endDate)
         throw new Error('일정 기간 안의 방문 날짜를 선택해 주세요.');
@@ -307,9 +320,13 @@ export default function Places() {
                     {r.address}
                   </P>
                 </View>
-                <Button tone="outline" small onPress={() => setChosen(r)}>
-                  ＋ 추가
-                </Button>
+                {alreadyOn(r) ? (
+                  <Text style={{ fontSize: 12, color: colors.muted, fontWeight: '700' }}>담은 장소</Text>
+                ) : (
+                  <Button tone="outline" small onPress={() => setChosen(r)}>
+                    ＋ 추가
+                  </Button>
+                )}
               </View>
             </Card>
           ))}
@@ -350,7 +367,8 @@ export default function Places() {
           placeholder="시간 미정"
           helper="5분 단위 · 비우면 시간 미정"
         />
-        <Button disabled={a.busy} onPress={addPlace}>
+        {alreadyOn(chosen) && <P>같은 날짜에 이미 담은 장소예요.</P>}
+        <Button disabled={a.busy || alreadyOn(chosen)} onPress={addPlace}>
           이 날짜에 장소 추가
         </Button>
         {a.errorView}
