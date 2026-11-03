@@ -55,7 +55,7 @@ npm test
 npm run export
 ```
 
-`npm test`의 앱·서버 공통 입력 대조(`tests/policy.test.ts`)는 옆 폴더 `../backend`의 `server/core/policy.ts`를 읽습니다. 다른 위치면 `ATP_BACKEND_DIR`로 지정하고, 없으면 그 테스트만 건너뜁니다.
+`npm test`의 앱·서버 공통 입력 대조(`tests/policy.test.mts`)는 옆 폴더 `../backend`의 `server/core/policy.ts`를 읽습니다. 다른 위치면 `ATP_BACKEND_DIR`로 지정하고, 없으면 그 테스트만 건너뜁니다.
 
 ## API 계약 동기화
 

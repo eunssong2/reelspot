@@ -12,7 +12,7 @@
     "lint": "expo lint",
     "export": "expo export --platform android",
     "release:android": "node scripts/build-release.mjs",
-    "test": "npx --yes tsx --test tests/*.test.ts",
+    "test": "npx --yes tsx --test tests/*.test.ts tests/*.test.mts",
     "emulator:fast": "node scripts/start-emulator.mjs"
   },
   "dependencies": {
