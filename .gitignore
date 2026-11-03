@@ -1,32 +1,12 @@
-# Credentials and machine-specific configuration
-.env
-.env.*
-!.env.example
-*.keystore
-*.jks
-*.p12
-*.pem
-local.properties
-
-# Dependencies and generated output
 node_modules/
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-.expo/
-.gradle/
-.cxx/
-build/
 dist/
-test-results/
-.DS_Store
-
-# Local runtime data and large packaged binaries
+.env
 .data/
-*.apk
-*.aab
-*.zip
-
-# Legacy standalone implementation workspace
-/mobile/
+.expo/
+test-results/
+**/build/
+**/.gradle/
+**/.cxx/
+ops-web/dist/
+artifacts/
+*.log

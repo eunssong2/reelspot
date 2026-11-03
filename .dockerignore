@@ -1,0 +1,9 @@
+node_modules
+**/build
+**/.gradle
+**/.cxx
+.env
+.data
+dist
+artifacts
+ops-web/dist
