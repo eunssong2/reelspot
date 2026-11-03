@@ -31,6 +31,8 @@ export type Route =
   // scheduleId 가 없으면 추가, 있으면 변경. date 는 추가할 때 시작·종료 기본값.
   | { name: 'scheduleEdit'; groupId: string; scheduleId?: string; date?: string; dayId?: string }
   | { name: 'invites'; groupId: string }
+  // 브이로그 만들기: 날짜 → 장소 → 사진·동영상 → 템플릿·자막 → 미리보기·생성·저장 (기획: AT THAT PLACE 브이로그 화면기획 v4, 구현: src/prototype/vlog)
+  | { name: 'vlog'; groupId: string }
   // code 가 있으면 초대 링크로 연 것처럼 바로 확인한다.
   | { name: 'inviteJoin'; code?: string };
 

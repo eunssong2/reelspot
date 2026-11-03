@@ -356,6 +356,8 @@ const toHref = (route: Route) => {
         pathname: '/prototype/schedule-edit',
         params: { groupId: route.groupId, scheduleId: route.scheduleId ?? '', date: route.date ?? '', dayId: route.dayId ?? '' },
       } as const;
+    case 'vlog':
+      return { pathname: '/prototype/vlog', params: { groupId: route.groupId } } as const;
     case 'invites':
       return { pathname: '/prototype/invites', params: { groupId: route.groupId } } as const;
     case 'inviteJoin':

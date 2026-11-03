@@ -291,6 +291,8 @@ export const SEED_SCHEDULES: Schedule[] = [
   }),
   s('sc-seongsu', 'g-walk', '성수 당일치기', '2026-10-24', '2026-10-24', { itineraryId: 'itin-seongsu', mediaCount: 3 }),
   s('sc-picnic', 'g-walk', '한강 피크닉', '2026-10-25', '2026-10-25', { status: 'cancelled', mediaCount: 2 }),
+  // 브이로그 만들기 예시: 3일 · 날짜마다 장소 2곳 · 장소마다 기록 4개 또는 2개(PLACE_RECORDS 의 vlog-* 장소)
+  s('sc-vlog', 'g-walk', '가을 사진 산책 3일', '2026-10-20', '2026-10-22', { itineraryId: 'itin-vlog-sample', mediaCount: 18 }),
   s('sc-bukhan', 'g-walk', '북한산 둘레길', '2026-11-07', '2026-11-07'),
   s('sc-autumn', 'g-archive', '가을 소풍', addDays(today, -92), addDays(today, -92), {
     mediaCount: 8,
@@ -328,6 +330,45 @@ export const SEED_INVITES: Invite[] = [
 
 /** 성수 당일치기처럼 기존 tripData 에 없는 일정의 장소 계획(일정 요약 화면이 쓴다). */
 export const SEED_ITINERARIES: Itinerary[] = [
+  {
+    id: 'itin-vlog-sample',
+    tripId: 'trip1',
+    name: '가을 사진 산책 3일',
+    startDate: '2026-10-20',
+    endDate: '2026-10-22',
+    days: [
+      {
+        id: 'day-1',
+        date: '2026-10-20',
+        dayNumber: 1,
+        title: '성수 퇴근길 산책',
+        places: [
+          { id: 'vlog-cafe', name: '골목 로스터리', address: '서울 성동구 성수이로 22', categoryLabel: '카페', emoji: '☕', tint: '#FFE7D6', visitTime: '18:30' },
+          { id: 'vlog-park', name: '서울숲 노을길', address: '서울 성동구 뚝섬로 273', categoryLabel: '산책', emoji: '🌳', tint: '#E3F1DC', visitTime: '19:40' },
+        ],
+      },
+      {
+        id: 'day-2',
+        date: '2026-10-21',
+        dayNumber: 2,
+        title: '연남동 천천히 걷기',
+        places: [
+          { id: 'vlog-noodle', name: '작은 국수집', address: '서울 마포구 동교로 38', categoryLabel: '맛집', emoji: '🍜', tint: '#FDE4DB', visitTime: '12:10' },
+          { id: 'vlog-book', name: '책방 모퉁이', address: '서울 마포구 연남로 5', categoryLabel: '문화', emoji: '📚', tint: '#E8E2F4', visitTime: '14:30' },
+        ],
+      },
+      {
+        id: 'day-3',
+        date: '2026-10-22',
+        dayNumber: 3,
+        title: '한강에서 마무리',
+        places: [
+          { id: 'vlog-bridge', name: '반포 다리 전망', address: '서울 서초구 올림픽대로 683', categoryLabel: '산책', emoji: '🌉', tint: '#DCEBFA', visitTime: '17:00' },
+          { id: 'vlog-picnic', name: '잔디밭 피크닉', address: '서울 서초구 신반포로 11', categoryLabel: '장소', emoji: '🧺', tint: '#FFECCB', visitTime: '18:20' },
+        ],
+      },
+    ],
+  },
   {
     id: 'itin-seongsu',
     tripId: 'trip1',

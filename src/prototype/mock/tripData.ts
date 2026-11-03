@@ -234,6 +234,79 @@ const thumb = (seed: string) => `https://picsum.photos/seed/${seed}/400/400`;
  * 'me' 기록은 일부러 넣지 않는다 — 장소 기록 화면의 "내 순간 올리기"는 별도 영역이다.
  */
 export const PLACE_RECORDS: Record<string, PlaceRecord[]> = {
+  // 브이로그 만들기 예시: 장소마다 기록 4개 또는 2개(사진·동영상 섞음)
+  'vlog-cafe': [
+    {
+      id: 'rv-vlog-cafe',
+      memberId: 'm-suah',
+      time: '10.20 18:42',
+      items: [
+        { id: 'vc1', kind: 'photo', imageUrl: thumb('vlog-cafe-1'), caption: '라떼 한 잔' },
+        { id: 'vc2', kind: 'photo', imageUrl: thumb('vlog-cafe-2') },
+        { id: 'vc3', kind: 'video', imageUrl: thumb('vlog-cafe-v1'), durationLabel: '0:08' },
+        { id: 'vc4', kind: 'video', imageUrl: thumb('vlog-cafe-v2'), durationLabel: '0:12' },
+      ],
+    },
+  ],
+  'vlog-park': [
+    {
+      id: 'rv-vlog-park',
+      memberId: 'm-doyun',
+      time: '10.20 19:51',
+      items: [
+        { id: 'vp1', kind: 'photo', imageUrl: thumb('vlog-park-1'), caption: '노을이 예뻐요' },
+        { id: 'vp2', kind: 'video', imageUrl: thumb('vlog-park-v1'), durationLabel: '0:06' },
+      ],
+    },
+  ],
+  'vlog-noodle': [
+    {
+      id: 'rv-vlog-noodle',
+      memberId: 'm-suah',
+      time: '10.21 12:20',
+      items: [
+        { id: 'vn1', kind: 'photo', imageUrl: thumb('vlog-noodle-1') },
+        { id: 'vn2', kind: 'photo', imageUrl: thumb('vlog-noodle-2'), caption: '국물이 진해요' },
+        { id: 'vn3', kind: 'photo', imageUrl: thumb('vlog-noodle-3') },
+        { id: 'vn4', kind: 'photo', imageUrl: thumb('vlog-noodle-4') },
+      ],
+    },
+  ],
+  'vlog-book': [
+    {
+      id: 'rv-vlog-book',
+      memberId: 'm-doyun',
+      time: '10.21 14:44',
+      items: [
+        { id: 'vb1', kind: 'video', imageUrl: thumb('vlog-book-v1'), durationLabel: '0:08' },
+        { id: 'vb2', kind: 'video', imageUrl: thumb('vlog-book-v2'), durationLabel: '0:15' },
+      ],
+    },
+  ],
+  'vlog-bridge': [
+    {
+      id: 'rv-vlog-bridge',
+      memberId: 'm-suah',
+      time: '10.22 17:08',
+      items: [
+        { id: 'vg1', kind: 'photo', imageUrl: thumb('vlog-bridge-1') },
+        { id: 'vg2', kind: 'photo', imageUrl: thumb('vlog-bridge-2') },
+        { id: 'vg3', kind: 'photo', imageUrl: thumb('vlog-bridge-3') },
+        { id: 'vg4', kind: 'video', imageUrl: thumb('vlog-bridge-v1'), durationLabel: '0:10' },
+      ],
+    },
+  ],
+  'vlog-picnic': [
+    {
+      id: 'rv-vlog-picnic',
+      memberId: 'm-doyun',
+      time: '10.22 18:35',
+      items: [
+        { id: 'vk1', kind: 'photo', imageUrl: thumb('vlog-picnic-1'), caption: '돗자리 펴고' },
+        { id: 'vk2', kind: 'photo', imageUrl: thumb('vlog-picnic-2') },
+      ],
+    },
+  ],
   'mock-gyeongbok': [
     {
       id: 'r1',

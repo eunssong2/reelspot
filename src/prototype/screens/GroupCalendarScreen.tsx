@@ -143,6 +143,12 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
     nav.push({ name: 'itineraryDay', tripId: group.tripId, itineraryId, dayId: en.dayId, groupId: group.id });
   };
 
+  // 브이로그: 아직 열어 본 적 없는 일정도 날짜 목록에 나오도록 일정 요약을 미리 만들어 두고 들어간다.
+  const startVlog = () => {
+    for (const sc of rawSchedules) if (!sc.itineraryId) ensureItinerary(sc.id);
+    nav.push({ name: 'vlog', groupId: group.id });
+  };
+
   const goToday = () => {
     setMonth(monthKey(today));
     setSelected(today);
@@ -348,8 +354,8 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
         )}
       </ScrollView>
 
-      {isOwner ? (
-        <View style={styles.footer}>
+      <View style={styles.footer}>
+        {isOwner ? (
           <Pressable
             onPress={() => nav.push({ name: 'scheduleEdit', groupId: group.id, date: selected })}
             accessibilityRole="button"
@@ -357,8 +363,15 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
           >
             <Text style={styles.addText}>＋ 일정 추가</Text>
           </Pressable>
-        </View>
-      ) : null}
+        ) : null}
+        <Pressable
+          onPress={startVlog}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.vlogButton, pressed && styles.vlogButtonPressed]}
+        >
+          <Text style={styles.vlogText}>브이로그 만들기</Text>
+        </Pressable>
+      </View>
 
       <ConfirmDialog
         visible={menuFor !== null}
@@ -378,7 +391,7 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
         ]}
       />
 
-      <Toast message={toast.message} bottom={isOwner ? 96 : 32} />
+      <Toast message={toast.message} bottom={isOwner ? 164 : 96} />
     </ScreenFrame>
   );
 }
@@ -694,7 +707,7 @@ const styles = StyleSheet.create({
   empty: { backgroundColor: colors.surface, borderRadius: radius.card, paddingVertical: 28, alignItems: 'center', gap: 6 },
   emptyTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   emptyBody: { fontSize: 13, color: colors.textMuted },
-  footer: { paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 14 },
+  footer: { paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 14, gap: 8 },
   addButton: {
     minHeight: MIN_TOUCH,
     borderRadius: radius.item,
@@ -703,5 +716,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addButtonPressed: { backgroundColor: colors.primaryPressed },
+  vlogButton: {
+    minHeight: MIN_TOUCH,
+    borderRadius: radius.item,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    backgroundColor: colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vlogButtonPressed: { backgroundColor: colors.primarySoft },
+  vlogText: { fontSize: 17, fontWeight: '800', color: colors.primary },
   addText: { fontSize: 17, fontWeight: '800', color: colors.onPrimary },
 });

@@ -5,6 +5,7 @@ import { ScenarioPanel } from '@/prototype/components/ScenarioPanel';
 import { PhoneFrame } from '@/prototype/components/ScreenFrame';
 import { GroupsProvider } from '@/prototype/state/GroupsProvider';
 import { PrototypeProvider } from '@/prototype/state/PrototypeProvider';
+import { VlogProvider } from '@/prototype/vlog/VlogProvider';
 import { colors } from '@/prototype/styles/tokens';
 
 /**
@@ -16,11 +17,13 @@ export default function PrototypeLayout() {
   return (
     <PrototypeProvider>
       <GroupsProvider>
+        <VlogProvider>
         <PhoneFrame>
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
           {/* 오류·로딩 상태를 띄워 보는 프로토타입 전용 도구(테스트 APK 에는 넣지 않는다) */}
           {IS_DEMO_BUILD ? null : <ScenarioPanel />}
         </PhoneFrame>
+        </VlogProvider>
       </GroupsProvider>
     </PrototypeProvider>
   );

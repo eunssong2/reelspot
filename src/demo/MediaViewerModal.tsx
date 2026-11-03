@@ -17,13 +17,15 @@ export interface ViewerTarget {
 interface Props {
   target: ViewerTarget | null;
   onClose: () => void;
+  /** 아래에 보여 줄 보조 버튼(예: 브이로그의 "자르기"). 없으면 보이지 않는다. */
+  action?: { label: string; onPress: () => void };
 }
 
 /**
  * 장소 기록 상세 보기: 사진은 확대해서, 동영상은 앱에 포함된 영상이 있을 때만 재생해서 보여준다.
  * 작성자·작성 시각·설명을 함께 보여주고, 닫기 버튼·Android 뒤로 가기로 닫는다.
  */
-export function MediaViewerModal({ target, onClose }: Props) {
+export function MediaViewerModal({ target, onClose, action }: Props) {
   const isVideo = target?.item.kind === 'video' && target.item.videoSource !== undefined;
 
   return (
@@ -44,6 +46,12 @@ export function MediaViewerModal({ target, onClose }: Props) {
             )
           ) : null}
         </View>
+
+        {target && action ? (
+          <Pressable accessibilityRole="button" onPress={action.onPress} style={styles.action}>
+            <Text style={styles.actionText}>{action.label}</Text>
+          </Pressable>
+        ) : null}
 
         {target ? (
           <View style={styles.caption}>
@@ -90,6 +98,8 @@ const styles = StyleSheet.create({
   close: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' },
   closeGlyph: { color: '#fff', fontSize: 18, fontWeight: '700' },
   body: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  action: { alignSelf: 'center', minHeight: 48, paddingHorizontal: 28, borderRadius: 24, backgroundColor: '#F3706B', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  actionText: { color: '#fff', fontSize: 16, fontWeight: '800' },
   caption: { paddingHorizontal: 20, paddingBottom: 24, gap: 2 },
   captionTitle: { color: '#fff', fontSize: 14, fontWeight: '700' },
   captionSub: { color: 'rgba(255,255,255,0.82)', fontSize: 14 },
