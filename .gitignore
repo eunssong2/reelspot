@@ -1,32 +1,17 @@
-# Credentials and machine-specific configuration
-.env
-.env.*
-!.env.example
-*.keystore
-*.jks
-*.p12
-*.pem
-local.properties
-
-# Dependencies and generated output
+# 의존성·빌드 결과
 node_modules/
-.venv/
-venv/
-__pycache__/
-*.py[cod]
 .expo/
-.gradle/
-.cxx/
-build/
+android/
+ios/
 dist/
-test-results/
-.DS_Store
-
-# Local runtime data and large packaged binaries
+**/build/
+**/.gradle/
+**/.cxx/
+# 비밀 설정·서명 키·로컬 JDK(.data/release-signing, .data/tools)
+.env
 .data/
+# APK·빌드 로그
+artifacts/
 *.apk
-*.aab
-*.zip
-
-# Legacy standalone implementation workspace
-/mobile/
+*.log
+test-results/

@@ -1,40 +1,62 @@
-# ReelSpot · At that place — 앱 개발
+# At that place · frontend
 
-`docs` 브랜치 하나에서 React Native 앱, API·작업 서버, 배포 도구, 기능 명세·개발 설계·회의 기록을 함께 관리합니다(2026-11-03 `feature/mobile-app`을 통합). [개발·실행 안내](1차%20개발%20코드/README.md), [앱 사용설명서](1차%20개발%20코드/docs/앱_사용설명서/README.md), [공개 서버 복구 상태](1차%20개발%20코드/docs/2026-10-30_공개서버_실행복구.md)를 참고하세요. 실제 카카오 로그인 완료와 일반 사용자 출시 준비는 별도 검증이 필요합니다.
+Android 앱(Expo 57 / React Native 0.86, Expo Router)을 관리하는 `frontend` 브랜치입니다. 2026-11-03에 `docs` 브랜치의 `1차 개발 코드/mobile`에서 분리했으며 이전 이력은 그대로 남아 있습니다.
 
-제품의 동작과 정책은 **기능 명세서**, 이를 구현하는 구조와 계약은 **1차 개발 설계서**, 결정의 배경과 변경 이력은 **회의록**으로 분리했습니다.
+| 브랜치 | 로컬 폴더 | 내용 |
+| --- | --- | --- |
+| `frontend` | `samsun/frontend` | 이 저장소. Android 앱 |
+| `backend` | `samsun/backend` | API 서버·미디어 작업자·운영 웹·API 계약·배포 |
+| `docs` | `samsun/docs` | 기능명세서·1차 개발 설계서·회의록 |
+| `feature/ui-prototype` | `samsun/feature-ui-prototype` | 디자이너·PM의 UI 프로토타입(기능 기준) |
 
-```text
-.
-├── 기능 명세서/
-│   ├── 기능명세서.md          # 현재 정책 원본: v2.3
-│   ├── 다이어그램/           # 유스케이스 원본·PNG·SVG
-│   └── 참고 자료/            # 이전 명세와 기능 조사 근거
-├── 1차 개발 설계서/
-│   ├── 00 설계서 안내.html    # 설계 v0.3.3 읽기 시작점
-│   ├── UI/                   # 프로토타입 화면·전환·상태 설계
-│   ├── 기준/                 # 검증용 명세 사본·SHA256
-│   ├── 부록/                 # API·DB·검증 결과
-│   ├── 참고 자료/            # 소개 PDF·선행 화면 명세
-│   └── 도구/                 # 문서 재생성·검증 도구
-└── 회의록/                   # 회의 내용·반영 내역·당시 참고 자료
+> 현재 기능 기준은 `docs` 브랜치의 기능명세서 v3.0·설계 v0.4(2026-11-03, UI 프로토타입 기준)입니다. 앱 0.2.7은 그 이전 기준으로 만들어져 있어 v3과 다른 부분이 있습니다.
+
+## 구성
+
+| 경로 | 내용 |
+| --- | --- |
+| `src/app/` | Expo Router 화면 |
+| `src/components/`, `src/lib/` | 공통 화면 요소, API·상태·검증·업로드 처리 |
+| `modules/atp-transfer/` | WorkManager 전송·알림, Keystore 자격 증명, SHA256, 촬영 영상 AAC 호환 준비, MediaStore 앨범 저장 |
+| `contracts/` | `backend`의 `contracts/generated.ts`·`openapi.json` 사본(API 타입) |
+| `tests/` | 앱 로직 테스트, 앱·서버 공통 입력 규칙 대조 |
+| `scripts/` | 확인용·릴리즈 APK 빌드, 에뮬레이터 실행 |
+| `docs/` | 앱 사용설명서, 릴리즈·빌드 기록, 에뮬레이터 기록 |
+
+## 실행
+
+Node.js 24가 필요합니다. Android 빌드에는 **전체 JDK 21**과 Android SDK 36/NDK 27.1이 필요합니다(JRE만으로는 `jlink` 단계가 실행되지 않습니다). JDK가 없으면 `.data/tools/jdk21`을 씁니다.
+
+```bash
+npm ci
+npx expo prebuild --platform android
+npm run android
 ```
 
-| 문서 | 용도 |
-| --- | --- |
-| [현재 기능명세서](기능%20명세서/기능명세서.md) | F01~F28, 권한·한도·보관·완료 조건의 기준 |
-| [기능 명세서 안내](기능%20명세서/README.md) | 현재 문서와 과거 참고 자료 구분 |
-| [설계서 안내](1차%20개발%20설계서/00%20설계서%20안내.html) | Word·PDF·UI·API·DB 설계의 시작점 |
-| [설계 재생성·검증 방법](1차%20개발%20설계서/도구/사용법.txt) | 기준선 확인과 산출물 검증 절차 |
-| [회의록 목록](회의록/README.md) | 회의 원문·반영 결과와 추가 결정 |
-| [출시용 약관·개인정보 문서](약관/README.md) | 대한민국 출시 기준의 동의·고지 구성, 문서 초안과 출시 전 결정사항 |
+이미 설치한 개발 빌드에서는 `npm start`로 Metro를 실행합니다. 파일 전송과 앨범 저장에 로컬 네이티브 모듈을 쓰므로 Expo Go 대신 개발 빌드가 필요합니다.
 
-최신 정책은 기능명세서 **v2.3**, 설계는 **v0.3.3**입니다. 2026-10-24 개정으로 초대 조회·발급·공유·복사·개별 취소를 방장을 포함한 모든 현재 참여자에게 허용합니다. 문서의 설계·계약 검증과 실제 앱 기능 검수를 구분합니다.
+앱의 기본 API 주소와 `.env`의 `EXPO_PUBLIC_API_URL`은 `https://sphan0325.ddns.net`입니다. 앱은 HTTPS만 허용합니다. 지도·로그인 공개 키는 `.env`의 `EXPO_PUBLIC_KAKAO_JS_KEY`, `EXPO_PUBLIC_KAKAO_WEB_ORIGIN`, `EXPO_PUBLIC_GOOGLE_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`를 씁니다(`.env.example` 참고).
 
-기능·정책을 바꿀 때는 `기능 명세서/기능명세서.md`를 먼저 수정합니다. 설계서의 `기준/기능명세서.md`는 독립 열람·재생성·SHA256 검증을 위한 사본이며 별도의 정책 원본이 아닙니다. 정책 차이를 확인한 뒤 사본과 설계를 함께 갱신합니다. `참고 자료`와 `회의록`의 과거 내용이 현재 정책과 다르면 최신 기능명세서를 따릅니다.
+현재 PC의 원격 데스크톱에서 에뮬레이터를 다시 열려면 `npm run emulator:fast`를 실행합니다. 성능 기록은 [에뮬레이터 성능 조정](docs/에뮬레이터_성능조정.md)에 있습니다.
 
-`1차 개발 코드/`에는 앱·서버 소스와 사용설명서가 있습니다. 실행용 비밀 설정·DB/업로드 데이터·APK·ZIP·의존성·빌드 결과·원시 실행 로그는 제외합니다. 원본 참고 앱 없이도 설계 문서를 열고 재생성할 수 있으며, 이전 APK 관찰 결과는 설계서 내부의 캡처·XML·기록으로 보존합니다.
+## APK
 
-2026-11-01 테스트 빌드: [Android 0.2.1 빌드 기록](1차%20개발%20코드/docs/2026-11-01_릴리즈_0.2.1.md). 로컬 최상단 `at-that-place-release.apk`를 설치합니다. HTTPS 서버 연결과 테스트 약관 게시가 적용되어 있으며, 가입·콘텐츠 수동 검토 방법은 [테스트 서버 운영 안내](1차%20개발%20코드/docs/2026-11-01_테스트_서버_운영.md)를 따릅니다.
+- 확인용: `npm run preview:android -- --abi=x86_64,arm64-v8a` → `artifacts/at-that-place-preview.apk`와 루트 `at-that-place-preview.apk`
+- 릴리즈: `npm run release:android` → 전용 키(`.data/release-signing`)로 서명한 ARM64/x86_64 APK를 `artifacts/at-that-place-release.apk`와 루트 `at-that-place-release.apk`로 복사. **`.data/release-signing`은 이후 업데이트에도 같은 키가 필요하므로 따로 백업합니다.**
 
-2026-11-03 v3 개정: 디자이너·PM이 고객 요구를 반영하는 `feature/ui-prototype@870be87`을 실행·분석해 [기능명세서 v3.0](기능%20명세서/기능명세서.md)과 [1차 개발 설계서 v0.4](1차%20개발%20설계서/00%20설계서%20안내.html)(UI·API·DB·업무 흐름·검수)를 다시 작성했습니다. 프로토타입과 겹치는 기능은 프로토타입 기준(D01~D24), 프로토타입에 없는 기존 기능은 유지, 확인 필요 항목은 Q1~Q14입니다. 화면별 출처는 [UI v3 적용 기준](1차%20개발%20설계서/UI/2026-11-03_UI_v3_적용기준.md)에 있습니다.
+빌드 기록: [0.2.7](docs/2026-11-01_릴리즈_0.2.7.md) · [0.2.1](docs/2026-11-01_릴리즈_0.2.1.md) · [0.2.0](docs/2026-10-30_릴리즈_빌드_검증.md). 화면 사용법: [앱 사용설명서](docs/앱_사용설명서/README.md).
+
+## 검증
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run export
+```
+
+`npm test`의 앱·서버 공통 입력 대조(`tests/policy.test.ts`)는 옆 폴더 `../backend`의 `server/core/policy.ts`를 읽습니다. 다른 위치면 `ATP_BACKEND_DIR`로 지정하고, 없으면 그 테스트만 건너뜁니다.
+
+## API 계약 동기화
+
+`contracts/`는 `backend` 브랜치가 원본입니다. 서버 계약이 바뀌면 `backend`에서 `npm run contracts`를 실행한 뒤 `contracts/generated.ts`와 `contracts/openapi.json`을 이 저장소로 복사해 함께 커밋합니다. 이 폴더의 파일을 직접 고치지 않습니다.
