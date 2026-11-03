@@ -5,7 +5,7 @@
     {
       "check": "OpenAPI3.1 스키마와 operation 고유성",
       "passed": true,
-      "detail": 79
+      "detail": 80
     },
     {
       "check": "초대 관리 3개 API는 모든 현재 참여자",
@@ -42,7 +42,7 @@
     {
       "check": "패키지 내부 기능명세 SHA256",
       "passed": true,
-      "detail": "b7274b24c8d444feecf1f82c82671fbe6c831043f8881489d563e1b3db15f0f7"
+      "detail": "db82e1e7fcb6c0792358efb1422f80d90da1fa63efb5945af964fb5fdb428c21"
     },
     {
       "check": "업무 결과 키 operationId 통일",
@@ -66,7 +66,7 @@
     {
       "check": "현재 OpenAPI 예제 검증 결과",
       "passed": true,
-      "detail": 57
+      "detail": 72
     },
     {
       "check": "현재 DDL의 실제 DB 검증 결과",
@@ -94,7 +94,7 @@
           {
             "check": "build_design.py 독립 실행",
             "passed": true,
-            "output": "\"UI10\", \"S03\", \"S03-detail\", \"UI11\", \"UI12\", \"S05\", \"M1\", \"S05-empty\", \"UI13\", \"P16-2\", \"S04\", \"S04-select\", \"S04-empty\", \"UI14\", \"M2\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"P11-2\", \"INVITES\", \"UI24\", \"P12-2\", \"P12-3\", \"P12-4\", \"INVITE-JOIN\", \"UI25\", \"UI26\", \"P13-2\", \"P13-3\", \"MEMBERS-GROUP\", \"MEMBERS\", \"MEMBER-REMOVE\", \"MEMBER-REMOVED\", \"MEMBERS-READER\", \"UI27\", \"UI28\", \"P19-2\", \"P19-3\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"MY-LINK\", \"UI37\", \"ACCOUNT\", \"S0\"], \"pdf_intro_pages\": 3, \"pdf_pages\": 109, \"pptx_slides\": 112}\n{\"screens\": 36, \"operations\": 79, \"tables\": 28, \"functional_cases\": 129, \"native_ui_pptx\": \"/tmp/atp-design-standalone-42jlxg8m/package/UI/05 UI 설계.pptx\"}\n",
+            "output": "\"UI10\", \"S03\", \"S03-detail\", \"UI11\", \"UI12\", \"S05\", \"M1\", \"S05-empty\", \"UI13\", \"P16-2\", \"S04\", \"S04-select\", \"S04-empty\", \"UI14\", \"M2\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"P11-2\", \"INVITES\", \"UI24\", \"P12-2\", \"P12-3\", \"P12-4\", \"INVITE-JOIN\", \"UI25\", \"UI26\", \"P13-2\", \"P13-3\", \"MEMBERS-GROUP\", \"MEMBERS\", \"MEMBER-REMOVE\", \"MEMBER-REMOVED\", \"MEMBERS-READER\", \"UI27\", \"UI28\", \"P19-2\", \"P19-3\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"MY-LINK\", \"UI37\", \"ACCOUNT\", \"S0\"], \"pdf_intro_pages\": 3, \"pdf_pages\": 109, \"pptx_slides\": 113}\n{\"screens\": 36, \"operations\": 80, \"tables\": 28, \"functional_cases\": 134, \"native_ui_pptx\": \"/tmp/atp-design-standalone-ih5_ahzu/package/UI/05 UI 설계.pptx\"}\n",
             "error": ""
           },
           {
@@ -123,9 +123,9 @@
       }
     },
     {
-      "check": "129개 기능 검수 시나리오",
+      "check": "134개 기능 검수 시나리오",
       "passed": true,
-      "detail": 129
+      "detail": 134
     },
     {
       "check": "프로토타입 출처와 캡처 무결성",
@@ -331,7 +331,7 @@
     {
       "check": "PPTX 기본·상세·상태 화면 수",
       "passed": true,
-      "detail": 112
+      "detail": 113
     },
     {
       "check": "PPTX 캡처 전체의 원본 이미지 포함",
@@ -363,15 +363,15 @@
       "check": "Word 열기 03 API 연동 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 85,
-        "tables": 82
+        "paragraphs": 86,
+        "tables": 83
       }
     },
     {
       "check": "Word 열기 09 구현 계약 보완",
       "passed": true,
       "detail": {
-        "paragraphs": 84,
+        "paragraphs": 92,
         "tables": 2
       }
     },
@@ -379,8 +379,16 @@
       "check": "Word 열기 04 업무 흐름 상태 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 56,
+        "paragraphs": 61,
         "tables": 1
+      }
+    },
+    {
+      "check": "Word 열기 10 프로토타입 대조 보완",
+      "passed": true,
+      "detail": {
+        "paragraphs": 31,
+        "tables": 3
       }
     },
     {
@@ -395,6 +403,8 @@
       "check": "Excel 열기 06 검수 및 추적",
       "passed": true,
       "detail": [
+        "추가대조",
+        "11월3일요청",
         "요구사항추적",
         "공통정책추적",
         "기능검수",
@@ -410,7 +420,10 @@
       "check": "Excel 열기 07 결정 및 자료 차이",
       "passed": true,
       "detail": [
-        "자료차이와반영",
+        "읽기안내",
+        "프로토타입결정",
+        "확인대기",
+        "과거자료차이",
         "기술결정",
         "출시준비",
         "구현과외부준비구분",
@@ -448,7 +461,7 @@
     {
       "check": "기능검수 결과 미실행 유지",
       "passed": true,
-      "detail": 129
+      "detail": 134
     },
     {
       "check": "로컬 HTML 링크/이미지",
@@ -466,7 +479,7 @@
     {
       "check": "PDF 열기 09 구현 계약 보완",
       "passed": true,
-      "detail": 8
+      "detail": 9
     },
     {
       "check": "PDF 열기 03 API 연동 설계",
@@ -479,9 +492,14 @@
       "detail": 5
     },
     {
-      "check": "PDF 열기 04 업무 흐름 상태 설계",
+      "check": "PDF 열기 10 프로토타입 대조 보완",
       "passed": true,
       "detail": 5
+    },
+    {
+      "check": "PDF 열기 04 업무 흐름 상태 설계",
+      "passed": true,
+      "detail": 6
     },
     {
       "check": "PDF 열기 02 데이터베이스 설계",

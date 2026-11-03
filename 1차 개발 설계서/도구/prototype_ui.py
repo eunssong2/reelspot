@@ -64,14 +64,14 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
         sh=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,0,prs.slide_width,Inches(.85))
         sh.fill.solid();sh.fill.fore_color.rgb=RGBColor.from_string('202A35');sh.line.fill.background()
         text(s,.5,.16,15,.5,title,25,'FFFFFF',True)
-        text(s,.5,8.57,15,.3,sub+' · 2026-11-03 · 설계 v0.4',10,'5F6B78')
+        text(s,.5,8.57,15,.3,sub+' · 2026-11-03 · 설계 v0.4.1',10,'5F6B78')
         return s
     ov_img=lambda img:ROOT/'UI/전체화면정리'/img['image']
-    cover=base('At that place · UI 설계 v0.4 · UI 프로토타입 기준',f'feature/ui-prototype @ {ov_short} · 실행 캡처 @ {short} · 기능명세서 v3.0')
+    cover=base('At that place · UI 설계 v0.4.1 · UI 프로토타입 기준',f'feature/ui-prototype @ {ov_short} · 실행 캡처 @ {short} · 기능명세서 v3.1')
     text(cover,.7,1.25,10,1.2,'디자이너·PM의 UI 프로토타입을\n화면 설계 기준으로 반영합니다.',32,bold=True)
     text(cover,.7,3.15,9.3,3.4,
          f'최우선 자료: {overview["file"]}\nfeature/ui-prototype @ {overview["commit"]}\n슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 포함)\n프로토타입 실행 캡처 {len(shots)}개(@ {short})는 PPTX에 없는 화면·상태와 참고용으로 유지합니다.\n제품 UI ID {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다.',19)
-    text(cover,.7,7,9.4,.9,'프로토타입과 겹치는 기능은 프로토타입이 우선합니다(명세 v3.0 D01~D24).\n프로토타입에 없는 화면은 기존 설계안을 유지하고 Q1~Q14로 확인합니다.',17,'B8433F',True)
+    text(cover,.7,7,9.4,.9,'프로토타입과 겹치는 기능은 프로토타입이 우선합니다(명세 v3.1 D01~D24).\n프로토타입에 없는 화면은 기존 설계안을 유지하고 Q1~Q18로 확인합니다.',17,'B8433F',True)
     cover.shapes.add_picture(str(ov_img(ov_by_ui['UI05'][0])),Inches(11.6),Inches(1.1),height=Inches(7.2))
     flow=base('화면 흐름과 원본 위치','UI 담당 전체 화면 정리 2번 슬라이드 기준')
     text(flow,.8,1.35,14.5,2.6,
@@ -81,9 +81,9 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     text(flow,.8,7.05,14.3,.9,'프로토타입에 없는 화면(파일 전송·내 기록·본인 수정·신고·계정 삭제·저장 공간·운영 등)은 기존 설계안을 유지합니다.',17,'B8433F',True)
     # v3에서 프로토타입 기준으로 바뀐 결정(D)과 결정 전 적용값(Q). 원천은 design_model.V3_DECISIONS·OPEN_QUESTIONS.
     from design_model import V3_DECISIONS, OPEN_QUESTIONS
-    differences=[[d[0],d[2],d[3]] for d in V3_DECISIONS]+[[q[0]+' 확인 필요',q[1],'v3 적용: '+q[2]] for q in OPEN_QUESTIONS]
+    differences=[[d[0],d[2],d[3]] for d in V3_DECISIONS]+[[q[0]+' 확인 필요',q[1],'임시 적용: '+q[2]] for q in OPEN_QUESTIONS]
     for offset in range(0,len(differences),13):
-        diff=base('바뀐 결정과 확인 필요 항목','기능명세서 v3.0 0.2절(D)·0.4절(Q) · 이전(v2.3) → v3')
+        diff=base('바뀐 결정과 확인 필요 항목','기능명세서 v3.1 0.2절(D)·0.4절(Q) · 이전(v2.3) → v3')
         y=1.1
         for name,actual,contract in differences[offset:offset+13]:
             text(diff,.6,y,2.4,.5,name,12,'B8433F',True)
@@ -238,10 +238,10 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             qa_rows.append([v.strip() for v in line.strip('|').split('|')]+['미실행'])
     sheet(wb,'UI통합검수',['ID','확인 항목','기대 결과','실제 앱 검수'],qa_rows,[18,65,100,22])
     sheet(wb,'적용기준',['구분','내용'],[
-        ['기준','기능명세서 v3.0(2026-11-03) / 설계 v0.4 / UI 프로토타입 feature/ui-prototype @ '+ov_short+' / 실행 캡처 '+short],
+        ['기준','기능명세서 v3.1(2026-11-04) / 설계 v0.4.1 / UI 프로토타입 feature/ui-prototype @ '+ov_short+' / 실행 캡처 '+short],
         ['원칙','프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선. 프로토타입에 없는 기존 기능은 유지(화면은 같은 디자인 체계로 추가 설계). 프로토타입 결함은 Q 항목으로 관리'],
         ['화면 출처','UI 담당 전체 화면 정리 PPT 이미지 → 실행 캡처 → 명세 기반 설계안 순서로 대표 화면을 정한다'],
-        ['필수 열람','UI/2026-11-03_UI_v3_적용기준.md — 화면별 출처·바뀐 결정·추가 설계 / 기능명세서 0절 D01~D24·Q1~Q14'],
+        ['필수 열람','UI/2026-11-03_UI_v3_적용기준.md — 화면별 출처·바뀐 결정·추가 설계 / 기능명세서 0절 D01~D24·Q1~Q18'],
         ['이전 자료','UI/2026-11-01_UI_전체화면정리_반영.md(P1~P14는 v3에서 확정) / UI/2026-10-30_UI_통합_설계.md'],
         ['주의','PPT·캡처는 예시 데이터로 동작하는 프로토타입 화면. 기능 완료·권한·출시 적합성 확인 아님']], [28,110])
 
@@ -261,8 +261,8 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     pending_html='<ul>'+''.join(f'<li><b>{E(r[0])}</b>: {E(r[1])}</li>' for r in ov_slides[22].get('table',[])[1:])+'</ul>'
     dec_table='<table><tr><th>항목</th><th>이전(v2.3)</th><th>v3 기준</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in (d[0],d[2],d[3]))+'</tr>' for d in V3_DECISIONS)+'</table>'
     q_table='<table><tr><th>ID</th><th>확인할 내용</th><th>결정 전 v3 적용</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in q[:3])+'</tr>' for q in OPEN_QUESTIONS)+'</table>'
-    intro=f'<section class="intro"><h2>화면 적용 기준 · v0.4</h2><p><b>기준: 디자이너·PM의 UI 프로토타입</b> feature/ui-prototype @ <b>{ov_short}</b>(웹 실행 44개 화면 상태·코드 대조) · 기능명세서 v3.0(2026-11-03). 프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선이고, 프로토타입에 없는 기존 기능은 유지합니다. 제품 UI {len(SCREENS)}개 중 {applied_count}개는 UI 담당 정리 이미지·실행 캡처, {native_count}개는 명세 기반 설계안입니다. 실행 캡처 {len(shots)}개는 같은 커밋입니다.</p><p><a href="2026-11-03_UI_v3_적용기준.md">v3 적용 기준(화면별 출처·추가 설계)</a> · <a href="../기준/기능명세서.md">기능명세서 v3.0</a> · <a href="전체화면정리/출처.json">PPT 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드%20문구.txt">슬라이드 문구 원문</a> · <a href="프로토타입/출처.json">실행 캡처 출처</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">이전 반영 기준·앱 구현 현황</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a></p><h3>일정 규칙(PPT 21번)</h3>{rules_html}<h3>아직 연결되지 않은 기능(PPT 22번)</h3>{pending_html}</section><section class="intro"><h2>v3에서 바뀐 결정(D01~D24)</h2><p>이전 명세(v2.3)와 다른 프로토타입 동작을 기준으로 정했습니다.</p>{dec_table}</section><section class="intro"><h2>확인 필요 항목(Q1~Q14)</h2><p>결정 전까지 오른쪽 적용값으로 설계·구현합니다.</p>{q_table}</section>'
-    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · UI 프로토타입 기준 v0.4</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-11-03 · v0.4 · UI 프로토타입(feature/ui-prototype) 기준</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
+    intro=f'<section class="intro"><h2>화면 적용 기준 · v0.4.1</h2><p><b>기준: 디자이너·PM의 UI 프로토타입</b> feature/ui-prototype @ <b>{ov_short}</b>(웹 실행 44개 화면 상태·코드 대조) · 기능명세서 v3.1(2026-11-04). 프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선이고, 프로토타입에 없는 기존 기능은 유지합니다. 제품 UI {len(SCREENS)}개 중 {applied_count}개는 UI 담당 정리 이미지·실행 캡처, {native_count}개는 명세 기반 설계안입니다. 실행 캡처 {len(shots)}개는 같은 커밋입니다.</p><p><a href="2026-11-03_UI_v3_적용기준.md">v3 적용 기준(화면별 출처·추가 설계)</a> · <a href="../기준/기능명세서.md">기능명세서 v3.1</a> · <a href="전체화면정리/출처.json">PPT 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드%20문구.txt">슬라이드 문구 원문</a> · <a href="프로토타입/출처.json">실행 캡처 출처</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">이전 반영 기준·앱 구현 현황</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a></p><h3>일정 규칙(PPT 21번)</h3>{rules_html}<h3>아직 연결되지 않은 기능(PPT 22번)</h3>{pending_html}</section><section class="intro"><h2>v3에서 바뀐 결정(D01~D24)</h2><p>이전 명세(v2.3)와 다른 프로토타입 동작을 기준으로 정했습니다.</p>{dec_table}</section><section class="intro"><h2>확인 필요 항목(Q1~Q18)</h2><p>결정 전까지 오른쪽 적용값으로 설계·구현합니다.</p>{q_table}</section>'
+    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · UI 프로토타입 기준 v0.4.1</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-11-03 · v0.4.1 · UI 프로토타입(feature/ui-prototype) 기준</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
     (ROOT/'UI/05 UI 화면 갤러리.html').write_text(page)
     result=dict(source_commit=commit,overview_commit=overview['commit'],overview_sha256=overview['sha256'],
                 overview_images=len(overview['images']),overview_ui=sorted(ov_by_ui),
@@ -286,6 +286,6 @@ def update_index():
     s=s.replace('SVG 원본은 각 갤러리 화면에서 엽니다.','화면 출처·제품 적용 기준·회의 안건을 함께 확인합니다.')
     s=s.replace('SVG는 벡터 편집기로 열어 수정합니다.','명세 기반 SVG는 벡터 편집, 캡처 래퍼는 앱 소스 수정 후 재캡처합니다.')
     s=re.sub(r'<div class="info"><b>2026-1[01]-\d+ (?:UI 화면 반영|v0\.4[^<]*)</b>.*?</div>', '',s,flags=re.S)
-    info=f'<div class="info"><b>2026-11-03 v0.4 · UI 프로토타입 기준 개정</b><p>디자이너·PM이 고객 요구를 반영하는 feature/ui-prototype @ {applied["overview_commit"][:7]}를 실행·분석해 <b>기능명세서 v3.0</b>과 설계를 다시 작성했습니다. 화면 {applied["main_screens"]}개(UI 담당 정리 이미지 {applied["overview_images"]}개·실행 캡처 {applied["captures"]}개). 바뀐 결정 D01~D24·확인 필요 Q1~Q14는 <a href="기준/기능명세서.md">명세 0절</a>과 <a href="UI/2026-11-03_UI_v3_적용기준.md">UI v3 적용 기준</a>에 있습니다.</p></div>'
+    info=f'<div class="info"><b>2026-11-03 v0.4.1 · UI 프로토타입 기준 개정</b><p>디자이너·PM이 고객 요구를 반영하는 feature/ui-prototype @ {applied["overview_commit"][:7]}를 실행·분석해 <b>기능명세서 v3.1</b>과 설계를 다시 작성했습니다. 화면 {applied["main_screens"]}개(UI 담당 정리 이미지 {applied["overview_images"]}개·실행 캡처 {applied["captures"]}개). 바뀐 결정 D01~D24·확인 필요 Q1~Q18는 <a href="기준/기능명세서.md">명세 0절</a>과 <a href="UI/2026-11-03_UI_v3_적용기준.md">UI v3 적용 기준</a>에 있습니다.</p></div>'
     s=s.replace('<h2>개발 설계서</h2>',info+'<h2>개발 설계서</h2>')
     p.write_text(s)

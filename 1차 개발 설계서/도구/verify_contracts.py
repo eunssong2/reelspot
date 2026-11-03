@@ -23,7 +23,9 @@ def main():
     add('파일 완료 결과','Operation',{'operationId':U,'kind':'media_commit','state':'succeeded','result':{'taskId':U,'mediaId':U,'coverAssetId':None},'itemErrors':[]})
     transport={'protocol':'ATP-Upload/1','uploadEndpoint':f'/v1/upload-tasks/{U}/content','generation':1,'resumeOffset':0,'length':1048577,'expiresAt':T,'alignmentBytes':1048576,'maxChunkBytes':4194304}
     task={'id':U,'targetType':'record','submissionId':U,'state':'queued','transferredBytes':0,'actualBytes':None,'retryable':True,'reason':None,'version':1,'mediaId':None,'coverAssetId':None,'avatarAssetId':None,'transport':transport}
+    task['clientFileId']='f1'
     add('기록 전송 작업','UploadTask',task)
+    add('부분 접수 후보 연결 키 누락 거부','UploadTask',{k:v for k,v in task.items() if k!='clientFileId'},False)
     cover=copy.deepcopy(task);cover.pop('submissionId');cover['targetType']='cover';cover['coverGroupId']=U;add('대표사진 전송 작업','UploadTask',cover)
     bad=copy.deepcopy(task);bad['transport'].pop('resumeOffset');add('재개 offset 누락 거부','UploadTask',bad,False)
     bad=copy.deepcopy(task);bad['coverGroupId']=U;add('기록과 대표사진 혼합 대상 거부','UploadTask',bad,False)
@@ -46,6 +48,12 @@ def main():
     add('일차 제목 없음','ScheduleDay',day)
     add('일차 번호 0 거부','ScheduleDay',{**day,'dayNo':0},False)
     add('일차 상태 deleted 거부','ScheduleDay',{**day,'status':'deleted'},False)
+    group_day={'scheduleId':U,'scheduleVersion':3,'scheduleTitle':'서울 여행','day':day,'expiresAt':None}
+    add('모임 전체 날짜 탭 항목','GroupDay',group_day)
+    add('활성 날짜 탭에 취소 날짜 거부','GroupDay',{**group_day,'day':{**day,'status':'cancelled'}},False)
+    add('날짜 탭의 일정 식별자 누락 거부','GroupDay',{k:v for k,v in group_day.items() if k!='scheduleId'},False)
+    add('날짜 탭의 일정 버전 0 거부','GroupDay',{**group_day,'scheduleVersion':0},False)
+    add('100자 날짜 제목 보존','ScheduleDay',{**day,'title':'가'*100})
     sched={'id':U,'groupId':U,'title':'서울 여행','startDate':'2027-01-31','endDate':'2027-02-01','timezone':'Asia/Seoul','status':'active','version':3,'days':[day,{**day,'date':'2027-02-01','dayNo':2,'title':'둘째 날','status':'cancelled'}]}
     add('하루 취소 결과','DayChangeResult',{'schedule':sched,'days':sched['days']})
     add('마지막 날 삭제로 일정 삭제','DayChangeResult',{'schedule':None,'days':[]})
@@ -78,9 +86,28 @@ def main():
     add('동영상 내보내기는 동영상 파일','ExportResult',export)
     add('동영상 내보내기에 포스터 이미지 거부','ExportResult',{**export,'mime':'image/jpeg'},False)
     add('썸네일 variant 내보내기 거부','ExportResult',{**export,'variant':'thumbnail'},False)
+    # 실제 operation의 request/response를 검증한다. 서비스의 권한·문자소 길이는 별도 QA다.
+    def operation_example(name,path,method,location,value,valid=True):
+        examples.append({'name':name,'path':path,'method':method,'location':location,'value':value,'expected_valid':valid})
+    dp='/schedules/{scheduleId}/days/{date}'
+    operation_example('하루 제목100자 요청',dp,'patch','request',{'expectedVersion':3,'title':'가'*100})
+    operation_example('날짜만 변경하며 제목 유지',dp,'patch','request',{'expectedVersion':3,'date':'2027-02-02'})
+    operation_example('하루 변경 내용 없는 요청 거부',dp,'patch','request',{'expectedVersion':3},False)
+    operation_example('하루 제목 null 요청 거부',dp,'patch','request',{'expectedVersion':3,'title':None},False)
+    operation_example('하루 제목 빈값 거부',dp,'patch','request',{'expectedVersion':3,'title':''},False)
+    gp='/groups/{groupId}/days'
+    operation_example('모임 전체 날짜 마지막 빈 페이지',gp,'get','response',{'items':[],'nextCursor':None})
+    operation_example('모임 전체 날짜 다음 페이지',gp,'get','response',{'items':[group_day],'nextCursor':'opaque-next'})
+    operation_example('날짜 페이지 커서 누락 거부',gp,'get','response',{'items':[group_day]},False)
+    operation_example('날짜 페이지61개 거부',gp,'get','response',{'items':[group_day]*61,'nextCursor':None},False)
     checks=[]
     for ex in examples:
-        wrapper={'$ref':'#/components/schemas/'+ex['component'],'components':schema['components']}
+        if 'component' in ex:
+            target={'$ref':'#/components/schemas/'+ex['component']}
+        else:
+            operation=schema['paths'][ex['path']][ex['method']]
+            target=(operation['requestBody'] if ex['location']=='request' else operation['responses']['200'])['content']['application/json']['schema']
+        wrapper={**target,'components':schema['components']}
         errors=list(Draft202012Validator(wrapper,format_checker=FormatChecker()).iter_errors(ex['value']))
         valid=not errors;checks.append({'name':ex['name'],'passed':valid==ex['expected_valid'],'expected_valid':ex['expected_valid'],'actual_valid':valid,'validation_errors':[e.message for e in errors][:3]})
     dest=ROOT/'부록/계약예제';dest.mkdir(exist_ok=True)

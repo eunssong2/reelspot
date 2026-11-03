@@ -1,4 +1,4 @@
--- At that place v0.4(기능명세서 v3) / PostgreSQL 16. Empty database baseline, not application implementation.
+-- At that place v0.4.1(기능명세서 v3.1) / PostgreSQL 16. Empty database baseline, not application implementation.
 -- Run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f 001_initial.sql
 BEGIN;
 SELECT pg_advisory_xact_lock(74103102);
@@ -455,7 +455,7 @@ COMMENT ON COLUMN day_plans.schedule_id IS '참조 대상';
 
 COMMENT ON COLUMN day_plans.plan_date IS '정리·필터 속성';
 
-COMMENT ON COLUMN day_plans.title IS '빈값은 날짜 표시, 최대30 graphemes';
+COMMENT ON COLUMN day_plans.title IS '날짜 제목 단일 원천. UI38 저장 최대100 graphemes, UI12 변경 입력30·기존 긴 제목 보존; 없으면 기본 제목. 길이는 서비스 검증';
 
 COMMENT ON COLUMN day_plans.version IS 'API가 expectedVersion 검증 후 +1';
 

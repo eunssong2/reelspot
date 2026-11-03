@@ -1,93 +1,108 @@
 [
   {
     "path": "00 설계서 안내.html",
-    "bytes": 6992,
-    "sha256": "0af11bc11fbca20d4e10dced05424cf2488a1a4250e6bed179dfc8e8eace39e6"
+    "bytes": 7281,
+    "sha256": "275cfc69a8f6df75c6183a41c369a80c14f1ae761dc2eab2e74fa3d533516b8f"
   },
   {
     "path": "01 시스템 설계.docx",
-    "bytes": 162135,
-    "sha256": "cd15d96aeecd21ea61b0145b5499d761eb3333bb5430b9e5608c7be78021388d"
+    "bytes": 162141,
+    "sha256": "297075bdc19c3182ca343a2931082be4ea8a9853e9bf21e3ca24d86c71a99a94"
   },
   {
     "path": "01 시스템 설계.pdf",
-    "bytes": 435258,
-    "sha256": "13cd5fe0b3ec4c4cd876591aaa0b1e7882ace334bb55c38be7a07dd17f88e0a2"
+    "bytes": 435273,
+    "sha256": "ff709ede5b02bcb6c6b9c57fd171cec9bf6b1554c07c0565669a8426fe6d784d"
   },
   {
     "path": "02 데이터베이스 설계.docx",
-    "bytes": 186739,
-    "sha256": "ee617d5b0df0338281941dc6c625e5a83be620cf6415d2fead47cdffd0600f5e"
+    "bytes": 186845,
+    "sha256": "119e1474828b5b67ff86a52f35368e0c92330390c99d55135bb8325b2311d504"
   },
   {
     "path": "02 데이터베이스 설계.pdf",
-    "bytes": 623815,
-    "sha256": "ec79c6da94a9d250e36c45cd8eba8416854899738685977cf1b29db15ea040d7"
+    "bytes": 626585,
+    "sha256": "6ccd874186b61fa86334348023f6fbb314373b5d3f8bb752675e22256ca653fd"
   },
   {
     "path": "03 API 연동 설계.docx",
-    "bytes": 48061,
-    "sha256": "39641b083eb6e114a7360d553160b65313598fae726ba13e8a73033cc0b0495c"
+    "bytes": 48170,
+    "sha256": "12cb25c74eb0bffc51d3f4dd6f978b137244fce10556e795335d7fb16c7a28b4"
   },
   {
     "path": "03 API 연동 설계.pdf",
-    "bytes": 356661,
-    "sha256": "2037279343f85d05ac7ef2cbb345c4a2d8719c274b5672d494ac5f086bcffcc7"
+    "bytes": 357163,
+    "sha256": "3d2653a5128cbd495207d08c1a415aec2fbeec97395fe9eece1f595616e26943"
   },
   {
     "path": "04 업무 흐름 상태 설계.docx",
-    "bytes": 44715,
-    "sha256": "88363afe4b36c3830c65fc4f80d2b0a543f8b17332dc728fdb5138db9d01f8ed"
+    "bytes": 45351,
+    "sha256": "a02e8e5a73725b4528f304f21525e4c8f8c0e7fa389c391ca9f0628de32e8d53"
   },
   {
     "path": "04 업무 흐름 상태 설계.pdf",
-    "bytes": 365708,
-    "sha256": "f838ae96d933f209c7ba3f6812b7fa452b1765fb3c1a102dc4181cc0dd98d59c"
+    "bytes": 376253,
+    "sha256": "4ff674ad9c2746d5e2999b7062cafb697f666afab1da1eace5e9e7bb91b37120"
   },
   {
     "path": "06 검수 및 추적.xlsx",
-    "bytes": 41079,
-    "sha256": "b3434a5be412ea648d0d1cf3dafd4bdd5a9dc96247abb7f5be0769b1fc999f64"
+    "bytes": 48737,
+    "sha256": "4fe0eea43e3d29f05ef790ca2d6cc779d6ec34a972e23ea700384306a051c464"
   },
   {
     "path": "07 결정 및 자료 차이.xlsx",
-    "bytes": 21450,
-    "sha256": "8252601fe36ab4f91364d590bf8ed4ac8fa744de1a2ac2fece861bc8ef1e04d7"
+    "bytes": 27330,
+    "sha256": "05d8afbb29a09b5f96c58cfb32a9803fe14e4ac3dfadb23b725f8463adfd22dc"
   },
   {
     "path": "09 구현 계약 보완.docx",
-    "bytes": 50018,
-    "sha256": "6a59eda1e3e5d6b1e44c086ec9e4007be500a5d60a435681612ae49b2cbeb58f"
+    "bytes": 50634,
+    "sha256": "e6a5a4384e1f0b857281d924232a862cc8b349f9cda4c29665f702e3d7f21bcc"
   },
   {
     "path": "09 구현 계약 보완.pdf",
-    "bytes": 442869,
-    "sha256": "7070a00b6288bccbb510384f78df320bea3f767235dfb1e1774fa9e9da87e647"
+    "bytes": 451271,
+    "sha256": "5332b526b74d6302118c996ebd97cd9472c517e5da71525c901ee1c0abc8357c"
+  },
+  {
+    "path": "10 프로토타입 대조 보완.docx",
+    "bytes": 45132,
+    "sha256": "d15a7bb65ec2bf27c196a9ac7595b91c8c291f56fd98628750063372773399e4"
+  },
+  {
+    "path": "10 프로토타입 대조 보완.md",
+    "bytes": 16043,
+    "sha256": "35f85f2c567e3dc7d482c1ee709934d9d91d3b23c9eb8f933e2539be7760f402"
+  },
+  {
+    "path": "10 프로토타입 대조 보완.pdf",
+    "bytes": 359730,
+    "sha256": "dc77fd8bf3dc256d592a99fb61838946107125f5a24ad9b121da3f8fa2872af0"
   },
   {
     "path": "README.md",
-    "bytes": 2941,
-    "sha256": "9fa8a2d52089a2a62e814a825f320f44e31621cc01409b2ef86d4a092a496436"
+    "bytes": 3876,
+    "sha256": "d06bf67d670c61dfdf038c109d42afa108255c522e260c2f55cba68820bc4e53"
   },
   {
     "path": "UI/05 UI 설계.pdf",
-    "bytes": 11091462,
-    "sha256": "93293c0882007d18a4dcbc66fce40b02a883ce61093100c1e0d0a0027b3261ec"
+    "bytes": 11093414,
+    "sha256": "12a275718178910730cf53b25752039a42949f166641b9e7608b19d70984aeff"
   },
   {
     "path": "UI/05 UI 설계.pptx",
-    "bytes": 10666883,
-    "sha256": "d7efd0a923ec16ed8dd9bacbd2f6fc7ffe3f0892f335b5b93b72434242cfdd16"
+    "bytes": 10669298,
+    "sha256": "d97d3a764976d78fad08cb89f63894f643cd570b04c7505c52ea88ba7974eab5"
   },
   {
     "path": "UI/05 UI 화면 갤러리.html",
-    "bytes": 149550,
-    "sha256": "bbfd4b977c6998390b36f3e25fa43c66b58f89ff9745ab0cda9cc5401456f0da"
+    "bytes": 151455,
+    "sha256": "a6f4bdee542e9f06615f93a592d92ab196eb6a6a3115d8ff0c777a7f1e8406b2"
   },
   {
     "path": "UI/05 화면 명세.xlsx",
-    "bytes": 76114,
-    "sha256": "18ad42dc379fd9a0f76517ee56545339e8a3e3faf4848ace1ceaa94528ed1605"
+    "bytes": 76564,
+    "sha256": "b451d1239260cdc6a9a7318303a42674a5423bec9d4968ed20f7f5584ad40a83"
   },
   {
     "path": "UI/2026-10-30_UI_통합_검토결과.md",
@@ -111,8 +126,8 @@
   },
   {
     "path": "UI/2026-11-03_UI_v3_적용기준.md",
-    "bytes": 7981,
-    "sha256": "45ce9a9e2bc54d04aed2255624e06fe511193633cb6ff44e2e7eaa76687d0eec"
+    "bytes": 9585,
+    "sha256": "49755cdb20df855f79bfa9e21017c3fcebb5445181ff0eb7eec75571024b039c"
   },
   {
     "path": "UI/SVG/UI01_시작과_로그인.svg",
@@ -1212,12 +1227,12 @@
   {
     "path": "UI/화면 반영.json",
     "bytes": 2371,
-    "sha256": "6d17682acc78ab5df1e8881f885ae81ea7e6e8637614182f7ae8a1f899e7f9af"
+    "sha256": "ef9fdb005742facb63fb652233f7bef624546df4567edb789e79907bcc64ba75"
   },
   {
     "path": "UI/화면데이터.json",
-    "bytes": 139722,
-    "sha256": "5a741670ec916e6ffd0ad4381099afe7d7ad6e676bc8bab8e8478c7bbf9639fb"
+    "bytes": 140888,
+    "sha256": "73e24f6b7738bd374c2ed0ff1315d386e3ebe8fdffab6cd6960a9352b6865c3a"
   },
   {
     "path": "근거/08 APK 실행 검토.docx",
@@ -1227,7 +1242,7 @@
   {
     "path": "근거/08 APK 실행 검토.pdf",
     "bytes": 2934807,
-    "sha256": "7a58e7be42c9b182de84623d5e7185d71010ebd55197339357d3991a13bc7527"
+    "sha256": "db8d7167e6c1e28d0c394e0bf3cc5f81e18323ad016cd44de6ae3846806da339"
   },
   {
     "path": "근거/APK/01-entry.json",
@@ -1466,13 +1481,13 @@
   },
   {
     "path": "기준/기능명세서.md",
-    "bytes": 1359741,
-    "sha256": "b7274b24c8d444feecf1f82c82671fbe6c831043f8881489d563e1b3db15f0f7"
+    "bytes": 1366047,
+    "sha256": "db82e1e7fcb6c0792358efb1422f80d90da1fa63efb5945af964fb5fdb428c21"
   },
   {
     "path": "기준/기준선.json",
-    "bytes": 551,
-    "sha256": "4992b6431c46426f1b4bbb0355812e28a6cd0835bb2ee960df6ec366f079b223"
+    "bytes": 647,
+    "sha256": "c3beca1114918367cec50ea98e31aa0cc177148c606eec086430eeae09b95711"
   },
   {
     "path": "기준/재사용후보.json",
@@ -1481,8 +1496,8 @@
   },
   {
     "path": "도구/api_contract.py",
-    "bytes": 38278,
-    "sha256": "91af11f9d82ad8c96b4faf1b1256f19a81ad766c36055bbf841a1337d0fc120a"
+    "bytes": 40330,
+    "sha256": "f709de5b1a4aee804d8aeb7e45be971ae48f3feb94de2e6cf8d23704f128a7ff"
   },
   {
     "path": "도구/apply_db_baseline.py",
@@ -1491,8 +1506,8 @@
   },
   {
     "path": "도구/build_design.py",
-    "bytes": 42648,
-    "sha256": "8dceb509fef1e88abd33a27d3cf0b6ef69f86b6324c67e49442ab95663ff51c4"
+    "bytes": 47543,
+    "sha256": "ac4f78c47b11c79cb1627812bb48cbac8b8ba3de499cd756735dc12275effe03"
   },
   {
     "path": "도구/build_evidence.py",
@@ -1521,18 +1536,18 @@
   },
   {
     "path": "도구/contract_v02.py",
-    "bytes": 10504,
-    "sha256": "5a84a204c1318fbc39746d03308d35a851f212da78ba45d42f98d08e875d6b0a"
+    "bytes": 10893,
+    "sha256": "aa71d0fd8bc5e23e7c69969ef7d6901825eba38c216e9f3ec561a84bda4be45c"
   },
   {
     "path": "도구/data_model.py",
-    "bytes": 24418,
-    "sha256": "38b0dc349c89f40c7f9f515ced70356c7b2e95151a7c1341453dc6738a8071a2"
+    "bytes": 24596,
+    "sha256": "566d3ff3a60232e36e5f5442ff8183194a75c75062190655ae882f418a0e9d8b"
   },
   {
     "path": "도구/design_model.py",
-    "bytes": 98651,
-    "sha256": "432c4c2895d7f3f29e8d2f10ca70d50f46ffebfeee4d84e1d622e98cd3ea3c6c"
+    "bytes": 102314,
+    "sha256": "030a956a3cc1092ada5b8667562ce281e9de0e849c452d06b290bc7beccdddbf"
   },
   {
     "path": "도구/diagram_sources.py",
@@ -1542,17 +1557,17 @@
   {
     "path": "도구/document_content.py",
     "bytes": 19055,
-    "sha256": "4b0cef401bd589b10a2310564cf4b341ad101521abb60aa4545d8d0d9f0e5268"
+    "sha256": "2b41075d338aeb50e0d3ca5dc3f7e8ab8ed85f71388c75adf2b9303f464e7433"
   },
   {
     "path": "도구/physical_model.py",
-    "bytes": 24032,
-    "sha256": "aaed41e355bee6a1c93e5586ce95e06cbdec59117f5d82fa506b7562ff61f575"
+    "bytes": 24154,
+    "sha256": "8b6bf1cad96f428e5f2ba0c64d588b8fea2d003d925ee885821e5a9265fe41b4"
   },
   {
     "path": "도구/prototype_ui.py",
-    "bytes": 32332,
-    "sha256": "dcbcb75df94f3d75e69f7316c24e146a1eb449d2a46f9adfc312b8f2b5e1608c"
+    "bytes": 32350,
+    "sha256": "70e1843c5e6c27b9a6a2483617fc11746453bc430e206e295a3adbfafd036d34"
   },
   {
     "path": "도구/render_artifacts.py",
@@ -1565,9 +1580,14 @@
     "sha256": "07fd16127fdbfc6baebde2fd9dee3f31030598d4f1b46eb121bb967beba71057"
   },
   {
+    "path": "도구/review_20261103.py",
+    "bytes": 15832,
+    "sha256": "ea09c5b7c8ac2e1def3279b82140358c494510b66da74c90d8e97a6ced3f611a"
+  },
+  {
     "path": "도구/revision_content.py",
-    "bytes": 39460,
-    "sha256": "9e660ff7b995222b7def306d93768ea7afbc3127a8a19d7b6885b225bb4f52d6"
+    "bytes": 41239,
+    "sha256": "07977082bde3a9a8c58d4fff2f2e70f3fadc3033c64404a9af8b551641ff9403"
   },
   {
     "path": "도구/schema_guards.sql",
@@ -1581,13 +1601,13 @@
   },
   {
     "path": "도구/verify_contracts.py",
-    "bytes": 9841,
-    "sha256": "31902e417e11e16dd2f7761fcf460d3dce6e53d9d572ea832f5b5cea4cf8a76e"
+    "bytes": 12346,
+    "sha256": "68068155c57f8b29ac15875aec2f24c97c45ad12198104af745f59c8df6ee85b"
   },
   {
     "path": "도구/verify_db.py",
     "bytes": 5239,
-    "sha256": "8affd42848ca183c10f6c763bd1162ebf4f62d594cdb0677e3a1ccbb17ab2713"
+    "sha256": "92dadbdd1669163cb55a9a001bd04aefe439843cd8d5b1c6580ac0e003aae53a"
   },
   {
     "path": "도구/verify_standalone.py",
@@ -1596,18 +1616,18 @@
   },
   {
     "path": "도구/workflow_readable.py",
-    "bytes": 15052,
-    "sha256": "2ef930e53bd5434668d643df4a1c7d4b5d132b4fdb7e402598e38e1029b78a27"
+    "bytes": 16800,
+    "sha256": "ccef7336eac1087ac4def5843b407510f5d70457f2610d03f801d3afe529428a"
   },
   {
     "path": "도구/사용법.txt",
-    "bytes": 11238,
-    "sha256": "2e699b3db6dafe436e47db3b356a4e47ff5ce5f02a0988d111664a07ea13c678"
+    "bytes": 5482,
+    "sha256": "836ca6c520a66188919cc0d088b7a9d0365aabcf253b3a597999679fe1381d6b"
   },
   {
     "path": "부록/DB/001_initial.sql",
-    "bytes": 56427,
-    "sha256": "5c566c3b96472acf78c00aad6beee178312ec797a71ac7935c2c6baec5601833"
+    "bytes": 56549,
+    "sha256": "0f67399af58f9812375878a4e0d7d265b0eeb8d9b6355b662a93e8225c17098a"
   },
   {
     "path": "부록/DB/002_service_roles.sql",
@@ -1622,7 +1642,7 @@
   {
     "path": "부록/DB/검증결과.json",
     "bytes": 2624,
-    "sha256": "935fc49cf5584443363bdb3160e34865be2fbe399be1d3622c1a1842a45a42d7"
+    "sha256": "4a7488c11dcd7ab4c7cd1fc5392b80395766daf957c77f5880993c6f72243d73"
   },
   {
     "path": "부록/DB/실제 컬럼 사전.json",
@@ -1631,8 +1651,8 @@
   },
   {
     "path": "부록/DB/컬럼 및 제약.xlsx",
-    "bytes": 22333,
-    "sha256": "6a41c3f051bd63b1452cf39e8a23e856dc18aecd0966a0482deb4c5fbb9f70f7"
+    "bytes": 22407,
+    "sha256": "22766b396ff442dbf9b935349f92382584102768b59df0f2567dc7159c12d434"
   },
   {
     "path": "부록/ERD.png",
@@ -1651,18 +1671,18 @@
   },
   {
     "path": "부록/openapi.json",
-    "bytes": 464405,
-    "sha256": "1986a61e8b2fd48232d2e2afde5b007e8da852231827cf6f7489c7b1b9956e02"
+    "bytes": 472480,
+    "sha256": "0fe9a5a81607cd4cebdacb7862d653261412aff3ba251edc77a43a39a68dd93f"
   },
   {
     "path": "부록/계약예제/examples.json",
-    "bytes": 28093,
-    "sha256": "1c75e95e3f1c8115dd360f031a1413f17b12dda7054d3f77ef9fb0c6363020e2"
+    "bytes": 57126,
+    "sha256": "73836bcf6b026a6d33947c0acd66b229325aebce934ea8f950b15c12b92ff05d"
   },
   {
     "path": "부록/계약예제/검증결과.json",
-    "bytes": 14091,
-    "sha256": "68d6f5334d8c8adf996da88b52b259c1f1abbef64c3c6613984d0753b31d19ea"
+    "bytes": 31023,
+    "sha256": "bdf17bf0d086bdb5c0a0177332eb21efbebb62dbba2dc2256bc661a676c5fd09"
   },
   {
     "path": "부록/계약예제/업로드.http",
@@ -1692,17 +1712,17 @@
   {
     "path": "부록/독립 패키지 검증.json",
     "bytes": 1917,
-    "sha256": "a65a7c2584e95a6bcb7e553d633b17d9fbfe03f98ab3fcb7301d6402b008ccd1"
+    "sha256": "7c39aee3b1c35d28a6860a0886e10b63413d576d3262e5f924fc88e30a22271c"
   },
   {
     "path": "부록/산출물 검증.json",
-    "bytes": 13609,
-    "sha256": "c989cc7b84b78393b28f4b3094fabd875d61d76eeffbb87fdb1848ae792ef835"
+    "bytes": 14023,
+    "sha256": "3796da4ac6ee53a2dc5efc475a9f82efbc428cccca0e975b386d684ba905c5b5"
   },
   {
     "path": "부록/설계서 표지 미리보기.png",
-    "bytes": 342678,
-    "sha256": "b01257e66e74b3e13adf43cb1d6f9f9071bf10c81e1ee2927e735c63ead5d701"
+    "bytes": 357088,
+    "sha256": "da3b966a1b96bc71ed72c625f6cd49d616d80ae3429aed2651fb0f4e50012913"
   },
   {
     "path": "부록/아키텍처.png",
@@ -1716,23 +1736,23 @@
   },
   {
     "path": "부록/열람용HTML/01 시스템 설계.html",
-    "bytes": 16343,
-    "sha256": "4d7a807d48efc26d18022776a2bb2eb883985ee0550207b0180d95fd75f8c506"
+    "bytes": 16345,
+    "sha256": "828c0b0ee9a01104a1356fd09c8fbdb62207264c0cd316bee2e724859d16ae75"
   },
   {
     "path": "부록/열람용HTML/02 데이터베이스 설계.html",
-    "bytes": 62512,
-    "sha256": "4c01b5051775a9460f1596fd20861189d397b4df550d9bdc05d2bb65272577e5"
+    "bytes": 62784,
+    "sha256": "e4d41f30e4b75256e1dd14551e33d244656eb5d87285bea23a9a5b4fe52f3c6b"
   },
   {
     "path": "부록/열람용HTML/03 API 연동 설계.html",
-    "bytes": 39349,
-    "sha256": "c6c32dd23ea5433474ab7291b41ab7b26774a39e4660225371a874b627c28fd9"
+    "bytes": 39770,
+    "sha256": "73aa91e1748eed71567cb0832755f3c4f935a107e80938481aec7ec23840bdb3"
   },
   {
     "path": "부록/열람용HTML/04 업무 흐름 상태 설계.html",
-    "bytes": 18993,
-    "sha256": "7c1a3d3213e87c0225661f42e3e7942fe359c120aba7763cd037b1a53b692055"
+    "bytes": 20736,
+    "sha256": "6607580bc6f46506077536ea12767602296695b39cc9608ee01b63cb4f09735e"
   },
   {
     "path": "부록/열람용HTML/08 APK 실행 검토.html",
@@ -1741,8 +1761,13 @@
   },
   {
     "path": "부록/열람용HTML/09 구현 계약 보완.html",
-    "bytes": 30228,
-    "sha256": "024250f2565c13e0dd4d9d0ef425a26d9b9ea306ce5a01ffb1bd9994389bc496"
+    "bytes": 31937,
+    "sha256": "447ad567e53b3f57d4290492d220aa8973f56ad853aeae72e4c562c28c065de3"
+  },
+  {
+    "path": "부록/열람용HTML/10 프로토타입 대조 보완.html",
+    "bytes": 18916,
+    "sha256": "37ce4617e951fb675c7b373934d701379a7cbfba2cfe6921e918ac3907ade6c5"
   },
   {
     "path": "참고 자료/지도_API_연동_설계안.md",

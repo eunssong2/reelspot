@@ -1,8 +1,8 @@
 {
-  "scope": "초기 DDL·DB 제약·단일 정원 경쟁 검증. F01~F28 서버 구현 검수 아님. 데이터는 전용 임시 컨테이너에만 생성.",
-  "time": "2026-11-03T23:28:12.125301+09:00",
+  "scope": "초기 DDL·DB 제약·단일 정원 경쟁 검증. F01~F29 서버 구현 검수 아님. 데이터는 전용 임시 컨테이너에만 생성.",
+  "time": "2026-11-04T00:12:42.375800+09:00",
   "database": "PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
-  "ddl_sha256": "5c566c3b96472acf78c00aad6beee178312ec797a71ac7935c2c6baec5601833",
+  "ddl_sha256": "0f67399af58f9812375878a4e0d7d265b0eeb8d9b6355b662a93e8225c17098a",
   "passed": true,
   "checks": [
     {
@@ -51,8 +51,8 @@
       "check": "9명에서 동시2참여 → 성공1·거부1·최종10명",
       "passed": true,
       "detail": [
-        "ERROR:  CAPACITY_FULL\nCONTEXT:  PL/pgSQL function guard_membership_capacity() line 12 at RAISE\n",
-        ""
+        "",
+        "ERROR:  CAPACITY_FULL\nCONTEXT:  PL/pgSQL function guard_membership_capacity() line 12 at RAISE\n"
       ]
     }
   ]

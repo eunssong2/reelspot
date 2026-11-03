@@ -27,6 +27,8 @@ def apply_revision(ns):
     only=lambda name,others:{'properties':{'targetType':{'const':name[0]}},'required':[name[1]],'not':{'anyOf':[{'required':[o]} for o in others]}}
     schemas['UploadTask']['oneOf']=[only(('record','submissionId'),['coverGroupId','avatarUserId']),only(('cover','coverGroupId'),['submissionId','avatarUserId']),only(('avatar','avatarUserId'),['submissionId','coverGroupId'])]
     schemas['UploadTask']['allOf']=[{'if':{'properties':{'state':{'enum':['complete','cancelled','verifying','review']}}},'then':{'properties':{'transport':{'type':'null'}}}}]
+    schemas['UploadTask']['properties']['clientFileId']=S(minLength=1,description='접수 요청 후보의 clientFileId. 부분 접수·응답 유실 복구 시 tasks와 후보를 연결한다. 기록 작업에서 필수이며 재시도에도 불변.')
+    schemas['UploadTask']['allOf'].append({'if':{'properties':{'targetType':{'const':'record'}}},'then':{'required':['clientFileId']}})
     schemas['UploadTask']['properties']['coverAssetId']=nullable(UUID)
     schemas['UploadTask']['properties']['avatarAssetId']=nullable(UUID)
     schemas['UploadTask']['required'].append('coverAssetId')  # avatarAssetId는 서버 호환상 선택, avatar 완료 시 필수

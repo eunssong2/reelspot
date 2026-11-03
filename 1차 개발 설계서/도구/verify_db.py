@@ -44,7 +44,7 @@ COMMIT;"""
     catalog=sql(query);assert catalog.returncode==0,catalog.stderr
     (ROOT/'부록/DB/실제 컬럼 사전.json').write_text(json.dumps(json.loads(catalog.stdout),ensure_ascii=False,indent=2))
     version=sql('SELECT version();').stdout.strip()
-    result={'scope':'초기 DDL·DB 제약·단일 정원 경쟁 검증. F01~F28 서버 구현 검수 아님. 데이터는 전용 임시 컨테이너에만 생성.','time':datetime.now(ZoneInfo('Asia/Seoul')).isoformat(),'database':version,'ddl_sha256':hashlib.sha256((ROOT/'부록/DB/001_initial.sql').read_bytes()).hexdigest(),'passed':all(x['passed'] for x in results),'checks':results}
+    result={'scope':'초기 DDL·DB 제약·단일 정원 경쟁 검증. F01~F29 서버 구현 검수 아님. 데이터는 전용 임시 컨테이너에만 생성.','time':datetime.now(ZoneInfo('Asia/Seoul')).isoformat(),'database':version,'ddl_sha256':hashlib.sha256((ROOT/'부록/DB/001_initial.sql').read_bytes()).hexdigest(),'passed':all(x['passed'] for x in results),'checks':results}
     (ROOT/'부록/DB/검증결과.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
     print(json.dumps({'passed':result['passed'],'checks':len(results),'database':version},ensure_ascii=False))
     if not result['passed']:sys.exit(1)

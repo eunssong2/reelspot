@@ -1,118 +1,74 @@
-At that place 1차 개발 설계 v0.4 수정과 검증 (2026-11-03 UI 프로토타입 기준 개정)
+At that place 설계 v0.4.1 / 기능명세 v3.1 (2026-11-04)
 
-읽기
-00 설계서 안내.html → 09 구현 계약 보완 → 01~04 설계서 → UI/05 UI 설계.pptx → 06 검수 및 추적.xlsx
-정책 기준은 패키지 내부 기준/기능명세서.md(v3.0, 2026-11-03)이며 SHA256은 기준/기준선.json에 있습니다.
-v3은 feature/ui-prototype@870be87을 실행·분석해 프로토타입과 겹치는 기능을 프로토타입 기준으로 바꿨습니다(D01~D24, 확인 필요 Q1~Q14).
-화면·결정·확인 항목의 원천은 도구/design_model.py의 SCREENS·V3_DECISIONS·OPEN_QUESTIONS·QA입니다. UI 적용 기준은 UI/2026-11-03_UI_v3_적용기준.md.
-v2.1은 초대 조회·발급·공유·복사·개별 취소를 모든 현재 참여자에게 허용합니다. UI23·권한표·초대 API 3개·검수 시나리오를 함께 갱신했습니다. 기존 앱/서버 코드는 이 문서 개정만으로 변경되지 않습니다.
-v1 대비 변경 10건은 명세 0절과 09 구현 계약 보완 0절에 정리했습니다. 과거 v1 명세는 기능 명세서/참고 자료/에 보존하며 이전 변경 이력은 Git에서 확인합니다. 전달용 ZIP과 원본 참고 앱은 문서 저장소 정리로 제거했습니다.
-기존 DayLog 소스는 선택적 재사용 후보이며, 설계서 열람과 핵심 문서 재생성의 필수 의존이 아닙니다.
+현재 기준
+- feature/ui-prototype@870be871c97e8687a2ae7592fcbc48f59875e148의 일반 /prototype 연결 화면·동작 우선.
+- 10 프로토타입 대조 보완.md → 00 설계서 안내.html → 09 구현 계약 보완 → 01~04 → UI → 06 검수 및 추적.xlsx 순서.
+- 정책 원본은 ../기능 명세서/기능명세서.md. 기준/기능명세서.md는 동일 SHA256 사본.
+- D01~D24·Q1~Q18 적용. 11월3일 요청 C01~C13은 반영 대기. 과거 P/A 항목은 현행 원본과 충돌하면 원본 우선.
+- 기존 캡처47개를 보존했다. 문서/계약/DB 검증은 실제 앱·서버·실기기 검수 완료가 아니다.
 
-직접 편집
-Word 문단·표, Excel 셀, PowerPoint 도형·텍스트, SVG 텍스트·도형을 수정할 수 있습니다.
-2026-10-30: feature/ui-prototype @ a67ee60368819ce5a325b5fe2ace17f9c85140c1 화면 반영.
-제품 화면35개(UI36 마이페이지·UI37 계정 추가) 중19개에 실행 캡처를 반영했습니다.
-캡처36개(대응19 + 관련 상태17), 나머지16개는 명세 기반 설계안입니다.
-설명·계약 텍스트와 명세 기반 도형은 편집 가능합니다.19개 대응 SVG는 PNG 래퍼입니다.
-UI01/02/03의 확정사항 적용 도형은 UI/제품적용/에 별도 보존합니다. 원본 Google·동의 체크·하단 탭을 그대로 제품에 적용하지 않습니다.
-UI/2026-10-30_UI_통합_설계.md가 적용 기준이며 회의록/10월 30일 회의 안건.md에서 미결 정책을 관리합니다.
-과거 APK 캡처 PNG와 XML·관찰 기록은 근거/APK에 보존합니다. 최신 캡처는 UI/프로토타입의 웹 실행 결과로 구분합니다.
-Noto Sans CJK KR이 없으면 PowerPoint의 글꼴 바꾸기에서 맑은 고딕 등으로 바꿉니다.
-재생성은 기존 산출물을 덮어씁니다. Office에서 직접 수정한 파일은 먼저 별도 보관하세요.
+편집 원천
+- design_model.py: 화면·기능/API 매핑·QA·D/Q 결정·QA_PENDING_DECISIONS(임시값 의존 검수). review_20261103.py: 추가 대조/변경 요청/인계.
+- api_contract.py / contract_v02.py: OpenAPI·업무 결과·업로드 transport.
+- physical_model.py / schema_guards.sql / data_model.py: 물리·논리 DB·제약.
+- document_content.py / workflow_readable.py / revision_content.py: 시스템·흐름·보완 계약.
+- prototype_ui.py: 저장된 PPT/캡처와 모델에서 UI PPTX·HTML·XLSX·SVG 생성.
+- build_design.py: 모든 편집본과 10 대조 보완 Markdown 생성.
+Office 직접 수정은 재생성 시 덮어쓰므로 원천에도 반영하고 직접 수정본은 먼저 보관한다.
 
-2026-11-01: UI 담당 docs/AT_THAT_PLACE_전체화면정리.pptx(feature/ui-prototype @ 870be87)를 UI 설계의 최우선 기준으로 반영했습니다.
-PPTX 이미지43개 → 설계 화면19개(새 화면 UI38 하루 일정 변경 포함). 실행 캡처는 참고로 유지합니다.
-2026-11-03: docs 브랜치 통합. 실행 캡처를 feature/ui-prototype @ 870be871c97e8687a2ae7592fcbc48f59875e148(PPTX와 같은 커밋) 47개로 교체했습니다.
-하루 일정(DAY-*)은 UI38, 참여자 내보내기는 UI26, 모임 전체 날짜 탭은 UI08의 관련 상태입니다. 캡처 설명의 정책 번호는 P1~P14·A16~A23을 따릅니다.
-반영 기준과 제품 계약 차이(P1~P14)는 UI/2026-11-01_UI_전체화면정리_반영.md를 따릅니다.
+실행 위치: 이 파일의 상위 상위인 '1차 개발 설계서' 폴더
+python3 -m venv .venv                     # 환경이 없을 때
+.venv/bin/pip install -r 도구/requirements.txt
+.venv/bin/playwright install chromium
 
-전체 화면 정리 PPTX가 바뀌었을 때
-.venv/bin/python 도구/capture_overview.py --pptx /절대경로/체크아웃/docs/AT_THAT_PLACE_전체화면정리.pptx --commit <커밋>
-슬라이드·이미지 구성이 바뀌면 capture_overview.py의 UI_MAP을 먼저 고칩니다(맞지 않으면 중단합니다). 그다음 아래 재생성 절차를 실행합니다.
+정책 변경은 원본 검토 후 기준/기능명세서.md도 명시적으로 갱신한다. 다르면 생성이 중단된다.
+.venv/bin/python 도구/diagram_sources.py
+.venv/bin/python 도구/render_artifacts.py --diagrams
+.venv/bin/python 도구/build_design.py
+.venv/bin/python 도구/verify_contracts.py
+.venv/bin/python 도구/render_artifacts.py
+.venv/bin/python 도구/verify_standalone.py
+.venv/bin/python 도구/validate_artifacts.py
 
-수정 원천
-- capture_overview.py: UI 담당 전체 화면 정리 PPTX에서 이미지·슬라이드 문구·해시를 UI/전체화면정리/에 추출(최우선 기준)
-- prototype_ui.py: 캡처 우선 UI PPTX·HTML·Excel·JSON·SVG 생성, 화면 출처와 제품 계약 차이 표시
-- capture_login_ui.py: 비데모 프로토타입에서 로그인·달력·초대8개 화면과 기간 시트를 캡처해 같은 커밋 manifest에 추가
-- capture_prototype.py: 원본 추적 파일 변경 없이 실행 중인 Expo 데모 웹을27개 상태로 캡처
-- ../UI/프로토타입/출처.json: 브랜치·커밋·소스 SHA256·실행 경로·캡처 SHA256
-- ../UI/제품 화면전환.json: 브랜치 UI 반영 전 제품 전환 계약(나머지 흐름 보존용)
-- design_model.py: 화면35개(UI07 폐지·UI19는 UI16 통합·UI36/37 추가)·API목록·기능120시나리오·자료차이(2026-10-20 회의 행 포함)
-- api_contract.py / contract_v02.py: OpenAPI·typed 업무 결과·업로드 transport
-- physical_model.py / schema_guards.sql: 컬럼별 정의·초기 SQL·DB 트리거(초대 50회·방문 15개·사진5/영상2 포함, 반복 테이블 없음)
-- data_model.py: 논리 설명. 물리 컬럼은 physical_model을 가져옵니다.
-- revision_content.py: v0.3 변경 요약·v0.2 보완 본문·재사용·도구 결정·개발 순서·외부 준비 구분
-- document_content.py / workflow_readable.py: 시스템 및 업무 흐름 본문
-- diagram_sources.py: ERD/구성도 SVG
+DDL 또는 컬럼 주석이 바뀌면 hash도 바뀌므로 예전 DB 성공 결과를 재사용하지 않는다.
+실제 사용자 DB가 아닌 전용 임시 컨테이너만 사용한다(동명 컨테이너가 있으면 소유/상태 먼저 확인).
+docker run --rm -d --name atp-design-v02-pg --network none -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16-alpine
+.venv/bin/python 도구/verify_db.py
+# 검증 완료 후 이번에 생성한 컨테이너 정리
+docker stop atp-design-v02-pg
+.venv/bin/python 도구/validate_artifacts.py
+기존 배포 DB에 초기 SQL을 다시 적용하지 않는다. backend 전진 migration은 별도 구현 작업이다.
 
-UI만 재생성 (이 폴더, 즉 '1차 개발 설계서' 안에서 실행)
-저장된 캡처·출처.json만 사용하므로 원본 앱/브랜치 체크아웃/Expo/네트워크가 필요하지 않습니다.
+UI만 재생성
 .venv/bin/python -c "import sys; sys.path.insert(0,'도구'); from build_design import build_ui; from prototype_ui import update_index; build_ui(); update_index()"
 .venv/bin/python 도구/render_artifacts.py --ui
 .venv/bin/python 도구/verify_standalone.py
 .venv/bin/python 도구/validate_artifacts.py
 
-원격 브랜치 화면이 바뀌어 다시 캡처할 때 (의존성은 문서 저장소 외부 체크아웃에만 설치)
-1. git fetch origin feature/ui-prototype 후 별도 worktree/checkout 준비. 추적 파일을 수정하지 않습니다.
-2. 해당 체크아웃에서 npm ci 실행. 웹 의존성이 없으면 npm install --no-save --package-lock=false react-native-web@^0.21.0 @expo/metro-runtime@~6.1.2 실행.
-3. EXPO_PUBLIC_DEMO_MODE=1 CI=1 npx expo start --web --port 18081 실행.
-4. 문서 폴더에서 .venv/bin/python 도구/capture_prototype.py --source /절대경로/체크아웃 --url http://localhost:18081 실행.
-   새 브라우저 컨텍스트의 예시 데이터만 사용합니다. 실제 계정·서비스 데이터는 사용하지 않습니다.
-5. 같은 소스에서 EXPO_PUBLIC_DEMO_MODE를 설정하지 않고 CI=1 npx expo start --web --port 18082 실행.
-   .venv/bin/python 도구/capture_login_ui.py --source /절대경로/체크아웃 --url http://localhost:18082 실행.
-   두 캡처는 같은 커밋이어야 합니다. 로컬 웹 주소는 캡처 도구 전용이며 제품 URL은 HTTPS를 사용합니다.
-6. 화면·문구·정책 차이를 검토한 뒤 위 UI 재생성 절차 실행. 캡처 경로/명세가 바뀌면 캡처 스크립트도 갱신합니다.
-제품 기준은 기능명세서 v2.3입니다. 비연속 날짜·30개·1분 휠·최신순·선택10개·일정별 커버·프로필 사진은 미합의 차이로 표시합니다. 메모 입력은 최신 UI에서 제거됐습니다.
-화면을 갱신할 때 prototype_ui.py의 설명·매핑·제품 전환과 update_index의 기준 커밋 안내도 함께 확인합니다.
+프로토타입이 바뀐 경우
+1. 외부 feature-ui-prototype checkout에서 git pull --ff-only 후 commit과 diff를 기록한다.
+2. PPT가 바뀌면 capture_overview.py --pptx <절대경로>/docs/AT_THAT_PLACE_전체화면정리.pptx --commit <커밋> 실행.
+   슬라이드 구성이 바뀌면 UI_MAP을 검토한다. 예상과 다르면 도구는 중단한다.
+3. 별도 checkout에 의존성을 설치하고 일반/데모 Expo 웹을 실행한다. 기존 README는 옛 기능 설명을 포함하므로 라우트/소스를 우선 확인한다.
+   일반: CI=1 npx expo start --web --port 18082
+   데모: EXPO_PUBLIC_DEMO_MODE=1 CI=1 npx expo start --web --port 18081
+4. capture_prototype.py --source <절대경로> --url http://localhost:18081
+   capture_login_ui.py --source <절대경로> --url http://localhost:18082
+   같은 커밋·새 브라우저 예시 데이터만 사용한다. 실계정/서비스 데이터로 캡처하지 않는다.
+5. UI/프로토타입/출처.json·UI/전체화면정리/출처.json hash와 경로, 모델 매핑을 갱신한다.
+6. 정책 원본→사본→생성 원천→Office/PDF/계약→검증 순서로 반영한다.
+소스가 바뀌지 않았으면 저장된 캡처로 재생성하며 앱 실행을 새로 했다고 기록하지 않는다.
 
-문서 재생성 (이 폴더, 즉 '1차 개발 설계서' 안에서 실행)
-Python3.10+·Noto Sans CJK KR·Playwright Chromium이 필요합니다.
-python3 -m venv .venv
-.venv/bin/pip install -r 도구/requirements.txt
-.venv/bin/playwright install chromium
-.venv/bin/python 도구/diagram_sources.py
-.venv/bin/python 도구/render_artifacts.py --diagrams
-.venv/bin/python 도구/build_design.py
-.venv/bin/python 도구/verify_contracts.py
-.venv/bin/python 도구/build_evidence.py   # APK 재관찰이 없으면 생략 가능(2026-10-17 실행 근거 유지)
-.venv/bin/python 도구/render_artifacts.py
-.venv/bin/python 도구/verify_standalone.py
-.venv/bin/python 도구/validate_artifacts.py
+검증 결과
+- 부록/계약예제/검증결과.json: JSON 스키마 예제. 권한/경쟁/grapheme 업무 검증 별도.
+- 부록/DB/검증결과.json: 적용 DDL hash와 임시 DB 실행 범위.
+- 부록/독립 패키지 검증.json: 상위 정책/원본 앱 없이 재생성.
+- 부록/산출물 검증.json: 링크·스키마·기준선·파일 구조.
+- 06 검수 및 추적.xlsx: 실제 앱 검수는 증거가 생기기 전 미실행.
+- 과거 APK 관찰은 근거/APK. build_evidence.py는 ATP_REFERENCE_APK가 없으면 과거 결과를 보존한다.
+PDF는 동일 HTML의 인쇄본이며 Office와 페이지 나눔이 다를 수 있다. 글꼴은 Noto Sans CJK KR.
 
-정책 원본 ../기능 명세서/기능명세서.md가 있으면 내부 사본과 SHA256이 다를 때 재생성을 중단합니다.
-상위 원본이 없는 독립 패키지에서는 내부 사본으로 동작합니다.
-정책 변경은 차이를 검토한 뒤 기준/기능명세서.md를 명시적으로 갱신하세요.
-기준/재사용후보.json은 원본 소스가 없으면 기존 관찰 결과를 보존합니다.
-원본 앱을 스캔하지 않고 기존 hash·선언 버전을 과거 관찰 기록으로 유지합니다.
-ATP_REFERENCE_APK 환경변수로 외부 APK를 명시하지 않으면 build_evidence.py도 기존 캡처·관찰 결과를 보존하고 새 실행 결과를 만들지 않습니다.
-
-DB 정의가 바뀐 경우
-검증 결과는 DDL SHA256에 연결됩니다. DB를 변경한 뒤 예전 성공 결과를 재사용할 수 없습니다.
-아래 전용 임시 컨테이너만 사용하며 실제 사용자 DB에 검증 fixture를 넣지 않습니다.
-docker run --rm -d --name atp-design-v02-pg --network none -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16-alpine
-.venv/bin/python 도구/verify_db.py
-docker stop atp-design-v02-pg
-.venv/bin/python 도구/validate_artifacts.py
-verify_db.py는 새 이름의 검증 DB를 만들고 적용·동일hash재실행·hash변경거부·제약·정원경쟁·역할을 검사합니다.
-001_initial.sql은 빈 DB의27개 업무 테이블 baseline입니다. 002_service_roles.sql은 DBA용 역할 템플릿입니다.
-실제 적용에서는 PGHOST/PGPORT/PGUSER/PGDATABASE 등 전용 migrator 접속 환경을 설정한 뒤:
-python 도구/apply_db_baseline.py
-이 runner는 세션 advisory lock, 파일 hash 확인, 스키마와 이력의 동일 커밋을 수행합니다.
-운영 DB에 초기 스키마를 다시 만들거나 DROP SCHEMA로 되돌리지 않습니다.
-
-검증 범위
-- 부록/DB/검증결과.json: 실행한 DDL·DB 제약·정원 경쟁
-- 부록/계약예제/검증결과.json: 정상/오류 JSON을 OpenAPI에 적용한 결과
-- 부록/독립 패키지 검증.json: 상위 원본·DayLog·APK 없는 복사본의 문서 재생성
-- 부록/산출물 검증.json: 연결·파일·도형·스키마·기준선 검사
-- 06 검수 및 추적.xlsx: 실제 앱 기능 검수는 미실행. 단위/API/경쟁/기기/운영 방식을 구분합니다.
-
-APK 관찰을 새로 수행하는 경우
-Android SDK와 AVD가 필요하며 capture_apk.py의 시리얼은 emulator-5554입니다.
-python 도구/capture_apk.py 화면ID "실제로 수행한 경로"
-검증된 변경과 관찰 시각은 실제 증거를 확인한 경우에만 build_evidence.py에서 갱신하세요.
-
-PDF는 같은 콘텐츠를 HTML로 인쇄한 열람본으로 Office 원본과 줄바꿈/페이지 나눔이 다를 수 있습니다.
-PPTX는 구조·캡처 포함·참조를 검사하고 대응 SVG/PDF를 시각 검토합니다. PDF56쪽(화면55쪽·적용 기준1쪽), PowerPoint58장(화면55장·안내3장)입니다.
-실제 앱·서버·외부 연동·실기기 빌드가 완성되었다는 뜻은 아닙니다.
+06·07 검수/결정표 관리
+- 06 기대결과의 (Qxx 임시 · 확인 대기)는 고객 확정과 구분한다. 실제 앱 검수 상태는 미실행 유지.
+- 07은 현행 관리 파일: 읽기안내 / 프로토타입결정(D01~D24) / 확인대기(Q1~Q18) / 과거자료차이 / 기술결정 등.
+- Q 확정 시 명세·API·UI와 QA 기대결과를 갱신하고 QA_PENDING_DECISIONS 연결도 함께 정리한다.

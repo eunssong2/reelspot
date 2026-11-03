@@ -1,7 +1,7 @@
 """편집 가능한 설계 데이터. 문서와 도형은 build_design.py로 다시 생성한다."""
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-DATE='2026-11-03'
+DATE='2026-11-04'
 # v3(2026-11-03): feature/ui-prototype@870be87을 실행·분석해 화면을 다시 정했다. 프로토타입과 겹치면 프로토타입이 우선,
 # 프로토타입에 없는 기존 기능은 '기존 유지'로 남긴다. 결정 목록은 아래 V3_DECISIONS, 확인 항목은 OPEN_QUESTIONS.
 # rows: 유형, 표시 문자열. 상세 동작은 notes에 번호 순서로 연결한다.
@@ -63,7 +63,7 @@ screen('UI06','일정 추가','F07','현재 방장',[
 screen('UI38','하루 일정 변경','F08 F11','현재 방장',[
  ('lead','일정 변경'),('hint','주말 산책 모임'),('field','① 일정 제목 *  |  성수에서 느긋한 오후   9/100'),('field','② 날짜 *  |  2026.10.17  📅'),
  ('hint','🕘 시간은 각 장소에서 입력해요'),('hint','🌏 한국 표준시(Asia/Seoul) 기준'),('button','저장하기  ✓'),('link','③ 📅 일정 취소(기록 보존)  ·  기록은 보관 기한까지 남아요'),('link','④ 🗑 이 날 일정 삭제  ·  장소가 없는 날만 지울 수 있어요')],
- ['달력·목록 카드의 ⋯ → 일정 변경으로 연다. 그날 하나의 제목과 날짜만 고친다(기간 칸 없음). ① 초기값은 날짜 제목 또는 기본 제목, 1~100. 여러 날 일정은 날짜 제목, 하루 일정은 일정 제목으로 저장.',
+ ['달력·목록 카드의 ⋯ → 일정 변경으로 연다. 그날 하나의 제목과 날짜만 고친다(기간 칸 없음). ① 초기값은 날짜 제목 또는 기본 제목, 1~100. 하루·여러 날 모두 날짜 제목으로 저장하며 부모 일정명 유지(Q15).',
   '② 날짜 시트(‘날짜 변경’, 월요일 시작): 다른 일정이 쓰는 날짜와 같은 일정의 다른 날짜는 연하게·선택 불가. 옮기면 방문·기록·진행 업로드 날짜도 함께 옮기고 일차 재번호·시작/종료 재계산. 거부 ‘이미 다른 일정이 있는 날짜예요. 하루에는 일정을 하나만 만들 수 있어요.’',
   '③ ‘이 날 일정을 취소할까요?’/제목/‘기록은 보관 기한까지 남아요. 취소하면 누구도 새 사진·영상을 올릴 수 없고 되돌릴 수 없어요.’/일정 취소하기·돌아가기. 그날만 취소, 모든 날이 취소되면 일정 취소. 취소된 날짜는 다른 일정이 쓸 수 있다.',
   '④ 장소가 담긴 날은 🔒 ‘장소가 담긴 날은 삭제할 수 없어요’(누르면 ‘…장소를 먼저 비워 주세요.’). 장소 없으면 ‘이 날 일정을 삭제할까요?’/‘되돌릴 수 없어요.’. 마지막 날이면 일정 삭제(기록·진행 업로드가 있으면 거부, Q9). 이탈: ‘저장하지 않고 나갈까요?’/나가기·계속 편집.'],
@@ -75,7 +75,7 @@ screen('UI08','날짜별 장소','F06 F09 F10 F16','현재 참여자',[
   '② 날짜 머리+편집(→UI12). 날짜 제목 또는 기본 제목({n}일차 · {일정 이름}). 빈 날 ‘가고 싶은 곳을 담아 하루를 채워보세요.’',
   '③ 타임라인: 순번·세로선·시간(HH:mm/시간 미정)+수정(방문 시간 창, 확인 즉시 저장)·장소 카드(이름 2줄, 사진 a · 동영상 b 또는 아직 기록 없음) → UI13. 방금 추가한 장소는 ‘추가됨’ 강조.',
   '④ UI10. 15개 도달·취소된 날·만료 일정이면 비활성과 사유. 일정 전체·장소 미지정 기록 진입은 하단에 추가(기존 유지).'],
- '날짜 없음 ‘이 일정에는 날짜가 없어요.’ / 빈 날 / 15개 도달 / 취소된 날 보기 전용 / 만료 / 권한 상실', 'calendar scheduleDetail planUpdate mediaList', '02-schedule')
+ '날짜 없음 ‘이 일정에는 날짜가 없어요.’ / 빈 날 / 15개 도달 / 취소된 날 보기 전용 / 만료 / 권한 상실', 'groupDays calendar scheduleDetail planUpdate mediaList', '02-schedule')
 screen('UI09','사람별 보기','F16 F19 F25','현재 참여자',[
  ('lead','오후의 커피'),('hint','우리의 서울 여행 · 10.17 토'),('row','① 함께 남긴 순간  사진 4 · 동영상 1    [사진별 | 사람별✓]   최신순'),
  ('card','② (도) 도윤  사진 1 · 동영상 1 · 14:25         ⋯'),('photo','▶ 0:06  |  [사진]'),('card','(수) 수아  사진 3 · 14:12         ⋯'),('photo','[사진 2:1]\n[사진] [사진]'),('link','③ +2   ·   접기 ⌃')],
@@ -100,7 +100,7 @@ screen('UI11','장소 직접 등록','F09','현재 참여자',[
 screen('UI12','장소 순서 편집','F10 F11','현재 참여자',[
  ('lead','장소 순서 편집'),('hint','10월 17일 토요일'),('field','① 날짜 제목  |  예: 빵 먹고 전시 보고 저녁까지'),('hint','11/30 · 비워 두면 "10월 17일의 장소"로 보여요'),
  ('hint','위·아래 버튼으로 방문 순서를 바꾸세요.'),('card','1  오후의 커피  서울 성동구 연무장길 21\n② 방문 시간 14:00 ✎        ▲ ▼   ③ 🗑'),('card','2  서울숲 산책길\n방문 시간 15:10 ✎        ▲ ▼'),('button','④ 변경 저장')],
- ['① 최대 30자(입력 칸 상한), 비우면 기본 제목. 날짜 공통 메모 없음.',
+ ['① 변경 입력 최대 30자, 비우면 기본 제목. UI38에서 저장한 기존 31~100자 제목은 원문 유지하며 순서·시간만 저장해도 자르지 않는다(Q15). 날짜 공통 메모 없음.',
   '② 방문 시간 창: 오전/오후·1~12시·00~59분 휠(1분 단위), 처음 값 현재 시간 또는 오후 12시, ‘시간 미정으로 두기’·취소·확인. 편집 사본에만 반영. 시간 변경으로 순서를 바꾸지 않는다.',
   '▲▼(맨 위 ▲·맨 아래 ▼ 비활성). ③ 빈 방문 삭제(기존 유지, 기록·진행 업로드 있으면 잠금). 장소가 없으면 ‘아직 담은 장소가 없어요. 장소를 담으면 여기서 순서와 시간을 바꿀 수 있어요.’',
   '④ 순서·시간·제목을 버전과 함께 한 번에 저장 후 UI08. 동시 수정 충돌·실패 시 입력 유지. 변경 후 뒤로가기는 ‘저장하지 않고 나갈까요?’.'],
@@ -257,18 +257,19 @@ api('groupsList','GET','/groups','F03 F21','authenticated','cursor?, limit<=30',
 api('groupCreate','POST','/groups','F03 F07','authenticated','name, firstSchedule:ScheduleInput','group, membership, firstSchedule or operation','GROUP_LIMIT OWNER_CREATE_LIMIT VALIDATION_ERROR TEXT_REJECTED SCHEDULE_DATE_TAKEN')
 api('groupUpdate','PATCH','/groups/{groupId}','F04','owner','name?, coverAssetId?, restoreDefault?, expectedVersion','group or operation','FORBIDDEN VERSION_CONFLICT TEXT_REJECTED')
 api('coverPrepare','POST','/groups/{groupId}/cover-uploads','F04 F20 F26','owner','file{name,mime,declaredBytes<=5MB,fingerprint} (4:3 자르기, 긴 변1600px)','taskId, uploadEndpoint, state','FILE_INVALID FORBIDDEN')
+api('groupDays','GET','/groups/{groupId}/days','F06 F10','member','cursor?, limit:1..60 (월 범위 없음)','items:GroupDay[], nextCursor','FORBIDDEN GROUP_CLOSED INVALID_CURSOR')
 api('calendar','GET','/groups/{groupId}/calendar','F06','member','from:date, to:date (inclusive <=366 days)','schedules[{...,days[{date,dayNo,title,status,visitCount}]}], dateCounts','RANGE_TOO_LARGE FORBIDDEN')
 api('scheduleDetail','GET','/schedules/{scheduleId}','F06 F21','member','none','schedule, days[{date,dayNo,title,status,visitCount}], retention, plan[{date,title,visits[{...,plannedTime}],visitLimit:15}], version','FORBIDDEN EXPIRED')
 api('scheduleCreate','POST','/groups/{groupId}/schedules','F07','owner','ScheduleInput{title,startDate,endDate,timezone} (반복·시각 없음, 각 날짜가 일차)','schedule or operation','VALIDATION_ERROR TEXT_REJECTED FORBIDDEN SCHEDULE_DATE_TAKEN')
 api('scheduleUpdate','PATCH','/schedules/{scheduleId}','F08','owner','title?, startDate?, endDate?, expectedVersion, confirmOutsideRange? (v3 1차 화면 미제공·서버 호환 유지)','schedule or operation; 미확인 기간 밖 영향은 409 OUTSIDE_RANGE_CONFIRMATION_REQUIRED + details{visits,media}','VERSION_CONFLICT VALIDATION_ERROR OUTSIDE_RANGE_CONFIRMATION_REQUIRED TEXT_REJECTED FORBIDDEN SCHEDULE_CANCELLED SCHEDULE_DATE_TAKEN')
 api('scheduleCancel','POST','/schedules/{scheduleId}/cancellation','F08','owner','expectedVersion','schedule(status=cancelled)','VERSION_CONFLICT ALREADY_CANCELLED FORBIDDEN')
 api('scheduleDelete','POST','/schedules/{scheduleId}/deletion','F11','owner','expectedVersion','deletedId, deletedVisitIds','NOT_EMPTY VERSION_CONFLICT FORBIDDEN')
-api('dayUpdate','PATCH','/schedules/{scheduleId}/days/{date}','F08','owner','expectedVersion(일정), title?(여러 날 0~30·null / 하루 일정 1~100), date?(다른 날짜 하나로 이동)','DayChangeResult{schedule,days[]} or operation','SCHEDULE_DATE_TAKEN DAY_BUSY TARGET_NOT_EMPTY SCHEDULE_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN TEXT_REJECTED')
+api('dayUpdate','PATCH','/schedules/{scheduleId}/days/{date}','F08','owner','expectedVersion(일정), title?(날짜 제목1~100·생략 유지), date?(다른 날짜 하나로 이동)','DayChangeResult{schedule,days[]} or operation','SCHEDULE_DATE_TAKEN DAY_BUSY TARGET_NOT_EMPTY SCHEDULE_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN TEXT_REJECTED')
 api('dayCancel','POST','/schedules/{scheduleId}/days/{date}/cancellation','F08','owner','expectedVersion(일정)','DayChangeResult{schedule,days[]} (모든 날 취소 시 schedule.status=cancelled)','ALREADY_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN')
 api('dayDelete','POST','/schedules/{scheduleId}/days/{date}/deletion','F08 F11','owner','expectedVersion(일정)','DayChangeResult{schedule|null,days[]} (마지막 날이면 일정 삭제)','NOT_EMPTY VERSION_CONFLICT NOT_FOUND FORBIDDEN')
 api('placesSearch','GET','/places','F09','member-context','groupId, query?, category, bounds?, sort, center?, page?','places[<=15], provider:kakao, region:서울특별시, excludedOutsideSeoul, page, isEnd, searchContext{radiusMeters:2000|null}','PROVIDER_UNAVAILABLE VALIDATION_ERROR')
 api('visitCreate','POST','/schedules/{scheduleId}/visits','F09','member','visitDate, providerPlaceId? or manual{name,address?,lat?,lng?} (시간 없이 맨 뒤 추가, plannedTime=null)','visit','DUPLICATE_VISIT VISIT_LIMIT VALIDATION_ERROR TEXT_REJECTED SCHEDULE_CANCELLED DAY_CANCELLED')
-api('planUpdate','PUT','/schedules/{scheduleId}/plans/{date}','F10','member','title(0~30), visits[{id,order,plannedTime:HH:MM 1분 단위|null}], expectedVersion','plan or operation','VERSION_CONFLICT INVALID_VISIT_SET TEXT_REJECTED VALIDATION_ERROR')
+api('planUpdate','PUT','/schedules/{scheduleId}/plans/{date}','F10','member','title(변경 0~30·기존 100자 보존), visits[{id,order,plannedTime:HH:MM 1분 단위|null}], expectedVersion','plan or operation','VERSION_CONFLICT INVALID_VISIT_SET TEXT_REJECTED VALIDATION_ERROR')
 api('visitDelete','DELETE','/visits/{visitId}','F11','member','expectedVersion','deletedId','NOT_EMPTY VERSION_CONFLICT')
 api('uploadLimits','GET','/schedules/{scheduleId}/upload-limits','F13 F14','member','recordDate, visitId?','visitId|null, recordDate, photos, videos, photoLimit:5, videoLimit:2, maxFilesPerSubmission:10','FORBIDDEN EXPIRED DAY_CANCELLED')
 api('uploadPrepare','POST','/schedules/{scheduleId}/submissions','F13 F14 F15','member','files[1..10]:FileInput{selectionIndex 0..9, fingerprint, recordDate=방문 날짜, visitId(장소 기록 화면) 또는 null(미지정 유지)}','submissionId, tasks[{id,state,uploadEndpoint}], fileErrors[{code:MEDIA_LIMIT|FILE_INVALID|...}], remaining[{visitId|null,recordDate,photos,videos}]','SCHEDULE_CANCELLED DAY_CANCELLED DUPLICATE_FILE EXPIRED QUOTA_EXCEEDED FILE_INVALID MEDIA_LIMIT')
@@ -443,6 +444,10 @@ OPEN_QUESTIONS=[
  ('Q12','기록 조회 단위(장소 id vs 방문)','방문 단위','F16'),
  ('Q13','일정 배경 사진·일정 요약 화면 재사용','사용하지 않음','F06'),
  ('Q14','기록 정렬에 연도 없음','서버 시각(연도 포함) 정렬','F16'),
+ ('Q15','하루 변경 100자·순서 편집 30자와 같은 날짜 제목','day_plans.title 최대100; UI12 변경만30, 기존 긴 제목 보존·부모 일정명 유지','F08 F10'),
+ ('Q16','추가 설계·PM 확인 대기: 묶음 정렬의 완료 시점','임시: 첫 파일 완료 시각 고정. 첫/전체 완료·지연 재배치 확인','F16'),
+ ('Q17','추가 설계·PM/백엔드 확인 대기: groupDays 페이지 한도','임시: 기본·최대 60개. 응답 크기·탭 로딩 검토 후 확정','F06 F10'),
+ ('Q18','추가 설계·PM 확인 대기: 날짜만 바꿀 때 기본 제목 저장','임시: title 생략·제목 없음 유지. 프로토타입은 문자열 저장','F08 F10'),
 ]
 # v3: 모임 사진·프로필 사진도 재개 업로드(HEAD/PATCH)를 쓴다.
 for _screen in SCREENS:
@@ -465,3 +470,27 @@ QA['F19']=[('선택 3개 다운받기(사진2·동영상1)','동영상은 동영
 QA['F22']=[('방장이 참여자 내보내기','참여 종료·모임 재참여 차단·완료 파일 유지'),('내보낸 사람이 다른 새 초대로 참여','REENTRY_BLOCKED'),('일반 참여자 화면·직접 요청','⋯ 없음·서버 거부'),('카카오톡 초대·초대링크 복사(초대 없음/있음)','가장 최근 초대 사용 또는 새 발급'),('방장 이전·차단 해제 후 재참여','즉시 이전·해제 후 일반 참여')]
 QA['F28']=[('마이페이지 참여한 모임 수(0개·여러 페이지)','서버 수 그대로·0개는 0개'),('닉네임 12자 입력·공백만·검사 거부','12자 상한·저장 비활성·거부 안내'),('설정 초대코드 입력·위치 서비스·약관 4종','UI24 연결·기기 설정 열기·게시 문서 열기'),('로그아웃(업로드 진행 중)·서비스 탈퇴 확인','확인 후 UI01·탈퇴는 UI30'),('캐시 정리·저장 공간','재생 캐시만 삭제·5GB 표시')]
 QA['F29']=[('프로필 사진 선택·1:1 자르기','위치 제거·검사 후 반영·모든 아바타 위치 갱신'),('기본 사진으로 되돌리기','이름 첫 글자 아바타·avatarVersion 증가'),('5MB 초과·불러오기 실패·권한 거절','사진 실패 문구·기존 사진 유지'),('검사 거부·동시 변경','기존 사진 유지·버전 충돌')]
+
+# 2026-11-03 추가 대조: 옛 장소 추가 시각 입력 검수를 현행 D11에 맞춘다.
+QA['F09'][0]=('검색→지도이동→영역검색→방문추가→타임라인 시간 수정','추가 시 plannedTime=null·날짜 마지막 순서·이후 1분 단위 저장')
+QA['F08'].append(('하루/여러 날 제목 100자 저장·101자·빈값·날짜만 변경','100자 허용·101자/빈값 거부·날짜만 변경 시 제목과 부모 일정명 유지'))
+QA['F10'].extend([('UI38에서 100자 제목 저장 후 UI12에서 순서·시간만 저장','기존 제목 100자 보존·새 제목 변경만 30자 제한'),('모임 날짜가 여러 달·해·61개 이상, 페이지 중 날짜 이동·취소','groupDays 다음 페이지·키 중복 제거·선택 유지 또는 변경 안내 후 재조회')])
+QA['F14'].append(('10개 후보 중 일부 거부·응답 유실 후 재시도','접수 ID 있는 후보만 제거·거부 후보/사유 보존·같은 멱등 키로 중복 방지'))
+QA['F16'].append(('동일 묶음 지연 완료·첫 완료 파일 삭제·정렬 시각 동률','묶음 첫 완료 시각 불변·submissionId 동률 정렬·묶음 내부 selectionIndex 오름차순'))
+for _s in SCREENS:
+    if _s['id']=='UI38': _s['notes'].append('Q15: 하루/여러 날 모두 날짜 제목 1~100자, 부모 일정명 유지. Q18 추가 설계(PM 확인 대기): 날짜만 변경할 때 title 생략; 프로토타입은 기본 제목 문자열 저장. UI12와 같은 day_plans.title.')
+    if _s['id']=='UI08': _s['notes'].append('모임 전체 탭은 groupDays 커서 조회(Q17: 기본·최대 60개는 추가 설계·확인 대기). 월 달력 응답만 재사용하지 않는다. 탭은 (scheduleId,date), 취소 날짜는 원래 일정 상세로 보기 전용 진입.')
+    if _s['id']=='UI14': _s['notes'].append('부분 접수는 접수된 후보만 제거하고 거부 후보·사유를 유지. 응답 유실은 같은 멱등 키로 확인, 모두 접수됐을 때만 시트를 비운다.')
+
+# v3.1: 요구 동작과 추가 설계의 임시 적용을 화면에서 함께 표시한다.
+for _s in SCREENS:
+    if _s['id'] in ['UI09','UI13']: _s['notes'].append('Q16 추가 설계·PM 확인 대기: 묶음 첫 파일 완료 시각을 임시 정렬 기준으로 사용. 후속 완료 시 재배치 여부를 확인한다.')
+
+# 확인 전 적용값에 의존하는 검수. 06 기대결과와 07 확인대기에서 같은 연결을 사용한다.
+QA_PENDING_DECISIONS={
+    'TC-F08-05': ['Q15','Q18'],
+    'TC-F10-05': ['Q15'],
+    'TC-F10-06': ['Q17'],
+    'TC-F16-01': ['Q16'],
+    'TC-F16-06': ['Q16'],
+}

@@ -1,6 +1,6 @@
 {
   "scope": "OpenAPI 3.1 JSON Schema 예제 검증. 서버의 권한·경쟁·파일 실제 전송 검수는 별도.",
-  "openapi_canonical_sha256": "8f8b2711d93751bbadce49668d8ac40a0eafd3fa32ed738f02aabf9113efb164",
+  "openapi_canonical_sha256": "4c55d34042006db6af635bfbbd6e70273be18ef89f047cebe6fd56fe32e19608",
   "passed": true,
   "checks": [
     {
@@ -88,6 +88,15 @@
       "validation_errors": []
     },
     {
+      "name": "부분 접수 후보 연결 키 누락 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'clientFileId' is a required property"
+      ]
+    },
+    {
       "name": "대표사진 전송 작업",
       "passed": true,
       "expected_valid": true,
@@ -109,7 +118,7 @@
       "expected_valid": false,
       "actual_valid": false,
       "validation_errors": [
-        "{'id': '00000000-0000-0000-0000-000000000001', 'targetType': 'record', 'submissionId': '00000000-0000-0000-0000-000000000001', 'state': 'queued', 'transferredBytes': 0, 'actualBytes': None, 'retryable': True, 'reason': None, 'version': 1, 'mediaId': None, 'coverAssetId': None, 'avatarAssetId': None, 'transport': {'protocol': 'ATP-Upload/1', 'uploadEndpoint': '/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content', 'generation': 1, 'resumeOffset': 0, 'length': 1048577, 'expiresAt': '2026-10-17T15:00:00+09:00', 'alignmentBytes': 1048576, 'maxChunkBytes': 4194304}, 'coverGroupId': '00000000-0000-0000-0000-000000000001'} is not valid under any of the given schemas"
+        "{'id': '00000000-0000-0000-0000-000000000001', 'targetType': 'record', 'submissionId': '00000000-0000-0000-0000-000000000001', 'state': 'queued', 'transferredBytes': 0, 'actualBytes': None, 'retryable': True, 'reason': None, 'version': 1, 'mediaId': None, 'coverAssetId': None, 'avatarAssetId': None, 'transport': {'protocol': 'ATP-Upload/1', 'uploadEndpoint': '/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content', 'generation': 1, 'resumeOffset': 0, 'length': 1048577, 'expiresAt': '2026-10-17T15:00:00+09:00', 'alignmentBytes': 1048576, 'maxChunkBytes': 4194304}, 'clientFileId': 'f1', 'coverGroupId': '00000000-0000-0000-0000-000000000001'} is not valid under any of the given schemas"
       ]
     },
     {
@@ -247,6 +256,47 @@
       "validation_errors": [
         "'deleted' is not one of ['active', 'cancelled']"
       ]
+    },
+    {
+      "name": "모임 전체 날짜 탭 항목",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "활성 날짜 탭에 취소 날짜 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'active' was expected"
+      ]
+    },
+    {
+      "name": "날짜 탭의 일정 식별자 누락 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'scheduleId' is a required property"
+      ]
+    },
+    {
+      "name": "날짜 탭의 일정 버전 0 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "0 is less than the minimum of 1"
+      ]
+    },
+    {
+      "name": "100자 날짜 제목 보존",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
     },
     {
       "name": "하루 취소 결과",
@@ -421,7 +471,7 @@
       "expected_valid": false,
       "actual_valid": false,
       "validation_errors": [
-        "{'id': '00000000-0000-0000-0000-000000000001', 'targetType': 'avatar', 'state': 'queued', 'transferredBytes': 0, 'actualBytes': None, 'retryable': True, 'reason': None, 'version': 1, 'mediaId': None, 'coverAssetId': None, 'avatarAssetId': None, 'transport': {'protocol': 'ATP-Upload/1', 'uploadEndpoint': '/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content', 'generation': 1, 'resumeOffset': 0, 'length': 1048577, 'expiresAt': '2026-10-17T15:00:00+09:00', 'alignmentBytes': 1048576, 'maxChunkBytes': 4194304}, 'avatarUserId': '00000000-0000-0000-0000-000000000001', 'coverGroupId': '00000000-0000-0000-0000-000000000001'} is not valid under any of the given schemas"
+        "{'id': '00000000-0000-0000-0000-000000000001', 'targetType': 'avatar', 'state': 'queued', 'transferredBytes': 0, 'actualBytes': None, 'retryable': True, 'reason': None, 'version': 1, 'mediaId': None, 'coverAssetId': None, 'avatarAssetId': None, 'transport': {'protocol': 'ATP-Upload/1', 'uploadEndpoint': '/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content', 'generation': 1, 'resumeOffset': 0, 'length': 1048577, 'expiresAt': '2026-10-17T15:00:00+09:00', 'alignmentBytes': 1048576, 'maxChunkBytes': 4194304}, 'clientFileId': 'f1', 'avatarUserId': '00000000-0000-0000-0000-000000000001', 'coverGroupId': '00000000-0000-0000-0000-000000000001'} is not valid under any of the given schemas"
       ]
     },
     {
@@ -461,6 +511,79 @@
       "actual_valid": false,
       "validation_errors": [
         "'thumbnail' is not one of ['sanitized_original', 'view', None]"
+      ]
+    },
+    {
+      "name": "하루 제목100자 요청",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "날짜만 변경하며 제목 유지",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "하루 변경 내용 없는 요청 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "{'expectedVersion': 3} does not have enough properties"
+      ]
+    },
+    {
+      "name": "하루 제목 null 요청 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "None is not of type 'string'"
+      ]
+    },
+    {
+      "name": "하루 제목 빈값 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'' should be non-empty"
+      ]
+    },
+    {
+      "name": "모임 전체 날짜 마지막 빈 페이지",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "모임 전체 날짜 다음 페이지",
+      "passed": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "validation_errors": []
+    },
+    {
+      "name": "날짜 페이지 커서 누락 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "'nextCursor' is a required property"
+      ]
+    },
+    {
+      "name": "날짜 페이지61개 거부",
+      "passed": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "validation_errors": [
+        "[{'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}, {'scheduleId': '00000000-0000-0000-0000-000000000001', 'scheduleVersion': 3, 'scheduleTitle': '서울 여행', 'day': {'date': '2027-01-31', 'dayNo': 1, 'title': None, 'status': 'active', 'visitCount': 0}, 'expiresAt': None}] is too long"
       ]
     }
   ]
