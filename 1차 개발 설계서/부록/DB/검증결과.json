@@ -1,14 +1,14 @@
 {
   "scope": "초기 DDL·DB 제약·단일 정원 경쟁 검증. F01~F28 서버 구현 검수 아님. 데이터는 전용 임시 컨테이너에만 생성.",
-  "time": "2026-10-30T22:40:46.971873+09:00",
+  "time": "2026-11-03T23:28:12.125301+09:00",
   "database": "PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
-  "ddl_sha256": "f6d5176e06f1c950999b894bab0599992177b918c6ef3294843087b81f44f3e5",
+  "ddl_sha256": "5c566c3b96472acf78c00aad6beee178312ec797a71ac7935c2c6baec5601833",
   "passed": true,
   "checks": [
     {
       "check": "초기 SQL+마이그레이션 hash 원자 적용",
       "passed": true,
-      "detail": "R\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nINSERT 0 1\nCOMMIT\nt\n"
+      "detail": "N\nCREATE TRIGGER\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nCREATE FUNCTION\nCREATE TRIGGER\nINSERT 0 1\nCOMMIT\nt\n"
     },
     {
       "check": "동일 hash 재실행은 변경 없이 건너뜀",
@@ -22,7 +22,7 @@
     {
       "check": "컬럼/FK/보관/정원/위치/감사 제약 회귀",
       "passed": true,
-      "detail": "SERT 0 10\nSET CONSTRAINTS\n\n\n\n\nINSERT 0 1\n\nINSERT 0 1\nUPDATE 1\n\n\nUPDATE 1\nDO\n\nINSERT 0 1\n\nINSERT 0 1\n\nINSERT 0 1\nINSERT 0 1\nINSERT 0 4\n\nINSERT 0 2\n\nUPDATE 1\nINSERT 0 1\nINSERT 0 1\nINSERT 0 1\nINSERT 0 15\nINSERT 0 14\n\nUPDATE 1\nINSERT 0 1\nDO\nINSERT 0 1\nUPDATE 1\nDO\n\n\n\n\n\n\n\nINSERT 0 1\nINSERT 0 1\n\n\nROLLBACK\n"
+      "detail": " 0 1\nINSERT 0 1\nINSERT 0 15\nINSERT 0 14\n\nUPDATE 1\nINSERT 0 1\nDO\nINSERT 0 1\nUPDATE 1\nDO\n\n\n\n\n\n\n\nINSERT 0 1\nINSERT 0 2\n\nINSERT 0 1\n\n\nINSERT 0 1\n\nUPDATE 1\nINSERT 0 1\n\n\nDELETE 1\nSET CONSTRAINTS\nUPDATE 16\nUPDATE 9\nUPDATE 1\nSET CONSTRAINTS\nINSERT 0 1\nUPDATE 1\n\n\nINSERT 0 1\n\nINSERT 0 1\nINSERT 0 1\n\n\nROLLBACK\n"
     },
     {
       "check": "고지 문서 required=false 허용",
@@ -51,8 +51,8 @@
       "check": "9명에서 동시2참여 → 성공1·거부1·최종10명",
       "passed": true,
       "detail": [
-        "",
-        "ERROR:  CAPACITY_FULL\nCONTEXT:  PL/pgSQL function guard_membership_capacity() line 12 at RAISE\n"
+        "ERROR:  CAPACITY_FULL\nCONTEXT:  PL/pgSQL function guard_membership_capacity() line 12 at RAISE\n",
+        ""
       ]
     }
   ]

@@ -163,6 +163,7 @@
       "version": 1,
       "mediaId": null,
       "coverAssetId": null,
+      "avatarAssetId": null,
       "transport": {
         "protocol": "ATP-Upload/1",
         "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
@@ -190,6 +191,7 @@
       "version": 1,
       "mediaId": null,
       "coverAssetId": null,
+      "avatarAssetId": null,
       "transport": {
         "protocol": "ATP-Upload/1",
         "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
@@ -219,6 +221,7 @@
       "version": 1,
       "mediaId": null,
       "coverAssetId": null,
+      "avatarAssetId": null,
       "transport": {
         "protocol": "ATP-Upload/1",
         "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
@@ -246,6 +249,7 @@
       "version": 1,
       "mediaId": null,
       "coverAssetId": null,
+      "avatarAssetId": null,
       "transport": {
         "protocol": "ATP-Upload/1",
         "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
@@ -275,6 +279,7 @@
       "version": 1,
       "mediaId": "00000000-0000-0000-0000-000000000001",
       "coverAssetId": null,
+      "avatarAssetId": null,
       "transport": null
     }
   },
@@ -294,6 +299,7 @@
       "version": 1,
       "mediaId": null,
       "coverAssetId": null,
+      "avatarAssetId": null,
       "transport": {
         "protocol": "ATP-Upload/1",
         "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
@@ -372,17 +378,17 @@
     }
   },
   {
-    "name": "고지 문서 체크 제외",
+    "name": "향후 고지 문서(가입 화면 미사용) 체크 제외",
     "component": "ConsentDocument",
     "expected_valid": true,
     "value": {
       "id": "00000000-0000-0000-0000-000000000001",
-      "itemKey": "privacy",
-      "title": "개인정보 처리방침",
+      "itemKey": "notice-sample",
+      "title": "향후 고지 문서",
       "version": "1",
       "kind": "notice",
       "required": false,
-      "url": "https://example.invalid/documents/privacy",
+      "url": "https://example.invalid/documents/notice",
       "development": false
     }
   },
@@ -392,27 +398,72 @@
     "expected_valid": false,
     "value": {
       "id": "00000000-0000-0000-0000-000000000001",
-      "itemKey": "privacy",
-      "title": "개인정보 처리방침",
+      "itemKey": "notice-sample",
+      "title": "향후 고지 문서",
       "version": "1",
       "kind": "notice",
       "required": true,
-      "url": "https://example.invalid/documents/privacy",
+      "url": "https://example.invalid/documents/notice",
       "development": false
     }
   },
   {
-    "name": "서비스 이용약관 필수 체크",
+    "name": "v3 가입 동의 서비스 이용약관 (필수)",
     "component": "ConsentDocument",
     "expected_valid": true,
     "value": {
       "id": "00000000-0000-0000-0000-000000000001",
       "itemKey": "terms-service",
-      "title": "개인정보 처리방침",
+      "title": "서비스 이용약관",
       "version": "1",
       "kind": "consent",
       "required": true,
-      "url": "https://example.invalid/documents/privacy",
+      "url": "https://example.invalid/documents/notice",
+      "development": false
+    }
+  },
+  {
+    "name": "v3 가입 동의 개인정보 수집 및 이용 동의 (필수)",
+    "component": "ConsentDocument",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "itemKey": "privacy-collection",
+      "title": "개인정보 수집 및 이용 동의",
+      "version": "1",
+      "kind": "consent",
+      "required": true,
+      "url": "https://example.invalid/documents/notice",
+      "development": false
+    }
+  },
+  {
+    "name": "v3 가입 동의 마케팅 정보 수신 동의 (선택)",
+    "component": "ConsentDocument",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "itemKey": "marketing",
+      "title": "마케팅 정보 수신 동의",
+      "version": "1",
+      "kind": "consent",
+      "required": false,
+      "url": "https://example.invalid/documents/notice",
+      "development": false
+    }
+  },
+  {
+    "name": "v3 가입 동의 위치정보 이용약관 (선택)",
+    "component": "ConsentDocument",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "itemKey": "location-terms",
+      "title": "위치정보 이용약관",
+      "version": "1",
+      "kind": "consent",
+      "required": false,
+      "url": "https://example.invalid/documents/notice",
       "development": false
     }
   },
@@ -422,11 +473,11 @@
     "expected_valid": false,
     "value": {
       "id": "00000000-0000-0000-0000-000000000001",
-      "itemKey": "privacy",
-      "title": "개인정보 처리방침",
+      "itemKey": "notice-sample",
+      "title": "향후 고지 문서",
       "version": "1",
       "required": false,
-      "url": "https://example.invalid/documents/privacy",
+      "url": "https://example.invalid/documents/notice",
       "development": false
     }
   },
@@ -436,13 +487,545 @@
     "expected_valid": false,
     "value": {
       "id": "00000000-0000-0000-0000-000000000001",
-      "itemKey": "privacy",
-      "title": "개인정보 처리방침",
+      "itemKey": "notice-sample",
+      "title": "향후 고지 문서",
       "version": "1",
       "kind": "notice",
       "required": false,
       "url": "http://example.invalid/documents/privacy",
       "development": false
+    }
+  },
+  {
+    "name": "일차 제목 없음",
+    "component": "ScheduleDay",
+    "expected_valid": true,
+    "value": {
+      "date": "2027-01-31",
+      "dayNo": 1,
+      "title": null,
+      "status": "active",
+      "visitCount": 0
+    }
+  },
+  {
+    "name": "일차 번호 0 거부",
+    "component": "ScheduleDay",
+    "expected_valid": false,
+    "value": {
+      "date": "2027-01-31",
+      "dayNo": 0,
+      "title": null,
+      "status": "active",
+      "visitCount": 0
+    }
+  },
+  {
+    "name": "일차 상태 deleted 거부",
+    "component": "ScheduleDay",
+    "expected_valid": false,
+    "value": {
+      "date": "2027-01-31",
+      "dayNo": 1,
+      "title": null,
+      "status": "deleted",
+      "visitCount": 0
+    }
+  },
+  {
+    "name": "하루 취소 결과",
+    "component": "DayChangeResult",
+    "expected_valid": true,
+    "value": {
+      "schedule": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "groupId": "00000000-0000-0000-0000-000000000001",
+        "title": "서울 여행",
+        "startDate": "2027-01-31",
+        "endDate": "2027-02-01",
+        "timezone": "Asia/Seoul",
+        "status": "active",
+        "version": 3,
+        "days": [
+          {
+            "date": "2027-01-31",
+            "dayNo": 1,
+            "title": null,
+            "status": "active",
+            "visitCount": 0
+          },
+          {
+            "date": "2027-02-01",
+            "dayNo": 2,
+            "title": "둘째 날",
+            "status": "cancelled",
+            "visitCount": 0
+          }
+        ]
+      },
+      "days": [
+        {
+          "date": "2027-01-31",
+          "dayNo": 1,
+          "title": null,
+          "status": "active",
+          "visitCount": 0
+        },
+        {
+          "date": "2027-02-01",
+          "dayNo": 2,
+          "title": "둘째 날",
+          "status": "cancelled",
+          "visitCount": 0
+        }
+      ]
+    }
+  },
+  {
+    "name": "마지막 날 삭제로 일정 삭제",
+    "component": "DayChangeResult",
+    "expected_valid": true,
+    "value": {
+      "schedule": null,
+      "days": []
+    }
+  },
+  {
+    "name": "하루 변경 결과 days 누락 거부",
+    "component": "DayChangeResult",
+    "expected_valid": false,
+    "value": {
+      "schedule": null
+    }
+  },
+  {
+    "name": "시간 미정 방문",
+    "component": "Visit",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "scheduleId": "00000000-0000-0000-0000-000000000001",
+      "placeId": "00000000-0000-0000-0000-000000000001",
+      "visitDate": "2027-01-31",
+      "position": 0,
+      "plannedTime": null,
+      "version": 1
+    }
+  },
+  {
+    "name": "1분 단위 방문 시간 23:59",
+    "component": "Visit",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "scheduleId": "00000000-0000-0000-0000-000000000001",
+      "placeId": "00000000-0000-0000-0000-000000000001",
+      "visitDate": "2027-01-31",
+      "position": 0,
+      "plannedTime": "23:59",
+      "version": 1
+    }
+  },
+  {
+    "name": "1분 단위 방문 시간 10:01",
+    "component": "Visit",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "scheduleId": "00000000-0000-0000-0000-000000000001",
+      "placeId": "00000000-0000-0000-0000-000000000001",
+      "visitDate": "2027-01-31",
+      "position": 0,
+      "plannedTime": "10:01",
+      "version": 1
+    }
+  },
+  {
+    "name": "24:00 방문 시간 거부",
+    "component": "Visit",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "scheduleId": "00000000-0000-0000-0000-000000000001",
+      "placeId": "00000000-0000-0000-0000-000000000001",
+      "visitDate": "2027-01-31",
+      "position": 0,
+      "plannedTime": "24:00",
+      "version": 1
+    }
+  },
+  {
+    "name": "초 단위 방문 시간 거부",
+    "component": "Visit",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "scheduleId": "00000000-0000-0000-0000-000000000001",
+      "placeId": "00000000-0000-0000-0000-000000000001",
+      "visitDate": "2027-01-31",
+      "position": 0,
+      "plannedTime": "10:01:30",
+      "version": 1
+    }
+  },
+  {
+    "name": "선택 순서 10 거부(한 제출 최대10개)",
+    "component": "FileInput",
+    "expected_valid": false,
+    "value": {
+      "clientFileId": "f1",
+      "selectionIndex": 10,
+      "name": "one.jpg",
+      "mime": "image/jpeg",
+      "declaredBytes": 100,
+      "fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "checksum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind": "photo",
+      "recordDate": "2026-10-17"
+    }
+  },
+  {
+    "name": "선택 순서 9 허용",
+    "component": "FileInput",
+    "expected_valid": true,
+    "value": {
+      "clientFileId": "f1",
+      "selectionIndex": 9,
+      "name": "one.jpg",
+      "mime": "image/jpeg",
+      "declaredBytes": 100,
+      "fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "checksum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind": "photo",
+      "recordDate": "2026-10-17"
+    }
+  },
+  {
+    "name": "8자 초대 코드",
+    "component": "Invitation",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "link": "https://example.invalid/i/abc",
+      "code": "ABCD2345",
+      "issuedAt": "2026-10-17T15:00:00+09:00",
+      "expiresAt": "2026-10-17T15:00:00+09:00",
+      "useCount": 0,
+      "maxUses": 50,
+      "state": "active",
+      "version": 1
+    }
+  },
+  {
+    "name": "0·O·1·I 포함 초대 코드 거부",
+    "component": "Invitation",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "link": "https://example.invalid/i/abc",
+      "code": "ABCD0O1I",
+      "issuedAt": "2026-10-17T15:00:00+09:00",
+      "expiresAt": "2026-10-17T15:00:00+09:00",
+      "useCount": 0,
+      "maxUses": 50,
+      "state": "active",
+      "version": 1
+    }
+  },
+  {
+    "name": "7자 초대 코드 거부",
+    "component": "Invitation",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "link": "https://example.invalid/i/abc",
+      "code": "ABCD234",
+      "issuedAt": "2026-10-17T15:00:00+09:00",
+      "expiresAt": "2026-10-17T15:00:00+09:00",
+      "useCount": 0,
+      "maxUses": 50,
+      "state": "active",
+      "version": 1
+    }
+  },
+  {
+    "name": "소문자 초대 코드 거부(정규화는 앱)",
+    "component": "Invitation",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "link": "https://example.invalid/i/abc",
+      "code": "abcd2345",
+      "issuedAt": "2026-10-17T15:00:00+09:00",
+      "expiresAt": "2026-10-17T15:00:00+09:00",
+      "useCount": 0,
+      "maxUses": 50,
+      "state": "active",
+      "version": 1
+    }
+  },
+  {
+    "name": "기본 아이콘 프로필",
+    "component": "Profile",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "displayName": "지민",
+      "status": "active",
+      "avatarVersion": null,
+      "version": 1
+    }
+  },
+  {
+    "name": "프로필 사진 버전",
+    "component": "Profile",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "displayName": "지민",
+      "status": "active",
+      "avatarVersion": 2,
+      "version": 1
+    }
+  },
+  {
+    "name": "avatarVersion 누락 거부",
+    "component": "Profile",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "displayName": "지민",
+      "status": "active",
+      "version": 1
+    }
+  },
+  {
+    "name": "프로필 사진 전송 작업",
+    "component": "UploadTask",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "avatar",
+      "state": "queued",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": true,
+      "reason": null,
+      "version": 1,
+      "mediaId": null,
+      "coverAssetId": null,
+      "avatarAssetId": null,
+      "transport": {
+        "protocol": "ATP-Upload/1",
+        "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
+        "generation": 1,
+        "resumeOffset": 0,
+        "length": 1048577,
+        "expiresAt": "2026-10-17T15:00:00+09:00",
+        "alignmentBytes": 1048576,
+        "maxChunkBytes": 4194304
+      },
+      "avatarUserId": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  {
+    "name": "프로필 사진 완료",
+    "component": "UploadTask",
+    "expected_valid": true,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "avatar",
+      "state": "complete",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": false,
+      "reason": null,
+      "version": 1,
+      "mediaId": null,
+      "coverAssetId": null,
+      "avatarAssetId": "00000000-0000-0000-0000-000000000001",
+      "transport": null,
+      "avatarUserId": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  {
+    "name": "프로필 사진 완료에 mediaId 거부",
+    "component": "UploadTask",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "avatar",
+      "state": "complete",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": false,
+      "reason": null,
+      "version": 1,
+      "mediaId": "00000000-0000-0000-0000-000000000001",
+      "coverAssetId": null,
+      "avatarAssetId": "00000000-0000-0000-0000-000000000001",
+      "transport": null,
+      "avatarUserId": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  {
+    "name": "프로필 사진 완료 결과 누락 거부",
+    "component": "UploadTask",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "avatar",
+      "state": "complete",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": false,
+      "reason": null,
+      "version": 1,
+      "mediaId": null,
+      "coverAssetId": null,
+      "transport": null,
+      "avatarUserId": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  {
+    "name": "대표사진과 프로필 사진 혼합 대상 거부",
+    "component": "UploadTask",
+    "expected_valid": false,
+    "value": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "targetType": "avatar",
+      "state": "queued",
+      "transferredBytes": 0,
+      "actualBytes": null,
+      "retryable": true,
+      "reason": null,
+      "version": 1,
+      "mediaId": null,
+      "coverAssetId": null,
+      "avatarAssetId": null,
+      "transport": {
+        "protocol": "ATP-Upload/1",
+        "uploadEndpoint": "/v1/upload-tasks/00000000-0000-0000-0000-000000000001/content",
+        "generation": 1,
+        "resumeOffset": 0,
+        "length": 1048577,
+        "expiresAt": "2026-10-17T15:00:00+09:00",
+        "alignmentBytes": 1048576,
+        "maxChunkBytes": 4194304
+      },
+      "avatarUserId": "00000000-0000-0000-0000-000000000001",
+      "coverGroupId": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  {
+    "name": "프로필 사진 커밋 결과",
+    "component": "Operation",
+    "expected_valid": true,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "media_commit",
+      "state": "succeeded",
+      "result": {
+        "taskId": "00000000-0000-0000-0000-000000000001",
+        "mediaId": null,
+        "coverAssetId": null,
+        "avatarAssetId": "00000000-0000-0000-0000-000000000001"
+      },
+      "itemErrors": []
+    }
+  },
+  {
+    "name": "하루 변경 검사 후 결과",
+    "component": "Operation",
+    "expected_valid": true,
+    "value": {
+      "operationId": "00000000-0000-0000-0000-000000000001",
+      "kind": "day_update",
+      "state": "succeeded",
+      "result": {
+        "schedule": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "groupId": "00000000-0000-0000-0000-000000000001",
+          "title": "서울 여행",
+          "startDate": "2027-01-31",
+          "endDate": "2027-02-01",
+          "timezone": "Asia/Seoul",
+          "status": "active",
+          "version": 3,
+          "days": [
+            {
+              "date": "2027-01-31",
+              "dayNo": 1,
+              "title": null,
+              "status": "active",
+              "visitCount": 0
+            },
+            {
+              "date": "2027-02-01",
+              "dayNo": 2,
+              "title": "둘째 날",
+              "status": "cancelled",
+              "visitCount": 0
+            }
+          ]
+        },
+        "days": [
+          {
+            "date": "2027-01-31",
+            "dayNo": 1,
+            "title": null,
+            "status": "active",
+            "visitCount": 0
+          },
+          {
+            "date": "2027-02-01",
+            "dayNo": 2,
+            "title": "둘째 날",
+            "status": "cancelled",
+            "visitCount": 0
+          }
+        ]
+      },
+      "itemErrors": []
+    }
+  },
+  {
+    "name": "동영상 내보내기는 동영상 파일",
+    "component": "ExportResult",
+    "expected_valid": true,
+    "value": {
+      "mediaId": "00000000-0000-0000-0000-000000000001",
+      "kind": "video",
+      "state": "ready",
+      "converted": false,
+      "variant": "sanitized_original",
+      "mime": "video/mp4"
+    }
+  },
+  {
+    "name": "동영상 내보내기에 포스터 이미지 거부",
+    "component": "ExportResult",
+    "expected_valid": false,
+    "value": {
+      "mediaId": "00000000-0000-0000-0000-000000000001",
+      "kind": "video",
+      "state": "ready",
+      "converted": false,
+      "variant": "sanitized_original",
+      "mime": "image/jpeg"
+    }
+  },
+  {
+    "name": "썸네일 variant 내보내기 거부",
+    "component": "ExportResult",
+    "expected_valid": false,
+    "value": {
+      "mediaId": "00000000-0000-0000-0000-000000000001",
+      "kind": "video",
+      "state": "ready",
+      "converted": false,
+      "variant": "thumbnail",
+      "mime": "video/mp4"
     }
   }
 ]

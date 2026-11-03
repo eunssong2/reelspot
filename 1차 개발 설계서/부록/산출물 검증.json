@@ -1,11 +1,11 @@
 {
-  "scope": "설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F28 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.",
+  "scope": "설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F29 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.",
   "passed": true,
   "checks": [
     {
       "check": "OpenAPI3.1 스키마와 operation 고유성",
       "passed": true,
-      "detail": 73
+      "detail": 79
     },
     {
       "check": "초대 관리 3개 API는 모든 현재 참여자",
@@ -22,15 +22,15 @@
       "detail": "모든 현재 참여자(방장 포함)"
     },
     {
-      "check": "28개 기능의 UI 연결",
+      "check": "29개 기능의 UI 연결",
       "passed": true,
-      "detail": 28
+      "detail": 29
     },
     {
       "check": "서버 기능의 API 연결과 로컬 촬영 경계",
       "passed": true,
       "detail": {
-        "server_features": 27,
+        "server_features": 28,
         "F12": "Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결"
       }
     },
@@ -42,7 +42,7 @@
     {
       "check": "패키지 내부 기능명세 SHA256",
       "passed": true,
-      "detail": "74eb1f91e74d58f9745f1b48a6cc8a1e79c2a70ba7868e5526de41a0b5bb6010"
+      "detail": "b7274b24c8d444feecf1f82c82671fbe6c831043f8881489d563e1b3db15f0f7"
     },
     {
       "check": "업무 결과 키 operationId 통일",
@@ -66,7 +66,7 @@
     {
       "check": "현재 OpenAPI 예제 검증 결과",
       "passed": true,
-      "detail": 24
+      "detail": 57
     },
     {
       "check": "현재 DDL의 실제 DB 검증 결과",
@@ -80,8 +80,8 @@
       "check": "컬럼 사전과 실제 DB 컬럼 일치",
       "passed": true,
       "detail": {
-        "tables": 27,
-        "columns": 272
+        "tables": 28,
+        "columns": 282
       }
     },
     {
@@ -94,7 +94,7 @@
           {
             "check": "build_design.py 독립 실행",
             "passed": true,
-            "output": "\"UI10\", \"S03\", \"S03-detail\", \"UI11\", \"UI12\", \"S05\", \"M1\", \"S05-empty\", \"UI13\", \"P16-2\", \"S04\", \"S04-select\", \"S04-empty\", \"UI14\", \"M2\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"P11-2\", \"INVITES\", \"UI24\", \"P12-2\", \"P12-3\", \"P12-4\", \"INVITE-JOIN\", \"UI25\", \"UI26\", \"P13-2\", \"P13-3\", \"MEMBERS-GROUP\", \"MEMBERS\", \"MEMBER-REMOVE\", \"MEMBER-REMOVED\", \"MEMBERS-READER\", \"UI27\", \"UI28\", \"P19-2\", \"P19-3\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"MY-LINK\", \"UI37\", \"ACCOUNT\", \"S0\"], \"pdf_intro_pages\": 2, \"pdf_pages\": 111, \"pptx_slides\": 113}\n{\"screens\": 36, \"operations\": 73, \"tables\": 27, \"functional_cases\": 120, \"native_ui_pptx\": \"/tmp/atp-design-standalone-_h_kaxje/package/UI/05 UI 설계.pptx\"}\n",
+            "output": "\"UI10\", \"S03\", \"S03-detail\", \"UI11\", \"UI12\", \"S05\", \"M1\", \"S05-empty\", \"UI13\", \"P16-2\", \"S04\", \"S04-select\", \"S04-empty\", \"UI14\", \"M2\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"P11-2\", \"INVITES\", \"UI24\", \"P12-2\", \"P12-3\", \"P12-4\", \"INVITE-JOIN\", \"UI25\", \"UI26\", \"P13-2\", \"P13-3\", \"MEMBERS-GROUP\", \"MEMBERS\", \"MEMBER-REMOVE\", \"MEMBER-REMOVED\", \"MEMBERS-READER\", \"UI27\", \"UI28\", \"P19-2\", \"P19-3\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"MY-LINK\", \"UI37\", \"ACCOUNT\", \"S0\"], \"pdf_intro_pages\": 3, \"pdf_pages\": 109, \"pptx_slides\": 112}\n{\"screens\": 36, \"operations\": 79, \"tables\": 28, \"functional_cases\": 129, \"native_ui_pptx\": \"/tmp/atp-design-standalone-42jlxg8m/package/UI/05 UI 설계.pptx\"}\n",
             "error": ""
           },
           {
@@ -123,9 +123,9 @@
       }
     },
     {
-      "check": "120개 기능 검수 시나리오",
+      "check": "129개 기능 검수 시나리오",
       "passed": true,
-      "detail": 120
+      "detail": 129
     },
     {
       "check": "프로토타입 출처와 캡처 무결성",
@@ -178,15 +178,15 @@
       "detail": [
         [
           "UI11",
-          29
+          28
         ],
         [
           "UI15",
-          24
+          22
         ],
         [
           "UI16",
-          29
+          24
         ],
         [
           "UI17",
@@ -194,19 +194,19 @@
         ],
         [
           "UI20",
-          28
+          26
         ],
         [
           "UI21",
-          22
+          20
         ],
         [
           "UI22",
-          30
+          26
         ],
         [
           "UI25",
-          25
+          20
         ],
         [
           "UI27",
@@ -218,7 +218,7 @@
         ],
         [
           "UI30",
-          22
+          21
         ],
         [
           "UI31",
@@ -226,19 +226,19 @@
         ],
         [
           "UI32",
-          25
+          22
         ],
         [
           "UI33",
-          23
+          22
         ],
         [
           "UI34",
-          26
+          24
         ],
         [
           "UI35",
-          23
+          22
         ]
       ]
     },
@@ -331,7 +331,7 @@
     {
       "check": "PPTX 기본·상세·상태 화면 수",
       "passed": true,
-      "detail": 113
+      "detail": 112
     },
     {
       "check": "PPTX 캡처 전체의 원본 이미지 포함",
@@ -347,8 +347,8 @@
       "check": "Word 열기 02 데이터베이스 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 140,
-        "tables": 29
+        "paragraphs": 152,
+        "tables": 30
       }
     },
     {
@@ -363,15 +363,15 @@
       "check": "Word 열기 03 API 연동 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 79,
-        "tables": 76
+        "paragraphs": 85,
+        "tables": 82
       }
     },
     {
       "check": "Word 열기 09 구현 계약 보완",
       "passed": true,
       "detail": {
-        "paragraphs": 77,
+        "paragraphs": 84,
         "tables": 2
       }
     },
@@ -429,7 +429,7 @@
         "화면상태",
         "프로토타입대응",
         "앱구현현황",
-        "정책차이",
+        "바뀐결정과확인",
         "UI통합검수",
         "적용기준",
         "화면전환",
@@ -448,7 +448,7 @@
     {
       "check": "기능검수 결과 미실행 유지",
       "passed": true,
-      "detail": 120
+      "detail": 129
     },
     {
       "check": "로컬 HTML 링크/이미지",
@@ -471,7 +471,7 @@
     {
       "check": "PDF 열기 03 API 연동 설계",
       "passed": true,
-      "detail": 20
+      "detail": 22
     },
     {
       "check": "PDF 열기 01 시스템 설계",
@@ -486,17 +486,17 @@
     {
       "check": "PDF 열기 02 데이터베이스 설계",
       "passed": true,
-      "detail": 24
+      "detail": 26
     },
     {
       "check": "PDF 열기 05 UI 설계",
       "passed": true,
-      "detail": 111
+      "detail": 109
     },
     {
       "check": "UI PDF 기본·상세·상태 화면수",
       "passed": true,
-      "detail": 111
+      "detail": 109
     },
     {
       "check": "UI PDF 출처와 적용 기준",
@@ -509,16 +509,13 @@
       "detail": [
         "UI01",
         "LOGIN",
-        "UI01-PRODUCT",
         "UI02",
         "P04-2",
         "P04-3",
         "ONBOARD",
-        "UI02-PRODUCT",
         "UI03",
         "P05-2",
         "GROUPS",
-        "UI03-PRODUCT",
         "UI04",
         "P06-2",
         "GROUP-NEW",

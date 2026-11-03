@@ -1,4 +1,4 @@
--- At that place v0.3 / PostgreSQL 16. Empty database baseline, not application implementation.
+-- At that place v0.4(기능명세서 v3) / PostgreSQL 16. Empty database baseline, not application implementation.
 -- Run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f 001_initial.sql
 BEGIN;
 SELECT pg_advisory_xact_lock(74103102);
@@ -9,6 +9,8 @@ CREATE TABLE users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   display_name text NOT NULL CHECK (btrim(display_name) <> '' AND display_name !~ E'[\n\r]'),
   status text NOT NULL DEFAULT 'onboarding' CHECK (status IN ('onboarding','active','restricted','deleting','deleted')),
+  avatar_asset_id uuid,
+  avatar_version integer NOT NULL DEFAULT 0 CHECK(avatar_version>=0),
   version bigint NOT NULL DEFAULT 1 CHECK (version > 0),
   created_at timestamptz NOT NULL DEFAULT now(),
   deleted_at timestamptz
@@ -19,6 +21,10 @@ COMMENT ON COLUMN users.id IS '내부 불변 식별자';
 COMMENT ON COLUMN users.display_name IS 'NFC 후 grapheme 1~20은 API 검증';
 
 COMMENT ON COLUMN users.status IS '계정 생명주기';
+
+COMMENT ON COLUMN users.avatar_asset_id IS '프로필 사진(assets.avatar_user_id=본인). NULL이면 기본 아이콘. assets 생성 후 지연 FK 연결';
+
+COMMENT ON COLUMN users.avatar_version IS '프로필 사진 적용·기본 복원마다 증가(캐시 키)';
 
 COMMENT ON COLUMN users.version IS 'API가 expectedVersion 검증 후 +1';
 
@@ -103,9 +109,9 @@ COMMENT ON COLUMN consent_documents.item_key IS '동의 항목';
 
 COMMENT ON COLUMN consent_documents.version IS '불변 문서 버전';
 
-COMMENT ON COLUMN consent_documents.required IS 'consent의 필수 여부; notice는 false';
+COMMENT ON COLUMN consent_documents.required IS 'consent의 필수 여부; notice는 false. v3 가입 동의 4종: terms-service·privacy-collection 필수, marketing·location-terms 선택';
 
-COMMENT ON COLUMN consent_documents.kind IS '동의와 고지 구분';
+COMMENT ON COLUMN consent_documents.kind IS '동의와 고지 구분. v3 가입 문서는 모두 consent, notice는 향후 고지용';
 
 COMMENT ON COLUMN consent_documents.title IS '공개 문서명';
 
@@ -299,7 +305,7 @@ COMMENT ON COLUMN invitations.group_id IS '참조 대상';
 
 COMMENT ON COLUMN invitations.issuer_user_id IS '참조 대상';
 
-COMMENT ON COLUMN invitations.code_hash IS '조회용 hash';
+COMMENT ON COLUMN invitations.code_hash IS '조회용 hash. 코드는 8자 ABCDEFGHJKLMNPQRSTUVWXYZ23456789(0·O·1·I 제외)';
 
 COMMENT ON COLUMN invitations.token_hash IS '링크 토큰 hash';
 
@@ -348,9 +354,9 @@ COMMENT ON COLUMN schedules.group_id IS '참조 대상';
 
 COMMENT ON COLUMN schedules.title IS 'grapheme 1~100';
 
-COMMENT ON COLUMN schedules.start_date IS 'KST 시작 날짜';
+COMMENT ON COLUMN schedules.start_date IS 'KST 시작 날짜. v3: 남은 일차(schedule_days)의 최소 날짜로 서비스가 동기화';
 
-COMMENT ON COLUMN schedules.end_date IS 'KST 포함 종료 날짜. 시각·반복 없음';
+COMMENT ON COLUMN schedules.end_date IS 'KST 포함 종료 날짜(일차 최대 날짜). 시각·반복 없음';
 
 COMMENT ON COLUMN schedules.status IS '일정 상태';
 
@@ -371,6 +377,32 @@ COMMENT ON COLUMN schedules.created_at IS '서버 생성 시각';
 CREATE INDEX schedules_calendar_idx ON schedules(group_id,start_date,end_date);
 
 CREATE INDEX schedules_expiry_idx ON schedules(expires_at) WHERE expires_at IS NOT NULL;
+
+CREATE TABLE schedule_days (
+  schedule_id uuid NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+  group_id uuid NOT NULL REFERENCES groups(id) ON DELETE NO ACTION,
+  day_date date NOT NULL,
+  status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','cancelled')),
+  cancelled_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY(schedule_id,day_date),
+  CHECK((status='cancelled')=(cancelled_at IS NOT NULL)),
+  FOREIGN KEY(schedule_id,group_id) REFERENCES schedules(id,group_id) ON DELETE CASCADE
+);
+
+COMMENT ON COLUMN schedule_days.schedule_id IS '일정. 일차 번호는 날짜순 1부터(취소 포함) 조회 시 계산';
+
+COMMENT ON COLUMN schedule_days.group_id IS '같은 모임 같은 날짜 활성 일정 하나 검사용';
+
+COMMENT ON COLUMN schedule_days.day_date IS '일차 날짜(KST). 하루 이동 시 방문일·기록일과 같은 트랜잭션에서 변경';
+
+COMMENT ON COLUMN schedule_days.status IS '하루 취소. 모든 날 취소 시 일정 취소';
+
+COMMENT ON COLUMN schedule_days.cancelled_at IS '하루 취소 시각';
+
+COMMENT ON COLUMN schedule_days.created_at IS '서버 생성 시각';
+
+CREATE INDEX schedule_days_group_date_idx ON schedule_days(group_id,day_date) WHERE status='active';
 
 CREATE TABLE places (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -435,7 +467,7 @@ CREATE TABLE visits (
   place_id uuid NOT NULL REFERENCES places(id) ON DELETE NO ACTION,
   visit_date date NOT NULL,
   position integer CHECK(position>=0),
-  planned_time time CHECK(planned_time<'24:00'::time AND extract(second FROM planned_time)=0 AND extract(minute FROM planned_time)::int%5=0),
+  planned_time time CHECK(planned_time<'24:00'::time AND extract(second FROM planned_time)=0),
   dedupe_key text NOT NULL,
   deleted_at timestamptz,
   version bigint NOT NULL DEFAULT 1 CHECK (version > 0),
@@ -455,7 +487,7 @@ COMMENT ON COLUMN visits.visit_date IS '방문일';
 
 COMMENT ON COLUMN visits.position IS '활성은 필수, 삭제 후 NULL';
 
-COMMENT ON COLUMN visits.planned_time IS '00:00~23:55 또는 NULL(시간 미정). 추가 시 입력, 날짜별 활성 방문 15개 트리거';
+COMMENT ON COLUMN visits.planned_time IS '00:00~23:59 1분 단위 또는 NULL(시간 미정). 추가 시 NULL, 계획 저장에서 지정. 날짜별 활성 방문 15개 트리거';
 
 COMMENT ON COLUMN visits.dedupe_key IS '공급자 ID 또는 정규화 수기정보';
 
@@ -494,8 +526,9 @@ CREATE TABLE upload_tasks (
   schedule_id uuid,
   author_user_id uuid NOT NULL REFERENCES users(id) ON DELETE NO ACTION,
   cover_group_id uuid REFERENCES groups(id) ON DELETE NO ACTION,
+  avatar_user_id uuid REFERENCES users(id) ON DELETE NO ACTION,
   client_file_id text NOT NULL,
-  selection_index integer CHECK(selection_index BETWEEN 0 AND 119),
+  selection_index integer CHECK(selection_index BETWEEN 0 AND 9),
   kind text NOT NULL CHECK(kind IN ('photo','video')),
   fingerprint text NOT NULL CHECK(fingerprint ~ '^[0-9a-f]{64}$'),
   checksum text CHECK(checksum ~ '^[0-9a-f]{64}$'),
@@ -519,8 +552,8 @@ CREATE TABLE upload_tasks (
   UNIQUE(submission_id,selection_index),
   UNIQUE(id,schedule_id,author_user_id,submission_id),
   FOREIGN KEY(submission_id,schedule_id,author_user_id) REFERENCES submissions(id,schedule_id,author_user_id) ON DELETE NO ACTION,
-  FOREIGN KEY(visit_id,schedule_id,record_date) REFERENCES visits(id,schedule_id,visit_date) ON DELETE NO ACTION,
-  CHECK((cover_group_id IS NULL AND submission_id IS NOT NULL AND schedule_id IS NOT NULL AND record_date IS NOT NULL AND selection_index IS NOT NULL) OR (cover_group_id IS NOT NULL AND submission_id IS NULL AND schedule_id IS NULL AND record_date IS NULL AND selection_index IS NULL AND visit_id IS NULL)),
+  CONSTRAINT upload_tasks_visit_id_schedule_id_record_date_fkey FOREIGN KEY(visit_id,schedule_id,record_date) REFERENCES visits(id,schedule_id,visit_date) ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE,
+  CONSTRAINT upload_tasks_target_check CHECK((cover_group_id IS NULL AND avatar_user_id IS NULL AND submission_id IS NOT NULL AND schedule_id IS NOT NULL AND record_date IS NOT NULL AND selection_index IS NOT NULL) OR (num_nonnulls(cover_group_id,avatar_user_id)=1 AND submission_id IS NULL AND schedule_id IS NULL AND record_date IS NULL AND selection_index IS NULL AND visit_id IS NULL)),
   CHECK(upload_offset<=declared_bytes)
 );
 
@@ -534,13 +567,15 @@ COMMENT ON COLUMN upload_tasks.author_user_id IS '참조 대상';
 
 COMMENT ON COLUMN upload_tasks.cover_group_id IS '참조 대상';
 
+COMMENT ON COLUMN upload_tasks.avatar_user_id IS '프로필 사진 작업 대상(본인)';
+
 COMMENT ON COLUMN upload_tasks.client_file_id IS '후보별 클라이언트 ID';
 
-COMMENT ON COLUMN upload_tasks.selection_index IS '기록일 때 필수';
+COMMENT ON COLUMN upload_tasks.selection_index IS '기록일 때 필수. 한 제출 최대 10개';
 
 COMMENT ON COLUMN upload_tasks.kind IS '선언 종류, 서버 probe와 대조. 작성자×방문 사진5/영상2 트리거';
 
-COMMENT ON COLUMN upload_tasks.fingerprint IS '원본 SHA256';
+COMMENT ON COLUMN upload_tasks.fingerprint IS '원본 SHA256. 한 제출 안에서 중복 금지';
 
 COMMENT ON COLUMN upload_tasks.checksum IS '서버 전체 파일 SHA256';
 
@@ -582,6 +617,10 @@ CREATE INDEX upload_tasks_author_idx ON upload_tasks(author_user_id,state);
 
 CREATE INDEX upload_tasks_schedule_idx ON upload_tasks(schedule_id,state);
 
+CREATE UNIQUE INDEX upload_tasks_submission_fingerprint_uq ON upload_tasks(submission_id,fingerprint) WHERE submission_id IS NOT NULL;
+
+CREATE INDEX upload_tasks_avatar_idx ON upload_tasks(avatar_user_id) WHERE avatar_user_id IS NOT NULL;
+
 CREATE TABLE media (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   task_id uuid NOT NULL UNIQUE,
@@ -596,7 +635,7 @@ CREATE TABLE media (
   original_bytes bigint NOT NULL CHECK(original_bytes>0),
   captured_at timestamptz,
   completed_at timestamptz NOT NULL,
-  selection_index integer NOT NULL CHECK(selection_index BETWEEN 0 AND 119),
+  selection_index integer NOT NULL CHECK(selection_index BETWEEN 0 AND 9),
   access_state text NOT NULL DEFAULT 'available' CHECK(access_state IN ('available','deleted','expired','restricted')),
   moderation_state text NOT NULL CHECK(moderation_state IN ('passed','review','restricted')),
   deleted_at timestamptz,
@@ -604,7 +643,7 @@ CREATE TABLE media (
   version bigint NOT NULL DEFAULT 1 CHECK (version > 0),
   created_at timestamptz NOT NULL DEFAULT now(),
   FOREIGN KEY(task_id,schedule_id,author_user_id,submission_id) REFERENCES upload_tasks(id,schedule_id,author_user_id,submission_id) ON DELETE NO ACTION,
-  FOREIGN KEY(visit_id,schedule_id,record_date) REFERENCES visits(id,schedule_id,visit_date) ON DELETE NO ACTION
+  CONSTRAINT media_visit_id_schedule_id_record_date_fkey FOREIGN KEY(visit_id,schedule_id,record_date) REFERENCES visits(id,schedule_id,visit_date) ON DELETE NO ACTION DEFERRABLE INITIALLY IMMEDIATE
 );
 
 COMMENT ON COLUMN media.id IS '내부 불변 식별자';
@@ -631,9 +670,9 @@ COMMENT ON COLUMN media.original_bytes IS '원본 업로드 바이트';
 
 COMMENT ON COLUMN media.captured_at IS '촬영시각, 없는 값 생성 금지';
 
-COMMENT ON COLUMN media.completed_at IS '공개 완료시각';
+COMMENT ON COLUMN media.completed_at IS '공개 완료시각. 목록 정렬은 submissions.first_completed_at(게시 묶음) 기준';
 
-COMMENT ON COLUMN media.selection_index IS '최초 선택 순서';
+COMMENT ON COLUMN media.selection_index IS '최초 선택 순서. 묶음 안 정렬';
 
 COMMENT ON COLUMN media.access_state IS '접근 상태';
 
@@ -655,6 +694,7 @@ CREATE TABLE assets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   media_id uuid REFERENCES media(id) ON DELETE NO ACTION,
   cover_group_id uuid REFERENCES groups(id) ON DELETE NO ACTION,
+  avatar_user_id uuid REFERENCES users(id) ON DELETE NO ACTION,
   variant text NOT NULL CHECK(variant IN ('original_private','sanitized_original','view','thumbnail')),
   object_key text NOT NULL UNIQUE,
   bytes bigint NOT NULL CHECK(bytes>0),
@@ -663,7 +703,7 @@ CREATE TABLE assets (
   probe_result jsonb NOT NULL,
   state text NOT NULL DEFAULT 'staged' CHECK (state IN ('staged','ready','delete_pending','purged')),
   created_at timestamptz NOT NULL DEFAULT now(),
-  CHECK(num_nonnulls(media_id,cover_group_id)=1),
+  CONSTRAINT assets_owner_check CHECK(num_nonnulls(media_id,cover_group_id,avatar_user_id)=1),
   CHECK(state<>'ready' OR variant='original_private' OR location_verified_absent)
 );
 
@@ -672,6 +712,8 @@ COMMENT ON COLUMN assets.id IS '내부 불변 식별자';
 COMMENT ON COLUMN assets.media_id IS '참조 대상';
 
 COMMENT ON COLUMN assets.cover_group_id IS '참조 대상';
+
+COMMENT ON COLUMN assets.avatar_user_id IS '프로필 사진 소유자. 모임 저장량 미포함';
 
 COMMENT ON COLUMN assets.variant IS '원본 직접 배포 금지';
 
@@ -690,6 +732,8 @@ COMMENT ON COLUMN assets.state IS '객체 상태';
 COMMENT ON COLUMN assets.created_at IS '서버 생성 시각';
 
 CREATE INDEX assets_media_idx ON assets(media_id,variant);
+
+CREATE INDEX assets_avatar_idx ON assets(avatar_user_id) WHERE avatar_user_id IS NOT NULL;
 
 CREATE TABLE metadata_operations (
   id uuid PRIMARY KEY REFERENCES operations(id) ON DELETE NO ACTION,
@@ -991,7 +1035,7 @@ COMMENT ON COLUMN export_jobs.state IS '준비 상태';
 
 COMMENT ON COLUMN export_jobs.targets IS '1~120개 ID';
 
-COMMENT ON COLUMN export_jobs.results IS '파일별 결과';
+COMMENT ON COLUMN export_jobs.results IS '파일별 결과. 동영상은 동영상 파일(sanitized_original/view), 포스터·썸네일 아님';
 
 COMMENT ON COLUMN export_jobs.created_at IS '서버 생성 시각';
 
@@ -1000,6 +1044,8 @@ COMMENT ON COLUMN export_jobs.expires_at IS '준비결과24h, 실제 GET은 재�
 CREATE INDEX export_jobs_user_idx ON export_jobs(user_id,created_at DESC);
 
 ALTER TABLE groups ADD CONSTRAINT groups_cover_asset_fk FOREIGN KEY(cover_asset_id) REFERENCES assets(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE users ADD CONSTRAINT users_avatar_asset_fk FOREIGN KEY(avatar_asset_id) REFERENCES assets(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED;
 -- All functions are INVOKER. No mobile client has direct DB privileges.
 CREATE FUNCTION retention_last_day(end_date date) RETURNS date
 LANGUAGE sql IMMUTABLE STRICT SET search_path=atp,pg_catalog
@@ -1150,7 +1196,7 @@ END $$;
 CREATE TRIGGER visit_limit_guard BEFORE INSERT OR UPDATE ON visits
 FOR EACH ROW EXECUTE FUNCTION guard_visit_limit();
 
--- P11: 작성자×방문(미지정은 작성자×일정×기록일) 사진 5·영상 2.
+-- P11: 작성자×방문(미지정은 작성자×일정×기록일) 사진 5·영상 2. 대표사진·프로필 사진 작업은 제외.
 -- 완료 media(available)와 진행 중 upload_tasks를 합산한다. advisory lock으로 같은 묶음의 동시 접수를 직렬화한다.
 CREATE FUNCTION media_bucket_count(p_author uuid,p_schedule uuid,p_visit uuid,p_record date,p_kind text,p_exclude_task uuid,p_exclude_media uuid)
 RETURNS int LANGUAGE sql STABLE SET search_path=atp,pg_catalog AS $$
@@ -1167,7 +1213,7 @@ SET search_path=atp,pg_catalog AS $$
 DECLARE n int; lim int; bucket text; ex_task uuid; ex_media uuid;
 BEGIN
  IF TG_TABLE_NAME='upload_tasks' THEN
-   IF NEW.cover_group_id IS NOT NULL OR NEW.state IN ('complete','failed','cancelled') THEN RETURN NEW; END IF;
+   IF NEW.cover_group_id IS NOT NULL OR NEW.avatar_user_id IS NOT NULL OR NEW.state IN ('complete','failed','cancelled') THEN RETURN NEW; END IF;
    IF TG_OP='UPDATE' AND OLD.state NOT IN ('complete','failed','cancelled') AND OLD.visit_id IS NOT DISTINCT FROM NEW.visit_id AND OLD.record_date=NEW.record_date THEN RETURN NEW; END IF;
    ex_task:=NEW.id; ex_media:=NULL;
  ELSE
@@ -1186,6 +1232,55 @@ CREATE TRIGGER upload_task_media_limit_guard BEFORE INSERT OR UPDATE ON upload_t
 FOR EACH ROW EXECUTE FUNCTION guard_media_limit();
 CREATE TRIGGER media_media_limit_guard BEFORE INSERT OR UPDATE ON media
 FOR EACH ROW EXECUTE FUNCTION guard_media_limit();
+
+-- v3 D06: 한 모임의 같은 날짜에는 활성 일정의 활성 일차 하나만. 취소된 날·취소/삭제된 일정의 날은 빈 날이다.
+-- 모임 행 잠금으로 동시 추가·이동을 직렬화한다.
+CREATE FUNCTION guard_schedule_day() RETURNS trigger LANGUAGE plpgsql
+SET search_path=atp,pg_catalog AS $$
+BEGIN
+ IF NEW.status<>'active' THEN RETURN NEW; END IF;
+ IF TG_OP='UPDATE' AND OLD.status='active' AND OLD.day_date=NEW.day_date AND OLD.group_id=NEW.group_id THEN RETURN NEW; END IF;
+ PERFORM 1 FROM groups WHERE id=NEW.group_id FOR UPDATE;
+ IF EXISTS(SELECT 1 FROM schedule_days d JOIN schedules s ON s.id=d.schedule_id
+   WHERE d.group_id=NEW.group_id AND d.day_date=NEW.day_date AND d.status='active'
+     AND s.status='active' AND d.schedule_id<>NEW.schedule_id) THEN
+   RAISE EXCEPTION 'SCHEDULE_DATE_TAKEN' USING ERRCODE='23514';
+ END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER schedule_day_guard BEFORE INSERT OR UPDATE ON schedule_days
+FOR EACH ROW EXECUTE FUNCTION guard_schedule_day();
+
+-- v3 D08/P05: 하루 삭제는 그 날짜에 활성 방문·공개/제한 기록·진행 중 업로드가 없을 때만.
+-- 마지막 날 삭제 시 일정 삭제, 모든 날 취소 시 일정 취소는 서비스가 같은 트랜잭션에서 처리한다.
+CREATE FUNCTION guard_schedule_day_delete() RETURNS trigger LANGUAGE plpgsql
+SET search_path=atp,pg_catalog AS $$
+BEGIN
+ IF EXISTS(SELECT 1 FROM visits WHERE schedule_id=OLD.schedule_id AND visit_date=OLD.day_date AND deleted_at IS NULL)
+   OR EXISTS(SELECT 1 FROM media WHERE schedule_id=OLD.schedule_id AND record_date=OLD.day_date AND access_state IN ('available','restricted'))
+   OR EXISTS(SELECT 1 FROM upload_tasks WHERE schedule_id=OLD.schedule_id AND record_date=OLD.day_date AND state NOT IN ('complete','failed','cancelled')) THEN
+   RAISE EXCEPTION 'NOT_EMPTY' USING ERRCODE='23514';
+ END IF;
+ RETURN OLD;
+END $$;
+CREATE TRIGGER schedule_day_delete_guard BEFORE DELETE ON schedule_days
+FOR EACH ROW EXECUTE FUNCTION guard_schedule_day_delete();
+
+-- v3 D04: 프로필 사진은 본인 소유 avatar asset만 연결한다.
+CREATE FUNCTION check_user_avatar() RETURNS trigger LANGUAGE plpgsql
+SET search_path=atp,pg_catalog AS $$
+DECLARE actual_owner uuid;
+BEGIN
+ IF NEW.avatar_asset_id IS NOT NULL THEN
+   SELECT avatar_user_id INTO actual_owner FROM assets WHERE id=NEW.avatar_asset_id;
+   IF actual_owner IS DISTINCT FROM NEW.id THEN
+     RAISE EXCEPTION 'AVATAR_USER_MISMATCH' USING ERRCODE='23514';
+   END IF;
+ END IF;
+ RETURN NULL;
+END $$;
+CREATE CONSTRAINT TRIGGER user_avatar_guard AFTER INSERT OR UPDATE ON users
+DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_user_avatar();
 
 -- F05: 초대 확인 횟수 50회 소진. use_count는 증가만 허용하고 50 도달 시 exhausted_at을 고정한다.
 CREATE FUNCTION guard_invitation_uses() RETURNS trigger LANGUAGE plpgsql

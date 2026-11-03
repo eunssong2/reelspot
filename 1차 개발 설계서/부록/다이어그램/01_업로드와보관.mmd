@@ -4,7 +4,7 @@ sequenceDiagram
  participant D as PostgreSQL
  participant S as Private Storage
  participant W as 미디어 작업자
- A->>B: 제출(멱등키, 파일정보1~120)
+ A->>B: 제출(멱등키, 장소·기록일, 파일정보1~10)
  B->>D: 권한/일정잠금·검증·파일별task·용량예약
  D-->>B: submissionId/tasks
  B-->>A: 작업별 전송경로

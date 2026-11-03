@@ -44,32 +44,32 @@ Author -up-|> User
 Host -up-|> Member
 
 rectangle "At that place · 1차 Android 12+ 공동 기록·감상" {
-  usecase "계정·가입 동의·표시명 설정" as Account
+  usecase "카카오·Google 로그인\n약관 동의(필수2·선택2)·표시명" as Account
   usecase "내 모임 찾고\n만들거나 참여하기" as Join
-  usecase "기간(시작~종료 날짜) 일정\n수동 추가" as CreateSchedule
-  usecase "일정 제목·기간 수정" as EditSchedule
-  usecase "일정 취소(기록 보존)" as Schedule
-  usecase "빈 일정 삭제" as DeleteSchedule
+  usecase "기간 일정 추가\n날짜마다 1일차·2일차\n하루에 일정 하나" as CreateSchedule
+  usecase "하루 일정 변경\n그날 제목·날짜만" as EditSchedule
+  usecase "하루 일정 취소(기록 보존)" as Schedule
+  usecase "장소 없는 날 삭제\n마지막 날이면 일정 삭제" as DeleteSchedule
   usecase "빈 방문 삭제" as DeleteVisit
-  usecase "일정 안의 장소 계획\n검색·직접 등록·예정 시각\n일차별 최대 15개" as Plan
-  usecase "모임 이름·대표 사진 변경" as Cover
-  usecase "사진·영상 기록 올리기\n장소별 사진 5·영상 2\n장소 미지정 허용" as Records
-  usecase "모두의 기록 감상\n사람별 묶음·시간순\n사진 확대·개별 영상 재생" as Browse
+  usecase "날짜별 장소 계획\n서울 장소 검색·직접 등록\n방문 시간(1분)·순서 편집\n일차별 최대 15개" as Plan
+  usecase "모임 이름·모임 사진(4:3) 변경" as Cover
+  usecase "장소에 사진·동영상 올리기\n한 번 10개·중복 제외\n보관함·촬영\n장소별 사진 5·영상 2" as Records
+  usecase "모두의 기록 감상\n사진별·사람별·최신순/오래된순\n1~4배 확대·동영상 재생" as Browse
   usecase "본인 기록 개별·일괄 수정\n나중에 방문 연결" as Edit
   usecase "내가 올린 기록 조회·일괄 삭제\n나가기·퇴장 후에도 가능" as Mine
   usecase "초대 링크·코드 발급·관리" as Invite
   usecase "초대 메시지 공유\n카카오톡 등" as InviteShare
-  usecase "참여자 확인하기" as Participants
-  usecase "방장 이전·참여자 퇴장\n재참여 차단·해제" as Roles
+  usecase "함께하는 친구 확인\n카카오톡 초대·링크 복사" as Participants
+  usecase "참여자 내보내기·재참여 차단\n방장 이전·차단 해제" as Roles
   usecase "기록을 남기고 모임 나가기" as Leave
   usecase "마지막 방장 나가기\n모임 종료·본인 파일 삭제·타인 보존" as Close
-  usecase "길게 눌러 여러 장 선택\n모임 사진·영상 휴대폰 저장" as Save
+  usecase "선택해서 N개 다운받기\n사람별 사진 다운받기" as Save
   usecase "계정 삭제\n모든 모임의 본인 서버 기록 삭제" as End
-  usecase "캐시·저장 공간 관리" as Storage
+  usecase "마이페이지·설정\n닉네임·프로필 사진·캐시" as Storage
   usecase "신고·개인 차단/해제" as Safety
   usecase "방장 부재 복구 요청·검토" as Recovery
   usecase "운영 조치·수동 방장 이전" as Operations
-  usecase "타인 제공 파일의 위치 제거" as Privacy
+  usecase "제공 파일의 위치 제거" as Privacy
   usecase "공개 전 유해 콘텐츠 검사" as Filter
 }
 User -- Account
@@ -95,6 +95,7 @@ Member -- Records
 Member -- Browse
 Member -- Participants
 Member -- Storage
+Storage ..> Privacy : <<include>>
 Member -- Leave
 User -- End
 Member -- Edit
@@ -111,7 +112,7 @@ Browse -- OS
 InviteShare -- OS
 
 note right of Invite
-모든 현재 참여자가 발급·조회·공유·취소
+8자 코드(0·O·1·I 제외)·모든 현재 참여자가 발급·조회·공유·취소
 같은 모임의 다른 참여자 초대도 관리
 참여 종료 후 관리 불가
 수신자는 외부 메시지 재전달 가능
@@ -127,7 +128,7 @@ note right of Roles
 상대 수락·접속 대기 없음
 강제 퇴장 시 완료 기록·기한 유지
 자발적 나가기: 유효 초대로 정원 내 재참여
-강제 퇴장: 현재 방장 해제 전 모든 초대 재참여 불가
+내보내기: 현재 방장 해제 전 모든 초대 재참여 불가
 end note
 note right of Close
 다른 활성 참여자가 있으면 방장도 전체 삭제 불가
@@ -144,8 +145,10 @@ note bottom of End
 한 모임이라도 방장이면 계정 삭제 거부
 end note
 note right of Schedule
-일정은 시작~종료 날짜만 · 반복·시각 없음
-필요한 만큼 방장이 수동 추가·변경·취소·삭제
+일정은 날짜(일차)의 묶음 · 반복·시각 없음
+같은 모임 한 날짜에 활성 일정 하나
+하루 단위로 제목·날짜 변경·취소·삭제(방장)
+모든 날이 취소되면 일정 취소
 방을 만드는 사람이 방장·첫 일정 함께 설정
 첫 완료 시 종료일 + 달력상 3개월로 기한 고정
 이미 만료·삭제된 기록은 복구 안 함
@@ -153,7 +156,6 @@ note right of Schedule
 취소 시 기존 기록 보관 기한 유지
 취소 후 새 업로드는 방장도 불가
 취소 전 서버 접수 작업은 같은 파일로 완료·재시도 가능
-기간 밖 기록 유지·작성자가 재지정
 한국 시간 고정·최대 366일
 end note
 note bottom of Leave
@@ -169,7 +171,8 @@ note bottom of Edit
 파일 내용 편집·자동 영상 생성은 2차
 end note
 note right of Save
-1차 포함 · 개별/길게 눌러 다중 선택/제출 묶음 저장
+1차 포함 · 선택(길게 누르기 포함) 최대 120개·사람별 전체
+동영상은 동영상 파일로 저장
 현재 참여자는 조회 가능한 모임 기록 저장 가능
 개인 차단·운영 제한 적용, 타인 파일의 위치 제거
 나가기·강제 퇴장 후 본인·타인 모두 새 저장 불가
@@ -177,12 +180,13 @@ note right of Save
 저장해도 서버 보관 기한은 늘어나지 않음
 end note
 note right of Cover
-공동 모임 이름·대표 사진은 현재 방장만 변경
+모임 이름·모임 사진은 현재 방장만 변경
+초대·관리 화면 맨 위에서 사진 변경
 모든 참여자에게 같은 정보 반영
 end note
 note bottom of DeleteVisit
 기록·진행 업로드 없는 대상만 삭제
-기록 있는 일정은 삭제 대신 취소
+장소·기록 있는 날은 삭제 대신 취소
 end note
 note bottom of Operations
 P04 신원·참여·부재·후임 의사·기존 방장 통지 확인

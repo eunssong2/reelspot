@@ -25,12 +25,12 @@ def main():
     spec=json.loads((ROOT/'부록/openapi.json').read_text());validate(spec)
     ops=[v['operationId'] for path in spec['paths'].values() for v in path.values()]
     check('OpenAPI3.1 스키마와 operation 고유성',len(ops)==len(set(ops))==len(APIS),len(ops))
-    required={f'F{i:02}' for i in range(1,29)}
+    required={f'F{i:02}' for i in range(1,30)}
     invitation_ops=[v for path in spec['paths'].values() for v in path.values() if v.get('operationId') in ['invitesList','inviteCreate','inviteRevoke']]
     invitation_ui=next(s for s in SCREENS if s['id']=='UI23')
     check('초대 관리 3개 API는 모든 현재 참여자',len(invitation_ops)==3 and all(v.get('x-required-role')=='member' and '권한: member.' in v['description'] for v in invitation_ops),[v['operationId'] for v in invitation_ops])
     check('초대 UI와 현재 참여 권한 연결','모든 현재 참여자' in invitation_ui['role'],invitation_ui['role'])
-    check('28개 기능의 UI 연결',required<=set(f for s in SCREENS for f in s['features']),len(required))
+    check('29개 기능의 UI 연결',required<=set(f for s in SCREENS for f in s['features']),len(required))
     api_features=set(f for a in APIS for f in a['features'])
     check('서버 기능의 API 연결과 로컬 촬영 경계',(required-{'F12'})<=api_features,{'server_features':len(required-{'F12'}),'F12':'Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결'})
     check('화면 API 참조',all(set(s['api'])<=set(ops) for s in SCREENS),len(SCREENS))
@@ -52,7 +52,7 @@ def main():
     isolated=json.loads((ROOT/'부록/독립 패키지 검증.json').read_text())
     check('상위 원본과 DayLog 없는 패키지 재생성',isolated['passed'],isolated)
     qa_count=sum(map(len,QA.values()))
-    check(f'{qa_count}개 기능 검수 시나리오',set(QA)==required and qa_count==120,qa_count)
+    check(f'{qa_count}개 기능 검수 시나리오',set(QA)==required and all(len(v)>=4 for v in QA.values()),qa_count)
     svg_paths=list((ROOT/'UI/SVG').glob('*.svg'))
     from prototype_ui import load_source, load_overview
     prototype=load_source(); overview=load_overview()
@@ -130,7 +130,7 @@ def main():
             pages=list(pdf)[applied['pdf_intro_pages']:]
             check('UI PDF 출처와 적용 기준',prototype['commit'][:7] in pdf[0].get_text() and '화면 적용 기준' in pdf[0].get_text(),prototype['commit'])
             check('UI PDF 화면 순서와 누락',len(pages)==len(applied['gallery_pages']) and all(id+' ·' in page.get_text() for id,page in zip(applied['gallery_pages'],pages)),applied['gallery_pages'])
-    result={'scope':'설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F28 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.','passed':not errors,'checks':checks,'errors':errors}
+    result={'scope':'설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F29 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.','passed':not errors,'checks':checks,'errors':errors}
     (ROOT/'부록/산출물 검증.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
     manifest=[]
     for p in sorted(ROOT.rglob('*')):

@@ -64,32 +64,33 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
         sh=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,0,prs.slide_width,Inches(.85))
         sh.fill.solid();sh.fill.fore_color.rgb=RGBColor.from_string('202A35');sh.line.fill.background()
         text(s,.5,.16,15,.5,title,25,'FFFFFF',True)
-        text(s,.5,8.57,15,.3,sub+' · 2026-11-01',10,'5F6B78')
+        text(s,.5,8.57,15,.3,sub+' · 2026-11-03 · 설계 v0.4',10,'5F6B78')
         return s
     ov_img=lambda img:ROOT/'UI/전체화면정리'/img['image']
-    cover=base('At that place · UI 설계 · 전체 화면 정리 반영',f'UI 담당 전체 화면 정리 @ {ov_short} (최우선) · 프로토타입 캡처 @ {short}')
-    text(cover,.7,1.25,10,1.2,'UI 담당 전체 화면 정리를\n화면 설계의 최우선 기준으로 반영합니다.',32,bold=True)
+    cover=base('At that place · UI 설계 v0.4 · UI 프로토타입 기준',f'feature/ui-prototype @ {ov_short} · 실행 캡처 @ {short} · 기능명세서 v3.0')
+    text(cover,.7,1.25,10,1.2,'디자이너·PM의 UI 프로토타입을\n화면 설계 기준으로 반영합니다.',32,bold=True)
     text(cover,.7,3.15,9.3,3.4,
          f'최우선 자료: {overview["file"]}\nfeature/ui-prototype @ {overview["commit"]}\n슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 포함)\n프로토타입 실행 캡처 {len(shots)}개(@ {short})는 PPTX에 없는 화면·상태와 참고용으로 유지합니다.\n제품 UI ID {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다.',19)
-    text(cover,.7,7,9.4,.9,'화면 구성·문구·규칙은 PPTX가 우선합니다. 기능명세 v2.3·API·DB와 다른 항목은\n‘화면과 제품 계약의 차이’와 회의 안건에서 개정 여부를 정합니다.',17,'B8433F',True)
+    text(cover,.7,7,9.4,.9,'프로토타입과 겹치는 기능은 프로토타입이 우선합니다(명세 v3.0 D01~D24).\n프로토타입에 없는 화면은 기존 설계안을 유지하고 Q1~Q14로 확인합니다.',17,'B8433F',True)
     cover.shapes.add_picture(str(ov_img(ov_by_ui['UI05'][0])),Inches(11.6),Inches(1.1),height=Inches(7.2))
     flow=base('화면 흐름과 원본 위치','UI 담당 전체 화면 정리 2번 슬라이드 기준')
     text(flow,.8,1.35,14.5,2.6,
          '시작: 로그인(UI01) → 가입 동의·표시명(UI02) → 내 모임(UI03) → 모임 만들기(UI04) · 초대 코드 참여(UI24)\n모임 안: 모임 달력·일정 목록(UI05) → 날짜별 장소(UI08) → 장소 기록(UI13·UI09) → 사진·동영상 올리기(UI14)\n모임 달력 → 일정 추가(UI06) · 하루 일정 변경(UI38) · 초대·관리(UI23) · 함께하는 친구(UI26)\n날짜별 장소 → 장소 검색(UI10) · 순서 편집(UI12)',21)
     text(flow,.8,4.35,14.5,2.2,
          '내 정보: 내 모임 아래 탭 마이페이지(UI36) → 설정(UI28) → 프로필 및 계정(UI37)\nUI/전체화면정리/출처.json: PPTX 해시·슬라이드 문구·이미지별 화면 대응·이미지 해시\nUI/프로토타입/출처.json: 이전 실행 캡처의 커밋·소스·경로·해시\n재생성은 저장된 이미지를 사용하며 원격 브랜치·Expo 실행이 필요하지 않습니다.',20)
-    text(flow,.8,7.05,14.3,.9,'PPTX에 없는 화면(일정 요약·전체 기록·감상·내 기록·신고·계정 삭제 등)은 기존 설계안을 유지합니다.',17,'B8433F',True)
-    # PPTX(최우선)와 현재 제품 계약(명세 v2.3·API·DB)의 차이. 원천은 design_model의 P 항목이다.
-    from design_model import CONFLICTS
-    differences=[[c[0],c[2],c[3]+' → '+c[5]] for c in CONFLICTS if c[1].startswith('PPTX')]
-    diff=base('화면과 제품 계약의 차이','UI 담당 전체 화면 정리(최우선) vs 기능명세 v2.3 · 회의 안건 참조')
-    y=1.1
-    for name,actual,contract in differences:
-        text(diff,.6,y,2.4,.45,name,12,'B8433F',True)
-        text(diff,3.1,y,5.9,.45,actual,11)
-        text(diff,9.2,y,6.3,.45,contract,11)
-        y+=.5
-    text(diff,.6,8.2,14.8,.3,'PPTX 이미지는 UI 담당의 프로토타입 화면 예시입니다. 실제 로그인·서버 저장·업로드는 PPTX 22번 슬라이드의 미연결 목록을 따릅니다.',11,'5F6B78')
+    text(flow,.8,7.05,14.3,.9,'프로토타입에 없는 화면(파일 전송·내 기록·본인 수정·신고·계정 삭제·저장 공간·운영 등)은 기존 설계안을 유지합니다.',17,'B8433F',True)
+    # v3에서 프로토타입 기준으로 바뀐 결정(D)과 결정 전 적용값(Q). 원천은 design_model.V3_DECISIONS·OPEN_QUESTIONS.
+    from design_model import V3_DECISIONS, OPEN_QUESTIONS
+    differences=[[d[0],d[2],d[3]] for d in V3_DECISIONS]+[[q[0]+' 확인 필요',q[1],'v3 적용: '+q[2]] for q in OPEN_QUESTIONS]
+    for offset in range(0,len(differences),13):
+        diff=base('바뀐 결정과 확인 필요 항목','기능명세서 v3.0 0.2절(D)·0.4절(Q) · 이전(v2.3) → v3')
+        y=1.1
+        for name,actual,contract in differences[offset:offset+13]:
+            text(diff,.6,y,2.4,.5,name,12,'B8433F',True)
+            text(diff,3.1,y,5.9,.5,actual,11)
+            text(diff,9.2,y,6.3,.5,contract,11)
+            y+=.55
+        text(diff,.6,8.2,14.8,.3,'프로토타입은 예시 데이터로 동작합니다. 실제 로그인·서버 저장·업로드·다운로드는 22번 슬라이드의 미연결 목록이며 서버가 권한·한도를 최종 판정합니다.',11,'5F6B78')
     rules=base('일정 규칙과 아직 연결되지 않은 기능','UI 담당 전체 화면 정리 21·22번 슬라이드')
     rule_lines=ov_slides[21]['lines'][1:]
     text(rules,.7,1.2,7.2,6.8,'\n'.join(rule_lines),15)
@@ -142,22 +143,21 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             text(s,4.3,y,10.8,.5,'· '+n,17);y+=.55
         if sl.get('note'):
             text(s,4.3,y+.1,10.8,.6,'참고  '+sl['note'],14,'5F6B78');y+=.7
-        conflicts=[c for c in CONFLICTS if c[1].startswith('PPTX') and str(img['slide']) in re.findall(r'\d+',c[1])]
+        conflicts=[d for d in V3_DECISIONS if ui_spec and set(d[4].split())&set(ui_spec['features'])][:4]
         if conflicts:
-            text(s,4.3,6.1,10.8,.35,'제품 계약(명세 v2.3)과 다른 점',15,'B8433F',True)
-            text(s,4.3,6.5,10.8,1.3,'\n'.join(f'{c[0]}: {c[3]} → {c[5]}' for c in conflicts),12,'5F6B78')
+            text(s,4.3,6.1,10.8,.35,'v3에서 프로토타입 기준으로 바뀐 결정',15,'B8433F',True)
+            text(s,4.3,6.5,10.8,1.3,'\n'.join(f'{c[0]}: {c[2]} → {c[3]}' for c in conflicts),12,'5F6B78')
         if ui_spec:
             text(s,4.3,7.85,10.8,.5,'제품 계약: '+' / '.join(ui_spec['features'])+' · '+ui_spec['role']+' · API: '+', '.join(ui_spec['api']),11,'5F6B78')
         s.notes_slide.notes_text_frame.text='\n'.join([source,sl['lead'],*sl['bullets'],sl.get('note','')])
         notes=[sl['lead'],*sl['bullets']]+(['참고: '+sl['note']] if sl.get('note') else [])
         extra=f'<h3>최우선 자료</h3><p class="small">{E(overview["file"])} · {E(overview["commit"])} · {E(img["image"])}</p>'
         if conflicts:
-            extra+='<h3>제품 계약(명세 v2.3)과 다른 점</h3>'+''.join(f'<p class="small">{E(c[0])}: {E(c[3])} → {E(c[5])}</p>' for c in conflicts)
+            extra+='<h3>v3에서 바뀐 결정</h3>'+''.join(f'<p class="small">{E(c[0])}: {E(c[2])} → {E(c[3])}</p>' for c in conflicts)
         if ui_spec:
             extra+=f'<details><summary>제품 구현 계약 · {E(ui_spec["title"])}</summary>'+''.join(f'<p>{E(n)}</p>' for n in ui_spec['notes'])+'</details>'
             extra+=f'<h3>제품 상태·API</h3><p class="small">{E(ui_spec["states"])}</p><p class="small">{E(", ".join(ui_spec["api"]))}</p>'
         article(id,title,'UI 담당 전체 화면 정리(최우선) · '+img['id']+' '+img['state'],'전체화면정리/'+img['image'],notes,img['ui'],extra)
-    (ROOT/'UI/제품적용').mkdir(exist_ok=True)
     for spec in SCREENS:
         id=spec['id'];filename=id+'_'+spec['title'].replace(' ','_')+'.svg'
         path=ROOT/'UI/SVG'/filename
@@ -170,15 +170,6 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             overview_page(ov[0],spec)
             for img in ov[1:]:overview_page(img)
             if shot:capture_page(shot)
-            if id in ['UI01','UI02','UI03']:
-                applied_path=ROOT/'UI/제품적용'/filename
-                applied_path.write_text(svg_for(screen_elements(spec)))
-                slide=base(id+' 이전 결정 적용안(참고)', 'A16·A17 이전 사용자 결정 · PPTX(최우선)와 다름 · 회의 확인 필요')
-                for element in screen_elements(spec): ppt_shape(slide,element,.65,1.05,3.33/390)
-                selected=spec['notes'][-1:] + spec['notes'][:2]
-                for n,note in enumerate(selected):text(slide,4.4,1.4+n*1.65,10.6,1.5,note,18)
-                slide.notes_slide.notes_text_frame.text='\n'.join(spec['notes'])
-                article(id+'-PRODUCT',spec['title']+' · 이전 결정 적용안(참고)','명세 기반 편집 가능 도형 · PPTX와 다름','제품적용/'+filename,selected,id)
             title=ov[0]['screen'];kind='UI 담당 전체 화면 정리(최우선)';image='전체화면정리/'+ov[0]['image']
             slide_text=ov_slides[ov[0]['slide']]
             display=dict(spec,title=title,rows=[['overview',t] for t in [slide_text['lead'],*slide_text['bullets']]],
@@ -191,16 +182,6 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             b64=base64.b64encode((ROOT/'UI/프로토타입'/shot['image']).read_bytes()).decode()
             path.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img"><title>{escape(shot["title"])}</title><desc>feature/ui-prototype @ {commit} · 웹 실행 캡처 · 이미지 편집은 앱 소스에서 수행</desc><image width="390" height="844" href="data:image/png;base64,{b64}"/></svg>')
             capture_page(shot,spec)
-            if id in ['UI01','UI02','UI03']:
-                # 고객 원본 캡처와 구별되는 제품 적용 도형을 PDF/PPTX에도 함께 제공한다.
-                applied_path=ROOT/'UI/제품적용'/filename
-                applied_path.write_text(svg_for(screen_elements(spec)))
-                slide=base(id+' 제품 적용안', 'v2.3 확정사항 적용 · 고객 원본 캡처와 구분')
-                for element in screen_elements(spec): ppt_shape(slide,element,.65,1.05,3.33/390)
-                selected=spec['notes'][-1:] + spec['notes'][:2]
-                for n,note in enumerate(selected):text(slide,4.4,1.4+n*1.65,10.6,1.5,note,18)
-                slide.notes_slide.notes_text_frame.text='\n'.join(spec['notes'])
-                article(id+'-PRODUCT',spec['title']+' · 제품 적용안','명세 기반 편집 가능 도형','제품적용/'+filename,selected,id)
             title=shot['title'];kind='브랜치 실행 캡처';image='프로토타입/'+shot['image']
             display=dict(spec, title=title, rows=[['prototype',t] for t in shot.get('text','').splitlines()],
                          contract_title=spec['title'],contract_rows=spec['rows'],
@@ -249,7 +230,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             if line.startswith('| ') and len(cells)>=4 and not set(line)<=set('|- ') and cells[0] not in ('PPTX 화면','규칙'):
                 status_rows.append(cells[:4])
     sheet(wb,'앱구현현황',['PPTX 화면·규칙','판정','같은 점','다른 점'],status_rows,[28,14,70,90])
-    sheet(wb,'정책차이',['항목','전체 화면 정리(최우선)','제품 계약(명세 v2.3) → 처리'],differences,[25,75,75])
+    sheet(wb,'바뀐결정과확인',['항목','이전(v2.3)·내용','v3 기준'],differences,[25,75,75])
     integration=(ROOT/'UI/2026-10-30_UI_통합_설계.md').read_text()
     qa_rows=[]
     for line in integration.splitlines():
@@ -257,16 +238,15 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             qa_rows.append([v.strip() for v in line.strip('|').split('|')]+['미실행'])
     sheet(wb,'UI통합검수',['ID','확인 항목','기대 결과','실제 앱 검수'],qa_rows,[18,65,100,22])
     sheet(wb,'적용기준',['구분','내용'],[
-        ['최우선 기준','UI 담당 전체 화면 정리 '+overview['file']+' @ '+ov_short+' — 화면 구성·문구·규칙'],
-        ['기준','명세 v2.3 / 설계 v0.3.3 / 프로토타입 실행 캡처 '+short],
-        ['필수 열람','UI/2026-11-01_UI_전체화면정리_반영.md — 반영 기준·제품 계약 차이 / UI/2026-10-30_UI_통합_설계.md — 이전 화면별 계약'],
-        ['미결정','회의록/10월 30일 회의 안건.md — 맨 앞 목차의 논의 안건'],
-        ['주의','PPTX·캡처는 프로토타입 화면. 기능 완료·권한·동의·출시 적합성 확인 아님.'],
-        ['가입 적용','PPTX 기준 카카오·Google, 약관 전체 동의·선택 동의. A16·A17 이전 결정과 다르므로 회의 확인 필요. 이전 결정 적용안은 참고 쪽으로 보존.'],
-        ['출시 전','F02 기본 가입 구성 반영, F20/F24 등 출시 조건은 A13']], [28,110])
+        ['기준','기능명세서 v3.0(2026-11-03) / 설계 v0.4 / UI 프로토타입 feature/ui-prototype @ '+ov_short+' / 실행 캡처 '+short],
+        ['원칙','프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선. 프로토타입에 없는 기존 기능은 유지(화면은 같은 디자인 체계로 추가 설계). 프로토타입 결함은 Q 항목으로 관리'],
+        ['화면 출처','UI 담당 전체 화면 정리 PPT 이미지 → 실행 캡처 → 명세 기반 설계안 순서로 대표 화면을 정한다'],
+        ['필수 열람','UI/2026-11-03_UI_v3_적용기준.md — 화면별 출처·바뀐 결정·추가 설계 / 기능명세서 0절 D01~D24·Q1~Q14'],
+        ['이전 자료','UI/2026-11-01_UI_전체화면정리_반영.md(P1~P14는 v3에서 확정) / UI/2026-10-30_UI_통합_설계.md'],
+        ['주의','PPT·캡처는 예시 데이터로 동작하는 프로토타입 화면. 기능 완료·권한·출시 적합성 확인 아님']], [28,110])
 
     flows=[['UI03','UI05','모임 카드','전체 화면 정리'],['UI05','UI05 일정 목록','일정 목록 탭','전체 화면 정리'],['UI05 일정 목록','UI08','하루 일정 카드','전체 화면 정리·날짜별 장소'],['UI05 일정 목록','UI38','⋯ → 일정 변경(방장)','전체 화면 정리·그날만'],['UI05','UI06','+ 일정 추가(방장)','전체 화면 정리'],['UI05','UI23','초대·관리 ›','전체 화면 정리·모임 사진 변경 포함'],['UI05','UI26','위쪽 인원 띠','전체 화면 정리'],['UI08','UI10','장소 추가','전체 화면 정리'],['UI08','UI12','편집','전체 화면 정리'],['UI08','UI13','장소 카드','전체 화면 정리'],['UI13','UI09','사람별 아이콘','전체 화면 정리'],['UI13','UI14','+ 사진·동영상 올리기','전체 화면 정리·최대10개'],['UI03','UI36','하단 마이페이지 탭','전체 화면 정리'],['UI36','UI28','톱니바퀴','전체 화면 정리'],['UI28','UI37','프로필 및 계정','전체 화면 정리'],['UI28','UI24','초대코드 입력','전체 화면 정리'],
-           ['UI01','UI02','카카오 예시 인증','제품은 실제 인증 검증'],['UI02','UI03/UI24','가입 완료','제품은 이용약관 체크1개·보류 초대 분기'],['UI03','UI05','모임 선택','groupId'],['UI05','UI23','초대 관리','모든 현재 참여자'],['UI24','UI05','명시적 참여','정원/초대/현재 권한 재검증'],['UI05','UI08/S01','일정 선택','제품 진입'],['S0','S01','예시 일정 선택','데모 전용'],['S01','S02','날짜 카드 선택','tripId/itineraryId/dayId'],['S01','M4','배경 사진 변경','앨범 선택'],['S02','S03','장소 추가','선택 날짜'],['S03','S02','추가 성공','마지막 순서·제품은 예정 시각 선택·추가됨'],['S02','S05','편집','빈 날짜에도 제공'],['S02/S05','M1','시간 수정','S05에서는 변경 저장 때 반영'],['S05','S02','변경 저장','순서·시각·제목'],['S02','S04','장소 카드','방문별 기록'],['S04','V1','파일 탭','사진 확대·영상 재생'],['S04','M2','올리기','업로드 연결 지점'],['M2','M3','추가 타일','촬영·앨범 선택']]
+           ['UI01','UI02','카카오·Google 인증(신규)','제품은 실제 인증 검증'],['UI02','UI03/UI24','가입 완료','필수 2개 동의·보류 초대 분기'],['UI03','UI05','모임 선택','groupId'],['UI05','UI23','초대 관리','모든 현재 참여자'],['UI24','UI05','명시적 참여','정원/초대/현재 권한 재검증'],['UI05','UI08/S01','일정 선택','제품 진입'],['S0','S01','예시 일정 선택','데모 전용'],['S01','S02','날짜 카드 선택','tripId/itineraryId/dayId'],['S01','M4','배경 사진 변경','앨범 선택'],['S02','S03','장소 추가','선택 날짜'],['S03','S02','추가 성공','마지막 순서·제품은 예정 시각 선택·추가됨'],['S02','S05','편집','빈 날짜에도 제공'],['S02/S05','M1','시간 수정','S05에서는 변경 저장 때 반영'],['S05','S02','변경 저장','순서·시각·제목'],['S02','S04','장소 카드','방문별 기록'],['S04','V1','파일 탭','사진 확대·영상 재생'],['S04','M2','올리기','업로드 연결 지점'],['M2','M3','추가 타일','촬영·앨범 선택']]
     # 브랜치 전환과 기존 제품 계약을 구분해 모두 보존한다.
     flows+=json.loads((ROOT/'UI/제품 화면전환.json').read_text())
     sheet(wb,'화면전환',['출발','도착','이벤트','범위·전달'],flows,[25,25,35,80])
@@ -275,18 +255,20 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     wb.save(ROOT/'UI/05 화면 명세.xlsx')
     (ROOT/'UI/화면데이터.json').write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
     css="""*{box-sizing:border-box}body{font:15px/1.8 'Noto Sans CJK KR',sans-serif;color:#191F28;background:#f4f5f7;margin:0}a{color:#B8433F}aside{position:fixed;inset:0 auto 0 0;width:260px;background:white;overflow:auto;padding:24px}aside a{display:block;font-size:12px;padding:6px;text-decoration:none}main{margin-left:260px}header{background:#202A35;color:white;padding:40px}header a{color:white}.screen,.intro{background:white;margin:28px;padding:28px;border-radius:18px;scroll-margin:20px}h2{font-size:25px;margin:0 0 8px}.meta{color:#B8433F;font-size:13px}.pair{display:flex;gap:32px;align-items:flex-start}figure{width:260px;flex-shrink:0;margin:0}figure img{width:100%;border:1px solid #dce1e6}figcaption,.small{font-size:11px;overflow-wrap:anywhere}.notes{max-width:760px}.notes p{margin:0 0 16px}.notes h3{font-size:15px;margin:15px 0 8px}details{background:#f2f4f6;padding:12px;margin-bottom:16px}details p{font-size:13px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #dce1e6;padding:8px;text-align:left}th{background:#f2f4f6}@media(max-width:1100px){aside{display:none}main{margin:0}.pair{flex-wrap:wrap}}@media print{@page{size:A4 landscape;margin:10mm}aside,header,.intro{display:none}main{margin:0}.screen{height:187mm;margin:0;padding:0;border-radius:0;break-after:page;break-inside:avoid}.screen:last-child{break-after:auto}.pair{flex-wrap:nowrap;gap:24px}figure{width:232px}figure img{height:502px;object-fit:contain}.notes{font-size:12px;line-height:1.7}.notes p{margin-bottom:11px}.notes h3{font-size:12px}.small{font-size:9px}details{display:none}body{background:white}h2{font-size:21px}.meta{margin:4px 0 12px}}"""
-    table='<table><tr><th>항목</th><th>전체 화면 정리(최우선)</th><th>제품 계약(명세 v2.3) → 처리</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in row)+'</tr>' for row in differences)+'</table>'
-    css+='@media print{.intro{display:block;height:187mm;margin:0;padding:0;break-after:page;font-size:12px}.intro table{font-size:10px}.intro td,.intro th{padding:6px}}'
+    table='<table><tr><th>항목</th><th>이전(v2.3)·내용</th><th>v3 기준</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in row)+'</tr>' for row in differences)+'</table>'
+    css+='@media print{.intro{display:block;height:187mm;margin:0;padding:0;break-after:page;font-size:11px;line-height:1.45}.intro table{font-size:8.5px}.intro td,.intro th{padding:3px 5px}.intro h3{margin:6px 0 2px}.intro ul{margin:2px 0}}'
     rules_html='<ul>'+''.join(f'<li>{E(l)}</li>' for l in ov_slides[21]['lines'][1:])+'</ul>'
     pending_html='<ul>'+''.join(f'<li><b>{E(r[0])}</b>: {E(r[1])}</li>' for r in ov_slides[22].get('table',[])[1:])+'</ul>'
-    intro=f'<section class="intro"><h2>화면 적용 기준</h2><p><b>최우선 기준: UI 담당 전체 화면 정리</b> · {E(overview["file"])} @ <b>{ov_short}</b> · 슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 하루 일정 변경). 제품 UI {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다. 프로토타입 실행 캡처 {len(shots)}개(@ {short})는 PPTX에 없는 화면·상태와 참고용으로 유지합니다.</p><p><a href="전체화면정리/출처.json">PPTX 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드 문구.txt">슬라이드 문구 원문</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">반영 기준·제품 계약 차이·앱 구현 현황</a> · <a href="앱대조_구현후/">앱 대조 이미지(구현 후)</a> · <a href="앱대조_0.2.3/">적용 전</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a> · <a href="2026-11-01_UI_변경_반영.md">11월 1일 캡처 관찰</a> · <a href="../../회의록/10월%2030일%20회의%20안건.md">회의 안건</a> · <a href="프로토타입/출처.json">이전 캡처 출처</a></p><h3>일정 규칙(PPTX 21번)</h3>{rules_html}<h3>아직 연결되지 않은 기능(PPTX 22번)</h3>{pending_html}</section><section class="intro"><h2>화면과 제품 계약의 차이</h2><p>전체 화면 정리(최우선)와 기능명세 v2.3·API·DB가 다른 항목입니다. 제품 계약은 이번에 바꾸지 않았으며 회의 결정 후 명세부터 개정합니다.</p>{table}</section>'
-    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · 전체 화면 정리 반영</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-11-01 · UI 담당 전체 화면 정리(최우선) 반영</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
+    dec_table='<table><tr><th>항목</th><th>이전(v2.3)</th><th>v3 기준</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in (d[0],d[2],d[3]))+'</tr>' for d in V3_DECISIONS)+'</table>'
+    q_table='<table><tr><th>ID</th><th>확인할 내용</th><th>결정 전 v3 적용</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in q[:3])+'</tr>' for q in OPEN_QUESTIONS)+'</table>'
+    intro=f'<section class="intro"><h2>화면 적용 기준 · v0.4</h2><p><b>기준: 디자이너·PM의 UI 프로토타입</b> feature/ui-prototype @ <b>{ov_short}</b>(웹 실행 44개 화면 상태·코드 대조) · 기능명세서 v3.0(2026-11-03). 프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선이고, 프로토타입에 없는 기존 기능은 유지합니다. 제품 UI {len(SCREENS)}개 중 {applied_count}개는 UI 담당 정리 이미지·실행 캡처, {native_count}개는 명세 기반 설계안입니다. 실행 캡처 {len(shots)}개는 같은 커밋입니다.</p><p><a href="2026-11-03_UI_v3_적용기준.md">v3 적용 기준(화면별 출처·추가 설계)</a> · <a href="../기준/기능명세서.md">기능명세서 v3.0</a> · <a href="전체화면정리/출처.json">PPT 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드%20문구.txt">슬라이드 문구 원문</a> · <a href="프로토타입/출처.json">실행 캡처 출처</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">이전 반영 기준·앱 구현 현황</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a></p><h3>일정 규칙(PPT 21번)</h3>{rules_html}<h3>아직 연결되지 않은 기능(PPT 22번)</h3>{pending_html}</section><section class="intro"><h2>v3에서 바뀐 결정(D01~D24)</h2><p>이전 명세(v2.3)와 다른 프로토타입 동작을 기준으로 정했습니다.</p>{dec_table}</section><section class="intro"><h2>확인 필요 항목(Q1~Q14)</h2><p>결정 전까지 오른쪽 적용값으로 설계·구현합니다.</p>{q_table}</section>'
+    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · UI 프로토타입 기준 v0.4</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-11-03 · v0.4 · UI 프로토타입(feature/ui-prototype) 기준</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
     (ROOT/'UI/05 UI 화면 갤러리.html').write_text(page)
     result=dict(source_commit=commit,overview_commit=overview['commit'],overview_sha256=overview['sha256'],
                 overview_images=len(overview['images']),overview_ui=sorted(ov_by_ui),
                 main_screens=len(SCREENS),replaced_ui=sorted(replaced),
                 captures=len(shots),supplemental_screens=len(shots)+len(overview['images'])-len(replaced),
-                gallery_pages=page_ids,pdf_intro_pages=2,pdf_pages=len(page_ids)+2,pptx_slides=len(prs.slides))
+                gallery_pages=page_ids,pdf_intro_pages=3,pdf_pages=len(page_ids)+3,pptx_slides=len(prs.slides))
     (ROOT/'UI/화면 반영.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(result,ensure_ascii=False))
 
@@ -303,7 +285,7 @@ def update_index():
                 '최신 UI 캡처와 제품 적용 계약을 함께 제공합니다. 캡처는 데모이며 기능 검수 결과가 아닙니다.')
     s=s.replace('SVG 원본은 각 갤러리 화면에서 엽니다.','화면 출처·제품 적용 기준·회의 안건을 함께 확인합니다.')
     s=s.replace('SVG는 벡터 편집기로 열어 수정합니다.','명세 기반 SVG는 벡터 편집, 캡처 래퍼는 앱 소스 수정 후 재캡처합니다.')
-    s=re.sub(r'<div class="info"><b>2026-1[01]-\d+ UI 화면 반영</b>.*?</div>', '',s,flags=re.S)
-    info=f'<div class="info"><b>2026-11-01 UI 화면 반영</b><p><b>최우선 기준: UI 담당 전체 화면 정리</b>(feature/ui-prototype @ {applied["overview_commit"][:7]}, 이미지 {applied["overview_images"]}개, 새 화면 UI38). 프로토타입 실행 캡처 @ {m["commit"][:7]} {applied["captures"]}개는 참고로 유지. 제품 화면 {applied["main_screens"]}개. 명세 v2.3·설계 v0.3.3과 다른 항목은 <a href="UI/2026-11-01_UI_전체화면정리_반영.md">전체 화면 정리 반영 기준</a>과 회의 안건에서 개정 여부를 정합니다. <a href="UI/전체화면정리/출처.json">출처</a></p></div>'
+    s=re.sub(r'<div class="info"><b>2026-1[01]-\d+ (?:UI 화면 반영|v0\.4[^<]*)</b>.*?</div>', '',s,flags=re.S)
+    info=f'<div class="info"><b>2026-11-03 v0.4 · UI 프로토타입 기준 개정</b><p>디자이너·PM이 고객 요구를 반영하는 feature/ui-prototype @ {applied["overview_commit"][:7]}를 실행·분석해 <b>기능명세서 v3.0</b>과 설계를 다시 작성했습니다. 화면 {applied["main_screens"]}개(UI 담당 정리 이미지 {applied["overview_images"]}개·실행 캡처 {applied["captures"]}개). 바뀐 결정 D01~D24·확인 필요 Q1~Q14는 <a href="기준/기능명세서.md">명세 0절</a>과 <a href="UI/2026-11-03_UI_v3_적용기준.md">UI v3 적용 기준</a>에 있습니다.</p></div>'
     s=s.replace('<h2>개발 설계서</h2>',info+'<h2>개발 설계서</h2>')
     p.write_text(s)

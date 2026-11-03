@@ -7,13 +7,13 @@ def apply_revision(ns):
     nullable=lambda x:{'anyOf':[x,{'type':'null'}]}
     schemas['ItemError']=O({'id':UUID,'code':S(),'message':S(),'field':S()},['id','code','message'],additionalProperties=False)
     schemas['MetadataChangeResult']=O({'appliedIds':A(UUID,minItems=1,maxItems=120),'versions':A(O({'id':UUID,'version':V},['id','version'],additionalProperties=False))},['appliedIds','versions'],additionalProperties=False)
-    schemas['MediaCommitResult']=O({'taskId':UUID,'mediaId':nullable(UUID),'coverAssetId':nullable(UUID)},['taskId','mediaId','coverAssetId'],additionalProperties=False)
+    schemas['MediaCommitResult']=O({'taskId':UUID,'mediaId':nullable(UUID),'coverAssetId':nullable(UUID),'avatarAssetId':nullable(UUID)},['taskId','mediaId','coverAssetId'],additionalProperties=False,description='avatarAssetId는 프로필 사진 작업 완료 시 지정(서버 호환상 선택 필드)')
     schemas['PlanResult']=O({'title':S(),'date':ns['DATE'],'visits':A(R('Visit')),'version':V},['title','date','visits','version'],additionalProperties=False)
     schemas['GroupCreateResult']=O({'group':R('Group'),'membershipId':UUID,'firstSchedule':R('Schedule')},['group','membershipId','firstSchedule'],additionalProperties=False)
     schemas['DeleteResult']=O({'results':A(O({'id':UUID,'status':S(enum=['deleted','already_deleted','failed']),'reason':nullable(S())},['id','status','reason'],additionalProperties=False),maxItems=120)},['results'],additionalProperties=False)
     schemas['AccountDeleteResult']=O({'accessRevoked':B(const=True)},['accessRevoked'],additionalProperties=False)
     schemas['GroupCloseResult']=O({'groupId':UUID,'closed':B(const=True),'ownMediaAccessRevoked':B(const=True)},['groupId','closed','ownMediaAccessRevoked'],additionalProperties=False)
-    kinds={'group_create':'GroupCreateResult','group_update':'Group','profile_patch':'Profile','schedule_create':'Schedule','schedule_update':'Schedule','plan_update':'PlanResult','metadata_change':'MetadataChangeResult','media_commit':'MediaCommitResult','media_delete':'DeleteResult','account_delete':'AccountDeleteResult','group_close':'GroupCloseResult'}
+    kinds={'group_create':'GroupCreateResult','group_update':'Group','profile_patch':'Profile','schedule_create':'Schedule','schedule_update':'Schedule','plan_update':'PlanResult','day_update':'DayChangeResult','metadata_change':'MetadataChangeResult','media_commit':'MediaCommitResult','media_delete':'DeleteResult','account_delete':'AccountDeleteResult','group_close':'GroupCloseResult'}
     op=O({'operationId':UUID,'kind':S(enum=list(kinds)),'state':S(enum=['pending','review','succeeded','failed']),'result':nullable({'oneOf':[R(x) for x in kinds.values()]}),'itemErrors':A(R('ItemError'))},['operationId','kind','state','result','itemErrors'],additionalProperties=False)
     # 결과의 실제 타입은 kind와 state로 판정한다. 타 종류 결과를 넣을 수 없다.
     op['properties']['result']=nullable({'anyOf':[R(x) for x in kinds.values()]})
@@ -23,14 +23,18 @@ def apply_revision(ns):
     for k,r in kinds.items():op['allOf'].append({'if':{'properties':{'kind':{'const':k},'state':{'const':'succeeded'}}},'then':{'properties':{'result':R(r)}}})
     schemas['Operation']=op
     schemas['UploadTransport']=O({'protocol':S(const='ATP-Upload/1'),'uploadEndpoint':S(format='uri-reference'),'generation':I(minimum=1),'resumeOffset':I(minimum=0),'length':I(minimum=1,maximum=200000000),'expiresAt':DT,'alignmentBytes':I(const=1048576),'maxChunkBytes':I(const=4194304)},['protocol','uploadEndpoint','generation','resumeOffset','length','expiresAt','alignmentBytes','maxChunkBytes'],additionalProperties=False)
-    schemas['UploadTask']=O({'id':UUID,'targetType':S(enum=['record','cover']),'submissionId':UUID,'coverGroupId':UUID,'state':S(enum=['queued','uploading','verifying','review','complete','failed','cancelled']),'transferredBytes':I(minimum=0),'actualBytes':nullable(I(minimum=0)),'retryable':B(),'reason':nullable(S()),'version':V,'mediaId':nullable(UUID),'transport':nullable(R('UploadTransport'))},['id','targetType','state','transferredBytes','actualBytes','retryable','reason','version','mediaId','transport'],additionalProperties=False)
-    schemas['UploadTask']['oneOf']=[{'properties':{'targetType':{'const':'record'}},'required':['submissionId'],'not':{'required':['coverGroupId']}},{'properties':{'targetType':{'const':'cover'}},'required':['coverGroupId'],'not':{'required':['submissionId']}}]
+    schemas['UploadTask']=O({'id':UUID,'targetType':S(enum=['record','cover','avatar']),'submissionId':UUID,'coverGroupId':UUID,'avatarUserId':UUID,'state':S(enum=['queued','uploading','verifying','review','complete','failed','cancelled']),'transferredBytes':I(minimum=0),'actualBytes':nullable(I(minimum=0)),'retryable':B(),'reason':nullable(S()),'version':V,'mediaId':nullable(UUID),'transport':nullable(R('UploadTransport'))},['id','targetType','state','transferredBytes','actualBytes','retryable','reason','version','mediaId','transport'],additionalProperties=False)
+    only=lambda name,others:{'properties':{'targetType':{'const':name[0]}},'required':[name[1]],'not':{'anyOf':[{'required':[o]} for o in others]}}
+    schemas['UploadTask']['oneOf']=[only(('record','submissionId'),['coverGroupId','avatarUserId']),only(('cover','coverGroupId'),['submissionId','avatarUserId']),only(('avatar','avatarUserId'),['submissionId','coverGroupId'])]
     schemas['UploadTask']['allOf']=[{'if':{'properties':{'state':{'enum':['complete','cancelled','verifying','review']}}},'then':{'properties':{'transport':{'type':'null'}}}}]
     schemas['UploadTask']['properties']['coverAssetId']=nullable(UUID)
-    schemas['UploadTask']['required'].append('coverAssetId')
+    schemas['UploadTask']['properties']['avatarAssetId']=nullable(UUID)
+    schemas['UploadTask']['required'].append('coverAssetId')  # avatarAssetId는 서버 호환상 선택, avatar 완료 시 필수
+    null={'type':'null'}
     schemas['UploadTask']['allOf'].extend([
-      {'if':{'properties':{'state':{'const':'complete'},'targetType':{'const':'record'}}},'then':{'properties':{'mediaId':UUID,'coverAssetId':{'type':'null'}}}},
-      {'if':{'properties':{'state':{'const':'complete'},'targetType':{'const':'cover'}}},'then':{'properties':{'coverAssetId':UUID,'mediaId':{'type':'null'}}}}])
+      {'if':{'properties':{'state':{'const':'complete'},'targetType':{'const':'record'}}},'then':{'properties':{'mediaId':UUID,'coverAssetId':null,'avatarAssetId':null}}},
+      {'if':{'properties':{'state':{'const':'complete'},'targetType':{'const':'cover'}}},'then':{'properties':{'coverAssetId':UUID,'mediaId':null,'avatarAssetId':null}}},
+      {'if':{'properties':{'state':{'const':'complete'},'targetType':{'const':'avatar'}}},'then':{'required':['avatarAssetId'],'properties':{'avatarAssetId':UUID,'mediaId':null,'coverAssetId':null}}}])
     schemas['FileInput']['properties']['checksum']=S(pattern='^[0-9a-f]{64}$',description='원본 전체 SHA256, fingerprint와 동일')
     schemas['FileInput']['properties']['fingerprint']=S(pattern='^[0-9a-f]{64}$')
     schemas['FileInput']['required'].append('checksum')
@@ -57,7 +61,8 @@ def apply_revision(ns):
              'uploadPrepare':'submissionId, tasks:UploadTask[], fileErrors[]; 전송은 task.transport 참조',
              'uploadGet':'UploadTask {transport:UploadTransport|null}',
              'uploadRetry':'UploadTask {transport:{protocol,generation,resumeOffset,uploadEndpoint,length,expiresAt,...}|null}',
-             'coverPrepare':'UploadTask {targetType:cover,coverGroupId,transport:UploadTransport|null}'}
+             'coverPrepare':'UploadTask {targetType:cover,coverGroupId,transport:UploadTransport|null}',
+             'avatarPrepare':'UploadTask {targetType:avatar,avatarUserId,transport:UploadTransport|null}'}
     for a in ns['APIS']:
         if a['id'] in updates:a['response']=updates[a['id']]
     for id,method,req,res in [

@@ -148,7 +148,7 @@ END $$;
 CREATE TRIGGER visit_limit_guard BEFORE INSERT OR UPDATE ON visits
 FOR EACH ROW EXECUTE FUNCTION guard_visit_limit();
 
--- P11: 작성자×방문(미지정은 작성자×일정×기록일) 사진 5·영상 2.
+-- P11: 작성자×방문(미지정은 작성자×일정×기록일) 사진 5·영상 2. 대표사진·프로필 사진 작업은 제외.
 -- 완료 media(available)와 진행 중 upload_tasks를 합산한다. advisory lock으로 같은 묶음의 동시 접수를 직렬화한다.
 CREATE FUNCTION media_bucket_count(p_author uuid,p_schedule uuid,p_visit uuid,p_record date,p_kind text,p_exclude_task uuid,p_exclude_media uuid)
 RETURNS int LANGUAGE sql STABLE SET search_path=atp,pg_catalog AS $$
@@ -165,7 +165,7 @@ SET search_path=atp,pg_catalog AS $$
 DECLARE n int; lim int; bucket text; ex_task uuid; ex_media uuid;
 BEGIN
  IF TG_TABLE_NAME='upload_tasks' THEN
-   IF NEW.cover_group_id IS NOT NULL OR NEW.state IN ('complete','failed','cancelled') THEN RETURN NEW; END IF;
+   IF NEW.cover_group_id IS NOT NULL OR NEW.avatar_user_id IS NOT NULL OR NEW.state IN ('complete','failed','cancelled') THEN RETURN NEW; END IF;
    IF TG_OP='UPDATE' AND OLD.state NOT IN ('complete','failed','cancelled') AND OLD.visit_id IS NOT DISTINCT FROM NEW.visit_id AND OLD.record_date=NEW.record_date THEN RETURN NEW; END IF;
    ex_task:=NEW.id; ex_media:=NULL;
  ELSE
@@ -184,6 +184,55 @@ CREATE TRIGGER upload_task_media_limit_guard BEFORE INSERT OR UPDATE ON upload_t
 FOR EACH ROW EXECUTE FUNCTION guard_media_limit();
 CREATE TRIGGER media_media_limit_guard BEFORE INSERT OR UPDATE ON media
 FOR EACH ROW EXECUTE FUNCTION guard_media_limit();
+
+-- v3 D06: 한 모임의 같은 날짜에는 활성 일정의 활성 일차 하나만. 취소된 날·취소/삭제된 일정의 날은 빈 날이다.
+-- 모임 행 잠금으로 동시 추가·이동을 직렬화한다.
+CREATE FUNCTION guard_schedule_day() RETURNS trigger LANGUAGE plpgsql
+SET search_path=atp,pg_catalog AS $$
+BEGIN
+ IF NEW.status<>'active' THEN RETURN NEW; END IF;
+ IF TG_OP='UPDATE' AND OLD.status='active' AND OLD.day_date=NEW.day_date AND OLD.group_id=NEW.group_id THEN RETURN NEW; END IF;
+ PERFORM 1 FROM groups WHERE id=NEW.group_id FOR UPDATE;
+ IF EXISTS(SELECT 1 FROM schedule_days d JOIN schedules s ON s.id=d.schedule_id
+   WHERE d.group_id=NEW.group_id AND d.day_date=NEW.day_date AND d.status='active'
+     AND s.status='active' AND d.schedule_id<>NEW.schedule_id) THEN
+   RAISE EXCEPTION 'SCHEDULE_DATE_TAKEN' USING ERRCODE='23514';
+ END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER schedule_day_guard BEFORE INSERT OR UPDATE ON schedule_days
+FOR EACH ROW EXECUTE FUNCTION guard_schedule_day();
+
+-- v3 D08/P05: 하루 삭제는 그 날짜에 활성 방문·공개/제한 기록·진행 중 업로드가 없을 때만.
+-- 마지막 날 삭제 시 일정 삭제, 모든 날 취소 시 일정 취소는 서비스가 같은 트랜잭션에서 처리한다.
+CREATE FUNCTION guard_schedule_day_delete() RETURNS trigger LANGUAGE plpgsql
+SET search_path=atp,pg_catalog AS $$
+BEGIN
+ IF EXISTS(SELECT 1 FROM visits WHERE schedule_id=OLD.schedule_id AND visit_date=OLD.day_date AND deleted_at IS NULL)
+   OR EXISTS(SELECT 1 FROM media WHERE schedule_id=OLD.schedule_id AND record_date=OLD.day_date AND access_state IN ('available','restricted'))
+   OR EXISTS(SELECT 1 FROM upload_tasks WHERE schedule_id=OLD.schedule_id AND record_date=OLD.day_date AND state NOT IN ('complete','failed','cancelled')) THEN
+   RAISE EXCEPTION 'NOT_EMPTY' USING ERRCODE='23514';
+ END IF;
+ RETURN OLD;
+END $$;
+CREATE TRIGGER schedule_day_delete_guard BEFORE DELETE ON schedule_days
+FOR EACH ROW EXECUTE FUNCTION guard_schedule_day_delete();
+
+-- v3 D04: 프로필 사진은 본인 소유 avatar asset만 연결한다.
+CREATE FUNCTION check_user_avatar() RETURNS trigger LANGUAGE plpgsql
+SET search_path=atp,pg_catalog AS $$
+DECLARE actual_owner uuid;
+BEGIN
+ IF NEW.avatar_asset_id IS NOT NULL THEN
+   SELECT avatar_user_id INTO actual_owner FROM assets WHERE id=NEW.avatar_asset_id;
+   IF actual_owner IS DISTINCT FROM NEW.id THEN
+     RAISE EXCEPTION 'AVATAR_USER_MISMATCH' USING ERRCODE='23514';
+   END IF;
+ END IF;
+ RETURN NULL;
+END $$;
+CREATE CONSTRAINT TRIGGER user_avatar_guard AFTER INSERT OR UPDATE ON users
+DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_user_avatar();
 
 -- F05: 초대 확인 횟수 50회 소진. use_count는 증가만 허용하고 50 도달 시 exhausted_at을 고정한다.
 CREATE FUNCTION guard_invitation_uses() RETURNS trigger LANGUAGE plpgsql

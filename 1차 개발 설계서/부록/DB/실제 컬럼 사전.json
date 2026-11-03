@@ -78,6 +78,13 @@
   },
   {
     "table_name": "assets",
+    "column_name": "avatar_user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "assets",
     "column_name": "variant",
     "data_type": "text",
     "is_nullable": "NO",
@@ -1421,6 +1428,48 @@
     "column_default": "now()"
   },
   {
+    "table_name": "schedule_days",
+    "column_name": "schedule_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "schedule_days",
+    "column_name": "group_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "schedule_days",
+    "column_name": "day_date",
+    "data_type": "date",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "schedule_days",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'active'::text"
+  },
+  {
+    "table_name": "schedule_days",
+    "column_name": "cancelled_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "schedule_days",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
     "table_name": "schedules",
     "column_name": "id",
     "data_type": "uuid",
@@ -1639,6 +1688,13 @@
   },
   {
     "table_name": "upload_tasks",
+    "column_name": "avatar_user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "upload_tasks",
     "column_name": "client_file_id",
     "data_type": "text",
     "is_nullable": "NO",
@@ -1811,6 +1867,20 @@
     "data_type": "text",
     "is_nullable": "NO",
     "column_default": "'onboarding'::text"
+  },
+  {
+    "table_name": "users",
+    "column_name": "avatar_asset_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "users",
+    "column_name": "avatar_version",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "0"
   },
   {
     "table_name": "users",

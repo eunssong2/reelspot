@@ -52,16 +52,13 @@
   "gallery_pages": [
     "UI01",
     "LOGIN",
-    "UI01-PRODUCT",
     "UI02",
     "P04-2",
     "P04-3",
     "ONBOARD",
-    "UI02-PRODUCT",
     "UI03",
     "P05-2",
     "GROUPS",
-    "UI03-PRODUCT",
     "UI04",
     "P06-2",
     "GROUP-NEW",
@@ -160,7 +157,7 @@
     "ACCOUNT",
     "S0"
   ],
-  "pdf_intro_pages": 2,
-  "pdf_pages": 111,
-  "pptx_slides": 113
+  "pdf_intro_pages": 3,
+  "pdf_pages": 109,
+  "pptx_slides": 112
 }
