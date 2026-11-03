@@ -14,7 +14,10 @@ FONT = 'Noto Sans CJK KR'
 RELATED = {'S0':None,'S02':'UI08','S02-empty':'UI08','S02-oneday':'UI08','S02-tabs':'UI08',
            'M4':'UI08','M1':'UI12','S05-empty':'UI12','S03-detail':'UI10',
            'V1-video':'UI18','M3':'UI14','S04-empty':'UI13',
-           'MY-name':'UI36','SET-invite':'UI28','DATES':'UI08','S04-select':'UI13','PERIOD':'UI04'}
+           'MY-name':'UI36','SET-invite':'UI28','DATES':'UI08','S04-select':'UI13','PERIOD':'UI04',
+           'MEMBERS':'UI26','MEMBERS-READER':'UI26','MEMBER-REMOVE':'UI26','MEMBER-REMOVED':'UI26',
+           'CALENDAR-LIST':'UI05','DAY-MENU':'UI38','DAY-EDIT':'UI38','DAY-DATE':'UI38','DAY-CANCEL':'UI38',
+           'GROUP-DAYS':'UI08','MY-LINK':'UI36'}
 
 
 def load_source():
@@ -67,7 +70,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     cover=base('At that place · UI 설계 · 전체 화면 정리 반영',f'UI 담당 전체 화면 정리 @ {ov_short} (최우선) · 프로토타입 캡처 @ {short}')
     text(cover,.7,1.25,10,1.2,'UI 담당 전체 화면 정리를\n화면 설계의 최우선 기준으로 반영합니다.',32,bold=True)
     text(cover,.7,3.15,9.3,3.4,
-         f'최우선 자료: {overview["file"]}\nfeature/ui-prototype @ {overview["commit"]}\n슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 포함)\n이전 프로토타입 캡처 {len(shots)}개(@ {short})는 PPTX에 없는 화면·상태와 참고용으로 유지합니다.\n제품 UI ID {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다.',19)
+         f'최우선 자료: {overview["file"]}\nfeature/ui-prototype @ {overview["commit"]}\n슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 포함)\n프로토타입 실행 캡처 {len(shots)}개(@ {short})는 PPTX에 없는 화면·상태와 참고용으로 유지합니다.\n제품 UI ID {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다.',19)
     text(cover,.7,7,9.4,.9,'화면 구성·문구·규칙은 PPTX가 우선합니다. 기능명세 v2.3·API·DB와 다른 항목은\n‘화면과 제품 계약의 차이’와 회의 안건에서 개정 여부를 정합니다.',17,'B8433F',True)
     cover.shapes.add_picture(str(ov_img(ov_by_ui['UI05'][0])),Inches(11.6),Inches(1.1),height=Inches(7.2))
     flow=base('화면 흐름과 원본 위치','UI 담당 전체 화면 정리 2번 슬라이드 기준')
@@ -122,7 +125,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             # 제품 계약은 접어서 제공한다. 인쇄 시에는 핵심 상태와 API를 함께 표시한다.
             extra+=f'<details><summary>제품 구현 계약 · {E(ui_spec["title"])}</summary>'+''.join(f'<p>{E(n)}</p>' for n in ui_spec['notes'])+'</details>'
             extra+=f'<h3>제품 상태·API</h3><p class="small">{E(ui_spec["states"])}</p><p class="small">{E(", ".join(ui_spec["api"]))}</p>'
-        label='이전 프로토타입 캡처(참고)' if not ui_spec and shot['ui'] in ov_by_ui else '브랜치 실행 캡처'
+        label='프로토타입 실행 캡처(참고)' if not ui_spec and shot['ui'] in ov_by_ui else '브랜치 실행 캡처'
         article(id,title,label+' · '+shot['id']+' @ '+short+' · 웹','프로토타입/'+shot['image'],shot['notes'],related,extra)
     def overview_page(img,ui_spec=None):
         """PPTX 이미지 한 장. 대표 이미지는 설계 화면 ID로, 나머지 상태는 P번호로 쪽을 만든다."""
@@ -161,7 +164,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
         shot=primary.get(id)
         ov=ov_by_ui.get(id)
         if ov:
-            # PPTX 대표 이미지가 SVG·쪽의 기준이다. 이전 실행 캡처는 참고 쪽으로 뒤에 둔다.
+            # PPTX 대표 이미지가 SVG·쪽의 기준이다. 실행 캡처는 참고 쪽으로 뒤에 둔다.
             b64=base64.b64encode(ov_img(ov[0]).read_bytes()).decode()
             path.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img"><title>{escape(ov[0]["screen"])}</title><desc>UI 담당 전체 화면 정리 @ {overview["commit"]} · {escape(ov[0]["id"])} · 이미지 편집은 UI 원본에서 수행</desc><image width="390" height="844" href="data:image/png;base64,{b64}"/></svg>')
             overview_page(ov[0],spec)
@@ -255,7 +258,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     sheet(wb,'UI통합검수',['ID','확인 항목','기대 결과','실제 앱 검수'],qa_rows,[18,65,100,22])
     sheet(wb,'적용기준',['구분','내용'],[
         ['최우선 기준','UI 담당 전체 화면 정리 '+overview['file']+' @ '+ov_short+' — 화면 구성·문구·규칙'],
-        ['기준','명세 v2.3 / 설계 v0.3.3 / 이전 프로토타입 캡처 '+short],
+        ['기준','명세 v2.3 / 설계 v0.3.3 / 프로토타입 실행 캡처 '+short],
         ['필수 열람','UI/2026-11-01_UI_전체화면정리_반영.md — 반영 기준·제품 계약 차이 / UI/2026-10-30_UI_통합_설계.md — 이전 화면별 계약'],
         ['미결정','회의록/10월 30일 회의 안건.md — 맨 앞 목차의 논의 안건'],
         ['주의','PPTX·캡처는 프로토타입 화면. 기능 완료·권한·동의·출시 적합성 확인 아님.'],
@@ -276,7 +279,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     css+='@media print{.intro{display:block;height:187mm;margin:0;padding:0;break-after:page;font-size:12px}.intro table{font-size:10px}.intro td,.intro th{padding:6px}}'
     rules_html='<ul>'+''.join(f'<li>{E(l)}</li>' for l in ov_slides[21]['lines'][1:])+'</ul>'
     pending_html='<ul>'+''.join(f'<li><b>{E(r[0])}</b>: {E(r[1])}</li>' for r in ov_slides[22].get('table',[])[1:])+'</ul>'
-    intro=f'<section class="intro"><h2>화면 적용 기준</h2><p><b>최우선 기준: UI 담당 전체 화면 정리</b> · {E(overview["file"])} @ <b>{ov_short}</b> · 슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 하루 일정 변경). 제품 UI {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다. 이전 프로토타입 실행 캡처 {len(shots)}개(@ {short})는 PPTX에 없는 화면·상태와 참고용으로 유지합니다.</p><p><a href="전체화면정리/출처.json">PPTX 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드 문구.txt">슬라이드 문구 원문</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">반영 기준·제품 계약 차이·앱 구현 현황</a> · <a href="앱대조_구현후/">앱 대조 이미지(구현 후)</a> · <a href="앱대조_0.2.3/">적용 전</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a> · <a href="../../회의록/10월%2030일%20회의%20안건.md">회의 안건</a> · <a href="프로토타입/출처.json">이전 캡처 출처</a></p><h3>일정 규칙(PPTX 21번)</h3>{rules_html}<h3>아직 연결되지 않은 기능(PPTX 22번)</h3>{pending_html}</section><section class="intro"><h2>화면과 제품 계약의 차이</h2><p>전체 화면 정리(최우선)와 기능명세 v2.3·API·DB가 다른 항목입니다. 제품 계약은 이번에 바꾸지 않았으며 회의 결정 후 명세부터 개정합니다.</p>{table}</section>'
+    intro=f'<section class="intro"><h2>화면 적용 기준</h2><p><b>최우선 기준: UI 담당 전체 화면 정리</b> · {E(overview["file"])} @ <b>{ov_short}</b> · 슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 하루 일정 변경). 제품 UI {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다. 프로토타입 실행 캡처 {len(shots)}개(@ {short})는 PPTX에 없는 화면·상태와 참고용으로 유지합니다.</p><p><a href="전체화면정리/출처.json">PPTX 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드 문구.txt">슬라이드 문구 원문</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">반영 기준·제품 계약 차이·앱 구현 현황</a> · <a href="앱대조_구현후/">앱 대조 이미지(구현 후)</a> · <a href="앱대조_0.2.3/">적용 전</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a> · <a href="2026-11-01_UI_변경_반영.md">11월 1일 캡처 관찰</a> · <a href="../../회의록/10월%2030일%20회의%20안건.md">회의 안건</a> · <a href="프로토타입/출처.json">이전 캡처 출처</a></p><h3>일정 규칙(PPTX 21번)</h3>{rules_html}<h3>아직 연결되지 않은 기능(PPTX 22번)</h3>{pending_html}</section><section class="intro"><h2>화면과 제품 계약의 차이</h2><p>전체 화면 정리(최우선)와 기능명세 v2.3·API·DB가 다른 항목입니다. 제품 계약은 이번에 바꾸지 않았으며 회의 결정 후 명세부터 개정합니다.</p>{table}</section>'
     page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · 전체 화면 정리 반영</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-11-01 · UI 담당 전체 화면 정리(최우선) 반영</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
     (ROOT/'UI/05 UI 화면 갤러리.html').write_text(page)
     result=dict(source_commit=commit,overview_commit=overview['commit'],overview_sha256=overview['sha256'],
@@ -301,6 +304,6 @@ def update_index():
     s=s.replace('SVG 원본은 각 갤러리 화면에서 엽니다.','화면 출처·제품 적용 기준·회의 안건을 함께 확인합니다.')
     s=s.replace('SVG는 벡터 편집기로 열어 수정합니다.','명세 기반 SVG는 벡터 편집, 캡처 래퍼는 앱 소스 수정 후 재캡처합니다.')
     s=re.sub(r'<div class="info"><b>2026-1[01]-\d+ UI 화면 반영</b>.*?</div>', '',s,flags=re.S)
-    info=f'<div class="info"><b>2026-11-01 UI 화면 반영</b><p><b>최우선 기준: UI 담당 전체 화면 정리</b>(feature/ui-prototype @ {applied["overview_commit"][:7]}, 이미지 {applied["overview_images"]}개, 새 화면 UI38). 이전 실행 캡처 @ {m["commit"][:7]} {applied["captures"]}개는 참고로 유지. 제품 화면 {applied["main_screens"]}개. 명세 v2.3·설계 v0.3.3과 다른 항목은 <a href="UI/2026-11-01_UI_전체화면정리_반영.md">전체 화면 정리 반영 기준</a>과 회의 안건에서 개정 여부를 정합니다. <a href="UI/전체화면정리/출처.json">출처</a></p></div>'
+    info=f'<div class="info"><b>2026-11-01 UI 화면 반영</b><p><b>최우선 기준: UI 담당 전체 화면 정리</b>(feature/ui-prototype @ {applied["overview_commit"][:7]}, 이미지 {applied["overview_images"]}개, 새 화면 UI38). 프로토타입 실행 캡처 @ {m["commit"][:7]} {applied["captures"]}개는 참고로 유지. 제품 화면 {applied["main_screens"]}개. 명세 v2.3·설계 v0.3.3과 다른 항목은 <a href="UI/2026-11-01_UI_전체화면정리_반영.md">전체 화면 정리 반영 기준</a>과 회의 안건에서 개정 여부를 정합니다. <a href="UI/전체화면정리/출처.json">출처</a></p></div>'
     s=s.replace('<h2>개발 설계서</h2>',info+'<h2>개발 설계서</h2>')
     p.write_text(s)

@@ -94,7 +94,7 @@
           {
             "check": "build_design.py 독립 실행",
             "passed": true,
-            "output": ", \"S02-empty\", \"S02-oneday\", \"DATES\", \"S02-tabs\", \"UI09\", \"P17-2\", \"S04-people\", \"UI10\", \"S03\", \"S03-detail\", \"UI11\", \"UI12\", \"S05\", \"M1\", \"S05-empty\", \"UI13\", \"P16-2\", \"S04\", \"S04-select\", \"S04-empty\", \"UI14\", \"M2\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"P11-2\", \"INVITES\", \"UI24\", \"P12-2\", \"P12-3\", \"P12-4\", \"INVITE-JOIN\", \"UI25\", \"UI26\", \"P13-2\", \"P13-3\", \"MEMBERS\", \"UI27\", \"UI28\", \"P19-2\", \"P19-3\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"UI37\", \"ACCOUNT\", \"S0\"], \"pdf_intro_pages\": 2, \"pdf_pages\": 100, \"pptx_slides\": 102}\n{\"screens\": 36, \"operations\": 73, \"tables\": 27, \"functional_cases\": 120, \"native_ui_pptx\": \"/tmp/atp-design-standalone-o4j8xozk/package/UI/05 UI 설계.pptx\"}\n",
+            "output": "\"UI10\", \"S03\", \"S03-detail\", \"UI11\", \"UI12\", \"S05\", \"M1\", \"S05-empty\", \"UI13\", \"P16-2\", \"S04\", \"S04-select\", \"S04-empty\", \"UI14\", \"M2\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"P11-2\", \"INVITES\", \"UI24\", \"P12-2\", \"P12-3\", \"P12-4\", \"INVITE-JOIN\", \"UI25\", \"UI26\", \"P13-2\", \"P13-3\", \"MEMBERS-GROUP\", \"MEMBERS\", \"MEMBER-REMOVE\", \"MEMBER-REMOVED\", \"MEMBERS-READER\", \"UI27\", \"UI28\", \"P19-2\", \"P19-3\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"MY-LINK\", \"UI37\", \"ACCOUNT\", \"S0\"], \"pdf_intro_pages\": 2, \"pdf_pages\": 111, \"pptx_slides\": 113}\n{\"screens\": 36, \"operations\": 73, \"tables\": 27, \"functional_cases\": 120, \"native_ui_pptx\": \"/tmp/atp-design-standalone-_h_kaxje/package/UI/05 UI 설계.pptx\"}\n",
             "error": ""
           },
           {
@@ -131,9 +131,9 @@
       "check": "프로토타입 출처와 캡처 무결성",
       "passed": true,
       "detail": {
-        "commit": "a67ee60368819ce5a325b5fe2ace17f9c85140c1",
+        "commit": "870be871c97e8687a2ae7592fcbc48f59875e148",
         "overview": "870be871c97e8687a2ae7592fcbc48f59875e148",
-        "captures": 36,
+        "captures": 47,
         "overview_images": 43,
         "replaced": [
           "UI01",
@@ -331,12 +331,12 @@
     {
       "check": "PPTX 기본·상세·상태 화면 수",
       "passed": true,
-      "detail": 102
+      "detail": 113
     },
     {
       "check": "PPTX 캡처 전체의 원본 이미지 포함",
       "passed": true,
-      "detail": 79
+      "detail": 90
     },
     {
       "check": "PPTX 도형 슬라이드 경계",
@@ -491,17 +491,17 @@
     {
       "check": "PDF 열기 05 UI 설계",
       "passed": true,
-      "detail": 100
+      "detail": 111
     },
     {
       "check": "UI PDF 기본·상세·상태 화면수",
       "passed": true,
-      "detail": 100
+      "detail": 111
     },
     {
       "check": "UI PDF 출처와 적용 기준",
       "passed": true,
-      "detail": "a67ee60368819ce5a325b5fe2ace17f9c85140c1"
+      "detail": "870be871c97e8687a2ae7592fcbc48f59875e148"
     },
     {
       "check": "UI PDF 화면 순서와 누락",
@@ -529,6 +529,7 @@
         "P08-1",
         "P08-2",
         "CALENDAR",
+        "CALENDAR-LIST",
         "UI06",
         "P10-2",
         "SCHEDULE-EDIT",
@@ -536,6 +537,10 @@
         "P09-2",
         "P09-3",
         "P09-4",
+        "DAY-MENU",
+        "DAY-EDIT",
+        "DAY-DATE",
+        "DAY-CANCEL",
         "UI08",
         "P14-2",
         "S01",
@@ -545,6 +550,7 @@
         "S02-oneday",
         "DATES",
         "S02-tabs",
+        "GROUP-DAYS",
         "UI09",
         "P17-2",
         "S04-people",
@@ -584,7 +590,11 @@
         "UI26",
         "P13-2",
         "P13-3",
+        "MEMBERS-GROUP",
         "MEMBERS",
+        "MEMBER-REMOVE",
+        "MEMBER-REMOVED",
+        "MEMBERS-READER",
         "UI27",
         "UI28",
         "P19-2",
@@ -602,6 +612,7 @@
         "P18-2",
         "MY",
         "MY-name",
+        "MY-LINK",
         "UI37",
         "ACCOUNT",
         "S0"
