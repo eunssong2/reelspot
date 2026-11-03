@@ -50,7 +50,7 @@ root 소유 Nginx 설정은 사용자가 sudo로 준비 스크립트를 실행�
 서버 준비 전에는 아래 한 줄을 실행한다. 기존 설정을 백업하고 앱 경로를 추가한 뒤 문법 검사에 성공하면 reload한다. Guacamole과 TLS 설정은 유지하며, 실패하면 설정 파일을 백업으로 복원한다.
 
 ```bash
-sudo python3 "/home/sphan/Documents/samsun/1차 개발 코드/deploy/install-nginx.py" --prepare
+sudo python3 "/home/sphan/Documents/samsun/docs/1차 개발 코드/deploy/install-nginx.py" --prepare
 ```
 
 `Nginx 준비 완료`가 나오면 준비가 끝난다. 이 모드는 앱 경로에 `503 SERVICE_NOT_READY`를 반환하며 API 서버를 외부에 연결하지 않는다. 실제 로그인은 아래 서버 준비와 연결 활성화 후 가능하다. 이미 활성화한 서버에 `--prepare`를 다시 실행하면 앱 경로가 준비 중 상태로 돌아간다.
@@ -58,7 +58,7 @@ sudo python3 "/home/sphan/Documents/samsun/1차 개발 코드/deploy/install-ngi
 ### 서버 준비 후 연결 활성화
 
 ```bash
-cd '/home/sphan/Documents/samsun/1차 개발 코드'
+cd '/home/sphan/Documents/samsun/docs/1차 개발 코드'
 # 한글 경로 BuildKit 오류 회피 → DB 백업·마이그레이션 → API·워커 실행
 npm run server:start
 python3 deploy/install-nginx.py --dry-run
