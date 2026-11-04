@@ -1,0 +1,46 @@
+/**
+ * 화면 이동 경로. 라이브러리 없이 App.tsx 의 스택 배열로 관리한다.
+ * 내 스팟 모임 → 일정 요약 → 날짜별 장소 구성 → (새 스팟 검색 | 장소 사진) → 순서 편집 / 사진·동영상 올리기
+ *
+ * tripId(모임)와 itineraryId(일정)는 서로 다른 개념이다 — 한 모임 안에 여러 일정이 있을 수 있으므로
+ * 화면 간 이동에서 둘을 같은 값으로 섞어 쓰지 않는다.
+ */
+import type { ClipSeconds } from '../mock/tripData';
+
+export type Route =
+  | { name: 'trips' }
+  | { name: 'itinerarySummary'; tripId: string; itineraryId: string }
+  | { name: 'itineraryDay'; tripId: string; itineraryId: string; dayId: string; groupId?: string }
+  | { name: 'placeOrderEdit'; tripId: string; itineraryId: string; dayId: string }
+  | { name: 'placeSearch'; tripId: string; itineraryId: string; dayId: string }
+  | { name: 'placeRecords'; tripId: string; itineraryId: string; dayId: string; placeId: string }
+  // clipSeconds 를 모르는 진입 경로(장소 검색에서 바로 올리기)는 화면에서 기본값을 쓴다.
+  | { name: 'mediaUpload'; placeName?: string; clipSeconds?: ClipSeconds }
+  // 동영상 여러 개 이어 붙이기 실험 화면(웹 전용)
+  | { name: 'videoMerge' }
+  // 마이페이지: 프로필 사진·닉네임 변경, 참여한 모임 수
+  | { name: 'myPage' }
+  // 설정(프로필 및 계정·초대코드·약관·로그아웃)과 프로필 및 계정 상세
+  | { name: 'members'; groupId?: string; tripId?: string; itineraryId?: string }
+  | { name: 'settings' }
+  | { name: 'account' }
+  // 로그인 → 모임 → 달력 → 일정 → 초대 (docs/login-calendar-ui-spec.md). 'trips'(/prototype)가 로그인·내 모임 입구다.
+  | { name: 'onboarding' }
+  | { name: 'groupCreate' }
+  | { name: 'groupCalendar'; groupId: string; focusDate?: string }
+  // scheduleId 가 없으면 추가, 있으면 변경. date 는 추가할 때 시작·종료 기본값.
+  | { name: 'scheduleEdit'; groupId: string; scheduleId?: string; date?: string; dayId?: string }
+  | { name: 'invites'; groupId: string }
+  // 브이로그 만들기: 날짜 → 장소 → 사진·동영상 → 템플릿·자막 → 미리보기·생성·저장 (기획: AT THAT PLACE 브이로그 화면기획 v4, 구현: src/prototype/vlog)
+  | { name: 'vlog'; groupId: string }
+  // code 가 있으면 초대 링크로 연 것처럼 바로 확인한다.
+  | { name: 'inviteJoin'; code?: string };
+
+export interface Nav {
+  push: (route: Route) => void;
+  back: () => void;
+  /** 지금 화면을 route 로 바꾼다(뒤로가기로 돌아오지 않음). */
+  replace: (route: Route) => void;
+  /** 쌓인 화면을 모두 닫고 입구(/prototype: 로그인 또는 내 모임)로 돌아간다. */
+  home: () => void;
+}

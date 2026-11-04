@@ -8,6 +8,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from design_model import ROOT, SCREENS
+from vlog_revision import DEFECTS, defects_for_ui
 
 E = html.escape
 FONT = 'Noto Sans CJK KR'
@@ -22,6 +23,20 @@ RELATED = {'S0':None,'S02':'UI08','S02-empty':'UI08','S02-oneday':'UI08','S02-ta
 
 def load_source():
     manifest=json.loads((ROOT/'UI/프로토타입/출처.json').read_text())
+    # Keep original capture provenance; append separately recorded 9f64b5e observations.
+    extra_path=ROOT/'UI/브이로그/실행결과.json'
+    if extra_path.exists():
+        extra=json.loads(extra_path.read_text())
+        replaced={x['ui'] for x in extra['screens'] if x['ui']}
+        for old in manifest['screens']:
+            old.setdefault('commit',manifest['commit'])
+            if old['ui'] in replaced:
+                RELATED[old['id']]=old['ui']; old['ui']=None
+        for new in extra['screens']:
+            new['environment']=extra['environment']; new['scope']=extra['scope']
+            if new['ui'] is None: RELATED[new['id']]='UI39'
+        manifest['screens']+=extra['screens']
+        manifest['current_commit']=extra['commit']
     for shot in manifest['screens']:
         p=ROOT/'UI/프로토타입'/shot['image']
         if hashlib.sha256(p.read_bytes()).hexdigest()!=shot['sha256']:
@@ -30,7 +45,7 @@ def load_source():
 
 
 def load_overview():
-    """UI 담당 '전체 화면 정리' PPTX 추출본. UI 설계의 최우선 기준이다(도구/capture_overview.py)."""
+    """UI 담당 '전체 화면 정리' PPTX 추출본. 변경된 최신 실행 화면을 우선한다(도구/capture_overview.py)."""
     manifest=json.loads((ROOT/'UI/전체화면정리/출처.json').read_text())
     for img in manifest['images']:
         p=ROOT/'UI/전체화면정리'/img['image']
@@ -46,6 +61,10 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     ov_short=overview['commit'][:7]; ov_slides={s['slide']:s for s in overview['slides']}
     ov_by_ui={}
     for img in overview['images']:ov_by_ui.setdefault(img['ui'],[]).append(img)
+    historical_overview=[]
+    for ui,shot in primary.items():
+        if shot.get('commit','').startswith('9f64b5e'):
+            historical_overview.extend(ov_by_ui.pop(ui,[]))
     replaced=set(primary)|set(ov_by_ui)
     applied_count=len(replaced); extra_count=len(shots)+len(overview['images'])-applied_count; native_count=len(SCREENS)-applied_count
     prs=Presentation();prs.slide_width=Inches(16);prs.slide_height=Inches(9)
@@ -64,18 +83,18 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
         sh=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,0,prs.slide_width,Inches(.85))
         sh.fill.solid();sh.fill.fore_color.rgb=RGBColor.from_string('202A35');sh.line.fill.background()
         text(s,.5,.16,15,.5,title,25,'FFFFFF',True)
-        text(s,.5,8.57,15,.3,sub+' · 2026-11-03 · 설계 v0.4.1',10,'5F6B78')
+        text(s,.5,8.57,15,.3,sub+' · 2026-11-04 · 설계 v0.5.0',10,'5F6B78')
         return s
     ov_img=lambda img:ROOT/'UI/전체화면정리'/img['image']
-    cover=base('At that place · UI 설계 v0.4.1 · UI 프로토타입 기준',f'feature/ui-prototype @ {ov_short} · 실행 캡처 @ {short} · 기능명세서 v3.1')
+    cover=base('At that place · UI 설계 v0.5.0 · UI 프로토타입 기준',f'현재 9f64b5e · 과거 PPT {ov_short} · 캡처별 커밋 표시 · 기능명세서 v3.2')
     text(cover,.7,1.25,10,1.2,'디자이너·PM의 UI 프로토타입을\n화면 설계 기준으로 반영합니다.',32,bold=True)
     text(cover,.7,3.15,9.3,3.4,
-         f'최우선 자료: {overview["file"]}\nfeature/ui-prototype @ {overview["commit"]}\n슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 포함)\n프로토타입 실행 캡처 {len(shots)}개(@ {short})는 PPTX에 없는 화면·상태와 참고용으로 유지합니다.\n제품 UI ID {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다.',19)
-    text(cover,.7,7,9.4,.9,'프로토타입과 겹치는 기능은 프로토타입이 우선합니다(명세 v3.1 D01~D24).\n프로토타입에 없는 화면은 기존 설계안을 유지하고 Q1~Q18로 확인합니다.',17,'B8433F',True)
-    cover.shapes.add_picture(str(ov_img(ov_by_ui['UI05'][0])),Inches(11.6),Inches(1.1),height=Inches(7.2))
+         f'기존 화면 참고: {overview["file"]}\nfeature/ui-prototype @ {overview["commit"]}\n슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 포함)\n실행 캡처 {len(shots)}개: 기존 {short} + 신규9f64b5e. UI05·브이로그는 신규 캡처 우선.\n제품 UI ID {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다.',19)
+    text(cover,.7,7,9.4,.9,'프로토타입과 겹치는 기능은 프로토타입이 우선합니다(명세 v3.2 D01~D27).\n프로토타입에 없는 화면은 기존 설계안을 유지하고 Q1~Q21로 확인합니다.',17,'B8433F',True)
+    cover.shapes.add_picture(str(ROOT/'UI/프로토타입'/primary['UI05']['image']),Inches(11.6),Inches(1.1),height=Inches(7.2))
     flow=base('화면 흐름과 원본 위치','UI 담당 전체 화면 정리 2번 슬라이드 기준')
     text(flow,.8,1.35,14.5,2.6,
-         '시작: 로그인(UI01) → 가입 동의·표시명(UI02) → 내 모임(UI03) → 모임 만들기(UI04) · 초대 코드 참여(UI24)\n모임 안: 모임 달력·일정 목록(UI05) → 날짜별 장소(UI08) → 장소 기록(UI13·UI09) → 사진·동영상 올리기(UI14)\n모임 달력 → 일정 추가(UI06) · 하루 일정 변경(UI38) · 초대·관리(UI23) · 함께하는 친구(UI26)\n날짜별 장소 → 장소 검색(UI10) · 순서 편집(UI12)',21)
+         '시작: 로그인(UI01) → 가입 동의·표시명(UI02) → 내 모임(UI03) → 모임 만들기(UI04) · 초대 코드 참여(UI24)\n모임 안: 모임 달력·일정 목록(UI05) → 날짜별 장소(UI08) → 장소 기록(UI13·UI09) → 사진·동영상 올리기(UI14)\n모임 달력 → 일정 추가(UI06) · 하루 일정 변경(UI38) · 초대·관리(UI23) · 함께하는 친구(UI26)\n날짜별 장소 → 장소 검색(UI10) · 순서 편집(UI12)\n브이로그: 모임 달력 → UI39~49 (날짜·장소·기록·편집·생성/저장 미연결)',21)
     text(flow,.8,4.35,14.5,2.2,
          '내 정보: 내 모임 아래 탭 마이페이지(UI36) → 설정(UI28) → 프로필 및 계정(UI37)\nUI/전체화면정리/출처.json: PPTX 해시·슬라이드 문구·이미지별 화면 대응·이미지 해시\nUI/프로토타입/출처.json: 이전 실행 캡처의 커밋·소스·경로·해시\n재생성은 저장된 이미지를 사용하며 원격 브랜치·Expo 실행이 필요하지 않습니다.',20)
     text(flow,.8,7.05,14.3,.9,'프로토타입에 없는 화면(파일 전송·내 기록·본인 수정·신고·계정 삭제·저장 공간·운영 등)은 기존 설계안을 유지합니다.',17,'B8433F',True)
@@ -83,7 +102,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     from design_model import V3_DECISIONS, OPEN_QUESTIONS
     differences=[[d[0],d[2],d[3]] for d in V3_DECISIONS]+[[q[0]+' 확인 필요',q[1],'임시 적용: '+q[2]] for q in OPEN_QUESTIONS]
     for offset in range(0,len(differences),13):
-        diff=base('바뀐 결정과 확인 필요 항목','기능명세서 v3.1 0.2절(D)·0.4절(Q) · 이전(v2.3) → v3')
+        diff=base('바뀐 결정과 확인 필요 항목','기능명세서 v3.2 0.2절(D)·0.4절(Q) · 이전(v2.3) → v3')
         y=1.1
         for name,actual,contract in differences[offset:offset+13]:
             text(diff,.6,y,2.4,.5,name,12,'B8433F',True)
@@ -106,16 +125,19 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
                         f'<img src="{E(img)}" alt="{E(title)}"><figcaption>{E(kind)}</figcaption></figure>'
                         f'<div class="notes">'+''.join(f'<p>{E(n)}</p>' for n in notes)+extra+'</div></div></article>')
     def capture_page(shot,ui_spec=None):
+        commit=shot.get('commit',manifest['commit']); short=commit[:7]
         id=ui_spec['id'] if ui_spec else shot['id']
-        title=shot['title'];related=shot['ui'] or RELATED.get(shot['id']) or '데모 전용'
+        title=ui_spec['title'] if ui_spec else shot['title'];related=shot['ui'] or RELATED.get(shot['id']) or '데모 전용'
         s=base(id+'  '+title,f'브랜치 실행 캡처 · {shot["id"]} · {short}')
         s.shapes.add_picture(str(ROOT/'UI/프로토타입'/shot['image']),Inches(.65),Inches(1.05),height=Inches(7.2))
         text(s,4.3,1.15,10.9,.5,shot['id']+' · '+shot['actions'],22,bold=True)
+        known=defects_for_ui(id) if ui_spec else []
+        visible_notes=shot['notes']+[x['id']+' · '+x['status']+': '+x['summary'] for x in known]
         y=2
-        for n in shot['notes']:
+        for n in visible_notes:
             text(s,4.3,y,10.8,.9,n,18);y+=1.05
         text(s,4.3,5.5,10.8,.35,'출처와 적용 범위',16,'B8433F',True)
-        text(s,4.3,5.95,10.8,1.5,shot['source']+'\n'+manifest['environment']+'\n'+manifest['scope'],14,'5F6B78')
+        text(s,4.3,5.95,10.8,1.5,shot['source']+'\n'+shot.get('environment',manifest['environment'])+'\n'+shot.get('scope',manifest['scope']),14,'5F6B78')
         if ui_spec:
             text(s,4.3,7.52,10.8,.8,'제품 계약: '+' / '.join(ui_spec['features'])+' · '+ui_spec['role']+'\nAPI: '+', '.join(ui_spec['api']),12,'5F6B78')
         s.notes_slide.notes_text_frame.text='실행경로: '+shot['actions']+'\n브랜치: '+manifest['branch']+'\n커밋: '+commit+'\n'+ '\n'.join(shot['notes'])
@@ -127,14 +149,15 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             extra+=f'<details><summary>제품 구현 계약 · {E(ui_spec["title"])}</summary>'+''.join(f'<p>{E(n)}</p>' for n in ui_spec['notes'])+'</details>'
             extra+=f'<h3>제품 상태·API</h3><p class="small">{E(ui_spec["states"])}</p><p class="small">{E(", ".join(ui_spec["api"]))}</p>'
         label='프로토타입 실행 캡처(참고)' if not ui_spec and shot['ui'] in ov_by_ui else '브랜치 실행 캡처'
-        article(id,title,label+' · '+shot['id']+' @ '+short+' · 웹','프로토타입/'+shot['image'],shot['notes'],related,extra)
+        article(id,title,label+' · '+shot['id']+' @ '+short+' · 웹','프로토타입/'+shot['image'],visible_notes,related,extra)
     def overview_page(img,ui_spec=None):
         """PPTX 이미지 한 장. 대표 이미지는 설계 화면 ID로, 나머지 상태는 P번호로 쪽을 만든다."""
         sl=ov_slides[img['slide']]
         id=ui_spec['id'] if ui_spec else img['id']
         title=img['screen'] if ui_spec else img['screen']+' · '+img['state']
         source=f'UI 담당 전체 화면 정리 {img["slide"]}번 슬라이드 · {img["id"]} {img["state"]} @ {ov_short}'
-        s=base(id+'  '+title,source+' · 최우선')
+        priority='이전 참고 · 현재 UI05는9f64b5e 우선' if img in historical_overview else '적용 기준'
+        s=base(id+'  '+title,source+' · '+priority)
         s.shapes.add_picture(str(ov_img(img)),Inches(.65),Inches(1.05),height=Inches(7.2))
         text(s,4.3,1.15,10.9,.5,(sl.get('section')+' · ' if sl.get('section') else '')+img['screen']+' — '+img['state'],22,bold=True)
         text(s,4.3,1.8,10.8,.5,sl['lead'],18,'B8433F',True)
@@ -151,18 +174,19 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             text(s,4.3,7.85,10.8,.5,'제품 계약: '+' / '.join(ui_spec['features'])+' · '+ui_spec['role']+' · API: '+', '.join(ui_spec['api']),11,'5F6B78')
         s.notes_slide.notes_text_frame.text='\n'.join([source,sl['lead'],*sl['bullets'],sl.get('note','')])
         notes=[sl['lead'],*sl['bullets']]+(['참고: '+sl['note']] if sl.get('note') else [])
-        extra=f'<h3>최우선 자료</h3><p class="small">{E(overview["file"])} · {E(overview["commit"])} · {E(img["image"])}</p>'
+        extra=f'<h3>{E(priority)}</h3><p class="small">{E(overview["file"])} · {E(overview["commit"])} · {E(img["image"])}</p>'
         if conflicts:
             extra+='<h3>v3에서 바뀐 결정</h3>'+''.join(f'<p class="small">{E(c[0])}: {E(c[2])} → {E(c[3])}</p>' for c in conflicts)
         if ui_spec:
             extra+=f'<details><summary>제품 구현 계약 · {E(ui_spec["title"])}</summary>'+''.join(f'<p>{E(n)}</p>' for n in ui_spec['notes'])+'</details>'
             extra+=f'<h3>제품 상태·API</h3><p class="small">{E(ui_spec["states"])}</p><p class="small">{E(", ".join(ui_spec["api"]))}</p>'
-        article(id,title,'UI 담당 전체 화면 정리(최우선) · '+img['id']+' '+img['state'],'전체화면정리/'+img['image'],notes,img['ui'],extra)
+        article(id,title,'UI 담당 전체 화면 정리 · '+priority+' · '+img['id']+' '+img['state'],'전체화면정리/'+img['image'],notes,img['ui'],extra)
     for spec in SCREENS:
         id=spec['id'];filename=id+'_'+spec['title'].replace(' ','_')+'.svg'
         path=ROOT/'UI/SVG'/filename
         shot=primary.get(id)
         ov=ov_by_ui.get(id)
+        shot_commit=shot.get('commit',commit) if shot else commit
         if ov:
             # PPTX 대표 이미지가 SVG·쪽의 기준이다. 실행 캡처는 참고 쪽으로 뒤에 둔다.
             b64=base64.b64encode(ov_img(ov[0]).read_bytes()).decode()
@@ -180,16 +204,16 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
         elif shot:
             # 기존 SVG 경로도 최신 캡처를 담아, 외부의 기존 링크가 초안으로 돌아가지 않게 한다.
             b64=base64.b64encode((ROOT/'UI/프로토타입'/shot['image']).read_bytes()).decode()
-            path.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img"><title>{escape(shot["title"])}</title><desc>feature/ui-prototype @ {commit} · 웹 실행 캡처 · 이미지 편집은 앱 소스에서 수행</desc><image width="390" height="844" href="data:image/png;base64,{b64}"/></svg>')
+            path.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img"><title>{escape(shot["title"])}</title><desc>feature/ui-prototype @ {shot_commit} · 웹 실행 캡처 · 이미지 편집은 앱 소스에서 수행</desc><image width="390" height="844" href="data:image/png;base64,{b64}"/></svg>')
             capture_page(shot,spec)
-            title=shot['title'];kind='브랜치 실행 캡처';image='프로토타입/'+shot['image']
+            title=spec['title'];kind='브랜치 실행 캡처';image='프로토타입/'+shot['image']
             display=dict(spec, title=title, rows=[['prototype',t] for t in shot.get('text','').splitlines()],
                          contract_title=spec['title'],contract_rows=spec['rows'],
-                         visual_source=kind,prototype=shot,source_commit=commit)
+                         visual_source=kind,prototype=shot,source_commit=shot_commit)
             for i,t in enumerate(shot.get('text','').splitlines(),1):components.append([id,f'{id}-P{i:02}','실행 화면 문구',t,shot['actions'],'데모 표시·서비스 권한 별도',shot['id']])
         else:
             path.write_text(svg_for(screen_elements(spec)))
-            title=spec['title'];kind='명세 기반 설계안 · 기존 화면 유지';image='미리보기/'+path.stem+'.png'
+            title=spec['title'];kind='브이로그 코드 기반 설계안 · 실행 미관찰' if 'F30' in spec['features'] else '명세 기반 설계안 · 기존 화면 유지';image='미리보기/'+path.stem+'.png'
             s=base(id+'  '+title,kind)
             for e in screen_elements(spec):ppt_shape(s,e,.65,1.05,3.33/390)
             text(s,4.4,1.2,10.7,.5,'대상: '+spec['role'],21,bold=True)
@@ -205,10 +229,14 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             for i,(k,t) in enumerate(spec['rows'],1):components.append([id,f'{id}-C{i:02}',k,t,'\n'.join(spec['notes']),spec['role'],spec['states']])
         data.append(display)
         screen_rows.append([id,title,' '.join(spec['features']),spec['role'],kind,image,' '.join(i['id'] for i in ov) if ov else (shot['id'] if shot else ''),overview['file'] if ov else (shot['source'] if shot else '도구/design_model.py'),spec['states'],', '.join(spec['api'])])
-        states.append([id,kind,spec['states'],'제품 요구: 입력 보존·오류/빈 결과 구분·권한/버전 재검증 · 데모 구현과 구분'])
+        defect_note=' / '.join(x['id']+' '+x['status']+': '+x['summary'] for x in defects_for_ui(id))
+        if defect_note:
+            screen_rows[-1][8]+=' / '+defect_note
+        states.append([id,kind,spec['states']+(' / '+defect_note if defect_note else ''),'제품 요구: 입력 보존·오류/빈 결과 구분·권한/버전 재검증 · 데모 구현과 구분'])
         apis.extend([[id,a,' '.join(spec['features']),'제품 구현 계약 · 데모 연동 검수 아님'] for a in spec['api']])
         for extra in shots:
             if not extra['ui'] and RELATED.get(extra['id'])==id:capture_page(extra)
+    for old in historical_overview: overview_page(old)
     capture_page(next(s for s in shots if s['id']=='S0'))
     prs.save(ROOT/'UI/05 UI 설계.pptx')
     wb=Workbook();wb.remove(wb.active)
@@ -218,6 +246,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     sheet(wb,'전체화면규칙',['구분','내용'],[['일정 규칙',l] for l in ov_slides[21]['lines'][1:]]+[['미연결 기능: '+r[0],r[1]] for r in ov_slides[22].get('table',[])[1:]],[35,110])
     sheet(wb,'구성요소명세',['화면ID','요소ID','유형','표시문구','동작·검증·전환','권한·범위','상태·원본'],components)
     sheet(wb,'화면API연결',['화면ID','operationId','기능','범위'],apis)
+    sheet(wb,'브이로그결함',['결함번호','현재 동작','확인 상태','관련 UI','검수 ID','수정 후 기대'],[[x['id'],x['summary'],x['status'],', '.join(x['uis']),', '.join('TC-F30-'+str(n).zfill(2) for n in x['tests']),x['expected']] for x in DEFECTS],[14,75,32,40,35,85])
     sheet(wb,'화면상태',['화면ID','화면출처','제품별상태','복구규칙'],states)
     source_rows=[[s['id'],s['title'],s['ui'] or RELATED.get(s['id']) or '데모 전용',s['source'],s['route'],s['actions'],s['captured_at'],s['sha256']] for s in shots]
     sheet(wb,'프로토타입대응',['브랜치화면','화면명','설계UI','소스','라우트','실행경로','캡처시각','캡처SHA256'],source_rows)
@@ -238,10 +267,10 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             qa_rows.append([v.strip() for v in line.strip('|').split('|')]+['미실행'])
     sheet(wb,'UI통합검수',['ID','확인 항목','기대 결과','실제 앱 검수'],qa_rows,[18,65,100,22])
     sheet(wb,'적용기준',['구분','내용'],[
-        ['기준','기능명세서 v3.1(2026-11-04) / 설계 v0.4.1 / UI 프로토타입 feature/ui-prototype @ '+ov_short+' / 실행 캡처 '+short],
+        ['기준','기능명세서 v3.2(2026-11-04) / 설계 v0.5.0 / 현재9f64b5e / 기존 PPT '+ov_short+' / 기존 캡처 '+short+' + 신규 브이로그(개별 commit)'],
         ['원칙','프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선. 프로토타입에 없는 기존 기능은 유지(화면은 같은 디자인 체계로 추가 설계). 프로토타입 결함은 Q 항목으로 관리'],
         ['화면 출처','UI 담당 전체 화면 정리 PPT 이미지 → 실행 캡처 → 명세 기반 설계안 순서로 대표 화면을 정한다'],
-        ['필수 열람','UI/2026-11-03_UI_v3_적용기준.md — 화면별 출처·바뀐 결정·추가 설계 / 기능명세서 0절 D01~D24·Q1~Q18'],
+        ['필수 열람','UI/2026-11-03_UI_v3_적용기준.md — 화면별 출처·바뀐 결정·추가 설계 / 기능명세서 0절 D01~D27·Q1~Q21'],
         ['이전 자료','UI/2026-11-01_UI_전체화면정리_반영.md(P1~P14는 v3에서 확정) / UI/2026-10-30_UI_통합_설계.md'],
         ['주의','PPT·캡처는 예시 데이터로 동작하는 프로토타입 화면. 기능 완료·권한·출시 적합성 확인 아님']], [28,110])
 
@@ -261,10 +290,10 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     pending_html='<ul>'+''.join(f'<li><b>{E(r[0])}</b>: {E(r[1])}</li>' for r in ov_slides[22].get('table',[])[1:])+'</ul>'
     dec_table='<table><tr><th>항목</th><th>이전(v2.3)</th><th>v3 기준</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in (d[0],d[2],d[3]))+'</tr>' for d in V3_DECISIONS)+'</table>'
     q_table='<table><tr><th>ID</th><th>확인할 내용</th><th>결정 전 v3 적용</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in q[:3])+'</tr>' for q in OPEN_QUESTIONS)+'</table>'
-    intro=f'<section class="intro"><h2>화면 적용 기준 · v0.4.1</h2><p><b>기준: 디자이너·PM의 UI 프로토타입</b> feature/ui-prototype @ <b>{ov_short}</b>(웹 실행 44개 화면 상태·코드 대조) · 기능명세서 v3.1(2026-11-04). 프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선이고, 프로토타입에 없는 기존 기능은 유지합니다. 제품 UI {len(SCREENS)}개 중 {applied_count}개는 UI 담당 정리 이미지·실행 캡처, {native_count}개는 명세 기반 설계안입니다. 실행 캡처 {len(shots)}개는 같은 커밋입니다.</p><p><a href="2026-11-03_UI_v3_적용기준.md">v3 적용 기준(화면별 출처·추가 설계)</a> · <a href="../기준/기능명세서.md">기능명세서 v3.1</a> · <a href="전체화면정리/출처.json">PPT 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드%20문구.txt">슬라이드 문구 원문</a> · <a href="프로토타입/출처.json">실행 캡처 출처</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">이전 반영 기준·앱 구현 현황</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a></p><h3>일정 규칙(PPT 21번)</h3>{rules_html}<h3>아직 연결되지 않은 기능(PPT 22번)</h3>{pending_html}</section><section class="intro"><h2>v3에서 바뀐 결정(D01~D24)</h2><p>이전 명세(v2.3)와 다른 프로토타입 동작을 기준으로 정했습니다.</p>{dec_table}</section><section class="intro"><h2>확인 필요 항목(Q1~Q18)</h2><p>결정 전까지 오른쪽 적용값으로 설계·구현합니다.</p>{q_table}</section>'
-    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · UI 프로토타입 기준 v0.4.1</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-11-03 · v0.4.1 · UI 프로토타입(feature/ui-prototype) 기준</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
+    intro=f'<section class="intro"><h2>화면 적용 기준 · v0.5.0</h2><p><b>기준: 디자이너·PM의 UI 프로토타입</b> feature/ui-prototype @ <b>9f64b5e</b>(신규 브이로그 실행·코드 대조, 기존 PPT/캡처는 {ov_short}) · 기능명세서 v3.2(2026-11-04). 프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선이고, 프로토타입에 없는 기존 기능은 유지합니다. 제품 UI {len(SCREENS)}개 중 {applied_count}개는 UI 담당 정리 이미지·실행 캡처, {native_count}개는 명세 기반 설계안입니다. 실행 캡처 {len(shots)}개는 기존 {short}와 신규9f64b5e의 관찰을 합친 것입니다. 화면마다 커밋을 표시합니다.</p><p><a href="2026-11-03_UI_v3_적용기준.md">v3 적용 기준(화면별 출처·추가 설계)</a> · <a href="../기준/기능명세서.md">기능명세서 v3.2</a> · <a href="전체화면정리/출처.json">PPT 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드%20문구.txt">슬라이드 문구 원문</a> · <a href="프로토타입/출처.json">실행 캡처 출처</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">이전 반영 기준·앱 구현 현황</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a></p><p><a href="../11%20브이로그%20제작%20설계.md">현재 브이로그 설계·미연결 범위·Q19~Q21</a></p><h3>일정 규칙(PPT 21번, 이전 기준)</h3>{rules_html}<h3>이전 PPT의 미연결 목록(22번) · 브이로그 현재 상태는 11번 설계 우선</h3>{pending_html}</section><section class="intro"><h2>v3에서 바뀐 결정(D01~D27)</h2><p>이전 명세(v2.3)와 다른 프로토타입 동작을 기준으로 정했습니다.</p>{dec_table}</section><section class="intro"><h2>확인 필요 항목(Q1~Q21)</h2><p>Q1~Q20은 결정 전 적용값입니다. Q21은 정책 승인 대상이 아닌 구현 인계·검증 대기 항목입니다.</p>{q_table}</section>'
+    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · UI 프로토타입 기준 v0.5.0</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-11-04 · v0.5.0 · UI 프로토타입(feature/ui-prototype) 기준</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
     (ROOT/'UI/05 UI 화면 갤러리.html').write_text(page)
-    result=dict(source_commit=commit,overview_commit=overview['commit'],overview_sha256=overview['sha256'],
+    result=dict(current_commit=manifest.get('current_commit',commit),source_commit=commit,overview_commit=overview['commit'],overview_sha256=overview['sha256'],
                 overview_images=len(overview['images']),overview_ui=sorted(ov_by_ui),
                 main_screens=len(SCREENS),replaced_ui=sorted(replaced),
                 captures=len(shots),supplemental_screens=len(shots)+len(overview['images'])-len(replaced),
@@ -285,7 +314,7 @@ def update_index():
                 '최신 UI 캡처와 제품 적용 계약을 함께 제공합니다. 캡처는 데모이며 기능 검수 결과가 아닙니다.')
     s=s.replace('SVG 원본은 각 갤러리 화면에서 엽니다.','화면 출처·제품 적용 기준·회의 안건을 함께 확인합니다.')
     s=s.replace('SVG는 벡터 편집기로 열어 수정합니다.','명세 기반 SVG는 벡터 편집, 캡처 래퍼는 앱 소스 수정 후 재캡처합니다.')
-    s=re.sub(r'<div class="info"><b>2026-1[01]-\d+ (?:UI 화면 반영|v0\.4[^<]*)</b>.*?</div>', '',s,flags=re.S)
-    info=f'<div class="info"><b>2026-11-03 v0.4.1 · UI 프로토타입 기준 개정</b><p>디자이너·PM이 고객 요구를 반영하는 feature/ui-prototype @ {applied["overview_commit"][:7]}를 실행·분석해 <b>기능명세서 v3.1</b>과 설계를 다시 작성했습니다. 화면 {applied["main_screens"]}개(UI 담당 정리 이미지 {applied["overview_images"]}개·실행 캡처 {applied["captures"]}개). 바뀐 결정 D01~D24·확인 필요 Q1~Q18는 <a href="기준/기능명세서.md">명세 0절</a>과 <a href="UI/2026-11-03_UI_v3_적용기준.md">UI v3 적용 기준</a>에 있습니다.</p></div>'
+    s=re.sub(r'<div class="info"><b>2026-1[01]-\d+ (?:UI 화면 반영|v0\.[45][^<]*)</b>.*?</div>', '',s,flags=re.S)
+    info=f'<div class="info"><b>2026-11-04 v0.5.0 · 브이로그 추가 반영</b><p>디자이너·PM이 고객 요구를 반영하는 feature/ui-prototype @ 9f64b5e의 신규 브이로그를 실행·분석해 <b>기능명세서 v3.2</b>과 설계를 다시 작성했습니다. 화면 {applied["main_screens"]}개(UI 담당 정리 이미지 {applied["overview_images"]}개·실행 캡처 {applied["captures"]}개). 바뀐 결정 D01~D27·확인 필요 Q1~Q21는 <a href="기준/기능명세서.md">명세 0절</a>과 <a href="11%20브이로그%20제작%20설계.md">현재 브이로그 설계</a>에 있습니다.</p></div>'
     s=s.replace('<h2>개발 설계서</h2>',info+'<h2>개발 설계서</h2>')
     p.write_text(s)

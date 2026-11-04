@@ -1,6 +1,6 @@
 {
   "scope": "OpenAPI 3.1 JSON Schema 예제 검증. 서버의 권한·경쟁·파일 실제 전송 검수는 별도.",
-  "openapi_canonical_sha256": "4c55d34042006db6af635bfbbd6e70273be18ef89f047cebe6fd56fe32e19608",
+  "openapi_canonical_sha256": "c41893158e582564b5ea1ff094b17f9f7cbb0d7691bef0a947d77359e7e1b4e4",
   "passed": true,
   "checks": [
     {

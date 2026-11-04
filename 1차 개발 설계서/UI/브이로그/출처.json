@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-04",
+  "branch": "feature/ui-prototype",
+  "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+  "previous_commit": "870be871c97e8687a2ae7592fcbc48f59875e148",
+  "pull": "Already up to date.",
+  "scope": "변경 소스 정적 대조; 실행 캡처는 별도 파일에 기록",
+  "sources": [
+    {
+      "path": "app/prototype/_layout.tsx",
+      "sha256": "1dede5c97936b35309bb145633b32a5278173d9c0c6938c80be2f771562a175e"
+    },
+    {
+      "path": "app/prototype/vlog.tsx",
+      "sha256": "e9092518c8400cb55943f1a339785fb6aec3dd5b8fa61f5e88cbacb27fb4ad23"
+    },
+    {
+      "path": "src/demo/MediaViewerModal.tsx",
+      "sha256": "7a9d6291c83c120d5b15cc1bd79345d6a4dac00abe6d613af25299de86f8a122"
+    },
+    {
+      "path": "src/prototype/mock/groupData.ts",
+      "sha256": "1b6bf224f3f603ee92b82c0a226d89dee4e1e16d3a833d8707de3cbe804a1a16"
+    },
+    {
+      "path": "src/prototype/mock/tripData.ts",
+      "sha256": "bc41f5684ec955d1380ec1e81fdad9468aa39f7ff01d0b7146ba1126a9760141"
+    },
+    {
+      "path": "src/prototype/navigation/routes.ts",
+      "sha256": "f2eb9cc2bfc379d68f88dc550e9ff4d13f1d7aaff23eca9ea7e4b694cf87e86c"
+    },
+    {
+      "path": "src/prototype/screens/GroupCalendarScreen.tsx",
+      "sha256": "3232324c63f7535e8a204d676f73687f8fbd59da13274cb4505cdbb0a3a85bc3"
+    },
+    {
+      "path": "src/prototype/state/PrototypeProvider.tsx",
+      "sha256": "06b074b89600a691b63e927440faa2bda2bdadde039a14b85df902ecaf67af04"
+    },
+    {
+      "path": "src/prototype/vlog/CropModal.tsx",
+      "sha256": "d19e5e36066bf88b50990933bb32c3ba9376f7f297a6b0e7f1204b55f86e734a"
+    },
+    {
+      "path": "src/prototype/vlog/DatePlaceSteps.tsx",
+      "sha256": "73bc128dbfa5fd4bdd8a441b72bcc31dd13144f046b5b7476d8ecb7a9b665ced"
+    },
+    {
+      "path": "src/prototype/vlog/EditStep.tsx",
+      "sha256": "7bfd63946ccf6003571d3fed96cb4218bebe03bb35e4a8f9eefdfbfaee621400"
+    },
+    {
+      "path": "src/prototype/vlog/MediaStep.tsx",
+      "sha256": "86d67f6e2844e142311f3ad4df2ed7b4173c88672fa6a9893505fe571f7f18da"
+    },
+    {
+      "path": "src/prototype/vlog/OutputSteps.tsx",
+      "sha256": "a35ca82b480453e411509fb2caa171130d16b7edb843aa32f9da85334d16947f"
+    },
+    {
+      "path": "src/prototype/vlog/TemplateSteps.tsx",
+      "sha256": "a54595ce45be1b2fa6ee5941c6b2eacb1ce88cc18bada5e32587a6f8f6692f1c"
+    },
+    {
+      "path": "src/prototype/vlog/VlogFlowScreen.tsx",
+      "sha256": "c86220a0fc4e2be23b0b7bd78d81006b131e393a0556ef5456e2bdd94bf91adf"
+    },
+    {
+      "path": "src/prototype/vlog/VlogProvider.tsx",
+      "sha256": "3c6846fd257bbbd4629d723919773ae7dc7d9f972b904f1c33d2b38727075d59"
+    },
+    {
+      "path": "src/prototype/vlog/ctx.ts",
+      "sha256": "50bf466f5e5099a62e6cb893169ac1f002d41ed6f7882c4e26cd798cae5d8a1d"
+    },
+    {
+      "path": "src/prototype/vlog/imageSize.ts",
+      "sha256": "55c9607d70dafb87804c7f17bf1a5d9138e27543a916daa5a1ecc86e197c9ed9"
+    },
+    {
+      "path": "src/prototype/vlog/model.ts",
+      "sha256": "7be6a178195eb055f9662e533d60f43a78fd3d3d5f0213aa17beec17e4506f42"
+    },
+    {
+      "path": "src/prototype/vlog/parts.tsx",
+      "sha256": "d2962c9a41ce92cf710139975dd3f7f3d256e7982d9a701cd41de6ce7ba96cbe"
+    },
+    {
+      "path": "src/prototype/vlog/vlogBridge.ts",
+      "sha256": "ebf5d36cc5fe9e87d04372c27aacfc2b899f9d426222ec5de7a2b1d32ad604c9"
+    }
+  ]
+}

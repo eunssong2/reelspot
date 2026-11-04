@@ -22,27 +22,28 @@
       "detail": "모든 현재 참여자(방장 포함)"
     },
     {
-      "check": "29개 기능의 UI 연결",
+      "check": "30개 기능의 UI 연결",
       "passed": true,
-      "detail": 29
+      "detail": 30
     },
     {
       "check": "서버 기능의 API 연결과 로컬 촬영 경계",
       "passed": true,
       "detail": {
         "server_features": 28,
+        "F30": "기존 조회와 로컬 초안/렌더 어댑터, 서버 API 추가 Q20 대기",
         "F12": "Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결"
       }
     },
     {
       "check": "화면 API 참조",
       "passed": true,
-      "detail": 36
+      "detail": 47
     },
     {
       "check": "패키지 내부 기능명세 SHA256",
       "passed": true,
-      "detail": "db82e1e7fcb6c0792358efb1422f80d90da1fa63efb5945af964fb5fdb428c21"
+      "detail": "1837ef991e77a6755c61ecba592583bbf5ee89a090a13d32c201871c1842dc6f"
     },
     {
       "check": "업무 결과 키 operationId 통일",
@@ -94,7 +95,7 @@
           {
             "check": "build_design.py 독립 실행",
             "passed": true,
-            "output": "\"UI10\", \"S03\", \"S03-detail\", \"UI11\", \"UI12\", \"S05\", \"M1\", \"S05-empty\", \"UI13\", \"P16-2\", \"S04\", \"S04-select\", \"S04-empty\", \"UI14\", \"M2\", \"M3\", \"UI15\", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"P11-2\", \"INVITES\", \"UI24\", \"P12-2\", \"P12-3\", \"P12-4\", \"INVITE-JOIN\", \"UI25\", \"UI26\", \"P13-2\", \"P13-3\", \"MEMBERS-GROUP\", \"MEMBERS\", \"MEMBER-REMOVE\", \"MEMBER-REMOVED\", \"MEMBERS-READER\", \"UI27\", \"UI28\", \"P19-2\", \"P19-3\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"MY-LINK\", \"UI37\", \"ACCOUNT\", \"S0\"], \"pdf_intro_pages\": 3, \"pdf_pages\": 109, \"pptx_slides\": 113}\n{\"screens\": 36, \"operations\": 80, \"tables\": 28, \"functional_cases\": 134, \"native_ui_pptx\": \"/tmp/atp-design-standalone-ih5_ahzu/package/UI/05 UI 설계.pptx\"}\n",
+            "output": ", \"UI16\", \"UI17\", \"UI18\", \"V1-video\", \"UI20\", \"UI21\", \"UI22\", \"UI23\", \"P11-2\", \"INVITES\", \"UI24\", \"P12-2\", \"P12-3\", \"P12-4\", \"INVITE-JOIN\", \"UI25\", \"UI26\", \"P13-2\", \"P13-3\", \"MEMBERS-GROUP\", \"MEMBERS\", \"MEMBER-REMOVE\", \"MEMBER-REMOVED\", \"MEMBERS-READER\", \"UI27\", \"UI28\", \"P19-2\", \"P19-3\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"MY-LINK\", \"UI37\", \"ACCOUNT\", \"UI39\", \"VLOG-RESUME\", \"UI40\", \"UI41\", \"UI42\", \"UI43\", \"UI44\", \"UI45\", \"UI46\", \"UI47\", \"UI48\", \"UI49\", \"P07-1\", \"P07-2\", \"P07-3\", \"P08-1\", \"P08-2\", \"S0\"], \"pdf_intro_pages\": 3, \"pdf_pages\": 122, \"pptx_slides\": 126}\n{\"screens\": 47, \"operations\": 80, \"tables\": 28, \"functional_cases\": 150, \"native_ui_pptx\": \"/tmp/atp-design-standalone-_o2sd1ro/package/UI/05 UI 설계.pptx\"}\n",
             "error": ""
           },
           {
@@ -123,9 +124,9 @@
       }
     },
     {
-      "check": "134개 기능 검수 시나리오",
+      "check": "150개 기능 검수 시나리오",
       "passed": true,
-      "detail": 134
+      "detail": 150
     },
     {
       "check": "프로토타입 출처와 캡처 무결성",
@@ -133,7 +134,7 @@
       "detail": {
         "commit": "870be871c97e8687a2ae7592fcbc48f59875e148",
         "overview": "870be871c97e8687a2ae7592fcbc48f59875e148",
-        "captures": 47,
+        "captures": 59,
         "overview_images": 43,
         "replaced": [
           "UI01",
@@ -155,16 +156,36 @@
           "UI28",
           "UI36",
           "UI37",
-          "UI38"
+          "UI38",
+          "UI39",
+          "UI40",
+          "UI41",
+          "UI42",
+          "UI43",
+          "UI44",
+          "UI45",
+          "UI46",
+          "UI47",
+          "UI48"
         ]
       }
     },
     {
-      "check": "36개 SVG의 화면 출처별 구조",
+      "check": "브이로그 검토 소스 SHA256",
+      "passed": true,
+      "detail": "9f64b5e88d7d3e663726975f2408b181f13a0413"
+    },
+    {
+      "check": "브이로그 11단계와 확인항목 추적",
+      "passed": true,
+      "detail": "F30 / UI39~49 / TC-F30-01~16"
+    },
+    {
+      "check": "47개 SVG의 화면 출처별 구조",
       "passed": true,
       "detail": {
-        "prototype_raster": 20,
-        "editable_vector": 16
+        "prototype_raster": 30,
+        "editable_vector": 17
       }
     },
     {
@@ -238,6 +259,10 @@
         ],
         [
           "UI35",
+          22
+        ],
+        [
+          "UI49",
           22
         ]
       ]
@@ -325,18 +350,58 @@
         [
           "UI37",
           true
+        ],
+        [
+          "UI39",
+          true
+        ],
+        [
+          "UI40",
+          true
+        ],
+        [
+          "UI41",
+          true
+        ],
+        [
+          "UI42",
+          true
+        ],
+        [
+          "UI43",
+          true
+        ],
+        [
+          "UI44",
+          true
+        ],
+        [
+          "UI45",
+          true
+        ],
+        [
+          "UI46",
+          true
+        ],
+        [
+          "UI47",
+          true
+        ],
+        [
+          "UI48",
+          true
         ]
       ]
     },
     {
       "check": "PPTX 기본·상세·상태 화면 수",
       "passed": true,
-      "detail": 113
+      "detail": 126
     },
     {
       "check": "PPTX 캡처 전체의 원본 이미지 포함",
       "passed": true,
-      "detail": 90
+      "detail": 102
     },
     {
       "check": "PPTX 도형 슬라이드 경계",
@@ -347,7 +412,7 @@
       "check": "Word 열기 02 데이터베이스 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 152,
+        "paragraphs": 159,
         "tables": 30
       }
     },
@@ -355,7 +420,15 @@
       "check": "Word 열기 01 시스템 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 43,
+        "paragraphs": 49,
+        "tables": 1
+      }
+    },
+    {
+      "check": "Word 열기 11 브이로그 제작 설계",
+      "passed": true,
+      "detail": {
+        "paragraphs": 37,
         "tables": 1
       }
     },
@@ -363,7 +436,7 @@
       "check": "Word 열기 03 API 연동 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 86,
+        "paragraphs": 93,
         "tables": 83
       }
     },
@@ -371,7 +444,7 @@
       "check": "Word 열기 09 구현 계약 보완",
       "passed": true,
       "detail": {
-        "paragraphs": 92,
+        "paragraphs": 94,
         "tables": 2
       }
     },
@@ -379,7 +452,7 @@
       "check": "Word 열기 04 업무 흐름 상태 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 61,
+        "paragraphs": 67,
         "tables": 1
       }
     },
@@ -387,7 +460,7 @@
       "check": "Word 열기 10 프로토타입 대조 보완",
       "passed": true,
       "detail": {
-        "paragraphs": 31,
+        "paragraphs": 32,
         "tables": 3
       }
     },
@@ -439,6 +512,7 @@
         "전체화면규칙",
         "구성요소명세",
         "화면API연결",
+        "브이로그결함",
         "화면상태",
         "프로토타입대응",
         "앱구현현황",
@@ -461,7 +535,7 @@
     {
       "check": "기능검수 결과 미실행 유지",
       "passed": true,
-      "detail": 134
+      "detail": 150
     },
     {
       "check": "로컬 HTML 링크/이미지",
@@ -484,17 +558,22 @@
     {
       "check": "PDF 열기 03 API 연동 설계",
       "passed": true,
-      "detail": 22
+      "detail": 23
     },
     {
       "check": "PDF 열기 01 시스템 설계",
       "passed": true,
-      "detail": 5
+      "detail": 6
     },
     {
       "check": "PDF 열기 10 프로토타입 대조 보완",
       "passed": true,
       "detail": 5
+    },
+    {
+      "check": "PDF 열기 11 브이로그 제작 설계",
+      "passed": true,
+      "detail": 4
     },
     {
       "check": "PDF 열기 04 업무 흐름 상태 설계",
@@ -504,17 +583,17 @@
     {
       "check": "PDF 열기 02 데이터베이스 설계",
       "passed": true,
-      "detail": 26
+      "detail": 27
     },
     {
       "check": "PDF 열기 05 UI 설계",
       "passed": true,
-      "detail": 109
+      "detail": 122
     },
     {
       "check": "UI PDF 기본·상세·상태 화면수",
       "passed": true,
-      "detail": 109
+      "detail": 122
     },
     {
       "check": "UI PDF 출처와 적용 기준",
@@ -539,10 +618,6 @@
         "GROUP-NEW",
         "PERIOD",
         "UI05",
-        "P07-2",
-        "P07-3",
-        "P08-1",
-        "P08-2",
         "CALENDAR",
         "CALENDAR-LIST",
         "UI06",
@@ -630,6 +705,23 @@
         "MY-LINK",
         "UI37",
         "ACCOUNT",
+        "UI39",
+        "VLOG-RESUME",
+        "UI40",
+        "UI41",
+        "UI42",
+        "UI43",
+        "UI44",
+        "UI45",
+        "UI46",
+        "UI47",
+        "UI48",
+        "UI49",
+        "P07-1",
+        "P07-2",
+        "P07-3",
+        "P08-1",
+        "P08-2",
         "S0"
       ]
     },

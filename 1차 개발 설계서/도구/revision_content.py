@@ -2,8 +2,9 @@
 from pathlib import Path
 import json,hashlib,shutil
 
-REVISION='0.4.1-design'
+REVISION='0.5.0-design'
 SECTIONS=[
+('2026-11-04 — 브이로그 제작 UI 반영(v3.2·v0.5.0)',['feature/ui-prototype@9f64b5e의 F30·UI39~UI49·D25~D27을 반영. 생성/저장은 미연결, 제안 한도·출시/렌더/보관·접근 복구는 Q19~Q21. 상세는11 브이로그 제작 설계. C06/C13 부분 반영이며 다른 요청은 대기.']),
 ('2026-11-04 — 명세 v3.1 버전 구분과 추가 설계 표시',[
 '날짜 제목 저장 대상·부분 접수 보존·정렬 기준·Q15가 달라진 명세를 v3.1로 올리고 머리말·기준선·생성 산출물에 반영했다. 기존 v3.0은 2026-11-03 작성 이력이다.',
 'Q16 묶음 첫 파일 완료 시각, Q17 groupDays 기본·최대 60개, Q18 날짜만 변경 시 기본 제목 미저장은 추가 설계·확인 대기로 구분한다. Q18은 프로토타입의 기본 제목 문자열 저장과 다르다. 결정 전 임시 적용값이며 고객 확정이 아니다.',
@@ -48,7 +49,7 @@ SECTIONS=[
 '⑨ 사진 5·영상 2 / ⑩ 일차별 장소 15개: upload_tasks.kind 컬럼 추가, media_bucket_count 함수와 guard_media_limit 트리거(작성자×방문, 미지정은 작성자×일정×기록일, advisory lock), guard_visit_limit 트리거(일정 행 잠금). uploadPrepare fileErrors MEDIA_LIMIT·remaining[], visitCreate VISIT_LIMIT, metadataPatch 한도 재검증. UI08·UI10·UI11·UI13·UI16에 남은 개수 표시.',
 '검증: 003_contract_checks.sql에 6번째 사진·3번째 영상·16번째 방문·51번째 초대 확인·share 내보내기 거부와 실패 작업 자리 반환·삭제 방문 자리 복귀 회귀를 추가했다. 계약 통합 시나리오 CT13~CT15와 기능 검수 시나리오(F05·F06~F11·F13·F14·F16·F17·F19)를 갱신했다. 설계 검토 엑셀 1~3번(종료 후 맥락·만료 직전 업로드·차단과 관리 알림)은 미확정으로 두어 설계를 바꾸지 않았다.']),
 ('1 패키지 기준과 변경 통제',[
-'이 패키지의 정책 기준은 기준/기능명세서.md(v3.1, 2026-11-04, UI 프로토타입 기준)다. 프로젝트의 기능 명세서/기능명세서.md 원본과 바이트가 같은 사본이며 SHA256·크기·정책 적용 범위를 기준/기준선.json에 기록한다. 상위 원본이 바뀌면 자동으로 새 정책을 적용하지 않고 차이를 검토해 기준선을 다시 확정한다. v0.3은 2026-10-20 회의 결정에 따라 F05·F07~F11·F13·F14·F16·F17·F19·F20·F21·F23·F28과 P11·P12를 바꾼 명세 v2를 기준으로 삼는다.',
+'이 패키지의 정책 기준은 기준/기능명세서.md(v3.2, 2026-11-04, UI 프로토타입 기준)다. 프로젝트의 기능 명세서/기능명세서.md 원본과 바이트가 같은 사본이며 SHA256·크기·정책 적용 범위를 기준/기준선.json에 기록한다. 상위 원본이 바뀌면 자동으로 새 정책을 적용하지 않고 차이를 검토해 기준선을 다시 확정한다. v0.3은 2026-10-20 회의 결정에 따라 F05·F07~F11·F13·F14·F16·F17·F19·F20·F21·F23·F28과 P11·P12를 바꾼 명세 v2를 기준으로 삼는다.',
 '문서 사이의 우선순위는 기준 기능명세 → OpenAPI 및 DB 물리 정의 → 업무 절차·화면 연결 → 예제다. 문서와 스키마가 다르면 구현자가 임의 선택하지 않고 계약 오류로 기록한다. 이번 변경의 operationId·컬럼명·HTTP 동작은 OpenAPI와 physical_model.py가 각각 원천이다. 실행 SQL은 빈 DB에 적용하는 초기 스키마이며 완성된 서버 구현을 뜻하지 않는다.']),
 ('2 구현 도구와 코드 배치 결정',[
 '서버는 Node.js 24 계열·TypeScript·Fastify 5·node-postgres(pg) 8, PostgreSQL 16을 선택한다. ORM은 사용하지 않고 매개변수화 SQL과 명시적 트랜잭션을 사용한다. 모든 트랜잭션은 pool에서 얻은 동일 client로 BEGIN/COMMIT/ROLLBACK을 실행한다. 프레임워크와 드라이버의 패치 버전은 최초 서버 설치에서 lockfile로 고정하고 빌드·테스트 결과를 기록한다.',
@@ -115,10 +116,10 @@ def prepare_baseline(root):
         record=json.loads(reuse.read_text())
         record.update({'source_available':False,'source_required':False,'source_note':'원본 참고 앱은 2026-10-24 docs 브랜치 정리로 제거했다. 경로·hash·선언 버전은 과거 관찰 이력이며 현재 파일의 존재나 재사용 완료를 뜻하지 않는다.'})
         reuse.write_text(json.dumps(record,ensure_ascii=False,indent=2))
-    (basis/'기준선.json').write_text(json.dumps({'design_version':REVISION,'policy_snapshot':'기능명세서.md','sha256':digest(snapshot),'bytes':snapshot.stat().st_size,'policy_version':'3.1','policy_date':'2026-11-04','scope':'F01~F29/P01~P12/D01~D24/Q1~Q18/6절 한도/7절 제외','review':'2026-11-03 추가 대조 및 2026-11-04 검토 반영(R01~R08·C01~C13·Q16~Q18)','upper_source':'../기능 명세서/기능명세서.md (정책 원본, 독립 패키지에서는 내부 기준 사본 사용)','change_rule':'동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신'},ensure_ascii=False,indent=2))
+    (basis/'기준선.json').write_text(json.dumps({'design_version':REVISION,'policy_snapshot':'기능명세서.md','sha256':digest(snapshot),'bytes':snapshot.stat().st_size,'policy_version':'3.2','policy_date':'2026-11-04','scope':'F01~F29 및 추가 UI F30/P01~P12/D01~D27/Q1~Q21/6절 한도/7절 후속·연동 대기','review':'2026-11-04 feature/ui-prototype@9f64b5e 브이로그 반영; C06/C13 부분 반영; Q19~Q21 확인 대기','upper_source':'../기능 명세서/기능명세서.md (정책 원본, 독립 패키지에서는 내부 기준 사본 사용)','change_rule':'동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신'},ensure_ascii=False,indent=2))
 
 def apply_content(arch,decisions,sources,workflows):
-    arch[0][1][0]='At that place 1차 기준은 패키지 내부 기준/기능명세서.md(v3.1, 2026-11-04)의 F01~F29·P01~P12이며 Android12(API31)+, Asia/Seoul 고정이다. 상위 원본과 동일한 SHA256 사본을 포함한다. v0.3은 2026-10-20 회의 피드백 10건(초대 50회·반복 폐지·일정 시각 제거·수동 일정·UI16/19 통합·보기 방식·길게 눌러 저장·외부 공유 제거·사진5/영상2·장소15)을 반영한 명세 v2를 따른다.'
+    arch[0][1][0]='At that place 1차 기준은 패키지 내부 기준/기능명세서.md(v3.2, 2026-11-04)의 F01~F29·P01~P12 및 추가 UI F30(출시 단계 Q20)이며 Android12(API31)+, Asia/Seoul 고정이다. 상위 원본과 동일한 SHA256 사본을 포함한다. v0.3은 2026-10-20 회의 피드백 10건(초대 50회·반복 폐지·일정 시각 제거·수동 일정·UI16/19 통합·보기 방식·길게 눌러 저장·외부 공유 제거·사진5/영상2·장소15)을 반영한 명세 v2를 따른다.'
     arch[0][1][1]='실행 DB 정의·업로드 프로토콜·업무 결과 형식·선별 재사용 범위(v0.2)에 더해 v0.3에서 일정 모델 단순화·한도 트리거·초대 횟수·보기 방식·공통 선택 화면을 반영했다. 09 구현 계약 보완 0절과 부록/DB/001_initial.sql·부록/openapi.json을 함께 적용한다. 실제 공급자 등록·문서·연락처·실기기 측정은 출시 준비다.'
     arch[0][1].append('v0.3.3 추가 변경: 초대 관리는 방장 전용 기능에서 모든 현재 참여자의 기능으로 이동했다. API는 member 권한, UI23은 모든 현재 참여자 진입이며 발급자 본인 여부로 취소를 제한하지 않는다. 조회·발급·취소마다 현재 참여와 모임/이용 상태를 재검증한다.')
     arch[2][1][0]='Android 앱은 React Native·Expo 신규 앱 셸에 DayLog의 촬영·파일 처리 후보를 선별 이식한다. 기존 로컬 업무 DB·편집·알림·라우팅은 재사용하지 않는다. 기존 코드가 없어도 기준 명세와 UI/API 계약으로 구현할 수 있다. Expo57/RN0.86.3/React19.2.3 선언 조합과 채택 조건은09 문서·기준/재사용후보.json을 따른다.'
@@ -134,7 +135,7 @@ def apply_content(arch,decisions,sources,workflows):
         if row[0] in replacements:
             area,choice,why,status=replacements[row[0]];decisions[i]=(row[0],area,choice,why,status,row[-1])
     decisions.extend([('ADR13','전송','ATP-Upload/1: 인증 HEAD/PATCH·offset·generation·SHA256','불변 청크 저장 후 DB offset 커밋; 응답유실/중복/만료 정의','선택 확정·서버 구현 전','서버/앱 담당'),('ADR14','운영 인증','별도 OIDC client/issuer/audience + MFA·역할 분리','일반 앱 JWT 거부, reviewer/moderator/recovery approver','방식 확정·실계정 설정 필요','운영/백엔드 담당')])
-    sources[0]=('S1','기준/기능명세서.md','원본과 동일한 SHA256 사본·F01~F29·P01~P12·D01~D24','패키지 내부 구현 최우선 기준')
+    sources[0]=('S1','기준/기능명세서.md','원본과 동일한 SHA256 사본·F01~F30·P01~P12·D01~D27·Q1~Q21','패키지 내부 구현 최우선 기준')
     sources.extend([
       ('T5','https://fastify.dev/docs/latest/Reference/LTS/','Fastify 지원 정책','도구 선택 근거·2026-10-17 확인'),
       ('T6','https://node-postgres.com/features/transactions','동일 client의 명시적 트랜잭션','pg 선택·2026-10-17 확인'),

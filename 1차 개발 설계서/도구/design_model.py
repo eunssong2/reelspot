@@ -494,3 +494,7 @@ QA_PENDING_DECISIONS={
     'TC-F16-01': ['Q16'],
     'TC-F16-06': ['Q16'],
 }
+
+# v3.2: 연결된 브이로그 UI와 제안값·미연결 렌더 경계를 함께 관리한다.
+from vlog_revision import apply_model as apply_vlog_model
+apply_vlog_model(screen, SCREENS, V3_DECISIONS, OPEN_QUESTIONS, QA, QA_PENDING_DECISIONS)

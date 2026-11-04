@@ -25,14 +25,14 @@ def main():
     spec=json.loads((ROOT/'부록/openapi.json').read_text());validate(spec)
     ops=[v['operationId'] for path in spec['paths'].values() for v in path.values()]
     check('OpenAPI3.1 스키마와 operation 고유성',len(ops)==len(set(ops))==len(APIS),len(ops))
-    required={f'F{i:02}' for i in range(1,30)}
+    required={f'F{i:02}' for i in range(1,31)}
     invitation_ops=[v for path in spec['paths'].values() for v in path.values() if v.get('operationId') in ['invitesList','inviteCreate','inviteRevoke']]
     invitation_ui=next(s for s in SCREENS if s['id']=='UI23')
     check('초대 관리 3개 API는 모든 현재 참여자',len(invitation_ops)==3 and all(v.get('x-required-role')=='member' and '권한: member.' in v['description'] for v in invitation_ops),[v['operationId'] for v in invitation_ops])
     check('초대 UI와 현재 참여 권한 연결','모든 현재 참여자' in invitation_ui['role'],invitation_ui['role'])
-    check('29개 기능의 UI 연결',required<=set(f for s in SCREENS for f in s['features']),len(required))
+    check('30개 기능의 UI 연결',required<=set(f for s in SCREENS for f in s['features']),len(required))
     api_features=set(f for a in APIS for f in a['features'])
-    check('서버 기능의 API 연결과 로컬 촬영 경계',(required-{'F12'})<=api_features,{'server_features':len(required-{'F12'}),'F12':'Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결'})
+    check('서버 기능의 API 연결과 로컬 촬영 경계',(required-{'F12','F30'})<=api_features,{'server_features':len(required-{'F12','F30'}),'F30':'기존 조회와 로컬 초안/렌더 어댑터, 서버 API 추가 Q20 대기','F12':'Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결'})
     check('화면 API 참조',all(set(s['api'])<=set(ops) for s in SCREENS),len(SCREENS))
     basis=json.loads((ROOT/'기준/기준선.json').read_text())
     check('패키지 내부 기능명세 SHA256',hashlib.sha256((ROOT/'기준/기능명세서.md').read_bytes()).hexdigest()==basis['sha256'],basis['sha256'])
@@ -58,6 +58,8 @@ def main():
     prototype=load_source(); overview=load_overview()
     ov_primary={}
     for img in overview['images']:ov_primary.setdefault(img['ui'],img)
+    for shot in prototype['screens']:
+        if shot.get('commit','').startswith('9f64b5e') and shot['ui']: ov_primary.pop(shot['ui'],None)
     applied=json.loads((ROOT/'UI/화면 반영.json').read_text())
     replaced=set(applied['replaced_ui'])
     check('프로토타입 출처와 캡처 무결성',len(prototype['screens'])==applied['captures'] and
@@ -65,6 +67,9 @@ def main():
           overview['commit']==applied['overview_commit'] and len(overview['images'])==applied['overview_images'] and
           replaced=={s['ui'] for s in prototype['screens'] if s['ui']}|set(ov_primary),
           {'commit':prototype['commit'],'overview':overview['commit'],'captures':len(prototype['screens']),'overview_images':len(overview['images']),'replaced':sorted(replaced)})
+    vlog=json.loads((ROOT/'UI/브이로그/출처.json').read_text())
+    check('브이로그 검토 소스 SHA256',all(hashlib.sha256((ROOT/'UI/브이로그/소스'/x['path']).read_bytes()).hexdigest()==x['sha256'] for x in vlog['sources']),vlog['commit'])
+    check('브이로그 11단계와 확인항목 추적',len([x for x in SCREENS if x['id']>='UI39'])==11 and len(QA['F30'])==16,'F30 / UI39~49 / TC-F30-01~16')
     svg_ok=True
     for p in svg_paths:
         el=ET.parse(p)

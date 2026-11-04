@@ -1,13 +1,15 @@
-At that place 설계 v0.4.1 / 기능명세 v3.1 (2026-11-04)
+At that place 설계 v0.5.0 / 기능명세 v3.2 (2026-11-04)
 
 현재 기준
-- feature/ui-prototype@870be871c97e8687a2ae7592fcbc48f59875e148의 일반 /prototype 연결 화면·동작 우선.
-- 10 프로토타입 대조 보완.md → 00 설계서 안내.html → 09 구현 계약 보완 → 01~04 → UI → 06 검수 및 추적.xlsx 순서.
+- feature/ui-prototype@9f64b5e의 일반 /prototype 연결 화면·동작 우선. 브이로그 캡처는 UI/브이로그, 과거 캡처47개와 PPT는870be87 출처 보존.
+- 11 브이로그 제작 설계.md → 10 프로토타입 대조 보완.md(이전 대조) → 00 설계서 안내.html → 09 구현 계약 보완 → 01~04 → UI → 06 검수 및 추적.xlsx 순서.
 - 정책 원본은 ../기능 명세서/기능명세서.md. 기준/기능명세서.md는 동일 SHA256 사본.
-- D01~D24·Q1~Q18 적용. 11월3일 요청 C01~C13은 반영 대기. 과거 P/A 항목은 현행 원본과 충돌하면 원본 우선.
-- 기존 캡처47개를 보존했다. 문서/계약/DB 검증은 실제 앱·서버·실기기 검수 완료가 아니다.
+- D01~D27·Q1~Q21 적용. 11월3일 요청 C06/C13은 UI 부분 반영·렌더/저장 대기, 나머지는 반영 대기. 과거 P/A 항목은 현행 원본과 충돌하면 원본 우선.
+- 기존 캡처47개를 보존하고 신규 캡처는 개별 commit으로 구분한다. 문서/계약/DB 검증은 실제 앱·서버·실기기 검수 완료가 아니다.
 
 편집 원천
+- vlog_revision.py: F30·UI39~49·D25~27·Q19~21·TC-F30 및 11 브이로그 제작 설계 생성 원천.
+- capture_vlog.py: 일반 프로토타입 브이로그 웹 예시 캡처. --source <checkout> --url http://localhost:18084. 저장은 UI/브이로그/실행결과.json이며 과거 캡처 manifest를 덮어쓰지 않는다.
 - design_model.py: 화면·기능/API 매핑·QA·D/Q 결정·QA_PENDING_DECISIONS(임시값 의존 검수). review_20261103.py: 추가 대조/변경 요청/인계.
 - api_contract.py / contract_v02.py: OpenAPI·업무 결과·업로드 transport.
 - physical_model.py / schema_guards.sql / data_model.py: 물리·논리 DB·제약.
@@ -70,5 +72,16 @@ PDF는 동일 HTML의 인쇄본이며 Office와 페이지 나눔이 다를 수 �
 
 06·07 검수/결정표 관리
 - 06 기대결과의 (Qxx 임시 · 확인 대기)는 고객 확정과 구분한다. 실제 앱 검수 상태는 미실행 유지.
-- 07은 현행 관리 파일: 읽기안내 / 프로토타입결정(D01~D24) / 확인대기(Q1~Q18) / 과거자료차이 / 기술결정 등.
+- 07은 현행 관리 파일: 읽기안내 / 프로토타입결정(D01~D27) / 확인대기(Q1~Q21) / 과거자료차이 / 기술결정 등.
 - Q 확정 시 명세·API·UI와 QA 기대결과를 갱신하고 QA_PENDING_DECISIONS 연결도 함께 정리한다.
+
+브이로그 결함 재현 도구
+- 도구/review_vlog_feedback.py는 VB01·VB02의 결함 재현 전용이다. reproduced=true는 결함 관찰이며 수정 검수 통과가 아니다.
+- npm 의존성과 react-native-web이 준비된 9f64b5e checkout 및 Playwright Chromium이 필요하다.
+- .venv/bin/python 도구/review_vlog_feedback.py --source "<절대경로>/feature-ui-prototype" --port 18085
+- 포트는 --port로 지정한다. 이미 사용 중이면 중단하며 기존 서버에는 연결하지 않는다.
+- 실행 전에 실제 git HEAD·추적 파일 미변경·21개 소스 해시를 출처.json과 비교한다. 검증된 checkout에서 자체 Expo 서버를 실행하고 종료 시 정리한다. 실행 후 소스도 다시 확인한다.
+- 기록: UI/브이로그/피드백검토/재현결과.json·증거 PNG. source는 저장소 이름만 기록하며 개인 checkout의 절대경로는 저장하지 않는다. 커밋과 소스 해시 검증으로 실행 대상을 식별한다. Expo 실행 진단 로그는 시스템 임시 폴더의 vlog-repro-*.log에 저장하며 실패 시 경로를 표시한다.
+- 수정 커밋은 기존 재현 근거와 다르므로 이 도구가 거부한다. 수정 검수 시 별도 검수 도구/기준과 기대값을 준비하며 과거 증거를 덮어쓰지 않는다.
+- VB03·VB04는 코드 확인 상태다. UI 담당자의 실행 검수와 수정 후 확인이 필요하다.
+- Q21은 구현 인계·검증 대기다. Q1~Q20의 정책 결정/임시값과 구분한다.

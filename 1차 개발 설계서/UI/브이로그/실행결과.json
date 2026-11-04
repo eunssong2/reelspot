@@ -1,0 +1,217 @@
+{
+  "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+  "environment": "Expo 일반 모드·예시 데이터·Chromium·390×844·DPR2·ko-KR·Asia/Seoul",
+  "scope": "웹 UI 관찰, 실제 영상 생성·기기 저장·서버 권한 검수 아님",
+  "screens": [
+    {
+      "id": "VLOG-ENTRY",
+      "title": "모임 달력과 브이로그 진입",
+      "ui": "UI05",
+      "image": "../브이로그/VLOG-ENTRY.png",
+      "source": "src/prototype/screens/GroupCalendarScreen.tsx",
+      "route": "/prototype/group-calendar?groupId=g-walk",
+      "actions": "모임 달력 하단",
+      "notes": [
+        "9f64b5e: 브이로그 버튼 추가. 방장에게 일정 추가도 표시."
+      ],
+      "text": "‹\n주말 산책 모임\n6/10명\n방장 지민\n지\n수\n+4\n‹\n2026년 11월\n›\n오늘\n달력\n일정 목록\n초대·관리 ›\n월\n화\n수\n목\n금\n토\n일\n26\n27\n28\n29\n30\n31\n1\n2\n3\n4\n5\n6\n7\n북한산 둘레길\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n1\n2\n3\n4\n5\n6\n11월 4일 일정\n수요일\n이 날에는 일정이 없어요\n＋ 일정 추가\n브이로그 만들기\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "66959535a2f75ab90e0fa3f4c219e4bb54e2b18340822e50c5819890d8f529be"
+    },
+    {
+      "id": "VLOG-DATES",
+      "title": "브이로그 날짜 선택",
+      "ui": "UI39",
+      "image": "../브이로그/VLOG-DATES.png",
+      "source": "src/prototype/vlog/DatePlaceSteps.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "달력 → 브이로그",
+      "notes": [
+        "기록 없는 날짜 비활성. 예시 기록 날짜만 선택한다."
+      ],
+      "text": "‹\n날짜 선택\n닫기\n1 / 5 날짜\n어느 날을 담을까요?\n주말 산책 모임\n11월 7일 토요일\n북한산 둘레길 · 기록 없음\n—\n10월 25일 일요일\n한강 피크닉 · 기록 없음\n—\n10월 24일 토요일\n빵 먹고 전시 보고 저녁까지 · 기록 없음\n—\n10월 22일 목요일\n한강에서 마무리 · 장소 2곳\n✓\n10월 21일 수요일\n연남동 천천히 걷기 · 장소 2곳\n✓\n10월 20일 화요일\n성수 퇴근길 산책 · 장소 2곳\n✓\n10월 19일 월요일\n3일차 · 우리의 서울 여행 · 기록 없음\n—\n10월 18일 일요일\n연남동 골목 산책 · 기록 없음\n—\n10월 17일 토요일\n성수에서 느긋한 오후 · 장소 1곳\n✓\n날짜를 선택해 주세요\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "4590546e8b03497b0598ff5ecbc2f20bd56d8cf4ffaa8bc64fd2a4da9b29ebda"
+    },
+    {
+      "id": "VLOG-PLACES",
+      "title": "날짜별 장소 선택",
+      "ui": "UI40",
+      "image": "../브이로그/VLOG-PLACES.png",
+      "source": "src/prototype/vlog/DatePlaceSteps.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "날짜 → 장소",
+      "notes": [
+        "기록 있는 장소 기본 선택. 세로/가로 비율 선택."
+      ],
+      "text": "‹\n날짜별 장소 선택\n닫기\n2 / 5 장소\n1일의 장소를 골라주세요\n화면 비율\n세로 9:16\n가로 16:9\n영상 모양을 먼저 정해요. 이후 템플릿 배치가 화면 비율에 맞게 나와요.\n10월 17일 토요일\n전체 선택 ✓\n14:00  오후의 커피\n사진 5 · 동영상 2\n✓\n기록 없는 장소 2곳 · 선택 불가\n1일 · 장소 1곳 선택\n1곳의 사진·동영상 선택\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "e87eb736dad43ff39bd68b313e646bc92683652e77c0357cd7e70ea818f94ebf"
+    },
+    {
+      "id": "VLOG-MEDIA",
+      "title": "브이로그 사진·동영상 선택",
+      "ui": "UI41",
+      "image": "../브이로그/VLOG-MEDIA.png",
+      "source": "src/prototype/vlog/MediaStep.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "장소 → 미디어",
+      "notes": [
+        "오래된순 기본. 선택 순서가 재생 순서다."
+      ],
+      "text": "‹\n사진·동영상 선택\n닫기\n3 / 5 미디어 · 10.17 · 오후의 커피\n오후의 커피 0\n전체 7개\n오래된순\n · \n전체 선택\n▶ 0:15\n⤢\n▶ 0:08\n⤢\n⤢\n⤢\n⤢\n⤢\n⤢\n⤢ 버튼을 누르면 원본을 크게 보고 자를 수 있어요. 길게 눌러도 열려요.\n선택한 순서\n아직 고른 기록이 없어요.\n사진이나 동영상을 골라 주세요\n기록을 선택해 주세요\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "b34f567dd77303691c636ddbd67818789f8982a0ea1d8c359863ac00da3a0283"
+    },
+    {
+      "id": "VLOG-TEMPLATE",
+      "title": "브이로그 템플릿 선택",
+      "ui": "UI42",
+      "image": "../브이로그/VLOG-TEMPLATE.png",
+      "source": "src/prototype/vlog/TemplateSteps.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "미디어2개 → 템플릿",
+      "notes": [
+        "이어 재생/2분할 선택. 실제 합성은 미연결."
+      ],
+      "text": "‹\n템플릿 선택\n닫기\n4 / 5 템플릿 · 10.17 · 오후의 커피\n2개를 어떻게 보여줄까요?\n동영상 2 선택 · 변경 ›\n이어 재생 또는 2분할 중 선택하세요.\n✓\n1 / 2\n한 장씩 이어 재생\n순서대로 한 개씩\n2분할 · 좌우 2분할\n같은 화면에서 동시 재생\n2분할 · 상하 2분할\n같은 화면에서 동시 재생\n2분할 · 좌측 강조\n같은 화면에서 동시 재생\n선택한 방식으로 다음\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "17a9085b4ad4b60584545b68edad19677d2e953a66818e769e92791dccfbd504"
+    },
+    {
+      "id": "VLOG-LENGTH",
+      "title": "분할 영상 길이 맞추기",
+      "ui": "UI43",
+      "image": "../브이로그/VLOG-LENGTH.png",
+      "source": "src/prototype/vlog/TemplateSteps.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "2분할 → 공통길이",
+      "notes": [
+        "15초/8초 예시 영상 → 최단8초. 더 긴 영상 구간을 선택할 수 있다."
+      ],
+      "text": "‹\n장면 길이 맞춤\n닫기\n4 / 5 템플릿 · 10.17 · 오후의 커피\n2분할 · 사진 0 / 동영상 2\n▶\n▶\n2026.10.17 · 오후의 커피\n장면 길이 8초 · 자동 맞춤\n가장 짧은 동영상에 맞췄어요. 사진도 같은 8초 동안 보여요.\n영상 A  원본 15초   사용 0:00~0:08\n구간 이동 ›\n영상 B  원본 8초   사용 0:00~0:08\n길이 줄이기 (공통 길이 이하만 가능)\n−\n8초\n+\n반복·정지 화면·속도 조절로 늘리기는 후속 기능입니다.\n구간 확인\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "880290b8ba0672c379b78917a6cb422431445ea0d36130e31d223e2195eaad31"
+    },
+    {
+      "id": "VLOG-TRIM",
+      "title": "브이로그 동영상 구간",
+      "ui": "UI44",
+      "image": "../브이로그/VLOG-TRIM.png",
+      "source": "src/prototype/vlog/TemplateSteps.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "분할 길이 → 구간 이동",
+      "notes": [
+        "원본15초에서8초 사용. 편집본의 시작 위치만 바꾼다."
+      ],
+      "text": "‹\n동영상 구간\n닫기\n4 / 5 템플릿 · 영상 원본 15초\n공통 길이 8초\n00:00\n00:15\n시작 00:00   종료 00:08\n◀\n▶\n8초 길이를 유지하며 구간을 이동해요.\n8초 구간 적용\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "0738af8b3db8a0060d9e9bfbf34e0b555a6c2617b448ae312c66acc0a53691b2"
+    },
+    {
+      "id": "VLOG-EDIT",
+      "title": "장면 순서·자막",
+      "ui": "UI45",
+      "image": "../브이로그/VLOG-EDIT.png",
+      "source": "src/prototype/vlog/EditStep.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "이어 재생 → 편집",
+      "notes": [
+        "자막·글씨체·효과·화면 맞춤. 커버 기반 미리보기."
+      ],
+      "text": "‹\n장면 순서·자막\n닫기\n4 / 5 편집 · 10.17 · 오후의 커피\n이어 재생 · 순서 편집 ›\n▶\n2026.10.17 · 오후의 커피\n‹ 이전\n  장면 1 / 2  \n다음 ›\n동영상 길이\n원본 15초 중 5초 사용\n구간 이동 ›\n−\n5초\n+\n색감 효과 (지금 보는 장면)\n원본\n밝게\n어둡게\n흑백\n원본 파일은 바뀌지 않고, 영상으로 만들 때만 적용돼요.\n화면 맞춤 (지금 보는 장면)\n채우기\n맞춤\n날짜 표시\n2026.10.17\n장소명 표시\n오후의 커피\n이 장면 자막 (선택)\n글씨체\n기본 고딕 ›\n장면 전환 (이 장면이 시작될 때)\n없음\n페이드\n슬라이드\n확대\n▶ 전환 미리보기 다시 보기\n바로 다음 장면으로 · 첫 장면은 앞 장면이 없어 전환이 보이지 않아요.\n이 장소 완료\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "5399532fd5358149c8dee5c816a078a9f6cfc28e9beb1af0dfc5f40453aa25e5"
+    },
+    {
+      "id": "VLOG-COMPOSE",
+      "title": "브이로그 전체 구성",
+      "ui": "UI46",
+      "image": "../브이로그/VLOG-COMPOSE.png",
+      "source": "src/prototype/vlog/OutputSteps.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "장면 완료 → 구성",
+      "notes": [
+        "제목·날짜 제목·제목 화면·순서 편집. 원본 일정 불변."
+      ],
+      "text": "‹\n전체 구성\n닫기\n4 / 5 날짜·장소 편집 완료\n1일 · 1곳 · 예상 10초\n10.17 토요일  10초\n↑\n↓\n날짜 제목 화면 2초\n제목은 이 브이로그에만 적용돼요. 일정의 원래 제목은 바뀌지 않아요.\n오후의 커피 ✓\n이어 재생 · 기록 2개 · 10초   수정\n↑\n↓\n전체 미리보기\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "9f61a19eef13c52adf8378a09fe219857e3efbabf871ff9e63af34d0e54f9ab7"
+    },
+    {
+      "id": "VLOG-PREVIEW",
+      "title": "브이로그 전체 미리보기",
+      "ui": "UI47",
+      "image": "../브이로그/VLOG-PREVIEW.png",
+      "source": "src/prototype/vlog/OutputSteps.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "전체 구성 → 미리보기",
+      "notes": [
+        "영상 커버로 배치·자막·순서를 확인. 실제 영상/소리 검수 아님."
+      ],
+      "text": "‹\n전체 미리보기\n닫기\n5 / 5 미리보기\n주말 산책 모임 브이로그  수정\n▶\n2026.10.17 · 오후의 커피\n▶\n00:00 / 00:10\n10.17 0:00\n9:16 · 1080p · MP4\n자막·장면 수정\n영상 생성\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "359255dba6faaeb418b3a11f55cefad6dac057662bc98f5bdf3b29bbc7feb297"
+    },
+    {
+      "id": "VLOG-NOT-CONNECTED",
+      "title": "브이로그 생성 미연결",
+      "ui": "UI48",
+      "image": "../브이로그/VLOG-NOT-CONNECTED.png",
+      "source": "src/prototype/vlog/OutputSteps.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "미리보기 → 생성",
+      "notes": [
+        "handler 없음: 미연결 안내. 초안 유지, 다시 생성/편집으로."
+      ],
+      "text": "‹\n영상 생성\n닫기\n5 / 5 생성\n영상 생성 기능이 아직 연결되지 않았어요\n영상 렌더링 기능이 앱에 연결되면 만들 수 있어요. 편집 내용은 그대로 남아 있어요.\n편집으로\n다시 생성\n🧪",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "dfca53ad9ed502f37e9ff9967a842b96299e5f9ecd25e82d963a3aa688458245"
+    },
+    {
+      "id": "VLOG-RESUME",
+      "title": "브이로그 초안 복원",
+      "ui": null,
+      "image": "../브이로그/VLOG-RESUME.png",
+      "source": "src/prototype/vlog/VlogFlowScreen.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "닫기 → 재진입",
+      "notes": [
+        "이어서/새로 선택. 마지막 화면 대신 미완료 단계로 복원."
+      ],
+      "text": "‹\n날짜 선택\n닫기\n1 / 5 날짜\n어느 날을 담을까요?\n주말 산책 모임\n11월 7일 토요일\n북한산 둘레길 · 기록 없음\n—\n10월 25일 일요일\n한강 피크닉 · 기록 없음\n—\n10월 24일 토요일\n빵 먹고 전시 보고 저녁까지 · 기록 없음\n—\n10월 22일 목요일\n한강에서 마무리 · 장소 2곳\n✓\n10월 21일 수요일\n연남동 천천히 걷기 · 장소 2곳\n✓\n10월 20일 화요일\n성수 퇴근길 산책 · 장소 2곳\n✓\n10월 19일 월요일\n3일차 · 우리의 서울 여행 · 기록 없음\n—\n10월 18일 일요일\n연남동 골목 산책 · 기록 없음\n—\n10월 17일 토요일\n성수에서 느긋한 오후 · 장소 1곳\n✓\n선택한 날짜 1일 · 10.17\n1일의 장소 선택\n🧪\n작성 중인 브이로그가 있어요\n이어서 만들거나 새로 시작할 수 있어요.\n이어서 만들기\n새로 만들기",
+      "captured_at": "2026-11-04",
+      "commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+      "sha256": "78d0465ddc254ce9abc8f437d655d465fcea473bc6ce61e9fefe882e36dd205d"
+    }
+  ],
+  "checks": [
+    {
+      "check": "기록 없는 날짜 선택 차단",
+      "passed": true
+    },
+    {
+      "check": "15초/8초 분할 공통길이8초",
+      "passed": true
+    },
+    {
+      "check": "생성 미연결 안내·가짜 성공 없음",
+      "passed": true
+    },
+    {
+      "check": "닫기 후 재진입 초안 이어서/새로",
+      "passed": true
+    }
+  ]
+}
