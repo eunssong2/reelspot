@@ -13,7 +13,8 @@
     "export": "expo export --platform android",
     "release:android": "node scripts/build-release.mjs",
     "test": "npx --yes tsx --test tests/*.test.ts tests/*.test.mts",
-    "emulator:fast": "node scripts/start-emulator.mjs"
+    "emulator:fast": "node scripts/start-emulator.mjs",
+    "test:flows": "vitest run"
   },
   "dependencies": {
     "@formatjs/intl-segmenter": "^12.2.15",
@@ -21,7 +22,6 @@
     "expo": "~57.0.27",
     "expo-auth-session": "~57.0.16",
     "expo-build-properties": "~57.0.22",
-    "expo-camera": "~57.0.6",
     "expo-clipboard": "~57.0.2",
     "expo-constants": "~57.0.22",
     "expo-crypto": "~57.0.4",
@@ -51,7 +51,9 @@
     "@types/react": "~19.2.2",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.2",
-    "typescript": "~6.0.3"
+    "react-test-renderer": "^19.2.3",
+    "typescript": "~6.0.3",
+    "vitest": "^4.0.18"
   },
   "expo": {
     "doctor": {

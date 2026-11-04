@@ -19,7 +19,7 @@ test('하루 제목: 날짜 제목 우선, 없으면 N일차 · 일정 이름, �
   assert.equal(dayLabel({ title: null, dayNo: 3, scheduleTitle: '서울 여행', single: false }), '3일차 · 서울 여행');
   assert.equal(dayLabel({ title: '성수 오후', dayNo: 1, scheduleTitle: '서울 여행', single: false }), '성수 오후');
   assert.equal(dayLabel({ title: null, dayNo: 1, scheduleTitle: '당일치기', single: true }), '당일치기');
-  assert.equal(dayLabel({ title: '옛 날짜 제목', dayNo: 1, scheduleTitle: '당일치기', single: true }), '당일치기');
+  assert.equal(dayLabel({ title: '옛 날짜 제목', dayNo: 1, scheduleTitle: '당일치기', single: true }), '옛 날짜 제목');
 });
 test('날짜 표기: 요일 머리글·짧은 날짜·기간·기간 배지', () => {
   assert.equal(dateHeading('2026-10-17'), '10월 17일 토요일');

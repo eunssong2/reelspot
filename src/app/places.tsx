@@ -2,11 +2,10 @@ import { useInitialize } from '../lib/effects';
 import React, { useRef, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Linking, View, Text, ScrollView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { PlaceMap } from '../components/place-map';
 import { api, awaitOperation } from '../lib/api';
-import { inputText, validDate, validTime } from '../lib/validation';
+import { inputText, validDate } from '../lib/validation';
 import {
   Screen,
   Button,
@@ -35,13 +34,13 @@ export default function Places() {
     [name, setName] = useState(''),
     [address, setAddress] = useState(''),
     [date, setDate] = useState(p.visitDate || p.startDate),
-    [time, setTime] = useState(''),
     [lat, setLat] = useState(''),
     [lng, setLng] = useState(''),
     [category, setCategory] = useState('all'),
     [chosen, setChosen] = useState<any>(null),
-    [provider, setProvider] = useState('kakao'),
     [searched, setSearched] = useState(false),
+    [page, setPage] = useState(1),
+    [isEnd, setIsEnd] = useState(true),
     [providerMessage, setProviderMessage] = useState(''),
     [planned, setPlanned] = useState<any[]>([]);
   const [center, setCenter] = useState({ lat: 37.5665, lng: 126.978 }),
@@ -51,25 +50,25 @@ export default function Places() {
     a = useAction();
   useInitialize(() => {
     (async () => {
-      const detail = await api(`/schedules/${p.id}`),
-        first = detail.plan.flatMap((d: any) => d.visits).find((v: any) => v.lat != null);
+      const detail = await api(`/schedules/${p.id}`);
       setPlanned(detail.plan.flatMap((d: any) => d.visits.map((v: any) => ({ ...v, visitDate: d.date }))));
-      if (first) setCenter({ lat: first.lat, lng: first.lng });
-      else {
-        const saved = await AsyncStorage.getItem('atp.last-map');
-        if (saved) setCenter(JSON.parse(saved));
-      }
     })().catch(() => {});
   }, []);
-  async function search(inArea = false, selectedCategory = category, searchText = query) {
+  const lastSearch = useRef('');
+  async function search(inArea = false, selectedCategory = category, searchText = query, nextPage = 1, searchSort = sort) {
+    if (nextPage === 1 && selectedCategory === 'all' && !searchText.trim()) return;
     const seq = ++sequence.current;
     await a.run(async () => {
-      const r = await api(
-        `/places?groupId=${p.groupId}&query=${encodeURIComponent(inputText(searchText, '검색어', 100, selectedCategory === 'all'))}&category=${encodeURIComponent(selectedCategory)}&sort=${sort}&center=${center.lng},${center.lat}${inArea && bounds ? `&bounds=${bounds}` : ''}`,
-      );
+      const parameters = nextPage > 1 ? lastSearch.current : new URLSearchParams({
+        groupId: p.groupId, query: inputText(searchText, '검색어', 100, selectedCategory === 'all'),
+        category: selectedCategory, sort: selectedCategory === 'all' ? searchSort : 'distance',
+        center: `${center.lng},${center.lat}`, ...(inArea && bounds ? { bounds } : {}),
+      }).toString();
+      const r = await api(`/places?${parameters}&page=${nextPage}`);
       if (sequence.current === seq) {
-        setProvider(r.provider);
-        setResults(r.places);
+        lastSearch.current = parameters;
+        setPage(r.page); setIsEnd(r.isEnd);
+        setResults((previous) => nextPage === 1 ? r.places : [...new Map([...previous, ...r.places].map((x) => [x.id, x])).values()]);
         // A keyword search may return places outside the current view; area searches keep it.
         if (!inArea) setFitKey(seq);
         setChosen(null);
@@ -92,7 +91,6 @@ export default function Places() {
       validDate(date);
       if (alreadyOn(manual ? { name, address } : chosen))
         throw new Error('같은 날짜에 이미 담은 장소예요. 다른 장소를 골라 주세요.');
-      validTime(time);
       if (date < p.startDate || date > p.endDate)
         throw new Error('일정 기간 안의 방문 날짜를 선택해 주세요.');
       if (manual) {
@@ -108,7 +106,7 @@ export default function Places() {
         )
           throw new Error('위도·경도를 함께 입력하고 범위를 확인해 주세요.');
       }
-      const body: any = { visitDate: date, plannedTime: time || null };
+      const body: any = { visitDate: date };
       if (manual)
         body.manual = {
           name,
@@ -211,7 +209,8 @@ export default function Places() {
                   if (c !== 'all') {
                     setQuery('');
                     void search(true, c, '');
-                  }
+                  } else if (query.trim()) void search(false, 'all');
+                  else { sequence.current++; setResults([]); setSearched(false); setIsEnd(true); setChosen(null); }
                 }}
               >
                 {label}
@@ -249,7 +248,6 @@ export default function Places() {
         onRegion={(v) => {
           setCenter({ lat: v.lat, lng: v.lng });
           setBounds(v.bounds);
-          AsyncStorage.setItem('atp.last-map', JSON.stringify({ lat: v.lat, lng: v.lng }));
         }}
         onPin={(v) => {
           if (manual) {
@@ -262,13 +260,6 @@ export default function Places() {
         <>
           <P>지도에서 핀을 지정할 수 있어요. 위치는 선택 사항입니다.</P>
           <Field label="방문 날짜" value={date} onChangeText={setDate} />
-          <Field
-            label="예정 시각"
-            helper="5분 단위 · 비우면 시간 미정"
-            value={time}
-            onChangeText={setTime}
-            placeholder="시간 미정"
-          />
           <P>등록한 장소는 이 모임 안에서만 사용해요.</P>
         </>
       ) : (
@@ -294,7 +285,7 @@ export default function Places() {
             <H>장소 {results.length}곳</H>
             <TextButton
               color={colors.sub}
-              onPress={() => setSort(sort === 'relevance' ? 'distance' : 'relevance')}
+              onPress={() => { const next = sort === 'relevance' ? 'distance' : 'relevance'; setSort(next); void search(false, category, query, 1, next); }}
             >
               {sort === 'relevance' ? '관련도순' : '거리순'} ↕
             </TextButton>
@@ -330,12 +321,13 @@ export default function Places() {
               </View>
             </Card>
           ))}
+          {!isEnd && <Button secondary disabled={a.busy} onPress={() => search(false, category, query, page + 1)}>장소 더 보기</Button>}
           {!!providerMessage && <P>{providerMessage}</P>}
           {searched && !a.busy && !a.error && !providerMessage && !results.length && (
             <P>검색 결과가 없습니다. 검색어를 바꾸거나 직접 등록해 주세요.</P>
           )}
           {searched && results.length > 0 && (
-            <P>{provider === 'kakao' ? '카카오맵' : 'Google Maps'} 장소 검색 결과</P>
+            <P>카카오맵 · 서울특별시 장소 검색 결과</P>
           )}
         </>
       )}
@@ -351,22 +343,13 @@ export default function Places() {
         <TextButton
           onPress={() =>
             Linking.openURL(
-              provider === 'kakao'
-                ? `https://map.kakao.com/link/map/${encodeURIComponent(chosen.id)}`
-                : `https://www.google.com/maps/search/?api=1&query=${chosen.lat},${chosen.lng}&query_place_id=${encodeURIComponent(chosen.id)}`,
+              `https://map.kakao.com/link/map/${encodeURIComponent(chosen.id)}`,
             )
           }
         >
           지도에서 보기
         </TextButton>
         <Field label="방문 날짜" value={date} onChangeText={setDate} />
-        <Field
-          label="예정 시각"
-          value={time}
-          onChangeText={setTime}
-          placeholder="시간 미정"
-          helper="5분 단위 · 비우면 시간 미정"
-        />
         {alreadyOn(chosen) && <P>같은 날짜에 이미 담은 장소예요.</P>}
         <Button disabled={a.busy || alreadyOn(chosen)} onPress={addPlace}>
           이 날짜에 장소 추가

@@ -108,7 +108,7 @@ export default function Account() {
       <Sheet visible={editing} title="닉네임 변경" onClose={() => setEditing(false)}>
         <ClearableInput
           accessibilityLabel="닉네임"
-          limit={20}
+          limit={12}
           value={name}
           onChangeText={setName}
           editable={!a.busy}
@@ -129,7 +129,7 @@ export default function Account() {
             disabled={a.busy || !profile || !name.trim()}
             onPress={() =>
               a.run(async () => {
-                const displayName = inputText(name, '닉네임', 20);
+                const displayName = inputText(name, '닉네임', 12);
                 await awaitOperation(
                   await api('/me/profile', { displayName, expectedVersion: profile.version }, 'PATCH'),
                 );

@@ -52,7 +52,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * locale=ko → documents[{id,version,required,url}]
+         * locale=ko → documents[{id,itemKey,title,version,kind,required,url,development}] (v3 가입 동의 consent 4종: 서비스 이용약관·개인정보 수집 및 이용 필수, 마케팅·위치정보 선택)
          * @description 권한: public. 도메인 오류: DOCUMENT_UNAVAILABLE. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         get: operations["consentDocs"];
@@ -74,7 +74,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * displayName, consents[{documentId,version,agreed}] → user, consentReceipts
+         * displayName(1~20), consents[{documentId,version,agreed:true|false}] (게시 consent 문서 버전마다) → user, consentReceipts
          * @description 권한: authenticated. 도메인 오류: CONSENT_REQUIRED TEXT_REJECTED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         post: operations["onboard"];
@@ -92,7 +92,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * none → profile
+         * none → profile{id,displayName,status,avatarVersion,version}
          * @description 권한: self. 도메인 오류: AUTH_EXPIRED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         get: operations["profileGet"];
@@ -102,8 +102,8 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * displayName, expectedVersion → profile or operation
-         * @description 권한: self. displayName(NFC 1~20 graphemes), avatarAssetId(완료된 본인 프로필 사진 작업의 결과) 또는 restoreDefaultAvatar=true 중 하나 이상. 이전 사진은 정리된다. 도메인 오류: VALIDATION_ERROR FILE_INVALID TEXT_REJECTED VERSION_CONFLICT.
+         * displayName?(1~20), avatarAssetId? | restoreDefaultAvatar?:true, expectedVersion → profile{...,avatarVersion} or operation
+         * @description 권한: self. 도메인 오류: VALIDATION_ERROR FILE_INVALID TEXT_REJECTED VERSION_CONFLICT. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         patch: operations["profilePatch"];
         trace?: never;
@@ -191,7 +191,7 @@ export interface paths {
         put?: never;
         /**
          * name, firstSchedule:ScheduleInput → group, membership, firstSchedule or operation
-         * @description 권한: authenticated. 도메인 오류: SCHEDULE_DATE_TAKEN GROUP_LIMIT OWNER_CREATE_LIMIT VALIDATION_ERROR TEXT_REJECTED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         * @description 권한: authenticated. 도메인 오류: GROUP_LIMIT OWNER_CREATE_LIMIT VALIDATION_ERROR TEXT_REJECTED SCHEDULE_DATE_TAKEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         post: operations["groupCreate"];
         delete?: never;
@@ -230,10 +230,30 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * file:FileInput → UploadTask {targetType:cover,coverGroupId,transport:UploadTransport|null}
+         * file{name,mime,declaredBytes<=5MB,fingerprint} (4:3 자르기, 긴 변1600px) → UploadTask {targetType:cover,coverGroupId,transport:UploadTransport|null}
          * @description 권한: owner. 도메인 오류: FILE_INVALID FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         post: operations["coverPrepare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{groupId}/days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * cursor?, limit:1..60 (월 범위 없음) → items:GroupDay[], nextCursor
+         * @description 권한: member. 도메인 오류: FORBIDDEN GROUP_CLOSED INVALID_CURSOR. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         */
+        get: operations["groupDays"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -248,7 +268,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * from:date, to:date (inclusive <=366 days) → schedules[], dateCounts
+         * from:date, to:date (inclusive <=366 days) → schedules[{...,days[{date,dayNo,title,status,visitCount}]}], dateCounts
          * @description 권한: member. 도메인 오류: RANGE_TOO_LARGE FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         get: operations["calendar"];
@@ -268,7 +288,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * none → schedule, retention, plan[{date,title,visits[{...,plannedTime}],visitLimit:15}], version
+         * none → schedule, days[{date,dayNo,title,status,visitCount}], retention, plan[{date,title,visits[{...,plannedTime}],visitLimit:15}], version
          * @description 권한: member. 도메인 오류: FORBIDDEN EXPIRED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         get: operations["scheduleDetail"];
@@ -278,8 +298,8 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * title?, startDate?, endDate?, expectedVersion, confirmOutsideRange? → schedule or operation; 미확인 기간 밖 영향은 409 OUTSIDE_RANGE_CONFIRMATION_REQUIRED + details{visits,media}
-         * @description 권한: owner. 도메인 오류: SCHEDULE_DATE_TAKEN VERSION_CONFLICT VALIDATION_ERROR OUTSIDE_RANGE_CONFIRMATION_REQUIRED TEXT_REJECTED FORBIDDEN SCHEDULE_CANCELLED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다. 기간을 바꾸면 일차를 새 기간 전체로 다시 만든다(남는 날짜의 제목·방문·취소 상태 유지). 새로 들어오는 날짜가 다른 활성 일정의 활성 일차면 409 SCHEDULE_DATE_TAKEN.
+         * title?, startDate?, endDate?, expectedVersion, confirmOutsideRange? (v3 1차 화면 미제공·서버 호환 유지) → schedule or operation; 미확인 기간 밖 영향은 409 OUTSIDE_RANGE_CONFIRMATION_REQUIRED + details{visits,media}
+         * @description 권한: owner. 도메인 오류: VERSION_CONFLICT VALIDATION_ERROR OUTSIDE_RANGE_CONFIRMATION_REQUIRED TEXT_REJECTED FORBIDDEN SCHEDULE_CANCELLED SCHEDULE_DATE_TAKEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         patch: operations["scheduleUpdate"];
         trace?: never;
@@ -294,8 +314,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * ScheduleInput{title,startDate,endDate,timezone} (반복·시각 없음) → schedule or operation
-         * @description 권한: owner. 도메인 오류: SCHEDULE_DATE_TAKEN VALIDATION_ERROR TEXT_REJECTED FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         * ScheduleInput{title,startDate,endDate,timezone} (반복·시각 없음, 각 날짜가 일차) → schedule or operation
+         * @description 권한: owner. 도메인 오류: VALIDATION_ERROR TEXT_REJECTED FORBIDDEN SCHEDULE_DATE_TAKEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         post: operations["scheduleCreate"];
         delete?: never;
@@ -344,6 +364,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/schedules/{scheduleId}/days/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * expectedVersion(일정), title?(날짜 제목1~100·생략 유지), date?(다른 날짜 하나로 이동) → DayChangeResult{schedule,days[]} or operation
+         * @description 권한: owner. 도메인 오류: SCHEDULE_DATE_TAKEN DAY_BUSY TARGET_NOT_EMPTY SCHEDULE_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN TEXT_REJECTED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         */
+        patch: operations["dayUpdate"];
+        trace?: never;
+    };
+    "/schedules/{scheduleId}/days/{date}/cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * expectedVersion(일정) → DayChangeResult{schedule,days[]} (모든 날 취소 시 schedule.status=cancelled)
+         * @description 권한: owner. 도메인 오류: ALREADY_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         */
+        post: operations["dayCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{scheduleId}/days/{date}/deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * expectedVersion(일정) → DayChangeResult{schedule|null,days[]} (마지막 날이면 일정 삭제)
+         * @description 권한: owner. 도메인 오류: NOT_EMPTY VERSION_CONFLICT NOT_FOUND FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         */
+        post: operations["dayDelete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/places": {
         parameters: {
             query?: never;
@@ -352,7 +432,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * groupId, query, category, bounds?, sort, center? → places[], provider, searchContext
+         * groupId, query?, category, bounds?, sort, center?, page? → places[<=15], provider:kakao, region:서울특별시, excludedOutsideSeoul, page, isEnd, searchContext{radiusMeters:2000|null}
          * @description 권한: member-context. 도메인 오류: PROVIDER_UNAVAILABLE VALIDATION_ERROR. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         get: operations["placesSearch"];
@@ -374,8 +454,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * visitDate, plannedTime?(HH:MM 5분 단위|null), providerPlaceId? or manual{name,address?,lat?,lng?} → visit
-         * @description 권한: member. 도메인 오류: DAY_CANCELLED DUPLICATE_VISIT VISIT_LIMIT VALIDATION_ERROR TEXT_REJECTED SCHEDULE_CANCELLED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         * visitDate, providerPlaceId? or manual{name,address?,lat?,lng?} (시간 없이 맨 뒤 추가, plannedTime=null) → visit
+         * @description 권한: member. 도메인 오류: DUPLICATE_VISIT VISIT_LIMIT VALIDATION_ERROR TEXT_REJECTED SCHEDULE_CANCELLED DAY_CANCELLED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         post: operations["visitCreate"];
         delete?: never;
@@ -393,8 +473,8 @@ export interface paths {
         };
         get?: never;
         /**
-         * title, visits[{id,order,plannedTime?}], expectedVersion → plan or operation
-         * @description 권한: member. 도메인 오류: VERSION_CONFLICT INVALID_VISIT_SET TEXT_REJECTED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         * title(변경 0~30·기존 100자 보존), visits[{id,order,plannedTime:HH:MM 1분 단위|null}], expectedVersion → plan or operation
+         * @description 권한: member. 도메인 오류: VERSION_CONFLICT INVALID_VISIT_SET TEXT_REJECTED VALIDATION_ERROR. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         put: operations["planUpdate"];
         post?: never;
@@ -424,6 +504,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/schedules/{scheduleId}/upload-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["uploadLimits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/schedules/{scheduleId}/submissions": {
         parameters: {
             query?: never;
@@ -434,8 +530,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * files[1..120]:FileInput+recordDate+visitId?+description+selectionIndex → submissionId, tasks:UploadTask[], fileErrors[]; 전송은 task.transport 참조
-         * @description 권한: member. 도메인 오류: DAY_CANCELLED SCHEDULE_CANCELLED EXPIRED QUOTA_EXCEEDED FILE_INVALID MEDIA_LIMIT. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         * files[1..10]:FileInput{selectionIndex 0..9, fingerprint, recordDate=방문 날짜, visitId(장소 기록 화면) 또는 null(미지정 유지)} → submissionId, tasks:UploadTask[], fileErrors[]; 전송은 task.transport 참조
+         * @description 권한: member. 도메인 오류: SCHEDULE_CANCELLED DAY_CANCELLED DUPLICATE_FILE EXPIRED QUOTA_EXCEEDED FILE_INVALID MEDIA_LIMIT. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         post: operations["uploadPrepare"];
         delete?: never;
@@ -532,7 +628,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * recordDate?, visitId?, unassigned?, outsideRange?, view:by_time|by_author, order:asc|desc, cursor?, limit<=60 → items[{...,sortAt,sortBasis}], groups[] (by_author 작성자 구역), visibleCounts, nextCursor
+         * recordDate?, visitId?, unassigned?, outsideRange?, view:by_photo|by_author (기본 by_photo), order:desc|asc (기본 desc, 게시 묶음 시각), cursor?, limit<=60 → items[{...,displayName,durationMs,submissionCompletedAt,sortAt}], groups[{authorUserId,displayName,avatarVersion,...}] (by_author 작성자 카드), visibleCounts, nextCursor
          * @description 권한: member. 도메인 오류: FORBIDDEN EXPIRED INVALID_CURSOR. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         get: operations["mediaList"];
@@ -634,7 +730,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * mediaIds[1..120], purpose:save (share 폐지) → exportId, state, results[]
+         * mediaIds[1..120], purpose:save (share 폐지) → exportId, state, results[{mediaId,kind,state,converted,variant,mime}] (동영상은 동영상 파일)
          * @description 권한: member-visible. 도메인 오류: FORBIDDEN EXPIRED BLOCKED MODERATION_RESTRICTED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         post: operations["exportCreate"];
@@ -672,7 +768,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Range? header → authenticated sanitized binary stream
+         * Range? header → authenticated sanitized binary stream (사진=이미지, 동영상=위치 제거 동영상 파일·포스터 아님)
          * @description 권한: member-visible. 도메인 오류: FORBIDDEN EXPIRED DELETED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         get: operations["exportFile"];
@@ -698,7 +794,7 @@ export interface paths {
         get: operations["invitesList"];
         put?: never;
         /**
-         * none → invite{id,link,code,issuedAt,expiresAt,useCount:0,maxUses:50,state}
+         * none → invite{id,link,code(8자 ABCDEFGHJKLMNPQRSTUVWXYZ23456789),issuedAt,expiresAt(+168h),useCount:0,maxUses:50,state}
          * @description 모든 현재 참여자. 발급자와 관계없이 같은 모임 초대 관리. 재시도 시 현재 권한 재검증.
          */
         post: operations["inviteCreate"];
@@ -736,8 +832,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * tokenOrCode (성공 응답마다 useCount+1, 50회 소진) → groupName, scheduleSummary, inviteState, usesRemaining
-         * @description 권한: public. 도메인 오류: INVITE_INVALID INVITE_EXPIRED INVITE_EXHAUSTED INVITE_REVOKED GROUP_CLOSED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다. 코드는 8자리 A-Z0-9(이전 12자리 16진 코드도 허용, 대소문자 무관). 로그인한 현재 참여자(발급자 포함)가 확인하면 사용 횟수를 쓰지 않고 alreadyMember=true. Authorization은 선택.
+         * tokenOrCode (앱이 정규화한 8자 코드 또는 링크 토큰; 이미 참여자 포함 성공 응답마다 useCount+1, 50회 소진) → groupName, scheduleSummary, inviteState, usesRemaining
+         * @description 권한: public. 도메인 오류: INVITE_INVALID INVITE_EXPIRED INVITE_EXHAUSTED INVITE_REVOKED GROUP_CLOSED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         get: operations["invitePreview"];
         put?: never;
@@ -776,7 +872,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * none → members[{id,displayName,isOwner}], reentryBlocks(owner only)
+         * none → members[{id,userId,displayName,avatarVersion,isOwner,isMe}], reentryBlocks(owner only)
          * @description 권한: member. 도메인 오류: FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
          */
         get: operations["membersList"];
@@ -1192,6 +1288,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/avatar-uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * file{name,mime,declaredBytes<=5MB,fingerprint} (1:1 자르기) → UploadTask {targetType:avatar,avatarUserId,transport:UploadTransport|null}
+         * @description 권한: self. 도메인 오류: FILE_INVALID ACCESS_REVOKED. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         */
+        post: operations["avatarPrepare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{userId}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * v?(avatarVersion 캐시 키) → 위치 제거 프로필 사진 binary (없으면 404)
+         * @description 권한: self-or-co-member. 도메인 오류: NOT_FOUND FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다.
+         */
+        get: operations["avatarStream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/notifications": {
         parameters: {
             query?: never;
@@ -1384,22 +1520,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/schedules/{scheduleId}/upload-limits": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["uploadLimits"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/media/{mediaId}": {
         parameters: {
             query?: never;
@@ -1432,95 +1552,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/schedules/{scheduleId}/days/{date}": {
+    "/groups/{groupId}/vlog-sources": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * expectedVersion(일정), title?, date? → schedule, days
-         * @description 권한: owner. 일차 제목 변경(여러 날 일정은 최대 30, 빈값/null은 제목 없음; 하루짜리 일정은 일정 제목 1~100) 또는 다른 날짜로 이동. 이동하면 방문·기록 날짜가 함께 옮겨지고 일차 번호가 다시 매겨진다. 도메인 오류: SCHEDULE_DATE_TAKEN(대상 날짜를 다른 일정이 쓰거나 이미 이 일정의 날) DAY_BUSY(그 날짜 파일 전송 진행 중) TARGET_NOT_EMPTY(대상 날짜에 기간 밖 방문/기록 잔존) SCHEDULE_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN TEXT_REJECTED.
-         */
-        patch: operations["dayUpdate"];
-        trace?: never;
-    };
-    "/schedules/{scheduleId}/days/{date}/cancellation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * expectedVersion(일정) → schedule, days
-         * @description 권한: owner. 하루 취소: 기록은 남고 그 날짜의 새 방문·파일은 409 DAY_CANCELLED. 모든 날이 취소되면 일정도 취소. 도메인 오류: ALREADY_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN.
-         */
-        post: operations["dayCancel"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/schedules/{scheduleId}/days/{date}/deletion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * expectedVersion(일정) → schedule|null, days
-         * @description 권한: owner. 장소·방문·기록·진행 파일이 없는 날만 삭제(아니면 409 NOT_EMPTY). 마지막 날이면 일정 삭제(schedule=null). 남은 날이 모두 취소 상태면 일정 취소. 도메인 오류: NOT_EMPTY VERSION_CONFLICT NOT_FOUND FORBIDDEN.
-         */
-        post: operations["dayDelete"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me/avatar-uploads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * file:FileInput → UploadTask {targetType:avatar,avatarUserId,transport}
-         * @description 권한: self(active). 완료되면 task.avatarAssetId를 PATCH /me/profile avatarAssetId로 적용. 위치 제거·검사는 대표 사진과 같다. 도메인 오류: FILE_INVALID ACCESS_REVOKED.
-         */
-        post: operations["avatarPrepare"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{userId}/avatar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description 권한: 본인 또는 활성 모임을 함께하는 참여자. 사진이 없으면 404 NOT_FOUND, 비참여자는 403 FORBIDDEN. */
-        get: operations["avatarStream"];
+        /** @description 현재 참여자만. 취소 일정의 보존 기록도 브이로그에서 조회하기 위한 일정 식별자 목록. 실제 미디어 조회마다 기존 권한·만료·차단을 다시 검사한다. */
+        get: operations["vlogSources"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1541,7 +1581,7 @@ export interface components {
             /** Format: uuid */
             operationId?: string;
             currentVersion?: number;
-            /** @description OUTSIDE_RANGE_CONFIRMATION_REQUIRED: {visits,media}; MEDIA_LIMIT: {photosRemaining,videosRemaining}; VISIT_LIMIT: {limit:15}; SCHEDULE_DATE_TAKEN: {dates:[date], schedules:[{id,title}]}; DAY_CANCELLED(upload): {date}; TARGET_NOT_EMPTY: {date} */
+            /** @description OUTSIDE_RANGE_CONFIRMATION_REQUIRED: {visits,media}; MEDIA_LIMIT: {photosRemaining,videosRemaining}; VISIT_LIMIT: {limit:15}; SCHEDULE_DATE_TAKEN: {dates:[date],schedules:[{id,title}]}; DAY_CANCELLED: {date}; TARGET_NOT_EMPTY: {date}; DUPLICATE_FILE: {clientFileIds:[...]} */
             details?: {
                 [key: string]: unknown;
             };
@@ -1553,7 +1593,7 @@ export interface components {
                 message?: string;
             }[];
         };
-        /** @description 제목1~100 graphemes. 날짜만 입력, 양끝 포함366일, 과거 허용. 반복·종일/시각 필드는 없다(2026-10-20 회의). 시각은 Visit.plannedTime. */
+        /** @description 제목1~100 graphemes. 날짜만 입력, 양끝 포함366일, 과거 허용. startDate~endDate의 각 날짜가 일차(ScheduleDay)가 된다. v3: 같은 모임의 활성 일정이 쓰는 활성 일차와 겹치는 날짜가 하나라도 있으면 409 SCHEDULE_DATE_TAKEN(취소된 날·취소된 일정의 날은 빈 날). 반복·종일/시각 필드는 없다(2026-10-20 회의). 시각은 Visit.plannedTime. */
         ScheduleInput: {
             title: string;
             /** Format: date */
@@ -1563,7 +1603,7 @@ export interface components {
             /** @enum {string} */
             timezone: "Asia/Seoul";
         };
-        /** @description 미디어 규격은 기능명세서6.2. 서버 actualBytes/probe와 대조한다. */
+        /** @description 미디어 규격은 기능명세서6.2. 서버 actualBytes/probe와 대조한다. v3: 장소 기록 화면에서 올리면 visitId=그 방문, recordDate=그 방문의 날짜. visitId=null(장소 미지정)은 기존 기능으로 유지. 설명은 업로드 시트에서 받지 않으며(빈값) 이후 metadataPatch로 수정한다. */
         FileInput: {
             clientFileId: string;
             selectionIndex: number;
@@ -1601,16 +1641,21 @@ export interface components {
             description?: string;
             /** @enum {string} */
             kind: "photo" | "video";
+            durationMs?: number | null;
+            displayName?: string;
             /** Format: date-time */
             completedAt: string;
+            /** @description 촬영 시각. 표시·필터용으로 보존하며 정렬에 쓰지 않는다 */
             capturedAt?: string | null;
+            /** Format: date-time */
+            submissionCompletedAt: string;
             /** Format: date-time */
             sortAt: string;
             /**
-             * @description 시간순 정렬 기준. 촬영 시각이 없으면 completed
+             * @description v3.1 Q16 추가 설계·PM 확인 대기: 임시 정렬 기준은 게시 묶음(submission)의 첫 완료 시각(submissionCompletedAt=sortAt). 같은 묶음 안에서는 selectionIndex 순서 유지
              * @enum {string}
              */
-            sortBasis: "captured" | "completed";
+            sortBasis: "submission";
             /** Format: date */
             retentionLastDate?: string;
             /** Format: date-time */
@@ -1618,9 +1663,7 @@ export interface components {
             version: number;
             /** @enum {string} */
             accessState: "available" | "deleted" | "expired" | "restricted";
-            displayName?: string;
             visitName?: string | null;
-            durationMs?: number | null;
         };
         UploadTask: ({
             /** Format: uuid */
@@ -1631,6 +1674,8 @@ export interface components {
             submissionId?: string;
             /** Format: uuid */
             coverGroupId?: string;
+            /** Format: uuid */
+            avatarUserId?: string;
             /** @enum {string} */
             state: "queued" | "uploading" | "verifying" | "review" | "complete" | "failed" | "cancelled";
             transferredBytes: number;
@@ -1640,13 +1685,11 @@ export interface components {
             version: number;
             mediaId: string | null;
             transport: components["schemas"]["UploadTransport"] | null;
-            coverAssetId: string | null;
             clientFileId: string;
-            selectionIndex: number | null;
-            /** Format: uuid */
-            avatarUserId?: string;
+            coverAssetId: string | null;
             avatarAssetId?: string | null;
-        } & (unknown & unknown & unknown & unknown)) & ({
+            selectionIndex: number | null;
+        } & (unknown & unknown & unknown & unknown & unknown)) & ({
             /** @constant */
             targetType?: "record";
         } | {
@@ -1660,12 +1703,12 @@ export interface components {
             /** Format: uuid */
             operationId: string;
             /** @enum {string} */
-            kind: "group_create" | "group_update" | "profile_patch" | "schedule_create" | "schedule_update" | "plan_update" | "metadata_change" | "media_commit" | "media_delete" | "account_delete" | "group_close" | "onboarding" | "visit_create" | "day_update";
+            kind: "group_create" | "group_update" | "profile_patch" | "schedule_create" | "schedule_update" | "plan_update" | "day_update" | "metadata_change" | "media_commit" | "media_delete" | "account_delete" | "group_close" | "onboarding" | "visit_create";
             /** @enum {string} */
             state: "pending" | "review" | "succeeded" | "failed";
-            result: (components["schemas"]["GroupCreateResult"] | components["schemas"]["Group"] | components["schemas"]["Profile"] | components["schemas"]["Schedule"] | components["schemas"]["Schedule"] | components["schemas"]["PlanResult"] | components["schemas"]["MetadataChangeResult"] | components["schemas"]["MediaCommitResult"] | components["schemas"]["DeleteResult"] | components["schemas"]["AccountDeleteResult"] | components["schemas"]["GroupCloseResult"] | Record<string, never> | components["schemas"]["Visit"] | components["schemas"]["DayChangeResult"]) | null;
+            result: (components["schemas"]["GroupCreateResult"] | components["schemas"]["Group"] | components["schemas"]["Profile"] | components["schemas"]["Schedule"] | components["schemas"]["Schedule"] | components["schemas"]["PlanResult"] | components["schemas"]["DayChangeResult"] | components["schemas"]["MetadataChangeResult"] | components["schemas"]["MediaCommitResult"] | components["schemas"]["DeleteResult"] | components["schemas"]["AccountDeleteResult"] | components["schemas"]["GroupCloseResult"] | Record<string, never> | components["schemas"]["Visit"]) | null;
             itemErrors: components["schemas"]["ItemError"][];
-        } & (unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown);
+        } & (unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown);
         Group: {
             /** Format: uuid */
             id: string;
@@ -1699,6 +1742,7 @@ export interface components {
                 urgency: "week" | "last_day";
             }[];
         };
+        /** @description v3: 일정은 날짜(일차)의 묶음. startDate/endDate는 남은 일차의 최소·최대 날짜(봉투)이며 보관 기한 계산은 endDate 기준을 유지한다. 모든 일차가 취소되면 status=cancelled. */
         Schedule: {
             /** Format: uuid */
             id: string;
@@ -1720,8 +1764,36 @@ export interface components {
             /** Format: date-time */
             expiresAt?: string;
             version: number;
-            /** @description 달력 응답에서만 포함 */
+            /** @description 달력 응답에서 포함. 일정 상세는 최상위 days[] */
             days?: components["schemas"]["ScheduleDay"][];
+        };
+        /** @description 일정의 하루. dayNo는 날짜순 1부터(취소된 날 포함), 이동·삭제 시 다시 매긴다. 같은 모임에서 활성 일정의 활성 일차는 날짜마다 하나뿐이다. 앱 기본 표시 제목: 여러 날 `{dayNo}일차 · {일정명}`, 하루 `{일정명}`. */
+        ScheduleDay: {
+            /** Format: date */
+            date: string;
+            dayNo: number;
+            /** @description 일차 제목(최대100 graphemes, UI38). 없으면 null. 단일 날짜도 이 값을 우선 표시하고 없으면 일정 제목을 쓴다 */
+            title: string | null;
+            /** @enum {string} */
+            status: "active" | "cancelled";
+            visitCount: number;
+        };
+        /** @description 모임 전체 날짜 탭. 활성 일정의 활성 날짜만 반환. day.title 우선, 없으면 기본 제목. 만료 전 기록 없는 일정은 expiresAt=null일 수 있다. 만료 여부는 편집/업로드 접근에서 다시 판정. */
+        GroupDay: {
+            /** Format: uuid */
+            scheduleId: string;
+            scheduleVersion: number;
+            scheduleTitle: string;
+            day: components["schemas"]["ScheduleDay"] & {
+                /** @constant */
+                status?: "active";
+            };
+            expiresAt: string | null;
+        };
+        /** @description 하루 변경·취소·삭제 결과. 마지막 날 삭제로 일정이 삭제되면 schedule=null, days=[] */
+        DayChangeResult: {
+            schedule: components["schemas"]["Schedule"] | null;
+            days: components["schemas"]["ScheduleDay"][];
         };
         Visit: {
             /** Format: uuid */
@@ -1733,6 +1805,7 @@ export interface components {
             /** Format: date */
             visitDate: string;
             position: number;
+            /** @description 00:00~23:59 1분 단위. null=시간 미정 */
             plannedTime?: string | null;
             version: number;
         };
@@ -1747,17 +1820,18 @@ export interface components {
         Profile: {
             /** Format: uuid */
             id: string;
+            /** @description NFC 1~20 graphemes. 마이페이지 닉네임 변경 화면 입력은 12자(Q2) */
             displayName: string;
             status: string;
-            version: number;
             /** @description null이면 기본 아이콘. 바뀔 때마다 증가(캐시 키) */
             avatarVersion: number | null;
+            version: number;
         };
         Invitation: {
             /** Format: uuid */
             id: string;
             link: string;
-            /** @description 새 코드는 8자리 A-Z0-9 */
+            /** @description 신규: 0/O/1/I 제외 8자. 기존 발급 코드는 만료까지 허용 */
             code: string;
             /** Format: date-time */
             issuedAt: string;
@@ -1771,6 +1845,36 @@ export interface components {
             state: "active" | "exhausted" | "expired" | "revoked";
             version: number;
         };
+        /** @description 게시 문서만 반환. v3 가입 동의는 consent 4종: terms-service(서비스 이용약관, 필수)·privacy-collection(개인정보 수집 및 이용 동의, 필수)·marketing(마케팅 정보 수신 동의, 선택)·location-terms(위치정보 이용약관, 선택). 개인정보를 체크 불가 고지로 두던 v2.3 가정은 폐지. kind=notice는 향후 고지용으로만 남고 가입 화면에 쓰지 않는다. 빈 목록은 가입 완료 조건이 아니다. */
+        ConsentDocument: {
+            /** Format: uuid */
+            id: string;
+            itemKey: string;
+            title: string;
+            version: string;
+            /** @enum {unknown} */
+            kind: "consent" | "notice";
+            required: boolean;
+            /** Format: uri */
+            url: string;
+            development: boolean;
+        } & unknown;
+        ExportResult: {
+            /** Format: uuid */
+            mediaId: string;
+            /** @enum {string} */
+            kind: "photo" | "video";
+            /** @enum {string} */
+            state: "ready" | "failed";
+            converted: boolean;
+            /**
+             * @description 위치 제거 원본 또는 호환 변환본. 동영상은 동영상 파일 자체를 내보내며 포스터·썸네일을 내보내지 않는다
+             * @enum {string|null}
+             */
+            variant: "sanitized_original" | "view" | null;
+            mime?: string;
+            reason?: string | null;
+        } & unknown;
         ItemError: {
             /** Format: uuid */
             id: string;
@@ -1786,6 +1890,7 @@ export interface components {
                 version: number;
             }[];
         };
+        /** @description avatarAssetId는 프로필 사진 작업 완료 시 지정(서버 호환상 선택 필드) */
         MediaCommitResult: {
             /** Format: uuid */
             taskId: string;
@@ -1842,21 +1947,6 @@ export interface components {
             /** @constant */
             maxChunkBytes: 4194304;
         };
-        /** @description 일정의 하루. dayNo는 날짜순 1부터(취소된 날 포함). 같은 모임에서 활성 일정의 활성 일차는 날짜마다 하나뿐이다. */
-        ScheduleDay: {
-            /** Format: date */
-            date: string;
-            dayNo: number;
-            /** @description 일차 제목(최대 30 graphemes). 없으면 null */
-            title: string | null;
-            /** @enum {string} */
-            status: "active" | "cancelled";
-            visitCount: number;
-        };
-        DayChangeResult: {
-            schedule: components["schemas"]["Schedule"] | null;
-            days: components["schemas"]["ScheduleDay"][];
-        };
     };
     responses: never;
     parameters: never;
@@ -1878,7 +1968,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @enum {string} */
+                    /**
+                     * @description 현재 Google 활성화 보류. enum 보존은 신규 로그인 허용을 뜻하지 않는다.
+                     * @enum {string}
+                     */
                     provider: "kakao" | "google";
                     credential: string;
                     nonce: string;
@@ -2103,25 +2196,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description documents[{id,version,required,url}] */
+            /** @description documents[{id,itemKey,title,version,kind,required,url,development}] (v3 가입 동의 consent 4종: 서비스 이용약관·개인정보 수집 및 이용 필수, 마케팅·위치정보 선택) */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        documents: {
-                            /** Format: uuid */
-                            id: string;
-                            version: string;
-                            required: boolean;
-                            url: string;
-                            /** @enum {unknown} */
-                            kind: "consent" | "notice";
-                            title: string;
-                            itemKey: string;
-                            development: boolean;
-                        }[];
+                        documents: components["schemas"]["ConsentDocument"][];
                     };
                 };
             };
@@ -2220,7 +2302,9 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @description NFC 1~20 graphemes. 초과 입력은 앱에서 보존·오류 표시 */
                     displayName: string;
+                    /** @description v3: 게시된 consent 문서 4종(서비스 이용약관·개인정보 수집 및 이용 동의 필수, 마케팅 정보 수신·위치정보 이용약관 선택) 각각의 문서 버전에 agreed true/false를 기록한다. 필수가 false/누락이면 409 CONSENT_REQUIRED. 약관 전체 동의는 앱 편의 기능이다. */
                     consents: {
                         /** Format: uuid */
                         documentId: string;
@@ -2342,7 +2426,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description profile */
+            /** @description profile{id,displayName,status,avatarVersion,version} */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2447,16 +2531,16 @@ export interface operations {
             content: {
                 "application/json": {
                     displayName?: string;
-                    expectedVersion: number;
                     /** Format: uuid */
                     avatarAssetId?: string;
                     /** @constant */
                     restoreDefaultAvatar?: true;
+                    expectedVersion: number;
                 };
             };
         };
         responses: {
-            /** @description profile or operation */
+            /** @description profile{...,avatarVersion} or operation */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2910,7 +2994,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @enum {string} */
+                    /**
+                     * @description 현재 Google 활성화 보류. enum 보존은 신규 로그인 허용을 뜻하지 않는다.
+                     * @enum {string}
+                     */
                     provider: "kakao" | "google";
                     credential: string;
                     reauthProof: string;
@@ -3505,6 +3592,8 @@ export interface operations {
                         mime: string;
                         declaredBytes: number;
                         fingerprint: string;
+                        width?: number;
+                        height?: number;
                     };
                 };
             };
@@ -3517,6 +3606,115 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UploadTask"];
+                };
+            };
+            /** @description 입력/규격 오류 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 인증 만료/재인증 필요 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 권한/참여/차단/운영 제한 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 대상 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 버전/상태/멱등본문 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 삭제/만료/종료 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 파일 크기 초과 */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 요청률 제한 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 공급자/서비스 일시 장애 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    groupDays: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description items:GroupDay[], nextCursor */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["GroupDay"][];
+                        nextCursor: string | null;
+                    };
                 };
             };
             /** @description 입력/규격 오류 */
@@ -3616,7 +3814,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description schedules[], dateCounts */
+            /** @description schedules[{...,days[{date,dayNo,title,status,visitCount}]}], dateCounts */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3724,7 +3922,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description schedule, retention, plan[{date,title,visits[{...,plannedTime}],visitLimit:15}], version */
+            /** @description schedule, days[{date,dayNo,title,status,visitCount}], retention, plan[{date,title,visits[{...,plannedTime}],visitLimit:15}], version */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3732,6 +3930,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         schedule: components["schemas"]["Schedule"];
+                        days: components["schemas"]["ScheduleDay"][];
                         retention: {
                             fixed?: boolean;
                             /** Format: date */
@@ -3742,6 +3941,7 @@ export interface operations {
                         plan: {
                             /** Format: date */
                             date: string;
+                            /** @description 저장된 일차 제목 0~100. UI12에서 실제 변경할 때만 30자 제한 */
                             title: string;
                             visits: components["schemas"]["Visit"][];
                             visitCount: number;
@@ -3751,7 +3951,6 @@ export interface operations {
                             outsideRange?: boolean;
                         }[];
                         version: number;
-                        days: components["schemas"]["ScheduleDay"][];
                     };
                 };
             };
@@ -4309,6 +4508,355 @@ export interface operations {
             };
         };
     };
+    dayUpdate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                scheduleId: string;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    expectedVersion: number;
+                    /** @description NFC/trim 후 1~100 graphemes, 길이는 서비스에서 검사 */
+                    title?: string;
+                    /** Format: date */
+                    date?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description DayChangeResult{schedule,days[]} or operation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayChangeResult"];
+                };
+            };
+            /** @description 공개전검사/비동기처리 접수. operation을 조회하며 완료로 표시하지 않는다. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Operation"];
+                };
+            };
+            /** @description 입력/규격 오류 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 인증 만료/재인증 필요 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 권한/참여/차단/운영 제한 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 대상 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 버전/상태/멱등본문 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 삭제/만료/종료 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 파일 크기 초과 */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 요청률 제한 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 공급자/서비스 일시 장애 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    dayCancel: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                scheduleId: string;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    expectedVersion: number;
+                };
+            };
+        };
+        responses: {
+            /** @description DayChangeResult{schedule,days[]} (모든 날 취소 시 schedule.status=cancelled) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayChangeResult"];
+                };
+            };
+            /** @description 입력/규격 오류 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 인증 만료/재인증 필요 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 권한/참여/차단/운영 제한 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 대상 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 버전/상태/멱등본문 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 삭제/만료/종료 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 파일 크기 초과 */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 요청률 제한 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 공급자/서비스 일시 장애 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    dayDelete: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                scheduleId: string;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    expectedVersion: number;
+                };
+            };
+        };
+        responses: {
+            /** @description DayChangeResult{schedule|null,days[]} (마지막 날이면 일정 삭제) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayChangeResult"];
+                };
+            };
+            /** @description 입력/규격 오류 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 인증 만료/재인증 필요 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 권한/참여/차단/운영 제한 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 대상 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 버전/상태/멱등본문 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 삭제/만료/종료 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 파일 크기 초과 */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 요청률 제한 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 공급자/서비스 일시 장애 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     placesSearch: {
         parameters: {
             query: {
@@ -4318,6 +4866,7 @@ export interface operations {
                 bounds?: string;
                 sort?: "relevance" | "distance";
                 center?: string;
+                page?: number;
             };
             header?: never;
             path?: never;
@@ -4325,7 +4874,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description places[], provider, searchContext */
+            /** @description places[<=15], provider:kakao, region:서울특별시, excludedOutsideSeoul, page, isEnd, searchContext{radiusMeters:2000|null} */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -4336,6 +4885,8 @@ export interface operations {
                             providerPlaceId?: string;
                             name?: string;
                             address?: string;
+                            roadAddress?: string;
+                            phone?: string;
                             lat?: number;
                             lng?: number;
                             distanceMeters?: number;
@@ -4345,11 +4896,22 @@ export interface operations {
                             attributions?: Record<string, never>[];
                         }[];
                         /** @enum {string} */
-                        provider: "google" | "kakao";
+                        provider: "kakao";
+                        /** @constant */
+                        region: "서울특별시";
+                        /** @description 이번 쪽에서 서울특별시 밖이라 제외한 결과 수(키워드 검색) */
+                        excludedOutsideSeoul: number;
+                        page: number;
+                        isEnd: boolean;
                         searchContext: {
                             query?: string;
                             bounds?: string;
                             center?: string | null;
+                            /**
+                             * @description 카테고리 검색만 2000
+                             * @enum {integer|null}
+                             */
+                            radiusMeters?: 2000 | null;
                             requestSequence?: number;
                         };
                     };
@@ -4454,7 +5016,6 @@ export interface operations {
                 "application/json": {
                     /** Format: date */
                     visitDate: string;
-                    plannedTime?: string | null;
                     providerPlaceId?: string;
                     manual?: {
                         name: string;
@@ -4573,11 +5134,13 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @description 변경 입력은 0~30 graphemes. 서버 기존 값과 동일하면 31~100자 보존 허용(Q15); 자동 절단 금지 */
                     title: string;
                     visits: {
                         /** Format: uuid */
                         id: string;
                         order: number;
+                        /** @description 00:00~23:59 1분 단위 또는 null(시간 미정) */
                         plannedTime: string | null;
                     }[];
                     expectedVersion: number;
@@ -4796,6 +5359,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    uploadLimits: {
+        parameters: {
+            query: {
+                recordDate: string;
+                visitId?: string;
+            };
+            header?: never;
+            path: {
+                scheduleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 작성자의 완료·진행 파일을 반영한 남은 업로드 개수 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        visitId?: string | null;
+                        /** Format: date */
+                        recordDate: string;
+                        photos: number;
+                        videos: number;
+                        /** @constant */
+                        photoLimit: 5;
+                        /** @constant */
+                        videoLimit: 2;
+                    };
                 };
             };
         };
@@ -5383,8 +5981,9 @@ export interface operations {
                 visitId?: string;
                 unassigned?: boolean;
                 outsideRange?: boolean;
-                view?: "by_time" | "by_author";
-                order?: "asc" | "desc";
+                /** @description 새 앱은 by_photo/by_author. by_time은 기존 APK 호환용 별칭이며 by_photo와 같은 게시 묶음 정렬을 사용한다. 기존 APK 지원 종료 전 제거하지 않는다. */
+                view?: "by_photo" | "by_author" | "by_time";
+                order?: "desc" | "asc";
                 cursor?: string;
                 limit?: number;
             };
@@ -5396,7 +5995,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description items[{...,sortAt,sortBasis}], groups[] (by_author 작성자 구역), visibleCounts, nextCursor */
+            /** @description items[{...,displayName,durationMs,submissionCompletedAt,sortAt}], groups[{authorUserId,displayName,avatarVersion,...}] (by_author 작성자 카드), visibleCounts, nextCursor */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -5404,16 +6003,18 @@ export interface operations {
                 content: {
                     "application/json": {
                         items: components["schemas"]["Media"][];
-                        /** @description view=by_author일 때 작성자 구역 머리글. 차단 작성자 제외 */
+                        /** @description view=by_author일 때 작성자 카드 머리글(프로필 사진·이름·개수). 차단 작성자 제외. 카드 격자 1·2·3·4+ 와 `+N` 펼치기는 앱 표시 */
                         groups?: {
                             /** Format: uuid */
                             authorUserId: string;
                             displayName: string;
+                            avatarVersion: number | null;
                             photos: number;
                             videos: number;
                             /** Format: date-time */
                             firstCompletedAt: string;
-                            avatarVersion?: number | null;
+                            /** Format: date-time */
+                            latestCompletedAt?: string;
                         }[];
                         visibleCounts: {
                             photos: number;
@@ -6027,7 +6628,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description exportId, state, results[] */
+            /** @description exportId, state, results[{mediaId,kind,state,converted,variant,mime}] (동영상은 동영상 파일) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -6037,13 +6638,7 @@ export interface operations {
                         /** Format: uuid */
                         exportId: string;
                         state: string;
-                        results: {
-                            /** Format: uuid */
-                            mediaId?: string;
-                            state?: string;
-                            converted?: boolean;
-                            variant?: string;
-                        }[];
+                        results: components["schemas"]["ExportResult"][];
                     };
                 };
             };
@@ -6154,13 +6749,7 @@ export interface operations {
                             purpose?: string;
                             state?: string;
                         };
-                        results: {
-                            /** Format: uuid */
-                            mediaId?: string;
-                            state?: string;
-                            converted?: boolean;
-                            variant?: string;
-                        }[];
+                        results: components["schemas"]["ExportResult"][];
                     };
                 };
             };
@@ -6261,7 +6850,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 현재권한 재검증 후 위치검증된 파일 */
+            /** @description 현재권한 재검증 후 위치검증된 파일 (동영상은 동영상 파일 자체, 포스터 아님) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -6492,7 +7081,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description invite{id,link,code,issuedAt,expiresAt,useCount:0,maxUses:50,state} */
+            /** @description invite{id,link,code(8자 ABCDEFGHJKLMNPQRSTUVWXYZ23456789),issuedAt,expiresAt(+168h),useCount:0,maxUses:50,state} */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -6723,7 +7312,7 @@ export interface operations {
                         } | null;
                         /** @enum {string} */
                         inviteState: "active";
-                        /** @description 이번 응답을 포함해 50회에서 뺀 값 */
+                        /** @description 이번 응답을 포함해 50회에서 뺀 값. 이미 참여 중인 사용자의 확인도 포함해 성공 응답마다 1회 소모(v3, 프로토타입 동작) */
                         usesRemaining: number;
                         alreadyMember: boolean;
                     };
@@ -6824,6 +7413,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @description 링크 토큰 또는 8자 코드. 앱이 링크에서 코드 추출·대문자·영숫자만으로 정규화해 보낸다 */
                     tokenOrCode: string;
                 };
             };
@@ -6938,7 +7528,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description members[{id,displayName,isOwner}], reentryBlocks(owner only) */
+            /** @description members[{id,userId,displayName,avatarVersion,isOwner,isMe}], reentryBlocks(owner only) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -6948,11 +7538,12 @@ export interface operations {
                         members: {
                             /** Format: uuid */
                             id: string;
-                            displayName: string;
-                            isOwner: boolean;
                             /** Format: uuid */
                             userId: string;
+                            displayName: string;
                             avatarVersion: number | null;
+                            isOwner: boolean;
+                            isMe?: boolean;
                         }[];
                         reentryBlocks?: {
                             /** Format: uuid */
@@ -9403,7 +9994,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @enum {string} */
+                    /**
+                     * @description 현재 Google 활성화 보류. enum 보존은 신규 로그인 허용을 뜻하지 않는다.
+                     * @enum {string}
+                     */
                     provider: "kakao" | "google";
                     credential: string;
                     nonce: string;
@@ -9422,6 +10016,227 @@ export interface operations {
                         /** Format: date-time */
                         expiresAt: string;
                     };
+                };
+            };
+            /** @description 입력/규격 오류 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 인증 만료/재인증 필요 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 권한/참여/차단/운영 제한 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 대상 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 버전/상태/멱등본문 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 삭제/만료/종료 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 파일 크기 초과 */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 요청률 제한 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 공급자/서비스 일시 장애 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    avatarPrepare: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    file: {
+                        name: string;
+                        mime: string;
+                        declaredBytes: number;
+                        fingerprint: string;
+                        width?: number;
+                        height?: number;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description UploadTask {targetType:avatar,avatarUserId,transport:UploadTransport|null} */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadTask"];
+                };
+            };
+            /** @description 입력/규격 오류 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 인증 만료/재인증 필요 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 권한/참여/차단/운영 제한 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 대상 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 버전/상태/멱등본문 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 삭제/만료/종료 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 파일 크기 초과 */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 요청률 제한 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 공급자/서비스 일시 장애 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    avatarStream: {
+        parameters: {
+            query?: {
+                v?: string;
+            };
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 위치 제거·검사 통과 프로필 사진. 사진이 없으면 404 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
                 };
             };
             /** @description 입력/규격 오류 */
@@ -10530,41 +11345,6 @@ export interface operations {
             };
         };
     };
-    uploadLimits: {
-        parameters: {
-            query: {
-                recordDate: string;
-                visitId?: string;
-            };
-            header?: never;
-            path: {
-                scheduleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 작성자의 완료·진행 파일을 반영한 남은 업로드 개수 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        visitId?: string | null;
-                        /** Format: date */
-                        recordDate: string;
-                        photos: number;
-                        videos: number;
-                        /** @constant */
-                        photoLimit: 5;
-                        /** @constant */
-                        videoLimit: 2;
-                    };
-                };
-            };
-        };
-    };
     mediaGet: {
         parameters: {
             query: {
@@ -10617,489 +11397,26 @@ export interface operations {
             };
         };
     };
-    dayUpdate: {
+    vlogSources: {
         parameters: {
             query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                scheduleId: string;
-                date: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    expectedVersion: number;
-                    title?: string | null;
-                    /** Format: date */
-                    date?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description expectedVersion(일정), title?, date? → schedule, days */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayChangeResult"];
-                };
-            };
-            /** @description 공개전검사 접수 */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Operation"];
-                };
-            };
-            /** @description 입력/규격 오류 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 인증 만료/재인증 필요 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 권한/참여/차단/운영 제한 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 대상 없음 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 버전/상태/멱등본문 충돌 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 삭제/만료/종료 */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 파일 크기 초과 */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 요청률 제한 */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 공급자/서비스 일시 장애 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    dayCancel: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                scheduleId: string;
-                date: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    expectedVersion: number;
-                };
-            };
-        };
-        responses: {
-            /** @description expectedVersion(일정) → schedule, days */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayChangeResult"];
-                };
-            };
-            /** @description 입력/규격 오류 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 인증 만료/재인증 필요 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 권한/참여/차단/운영 제한 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 대상 없음 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 버전/상태/멱등본문 충돌 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 삭제/만료/종료 */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 파일 크기 초과 */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 요청률 제한 */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 공급자/서비스 일시 장애 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    dayDelete: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                scheduleId: string;
-                date: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    expectedVersion: number;
-                };
-            };
-        };
-        responses: {
-            /** @description expectedVersion(일정) → schedule|null, days */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayChangeResult"];
-                };
-            };
-            /** @description 입력/규격 오류 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 인증 만료/재인증 필요 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 권한/참여/차단/운영 제한 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 대상 없음 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 버전/상태/멱등본문 충돌 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 삭제/만료/종료 */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 파일 크기 초과 */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 요청률 제한 */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 공급자/서비스 일시 장애 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    avatarPrepare: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    file: {
-                        name: string;
-                        mime: string;
-                        declaredBytes: number;
-                        fingerprint: string;
-                    };
-                };
-            };
-        };
-        responses: {
-            /** @description UploadTask */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UploadTask"];
-                };
-            };
-            /** @description 입력/규격 오류 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 인증 만료/재인증 필요 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 권한/참여/차단/운영 제한 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 대상 없음 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 버전/상태/멱등본문 충돌 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 삭제/만료/종료 */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 파일 크기 초과 */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 요청률 제한 */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description 공급자/서비스 일시 장애 */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    avatarStream: {
-        parameters: {
-            query?: {
-                /** @description 캐시 키(avatarVersion) */
-                v?: string;
-            };
             header?: never;
             path: {
-                userId: string;
+                groupId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 위치 제거된 프로필 사진 */
+            /** @description 모임의 삭제되지 않은 일정 식별자 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/octet-stream": string;
+                    "application/json": {
+                        scheduleIds: string[];
+                    };
                 };
             };
         };

@@ -3,14 +3,16 @@ import React, { useState, useRef } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { DateTabs, DayTimeline } from '../../components/schedule-plan';
 import { useLocalSearchParams, router } from 'expo-router';
-import { api, getGroup } from '../../lib/api';
-import { usePreference, todayInSeoul } from '../../lib/preferences';
-import { addDays } from '../../lib/calendar';
+import { api, ApiError, getGroup, awaitOperation } from '../../lib/api';
+import { todayInSeoul } from '../../lib/preferences';
+import { loadGroupDays } from '../../lib/group-days';
 import { validDate } from '../../lib/validation';
 import { dayLabel, groupDays, periodLabel, scheduleDayList, shortDate, weekday } from '../../lib/day-labels';
 import { useAccount } from '../../lib/state';
 import { Records } from '../../components/records';
+import { TimeEditModal } from '../../components/time-edit-modal';
 import { UploadSheet } from '../../components/upload-sheet';
+import { useCandidateExit } from '../../components/candidate-exit';
 import {
   Screen,
   Button,
@@ -29,18 +31,18 @@ import {
  * `date` picks the day; tabs list active days of every schedule in the group.
  */
 export default function Schedule() {
-  const { id, date: dateParam } = useLocalSearchParams<{ id: string; date?: string }>(),
+  const { id, date: dateParam, recordVisit, openUpload } = useLocalSearchParams<{ id: string; date?: string; recordVisit?: string; openUpload?: string }>(),
     { session } = useAccount(),
     [detail, setDetail] = useState<any>(null),
     [files, setFiles] = useState<any[]>([]),
-    [tab, setTab] = useState<'plan' | 'records'>('plan'),
-    [options, setOptions, optionsReady] = usePreference('record-view-v2', {
-      view: 'by_time',
+    [tab, setTab] = useState<'plan' | 'records'>(openUpload === '1' ? 'records' : 'plan'),
+    [options, setOptions] = useState({
+      view: 'by_photo',
       order: 'desc',
     }),
     [date, setDate] = useState(dateParam ?? ''),
-    [recordDate, setRecordDate] = useState(''),
-    [visitId, setVisit] = useState(''),
+    [recordDate, setRecordDate] = useState(openUpload === '1' ? dateParam ?? '' : ''),
+    [visitId, setVisit] = useState(recordVisit ?? ''),
     [next, setNext] = useState<string | null>(null),
     [groups, setGroups] = useState<any[]>([]),
     [owner, setOwner] = useState(false),
@@ -57,8 +59,21 @@ export default function Schedule() {
   const setOrder = (order: string) => setOptions({ ...options, order });
   const [menu, setMenu] = useState(false),
     [filters, setFilters] = useState(false),
-    [adding, setAdding] = useState(false);
+    [adding, setAdding] = useState(openUpload === '1');
   const a = useAction();
+  const [candidateState, setCandidateState] = useState({ count: 0, busy: false });
+  const candidateExit = useCandidateExit(candidateState);
+  const timeAction = useAction({ inlineRetry: false });
+  const [timeVisit, setTimeVisit] = useState('');
+  const [timeLatest, setTimeLatest] = useState('');
+  const timeNeedsRefresh = useRef(false);
+  async function refreshTimePlan() {
+    const fresh = await api(`/schedules/${id}`);
+    setDetail({ ...fresh, writable: Date.parse(fresh.retention.expiresAt) > Date.now() });
+    const latest = fresh.plan.find((p: any) => p.date === date);
+    setTimeLatest(latest ? `최신 계획\n${latest.title}\n${latest.visits.map((v: any) => `${v.name} · ${v.plannedTime ?? '시간 미정'}`).join('\n')}` : '이 날짜의 계획이 없어졌어요.');
+    timeNeedsRefresh.current = false;
+  }
   const previousVisits = useRef<Set<string> | null>(null);
   const [highlightedVisits, setHighlightedVisits] = useState<string[]>([]);
   async function load(cursor?: string, valid = () => true) {
@@ -76,20 +91,21 @@ export default function Schedule() {
     setNext(r.nextCursor);
   }
   useFocusLoad(() => {
-    if (!optionsReady) return;
     let live = true;
     setSummary(null);
     a.run(async () => {
       const d = await api(`/schedules/${id}`);
       if (!live) return;
+      if (openUpload === '1' && recordVisit && !d.plan.some((day: any) => day.date === dateParam && day.visits.some((v: any) => v.id === recordVisit))) { setAdding(false); throw new Error('이전 후보의 장소가 이동·삭제됐어요. 후보는 원래 날짜·장소로 보존됩니다.'); }
       const visitIds = d.plan.flatMap((day: any) => day.visits.map((v: any) => v.id)) as string[];
       setHighlightedVisits(
         previousVisits.current ? visitIds.filter((id) => !previousVisits.current!.has(id)) : [],
       );
       previousVisits.current = new Set(visitIds);
-      setDetail(d);
+      setDetail({ ...d, writable: Date.parse(d.retention.expiresAt) > Date.now() });
       const own = (Array.isArray(d.days) ? d.days : scheduleDayList(d.schedule)) as any[];
-      if (!date || !own.some((x) => x.date === date)) {
+      if (date && !own.some((x) => x.date === date)) throw new Error('선택한 날짜가 이동되거나 삭제됐어요. 모임 달력에서 다시 선택해 주세요.');
+      if (!date) {
         const active = own.filter((x) => x.status === 'active'),
           today = todayInSeoul();
         setDate(
@@ -101,16 +117,13 @@ export default function Schedule() {
       if (!live) return;
       setGroup(g);
       setOwner(g.ownerUserId === session?.userId);
-      const around = d.schedule.startDate;
       const [cal, members, totals] = await Promise.all([
-        api(`/groups/${g.id}/calendar?from=${addDays(around, -182)}&to=${addDays(around, 183)}`).catch(
-          () => null,
-        ),
+        loadGroupDays(g.id),
         api(`/groups/${g.id}/members`).catch(() => null),
         api(`/schedules/${id}/media?limit=1`),
       ]);
       if (!live) return;
-      if (cal) setGroupDayList(groupDays(cal.schedules));
+      setGroupDayList(cal);
       if (members)
         setAvatars(Object.fromEntries(members.members.map((m: any) => [m.userId, m.avatarVersion ?? null])));
       setSummary(totals);
@@ -119,13 +132,13 @@ export default function Schedule() {
     return () => {
       live = false;
     };
-  }, [id, view, order, recordDate, visitId, unassigned, outside, optionsReady, tab]);
+  }, [id, view, order, recordDate, visitId, unassigned, outside, tab]);
   const ownDays = detail ? ((Array.isArray(detail.days) ? detail.days : scheduleDayList(detail.schedule)) as any[]) : [];
   const day = ownDays.find((x) => x.date === date);
   const plan = detail?.plan.find((p: any) => p.date === date);
   const single = ownDays.length === 1;
   const scheduleActive = detail?.schedule.status === 'active';
-  const dayActive = scheduleActive && day?.status !== 'cancelled';
+  const dayActive = scheduleActive && day?.status === 'active' && detail?.writable;
   // Tabs: every active day in the group; this schedule's days stand in until the calendar loads.
   const tabs = (
     groupDayList.length
@@ -135,15 +148,6 @@ export default function Schedule() {
   const activeTabs = tabs.filter((t) => t.date);
   const selectedVisit = detail?.plan.flatMap((d: any) => d.visits).find((v: any) => v.id === visitId);
   const visitDate = selectedVisit?.visitDate ?? recordDate;
-  const uploadParams: Record<string, string> = detail
-    ? {
-        id,
-        startDate: detail.schedule.startDate,
-        endDate: detail.schedule.endDate,
-        visitId,
-        recordDate: visitDate || date,
-      }
-    : { id };
   const title =
     tab === 'records'
       ? selectedVisit?.name || '함께 남긴 순간'
@@ -155,6 +159,8 @@ export default function Schedule() {
         ? periodLabel(activeTabs[0].date, activeTabs[activeTabs.length - 1].date)
         : undefined;
   function openRecords(v?: any) {
+    const enter = () => {
+    setOptions({ view: 'by_photo', order: 'desc' });
     setVisit(v?.id ?? '');
     setRecordDate(v ? date : '');
     setDateInput(v ? date : '');
@@ -162,6 +168,8 @@ export default function Schedule() {
     setOutside(false);
     setFiles([]);
     setTab('records');
+    };
+    if (tab === 'records') candidateExit.requestExit(enter); else enter();
   }
   return (
     <Screen
@@ -170,9 +178,12 @@ export default function Schedule() {
       onBack={() => {
         // The records view lives in this screen's state, so step back to the date view first.
         if (tab === 'records') {
+          candidateExit.requestExit(() => {
           setVisit('');
           setRecordDate('');
           setTab('plan');
+          setAdding(false);
+          });
           return true;
         }
         return false;
@@ -242,14 +253,44 @@ export default function Schedule() {
           {detail?.retention.lastDate ?? '확인 중'}까지
         </P>
       </Sheet>
-      {detail && (
+      {candidateExit.dialog}
+      <TimeEditModal visible={!!timeVisit} placeName={plan?.visits.find((v: any) => v.id === timeVisit)?.name ?? ''}
+        value={plan?.visits.find((v: any) => v.id === timeVisit)?.plannedTime ?? undefined}
+        busy={timeAction.busy} error={timeAction.error} latest={timeLatest} onClose={() => { setTimeVisit(''); timeAction.clear(); }}
+        onSave={(value) => timeAction.run(async () => {
+          if (timeNeedsRefresh.current) {
+            await refreshTimePlan();
+            throw new Error('내 입력은 유지했어요. 최신 계획을 확인한 뒤 다시 저장해 주세요.');
+          }
+          if (!plan?.visits.some((v: any) => v.id === timeVisit) || !dayActive)
+            throw new Error('이 장소가 이동·삭제됐거나 날짜를 수정할 수 없어요. 창을 닫고 최신 일정을 확인해 주세요.');
+          try {
+          await awaitOperation(await api(`/schedules/${id}/plans/${date}`, {
+            title: plan.title, expectedVersion: plan.version,
+            visits: plan.visits.map((v: any, order: number) => ({ id: v.id, order, plannedTime: v.id === timeVisit ? value ?? null : v.plannedTime ?? null })),
+          }, 'PUT'));
+          } catch (e) {
+            if (e instanceof ApiError && e.code === 'VERSION_CONFLICT') {
+              timeNeedsRefresh.current = true;
+              try { await refreshTimePlan(); }
+              catch { throw new Error('최신 계획을 불러오지 못했어요. 내 입력은 유지됩니다. 다시 확인을 누르면 재조회합니다.'); }
+              throw new Error('다른 참여자가 계획을 바꿨어요. 내 입력은 유지했으니 최신 계획을 확인한 뒤 다시 저장해 주세요.');
+            }
+            throw e;
+          }
+          const fresh = await api(`/schedules/${id}`);
+          setDetail({ ...fresh, writable: Date.parse(fresh.retention.expiresAt) > Date.now() });
+          setTimeVisit('');
+          timeAction.clear();
+        })} />
+      {detail && tab === 'records' && (
         <UploadSheet
           visible={adding}
           onClose={() => setAdding(false)}
           scheduleId={id}
+          onStateChange={setCandidateState}
           visitId={visitId || null}
-          recordDate={visitDate || date}
-          cameraParams={uploadParams}
+          recordDate={recordDate || date}
         />
       )}
       {tab === 'plan' ? (
@@ -300,9 +341,10 @@ export default function Schedule() {
                   editable={!!dayActive}
                   canAdd={!!dayActive}
                   highlightedVisits={highlightedVisits}
-                  onEdit={(visit) =>
-                    router.push({ pathname: '/plan', params: { id, date, ...(visit ? { visit } : {}) } })
-                  }
+                  onEdit={(visit) => {
+                    if (visit) { setTimeLatest(''); setTimeVisit(visit); }
+                    else router.push({ pathname: '/plan', params: { id, date } });
+                  }}
                   onVisit={(v) => openRecords(v)}
                   onAdd={() =>
                     router.push({
@@ -359,8 +401,8 @@ export default function Schedule() {
                   onPress={() =>
                     a.run(async () => {
                       if (dateInput) validDate(dateInput);
-                      setRecordDate(dateInput);
                       setFilters(false);
+                      if (dateInput !== recordDate) candidateExit.requestExit(() => setRecordDate(dateInput));
                     })
                   }
                 >
@@ -369,11 +411,15 @@ export default function Schedule() {
                 <Button
                   secondary
                   onPress={() => {
+                    const reset = () => {
                     setRecordDate('');
                     setDateInput('');
                     setUnassigned(false);
                     setOutside(false);
                     setFilters(false);
+                    };
+                    setFilters(false);
+                    if (recordDate) candidateExit.requestExit(reset); else reset();
                   }}
                 >
                   전체 기록 보기
@@ -390,6 +436,7 @@ export default function Schedule() {
             <Records
               key={`${id}:${recordDate}:${visitId}:${unassigned}:${outside}:${view}`}
               items={files}
+              recordScope={{ scheduleId: id, query: { view: 'by_photo', order, ...(recordDate ? { recordDate } : {}), ...(visitId ? { visitId } : {}), ...(unassigned ? { unassigned: 'true' } : {}), ...(outside ? { outsideRange: 'true' } : {}) } }}
               groups={view === 'by_author' ? groups : undefined}
               avatars={avatars}
               toolbar={{ view, onView: setView, order, onOrder: setOrder }}

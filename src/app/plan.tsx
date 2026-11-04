@@ -2,6 +2,7 @@ import { useInitialize } from '../lib/effects';
 import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { View, Text, Pressable } from 'react-native';
+import { TimeEditModal } from '../components/time-edit-modal';
 import { dateHeading } from '../lib/day-labels';
 import { api, awaitOperation, ApiError } from '../lib/api';
 import { inputText, validTime } from '../lib/validation';
@@ -14,9 +15,7 @@ import {
   H,
   P,
   useAction,
-  s,
   confirm,
-  Sheet,
   TextButton,
   colors,
 } from '../components/ui';
@@ -27,14 +26,8 @@ export default function Plan() {
     [version, setVersion] = useState(1);
   const [baseline, setBaseline] = useState(''),
     [latest, setLatest] = useState<any>(null);
-  const [editing, setEditing] = useState(''),
-    [time, setTime] = useState(''),
-    [timeError, setTimeError] = useState('');
-  const editTime = (v: any) => {
-    setEditing(v.id);
-    setTime(v.plannedTime ?? '');
-    setTimeError('');
-  };
+  const [editing, setEditing] = useState('');
+  const editTime = (v: any) => setEditing(v.id);
   const a = useAction();
   const shape = (title: string, visits: any[]) =>
     JSON.stringify({
@@ -59,7 +52,7 @@ export default function Plan() {
   }, [id, date]);
   async function save() {
     return a.run(async () => {
-      inputText(title, '날짜 제목', 30, false);
+      inputText(title, '날짜 제목', title === JSON.parse(baseline).title ? 100 : 30, false);
       visits.forEach((v) => validTime(v.plannedTime ?? ''));
       try {
         await awaitOperation(
@@ -127,51 +120,12 @@ export default function Plan() {
       >
         위·아래 버튼으로 방문 순서를 바꾸세요.
       </Text>
-      <TextButton
-        onPress={() =>
-          setVisits(
-            [...visits].sort((a, b) =>
-              (a.plannedTime ?? '99:99').localeCompare(b.plannedTime ?? '99:99'),
-            ),
-          )
-        }
-      >
-        예정 시각순으로 정렬
-      </TextButton>
-      <Sheet visible={!!editing} title="방문 시각" onClose={() => setEditing('')}>
-        <Field
-          label="예정 시각"
-          placeholder="14:00"
-          helper="5분 단위 · 비우면 시간 미정"
-          value={time}
-          onChangeText={(value) => {
-            setTime(value);
-            setTimeError('');
-          }}
-        />
-        <Button
-          onPress={() => {
-            // Local validation only; keep it out of the screen-level action error.
-            try {
-              validTime(time);
-            } catch (e) {
-              setTimeError((e as Error).message);
-              return;
-            }
-            setVisits(
-              visits.map((v) => (v.id === editing ? { ...v, plannedTime: time || null } : v)),
-            );
-            setEditing('');
-          }}
-        >
-          적용
-        </Button>
-        {!!timeError && (
-          <Text accessibilityRole="alert" style={s.error}>
-            {timeError}
-          </Text>
-        )}
-      </Sheet>
+      <TimeEditModal visible={!!editing} placeName={visits.find((v) => v.id === editing)?.name ?? ''}
+        value={visits.find((v) => v.id === editing)?.plannedTime ?? undefined}
+        onClose={() => setEditing('')} onSave={(time) => {
+          setVisits(visits.map((v) => v.id === editing ? { ...v, plannedTime: time ?? null } : v));
+          setEditing('');
+        }} />
       {visits.map((v, i) => (
         <View
           key={v.id}

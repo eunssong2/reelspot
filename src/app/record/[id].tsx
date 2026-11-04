@@ -17,6 +17,7 @@ function Video({ uri }: { uri: string }) {
     },
     (p) => {
       p.loop = false;
+      p.play();
     },
   );
   const [error, setError] = useState('');
@@ -35,7 +36,10 @@ function Video({ uri }: { uri: string }) {
   return (
     <>
       <VideoView player={player} style={{ flex: 1 }} nativeControls />
-      {error && <P>{error}</P>}
+      {error && <View><P>{error}</P><Button secondary onPress={() => {
+        setError('');
+        void player.replaceAsync({ uri, headers: { Authorization: `Bearer ${currentSession()?.accessToken}` } }).then(() => player.play()).catch(() => setError('동영상을 재생하지 못했어요. 다시 시도해 주세요.'));
+      }}>다시 시도</Button></View>}
     </>
   );
 }
@@ -45,6 +49,7 @@ function ZoomPhoto({ uri }: { uri: string }) {
   const [zoom, setZoom] = useState(1);
   const [scale] = useState(() => new Animated.Value(1)),
     [offset] = useState(() => new Animated.ValueXY());
+  const lastTap = useRef(0);
   const initial = useRef(0),
     baseZoom = useRef(1),
     currentZoom = useRef(1);
@@ -55,6 +60,14 @@ function ZoomPhoto({ uri }: { uri: string }) {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
+        if (e.nativeEvent.touches.length === 1) {
+          const now = e.nativeEvent.timestamp;
+          if (lastTap.current > 0 && now - lastTap.current < 300) {
+            currentZoom.current = currentZoom.current > 1 ? 1 : 2;
+            scale.setValue(currentZoom.current); setZoom(currentZoom.current); offset.setValue({ x: 0, y: 0 });
+          }
+          lastTap.current = now;
+        }
         if (e.nativeEvent.touches.length === 2) {
           const [a, b] = e.nativeEvent.touches;
           baseZoom.current = currentZoom.current;
@@ -67,7 +80,7 @@ function ZoomPhoto({ uri }: { uri: string }) {
           currentZoom.current = Math.max(
             1,
             Math.min(
-              5,
+              4,
               (baseZoom.current * Math.hypot(a.pageX - b.pageX, a.pageY - b.pageY)) /
                 (initial.current || 1),
             ),
@@ -90,7 +103,7 @@ function ZoomPhoto({ uri }: { uri: string }) {
         source={[{ uri, headers: { Authorization: `Bearer ${currentSession()?.accessToken}` } }]}
         style={{
           width: '100%',
-          height: height * 0.65,
+          height: height * 0.72,
           transform: [...offset.getTranslateTransform(), { scale }],
         }}
         resizeMode="contain"
@@ -123,7 +136,7 @@ function ZoomPhoto({ uri }: { uri: string }) {
         <Pressable
           accessibilityLabel="확대"
           onPress={() => {
-            const z = Math.min(5, zoom + 1);
+            const z = Math.min(4, zoom + 1);
             currentZoom.current = z;
             setZoom(z);
             scale.setValue(z);
@@ -201,7 +214,7 @@ export default function Record() {
       {!actual && <View style={{ flex: 1 }}>{a.errorView}</View>}
       <View style={{ padding: 20 }}>
         <Text style={{ fontSize: 13, fontWeight: '600', color: 'white' }}>
-          {info.displayName ?? '내 기록'} · {formatMoment(info.capturedAt ?? info.completedAt)}
+          {info.displayName ?? '내 기록'} · {formatMoment(info.sortAt ?? info.completedAt)}
         </Text>
         {!!info.description && (
           <Text style={{ fontSize: 12, lineHeight: 19, color: '#D1D6DB', marginTop: 6 }}>

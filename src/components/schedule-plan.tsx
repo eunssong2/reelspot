@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { Button, colors } from './ui';
 import { weekday, type GroupDay } from '../lib/day-labels';
@@ -12,8 +12,18 @@ export function DateTabs({
   date: string;
   onSelect: (day: Pick<GroupDay, 'date' | 'scheduleId'>) => void;
 }) {
+  const ref = useRef<ScrollView>(null);
+  const [width, setWidth] = useState(344);
+  const tabWidth = (width - 24) / 4;
+  const index = days.findIndex((d) => d.date === date);
+  useEffect(() => { ref.current?.scrollTo({ x: Math.max(0, index) * (tabWidth + 8), animated: true }); }, [index, tabWidth]);
+  if (days.length <= 1) return null;
   return (
     <ScrollView
+      ref={ref}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+      snapToInterval={tabWidth + 8}
+      decelerationRate="fast"
       horizontal
       style={{ flexGrow: 0, marginBottom: 12 }}
       contentContainerStyle={{ gap: 8 }}
@@ -29,7 +39,7 @@ export function DateTabs({
             accessibilityState={{ selected: on }}
             onPress={() => onSelect(d)}
             style={{
-              minWidth: 76,
+              width: tabWidth,
               minHeight: 52,
               paddingHorizontal: 12,
               alignItems: 'center',

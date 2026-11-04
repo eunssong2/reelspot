@@ -117,7 +117,7 @@ export class ApiError extends Error {
           FILE_NOT_READY: '파일을 아직 준비하고 있습니다. 잠시 후 다시 확인해 주세요.',
           AUTH_EXPIRED: '다시 로그인해 주세요.',
           VALIDATION_ERROR:
-            '입력한 내용을 확인해 주세요. 날짜는 YYYY-MM-DD, 시각은 5분 단위 HH:mm 형식으로 입력합니다.',
+            '입력한 내용을 확인해 주세요. 날짜는 YYYY-MM-DD, 시각은 1분 단위 HH:mm 형식으로 입력합니다.',
           DATE_OUTSIDE_SCHEDULE: '일정 기간 안의 날짜를 선택해 주세요.',
           FORBIDDEN: '접근 권한이 변경되었습니다.',
           ACCESS_REVOKED: '현재 이용할 수 없는 기능입니다.',

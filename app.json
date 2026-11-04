@@ -30,14 +30,6 @@
       "expo-router",
       "expo-secure-store",
       [
-        "expo-camera",
-        {
-          "cameraPermission": "함께할 순간을 촬영하려면 카메라가 필요해요.",
-          "microphonePermission": "소리 있는 영상을 촬영하려면 마이크가 필요해요.",
-          "recordAudioAndroid": true
-        }
-      ],
-      [
         "expo-build-properties",
         {
           "android": {
@@ -48,7 +40,15 @@
       "expo-web-browser",
       "expo-video",
       "expo-status-bar",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "함께할 사진과 동영상을 선택해 주세요.",
+          "cameraPermission": "함께할 순간을 촬영하려면 카메라가 필요해요.",
+          "microphonePermission": "소리 있는 영상을 촬영하려면 마이크가 필요해요."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

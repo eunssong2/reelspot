@@ -275,12 +275,12 @@ export default function Manage() {
           {group.coverAssetId ? (
             <Image
               source={coverSource(id, group.version)}
-              style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: 16, marginBottom: 20 }}
+              style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: 16, marginBottom: 20 }}
             />
           ) : (
             <View
               style={{
-                aspectRatio: 16 / 9,
+                aspectRatio: 4 / 3,
                 borderRadius: 16,
                 backgroundColor: colors.sage,
                 alignItems: 'center',
@@ -306,30 +306,9 @@ export default function Manage() {
           >
             이름 저장
           </Button>
-          <Button
-            secondary
-            onPress={() => router.push({ pathname: '/upload', params: { coverGroupId: id } })}
-          >
-            대표 사진 변경
-          </Button>
-          <Button
-            secondary
-            onPress={() =>
-              a.run(async () => {
-                await api(
-                  `/groups/${id}`,
-                  { restoreDefault: true, expectedVersion: group.version },
-                  'PATCH',
-                );
-                await refresh();
-              })
-            }
-          >
-            대표 사진 기본 이미지로 복원
-          </Button>
         </Card>
       )}
-      {/* The owner can replace or restore the cover instead of reporting it. */}
+      {/* Owners manage the cover in the invitation screen; other members can report it here. */}
       {mode === 'info' && group?.coverAssetId && !owner && (
         <Button
           secondary

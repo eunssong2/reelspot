@@ -569,6 +569,7 @@ export function useAction({ inlineRetry = true }: { inlineRetry?: boolean } = {}
   return {
     busy,
     run,
+    clear: () => { setError(''); setErrorCode(''); setOperationId(null); retry.current = null; },
     error,
     errorCode,
     hasRun,

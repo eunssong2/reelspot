@@ -153,7 +153,9 @@ export default function Group() {
       compact
       title={group?.name ?? '모임 달력'}
       footer={
-        owner ? (
+        <>
+        <Button secondary disabled={a.busy || !group} onPress={() => router.push({ pathname: '/vlog', params: { groupId: id } })}>브이로그 만들기</Button>
+        {owner ? (
           <Button
             disabled={a.busy}
             onPress={() =>
@@ -165,7 +167,8 @@ export default function Group() {
           >
             ＋ 일정 추가
           </Button>
-        ) : undefined
+        ) : null}
+        </>
       }
     >
       <Sheet

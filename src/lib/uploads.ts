@@ -1,3 +1,5 @@
+import { flushUploadDrafts } from './upload-draft';
+import { flushDraftWrites } from '../vlog/storage';
 import { randomUUID } from 'expo-crypto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -51,14 +53,13 @@ export async function candidate(
 }
 export async function enqueueTask(task: any, file: Candidate) {
   const session = currentSession()!;
-  if (!Transfer) throw new Error('Android 개발 빌드가 필요합니다.');
-  if (Platform.OS === 'android' && Number(Platform.Version) >= 33)
-    await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-
   const key = `atp.queue:${session.userId}`,
     q = JSON.parse((await AsyncStorage.getItem(key)) ?? '{}');
   q[task.id] = { file, task };
   await AsyncStorage.setItem(key, JSON.stringify(q));
+  if (!Transfer) throw new Error('Android 개발 빌드가 필요합니다.');
+  if (Platform.OS === 'android' && Number(Platform.Version) >= 33)
+    await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
   await Transfer.enqueue(
     JSON.stringify({
       taskId: task.id,
@@ -104,6 +105,8 @@ export async function restorePendingTransfers() {
   }
 }
 export async function clearLocalAccount(userId: string) {
+  await flushDraftWrites(userId);
+  await flushUploadDrafts(userId);
   const keys = (await AsyncStorage.getAllKeys()).filter((k) => k === `atp.queue:${userId}` || k.startsWith(`atp.upload-draft:${userId}:`) || k.startsWith(`atp.draft:${userId}:`));
   await AsyncStorage.multiRemove(keys);
   await FileSystem.deleteAsync(`${FileSystem.documentDirectory}uploads/${userId}/`, { idempotent: true });
@@ -120,6 +123,8 @@ export async function uploadAndApplyImage(
   const picked = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     allowsMultipleSelection: false,
+    allowsEditing: true,
+    aspect: target.kind === 'cover' ? [4, 3] : [1, 1],
     quality: 1,
   });
   if (picked.canceled || !picked.assets[0]) return null;

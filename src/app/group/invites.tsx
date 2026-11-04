@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Image, Share, Text, View, Pressable } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { api, coverSource, getGroup } from '../../lib/api';
+import { api, awaitOperation, coverSource, getGroup } from '../../lib/api';
 import { useFocusLoad } from '../../lib/effects';
 import { useAccount } from '../../lib/state';
 import { monthDayTime } from '../../lib/day-labels';
@@ -124,6 +124,13 @@ export default function Invites() {
             <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>
               {cover.busy ? '사진을 올리고 있어요…' : '내 모임 목록에 보이는 대표 사진이에요'}
             </Text>
+            {!!group.coverAssetId && <TextButton disabled={cover.busy} onPress={() =>
+              confirm('기본 이미지로 되돌릴까요?', '모임 이름의 첫 글자로 표시합니다.', () => cover.run(async () => {
+                await awaitOperation(await api(`/groups/${id}`, { restoreDefault: true, expectedVersion: group.version }, 'PATCH'));
+                await load();
+                setMessage('모임 사진을 기본 이미지로 되돌렸어요.');
+              }))
+            }>기본 이미지로 되돌리기</TextButton>}
           </View>
           <TextButton
             disabled={cover.busy}

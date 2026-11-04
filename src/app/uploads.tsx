@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import * as FS from 'expo-file-system/legacy';
 import { router } from 'expo-router';
+import { LegacyDraftLink } from '../components/legacy-draft-link';
 import { api, awaitOperation, getGroup, ApiError, currentSession } from '../lib/api';
 import { queue, resumeTask } from '../lib/uploads';
 import { Transfer } from '../../modules/atp-transfer';
@@ -70,6 +71,7 @@ export default function Uploads() {
   }, []);
   return (
     <Screen title="파일 전송 상태" subtitle="전송이 끝나면 파일 확인 후 기록에 표시됩니다.">
+      <LegacyDraftLink />
       <H>
         {!loaded
           ? '전송 상태를 확인하고 있어요'

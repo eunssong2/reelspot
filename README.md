@@ -9,7 +9,7 @@ Android 앱(Expo 57 / React Native 0.86, Expo Router)을 관리하는 `frontend`
 | `docs` | `samsun/docs` | 기능명세서·1차 개발 설계서·회의록 |
 | `feature/ui-prototype` | `samsun/feature-ui-prototype` | 디자이너·PM의 UI 프로토타입(기능 기준) |
 
-> 현재 기능 기준은 `docs` 브랜치의 기능명세서 v3.0·설계 v0.4(2026-11-03, UI 프로토타입 기준)입니다. 앱 0.2.7은 그 이전 기준으로 만들어져 있어 v3과 다른 부분이 있습니다.
+> 현재 구현 기준은 `docs@ded2a6c`의 기능명세 v3.2·설계 v0.5.0(2026-11-04)입니다. 변경·제거 범위, 검증 결과와 남은 결정은 [후보 수명·복구 안내 보완 및 최신 검증](docs/2026-11-04_후보수명_복구안내_보완.md)에 기록했습니다. F30 편집 UI는 연결했으며 실제 영상 합성·결과 저장은 Q20 결정 대기입니다.
 
 ## 구성
 
@@ -52,6 +52,7 @@ npm run android
 npm run typecheck
 npm run lint
 npm test
+npm run test:flows
 npm run export
 ```
 

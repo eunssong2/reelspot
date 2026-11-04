@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LegacyDraftLink } from '../components/legacy-draft-link';
 import { useFocusLoad } from '../lib/effects';
 import { api, currentSession } from '../lib/api';
 import { formatBytes } from '../lib/preferences';
@@ -49,6 +50,7 @@ export default function Storage() {
         <P>재생 캐시 {formatBytes(cacheBytes)} · 설정 한도 500MB</P>
         <P>선택 후보·전송용 파일 {formatBytes(localBytes)}</P>
         <P>캐시 정리는 선택 후보와 미완료 전송 원본을 삭제하지 않습니다.</P>
+        <LegacyDraftLink />
       </Card>
       {groups.map((g) => (
         <Card key={g.id}>

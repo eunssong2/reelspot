@@ -23,6 +23,6 @@ export function validPeriod(start: string, end: string) {
   if (days < 0 || days > 365) throw new Error('종료 날짜는 시작 날짜 이후이며, 기간은 최대 366일입니다.');
 }
 export function validTime(value: string) {
-  if (value && !/^([01]\d|2[0-3]):[0-5][05]$/.test(value)) throw new Error('예정 시각은 00:00~23:55 사이 5분 단위로 입력해 주세요.');
+  if (value && !/^([01]\d|2[0-3]):[0-5][0-9]$/.test(value)) throw new Error('예정 시각은 00:00~23:59 사이 1분 단위로 입력해 주세요.');
   return value || null;
 }

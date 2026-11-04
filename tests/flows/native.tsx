@@ -1,0 +1,16 @@
+import React, { forwardRef, useImperativeHandle } from 'react';
+export const View = 'View', Text = 'Text', Pressable = 'Pressable', TextInput = 'TextInput', Switch = 'Switch', ActivityIndicator = 'ActivityIndicator';
+export const Modal = ({ visible, children, ...props }: any) => visible ? <View {...props}>{children}</View> : null;
+export const ScrollView = forwardRef(({ children, ...props }: any, ref) => { useImperativeHandle(ref, () => ({ scrollTo() {} })); return <View {...props}>{children}</View>; });
+export const Image = Object.assign((props: any) => <image {...props} />, { getSize: (_uri: string, done: any) => done(400, 300), getSizeWithHeaders: (_uri: string, _headers: any, done: any) => done(400, 300) });
+export const StyleSheet = { create: (s: any) => s, absoluteFill: {}, absoluteFillObject: {}, hairlineWidth: 1 };
+export const useWindowDimensions = () => ({ width: 400, height: 800 });
+export const Platform = { OS: 'android', Version: 35, select: (v: any) => v.android ?? v.default };
+export const Dimensions = { get: () => ({ width: 400, height: 800 }) };
+const listeners = new Set<(state: string) => void>();
+export const AppState = { addEventListener: (_: string, fn: any) => { listeners.add(fn); return { remove: () => listeners.delete(fn) }; }, emit: (state: string) => { for (const fn of listeners) fn(state); }, clear: () => listeners.clear() };
+export const BackHandler = { addEventListener: () => ({ remove() {} }) };
+export const Alert = { alert() {} };
+export const PanResponder = { create: () => ({ panHandlers: {} }) };
+export const Linking = { openURL: async () => {} };
+export const PermissionsAndroid = { request: async () => 'granted', PERMISSIONS: { POST_NOTIFICATIONS: 'notifications' } };

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Image, Text, View, Pressable } from 'react-native';
+import { Image, Text, View, Pressable, type ImageStyle } from 'react-native';
 import { router } from 'expo-router';
 import { API, api, currentSession, type Media } from '../lib/api';
+import { authorPhotoIds } from '../lib/author-photos';
 import { Avatar } from './profile-ui';
-import { formatDuration, relativeTime } from '../lib/day-labels';
+import { formatDuration, monthDayTime } from '../lib/day-labels';
 import { Button, CheckCircle, P, Sheet, colors, TextButton, ScreenFooter, useAction } from './ui';
 type AuthorGroup = {
   authorUserId: string;
@@ -18,6 +19,10 @@ const thumb = (m: Media, context: string) => [
     headers: { Authorization: `Bearer ${currentSession()?.accessToken}` },
   },
 ];
+function RecordImage({ m, context, style }: { m: Media; context: string; style: ImageStyle }) {
+  const [failed, setFailed] = useState(false);
+  return failed ? <View style={[style, { justifyContent: 'center', padding: 10 }]}><Text>🖼️ 이미지를 불러오지 못했어요</Text></View> : <Image accessibilityLabel="기록 미리보기" source={thumb(m, context)} style={style} onError={() => setFailed(true)} />;
+}
 function VideoBadge({ m }: { m: Media }) {
   if (m.kind !== 'video') return null;
   return (
@@ -47,7 +52,7 @@ export function ViewToggle({ view, onView }: { view: string; onView: (v: string)
     <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 18, padding: 4 }}>
       {(
         [
-          ['by_time', '▦', '사진별 보기'],
+          ['by_photo', '▦', '사진별 보기'],
           ['by_author', '👤', '사람별 보기'],
         ] as const
       ).map(([value, icon, label]) => (
@@ -81,8 +86,10 @@ export function Records({
   groups,
   avatars = {},
   toolbar,
+  recordScope,
 }: {
   items: Media[];
+  recordScope?: { scheduleId: string; query: Record<string, string> };
   context?: 'shared' | 'mine';
   allowSave?: boolean;
   groups?: AuthorGroup[];
@@ -146,7 +153,7 @@ export function Records({
           recordDate: m.recordDate,
           visitName: m.visitName,
           displayName: m.displayName,
-          capturedAt: m.capturedAt,
+          sortAt: m.sortAt,
           completedAt: m.completedAt,
           retentionLastDate: m.retentionLastDate,
         }),
@@ -186,7 +193,7 @@ export function Records({
         {m.accessState !== 'available' ? (
           unavailable(m, 160)
         ) : (
-          <Image accessibilityLabel="기록 미리보기" source={thumb(m, context)} style={{ aspectRatio: 4 / 3 }} />
+          <RecordImage m={m} context={context} style={{ aspectRatio: 4 / 3 }} />
         )}
         <VideoBadge m={m} />
         {mode && (
@@ -212,12 +219,12 @@ export function Records({
           />
           <View style={{ flex: 1 }}>
             <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '800', color: colors.ink }}>
-              {relativeTime(m.completedAt ?? m.capturedAt)}
+              {monthDayTime(m.sortAt).slice(-5)}
               {' · '}
               {m.displayName ?? '내 기록'}
             </Text>
             {!!m.description && (
-              <Text numberOfLines={2} style={{ fontSize: 13, color: colors.sub, marginTop: 2 }}>
+              <Text numberOfLines={1} style={{ fontSize: 13, color: colors.sub, marginTop: 2 }}>
                 {m.description}
               </Text>
             )}
@@ -226,18 +233,18 @@ export function Records({
       </Pressable>
     );
   };
-  const tile = (m: Media, more?: number, onMore?: () => void) => (
+  const tile = (m: Media, more?: number, onMore?: () => void, wide?: number) => (
     <Pressable
       key={m.id}
       accessibilityRole="button"
       accessibilityLabel={more ? `${more}개 더 보기` : `${m.kind === 'video' ? '영상' : '사진'} 보기`}
       onPress={() => (onMore ? onMore() : open(m))}
-      style={{ width: '48.5%', aspectRatio: 1, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surface }}
+      style={{ width: wide ? '100%' : '48.5%', aspectRatio: wide || 1, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surface }}
     >
       {m.accessState !== 'available' ? (
         unavailable(m)
       ) : (
-        <Image accessibilityLabel="기록 미리보기" source={thumb(m, context)} style={{ width: '100%', height: '100%' }} />
+        <RecordImage m={m} context={context} style={{ width: '100%', height: '100%' }} />
       )}
       {!more && <VideoBadge m={m} />}
       {!!more && (
@@ -258,7 +265,7 @@ export function Records({
   const authorCard = (g: AuthorGroup) => {
     const list = items.filter((m) => m.authorUserId === g.authorUserId),
       isOpen = expanded.includes(g.authorUserId),
-      latest = list.map((m) => m.completedAt ?? m.capturedAt ?? '').sort().pop();
+      latest = list.map((m) => m.sortAt ?? '').sort().pop();
     const shown = isOpen || list.length <= 4 ? list : list.slice(0, 4);
     const fold = () =>
       setExpanded((old) =>
@@ -289,7 +296,7 @@ export function Records({
             <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
               사진 {g.photos}
               {g.videos ? ` · 동영상 ${g.videos}` : ''}
-              {latest ? ` · ${relativeTime(latest)}` : ''}
+              {latest ? ` · ${monthDayTime(latest).slice(-5)}` : ''}
             </Text>
           </View>
           <Pressable
@@ -303,7 +310,7 @@ export function Records({
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {shown.map((m, i) =>
-            !isOpen && list.length > 4 && i === 3 ? tile(m, list.length - 3, fold) : tile(m),
+            !isOpen && list.length > 4 && i === 3 ? tile(m, list.length - 3, fold) : tile(m, undefined, undefined, list.length === 1 ? 4 / 3 : !isOpen && list.length === 3 && i === 0 ? 2 : undefined),
           )}
         </View>
         {isOpen && list.length > 4 && (
@@ -322,7 +329,7 @@ export function Records({
     : [];
   return (
     <>
-      {toolbar ? (
+      {toolbar && items.length > 0 ? (
         <View
           style={{
             flexDirection: 'row',
@@ -369,7 +376,7 @@ export function Records({
             )}
           </View>
         </View>
-      ) : (
+      ) : !toolbar && items.length > 0 ? (
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
           <TextButton
             onPress={() => {
@@ -380,23 +387,29 @@ export function Records({
             {mode ? '취소' : '선택'}
           </TextButton>
         </View>
-      )}
-      {byAuthor ? groups!.map(authorCard) : items.map(card)}
+      ) : null}
+      {byAuthor ? groups!.filter((g) => items.some((m) => m.authorUserId === g.authorUserId)).map(authorCard) : items.map(card)}
       <Sheet
         visible={!!authorMenu}
         title={authorMenu ? `${authorMenu.displayName}의 기록` : ''}
         onClose={() => setAuthorMenu(null)}
       >
+        {batchAction.errorView}
         {allowSave && (
           <Button
-            disabled={!authorPhotos.length}
-            onPress={() => {
-              const ids = authorPhotos.slice(0, 120).map((m) => m.id);
+            disabled={batchAction.busy || !(authorMenu?.photos)}
+            onPress={() => batchAction.run(async () => {
+              const ids = recordScope ? await authorPhotoIds(authorMenu!.authorUserId, async (cursor) => {
+                const query = new URLSearchParams(recordScope.query);
+                if (cursor) query.set('cursor', cursor);
+                return api(`/schedules/${recordScope.scheduleId}/media?${query}`);
+              }) : authorPhotos.map((m) => m.id);
+              if (!ids.length) throw new Error('지금 저장할 수 있는 사진이 없어요.');
               setAuthorMenu(null);
               router.push({ pathname: '/save', params: { ids: ids.join(',') } });
-            }}
+            })}
           >
-            {authorPhotos.length ? `사진 다운받기 · ${Math.min(120, authorPhotos.length)}개` : '받을 수 있는 사진이 없어요'}
+            {authorMenu?.photos ? `사진 다운받기 · ${authorMenu.photos}개` : '받을 수 있는 사진이 없어요'}
           </Button>
         )}
         {authorMenu?.authorUserId === own && (

@@ -37,7 +37,7 @@ export const periodBadge = (start: string, end: string) => {
 };
 /** Day title shown in calendar cells, day cards and the date view. */
 export function dayLabel(day: Pick<GroupDay, 'title' | 'dayNo' | 'scheduleTitle' | 'single'>) {
-  // A one-day schedule is edited through its schedule title (server dayUpdate rule).
+  if (day.title) return day.title;
   if (day.single) return day.scheduleTitle;
   return day.title || `${day.dayNo}일차 · ${day.scheduleTitle}`;
 }

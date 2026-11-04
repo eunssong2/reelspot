@@ -4,9 +4,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { api, ApiError, awaitOperation, getGroup } from '../../lib/api';
 import { useInitialize } from '../../lib/effects';
 import { useAccount } from '../../lib/state';
-import { addDays, moveMonth } from '../../lib/calendar';
+import { moveMonth } from '../../lib/calendar';
 import { inputText } from '../../lib/validation';
-import { groupDays, scheduleDayList, type ScheduleDay } from '../../lib/day-labels';
+import { scheduleDayList, type ScheduleDay } from '../../lib/day-labels';
+import { loadGroupDays } from '../../lib/group-days';
 import { MonthGrid, MonthHeader } from '../../components/period-picker';
 import { Screen, Button, ClearableInput, P, Sheet, colors, confirm, s, useAction } from '../../components/ui';
 /** Edit one day of a schedule: its title and date, or cancel/delete just that day (owner only). */
@@ -39,45 +40,34 @@ export default function DayEdit() {
     setSingle(one);
     setGroupName(g.name);
     setPlaces(r.plan?.find((p: any) => p.date === date)?.visitCount ?? d.visitCount ?? 0);
-    setTitle(one ? r.schedule.title : (d.title ?? ''));
+    setTitle(d.title ?? (one ? r.schedule.title : `${d.dayNo}일차 · ${r.schedule.title}`));
     // Title and date can be changed even for a cancelled day while the schedule is active.
     setAllowed(r.schedule.status === 'active');
     // Dates the day cannot move to.
-    const cal = await api(
-      `/groups/${g.id}/calendar?from=${addDays(date, -182)}&to=${addDays(date, 183)}`,
-    ).catch(() => null);
-    if (cal)
-      setTaken(
-        new Set(
-          groupDays(cal.schedules)
-            .filter((x) =>
-              // Any day of this schedule (even cancelled) or another schedule's active day blocks a move.
-              x.scheduleId === scheduleId ? x.date !== date : x.status === 'active',
-            )
-            .map((x) => x.date),
-        ),
-      );
+    const activeDays = await loadGroupDays(g.id);
+    setTaken(new Set([
+      ...activeDays.filter((x) => x.scheduleId !== scheduleId || x.date !== date).map((x) => x.date),
+      ...days.filter((x: ScheduleDay) => x.date !== date).map((x: ScheduleDay) => x.date),
+    ]));
   }
   useInitialize(() => {
     if (session) void a.run(load);
   }, [scheduleId, date, session?.userId]);
-  const limit = single ? 100 : 30;
+  const limit = 100;
   let titleError = '';
   try {
-    inputText(title, '일정 제목', limit, single);
+    inputText(title, '일정 제목', limit);
   } catch (e) {
     titleError = (e as Error).message;
   }
-  const original = single ? schedule?.title : (day?.title ?? '');
+  const original = day?.title ?? (single ? schedule?.title : `${day?.dayNo}일차 · ${schedule?.title}`);
   const changed = !!day && (title.trim() !== (original ?? '') || newDate !== date);
   async function save() {
     await a.run(async () => {
       try {
         const body: any = { expectedVersion: schedule.version };
         if (title.trim() !== (original ?? ''))
-          body.title = single
-            ? inputText(title, '일정 제목', 100)
-            : inputText(title, '일정 제목', 30, false) || null;
+          body.title = inputText(title, '일정 제목', 100);
         if (newDate !== date) body.date = newDate;
         await awaitOperation(await api(`/schedules/${scheduleId}/days/${date}`, body, 'PATCH'));
         // Return to the calendar already in the stack instead of stacking another copy.
@@ -154,13 +144,13 @@ export default function DayEdit() {
         }}
       >
         <Text style={s.label}>
-          일정 제목{single && <Text style={{ color: colors.accent }}> *</Text>}
+          일정 제목<Text style={{ color: colors.accent }}> *</Text>
         </Text>
       </View>
       <ClearableInput
         accessibilityLabel="일정 제목"
         limit={limit}
-        helper={single ? '' : '비워 두면 "N일차 · 일정 이름"으로 보여요'}
+        helper="1~100자로 입력해 주세요"
         placeholder={
           day && schedule && !single ? `${day.dayNo}일차 · ${schedule.title}` : '예: 북한산 둘레길'
         }
