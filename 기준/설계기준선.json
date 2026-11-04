@@ -1,9 +1,13 @@
 {
-  "design_version": "0.3.0-design",
-  "policy_snapshot": "기능명세서.md",
-  "sha256": "f0bf6e3d1bdf0a71370ea6c0a1f5ed55b8c1b4b7dbfeaab8605609f96d5ffcd3",
-  "bytes": 1255876,
-  "scope": "F01~F28/P01~P12/6절 한도/7절 제외",
-  "upper_source": "../기능명세서.md (작성 환경 참고, 패키지 밖 파일은 구현 기준 필수 의존 아님)",
-  "change_rule": "동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신"
+  "policy_version": "3.2",
+  "design_version": "0.5.0",
+  "docs_commit": "ded2a6c7e2420b5959fd18d05ede38943f18c781",
+  "policy_source": "docs branch: 기능 명세서/기능명세서.md",
+  "policy_sha256": "1837ef991e77a6755c61ecba592583bbf5ee89a090a13d32c201871c1842dc6f",
+  "policy_bytes": 1377469,
+  "design_contract_source": "docs branch: 1차 개발 설계서/부록/openapi.json",
+  "design_contract_sha256": "6eb5b97c25e99edffe469129ab075ac47a85a78a956a0d40993cb8e6d6f1f0a7",
+  "prototype_commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+  "scope": "F01~F29 및 F30 편집 UI·접근 검증. Q19 임시값, Q20 실제 렌더·저장 정책 미확정.",
+  "change_rule": "원천 커밋·해시와 구현 차이를 함께 기록. 적용된 초기 DDL은 보존하고 추가 migration으로 변경."
 }

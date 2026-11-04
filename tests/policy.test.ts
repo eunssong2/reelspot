@@ -16,7 +16,9 @@ test('일정 기간과 예정 시각 경계', () => {
   assert.throws(() => period('2026-02-30', '2026-03-01'));
   assert.equal(plannedTime('23:55'), '23:55');
   assert.throws(() => plannedTime('24:00'));
-  assert.throws(() => plannedTime('10:01'));
+  assert.equal(plannedTime('10:01'), '10:01');
+  assert.equal(plannedTime('23:59'), '23:59');
+  assert.throws(() => plannedTime('10:60'));
 });
 test('표시명 NFC·grapheme·공백과 개행', () => {
   assert.equal(text('  가  ', 1), '가');

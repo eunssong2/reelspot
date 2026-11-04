@@ -26,25 +26,24 @@ test('이의 검토 기한은 한국 날짜 기준 3영업일: 주말·설정 �
   assert.equal(businessDeadline(new Date('2026-10-23T06:00:00Z'),3).toISOString(), '2026-10-28T06:00:00.000Z');
   assert.equal(businessDeadline(new Date('2026-10-23T06:00:00Z'),3,['2026-10-26']).toISOString(),'2026-10-29T06:00:00.000Z');
 });
-test('Google 장소 검색 요청·영역·필드·거리 정렬과 공급자 오류 매핑', async (t) => {
-  const oldKey = process.env.GOOGLE_PLACES_API_KEY, oldProvider = process.env.PLACES_PROVIDER;
-  process.env.GOOGLE_PLACES_API_KEY = 'fixture-key'; process.env.PLACES_PROVIDER = 'google';
-  t.after(() => { if (oldKey === undefined) delete process.env.GOOGLE_PLACES_API_KEY; else process.env.GOOGLE_PLACES_API_KEY = oldKey; if (oldProvider === undefined) delete process.env.PLACES_PROVIDER; else process.env.PLACES_PROVIDER = oldProvider; });
-  let sent: any, headers: any;
-  const mock = t.mock.method(globalThis,'fetch', async (url: any, options: any) => {
-    assert.equal(String(url),'https://places.googleapis.com/v1/places:searchText');
-    sent = JSON.parse(options.body); headers = options.headers;
-    return new Response(JSON.stringify({ places: [
-      { id:'far', displayName:{text:'먼 곳'},formattedAddress:'서울',location:{latitude:37.6,longitude:127} },
-      { id:'near',displayName:{text:'가까운 곳'},formattedAddress:'서울',location:{latitude:37.5,longitude:127} },
-    ] }), { status:200, headers:{'Content-Type':'application/json'} });
+test('서울 카카오 검색·거리 정렬·지역 제외·공급자 오류', async (t) => {
+  const old = process.env.KAKAO_REST_KEY; process.env.KAKAO_REST_KEY = 'fixture-key';
+  t.after(() => { if (old === undefined) delete process.env.KAKAO_REST_KEY; else process.env.KAKAO_REST_KEY = old; });
+  const mock = t.mock.method(globalThis, 'fetch', async (url: any, options: any) => {
+    const q = new URL(String(url));
+    assert.equal(q.hostname, 'dapi.kakao.com'); assert.equal(q.searchParams.get('size'), '15');
+    assert.equal(options.headers.Authorization, 'KakaoAK fixture-key');
+    return new Response(JSON.stringify({ documents: [
+      { id: 'far', place_name: '먼 곳', address_name: '서울 강남구', x: '127', y: '37.6' },
+      { id: 'near', place_name: '가까운 곳', address_name: '서울특별시 강남구', x: '127', y: '37.5' },
+      { id: 'outside', place_name: '경기도', address_name: '경기 성남시', x: '127', y: '37.4' },
+    ], meta: { is_end: false } }));
   });
-  const result = await searchPlaces({ query:'카페',category:'cafe',center:'127,37.5',bounds:'126,37,128,38',sort:'distance' });
-  assert.equal(result.provider,'google'); assert.equal(result.places[0].id,'near'); assert.equal(result.places[0].distance,0);
-  assert.equal(sent.includedType,'cafe'); assert.equal(sent.rankPreference,'DISTANCE'); assert.equal(sent.languageCode,'ko');
-  assert.ok(sent.locationRestriction); assert.equal(sent.locationBias,undefined); assert.equal(headers['X-Goog-Api-Key'],'fixture-key'); assert.ok(!headers['X-Goog-FieldMask'].includes('*'));
-  mock.mock.mockImplementation(async () => new Response('{}',{status:429}));
-  await assert.rejects(searchPlaces({query:'카페'}),(e: any) => e.code === 'PROVIDER_UNAVAILABLE');
+  const r = await searchPlaces({ query: '카페', center: '127,37.5', sort: 'distance' });
+  assert.equal(r.provider, 'kakao'); assert.deepEqual(r.places.map((p) => p.id), ['near', 'far']);
+  assert.equal(r.excludedOutsideSeoul, 1); assert.equal(r.isEnd, false);
+  mock.mock.mockImplementation(async () => new Response('{}', { status: 429 }));
+  await assert.rejects(searchPlaces({ query: '카페' }), (e: any) => e.code === 'PROVIDER_QUOTA_EXCEEDED');
 });
 
 const enabled = process.env.RUN_INTEGRATION === '1';
@@ -89,27 +88,27 @@ test('실제 PostgreSQL: 인증 외 누락 기능과 복구 경계', {skip:!enab
   await t.test('수기 장소·중복 및 좌표 검증',async () => {
     const body = {visitDate:'2026-11-01',manual:{name:'직접 등록',address:'서울',lat:37.5,lng:127},plannedTime:'10:05'};
     const v = await ok('POST',`/schedules/${sid}/visits`,body,a.token); visitId = v.id;
-    assert.equal(v.lat,37.5); assert.equal(v.plannedTime,'10:05');
+    assert.equal(v.lat,37.5); assert.equal(v.plannedTime,null);
     assert.equal((await call('POST',`/schedules/${sid}/visits`,body,a.token)).data.code,'DUPLICATE_VISIT');
     assert.equal((await call('POST',`/schedules/${sid}/visits`,{...body,manual:{name:'잘못된 좌표',lat:100,lng:127}},a.token)).status,400);
   });
   await t.test('지도 키 없이도 유효한 분류 검색은 이용 불가 사유를 반환하고 직접 등록 경로를 유지', async (t) => {
-    const key = process.env.GOOGLE_PLACES_API_KEY, provider = process.env.PLACES_PROVIDER;
-    delete process.env.GOOGLE_PLACES_API_KEY; process.env.PLACES_PROVIDER = 'google';
-    t.after(() => { if (key !== undefined) process.env.GOOGLE_PLACES_API_KEY = key; if (provider === undefined) delete process.env.PLACES_PROVIDER; else process.env.PLACES_PROVIDER = provider; });
+    const key = process.env.KAKAO_REST_KEY, provider = process.env.PLACES_PROVIDER;
+    delete process.env.KAKAO_REST_KEY; process.env.PLACES_PROVIDER = 'kakao';
+    t.after(() => { if (key !== undefined) process.env.KAKAO_REST_KEY = key; if (provider === undefined) delete process.env.PLACES_PROVIDER; else process.env.PLACES_PROVIDER = provider; });
     for (const category of ['all','tourism','restaurant','cafe','lodging']) {
       const result = await ok('GET',`/places?groupId=${gid}&query=cafe&category=${category}`,undefined,a.token);
       assert.equal(result.searchContext.available,false); assert.ok(result.searchContext.message.includes('직접 등록')); assert.deepEqual(result.places,[]);
     }
   });
-  await t.test('Google 검색 결과를 방문으로 선택하고 같은 날짜 중복 차단',async (t) => {
-    const key = process.env.GOOGLE_PLACES_API_KEY, provider = process.env.PLACES_PROVIDER;
-    process.env.GOOGLE_PLACES_API_KEY = 'fixture-key'; process.env.PLACES_PROVIDER = 'google';
-    t.after(() => { if (key === undefined) delete process.env.GOOGLE_PLACES_API_KEY; else process.env.GOOGLE_PLACES_API_KEY = key; if (provider === undefined) delete process.env.PLACES_PROVIDER; else process.env.PLACES_PROVIDER = provider; });
-    const placeId = 'google-fixture-'+randomUUID();
-    t.mock.method(globalThis,'fetch', async (_url: any, options: any) => { assert.equal(JSON.parse(options.body).includedType, 'cafe'); return new Response(JSON.stringify({ places: [{id:placeId,displayName:{text:'지도 검증 장소'},formattedAddress:'서울',location:{latitude:37.5,longitude:127}}] }),{status:200}); });
+  await t.test('카카오 검색 결과를 방문으로 선택하고 같은 날짜 중복 차단',async (t) => {
+    const key = process.env.KAKAO_REST_KEY, provider = process.env.PLACES_PROVIDER;
+    process.env.KAKAO_REST_KEY = 'fixture-key'; process.env.PLACES_PROVIDER = 'kakao';
+    t.after(() => { if (key === undefined) delete process.env.KAKAO_REST_KEY; else process.env.KAKAO_REST_KEY = key; if (provider === undefined) delete process.env.PLACES_PROVIDER; else process.env.PLACES_PROVIDER = provider; });
+    const placeId = 'kakao-fixture-'+randomUUID();
+    t.mock.method(globalThis,'fetch', async (_url: any, options: any) => { assert.equal(options.headers.Authorization, 'KakaoAK fixture-key'); return new Response(JSON.stringify({ documents: [{id:placeId,place_name:'지도 검증 장소',address_name:'서울',y:'37.5',x:'127'}], meta:{is_end:true} }),{status:200}); });
     const search = await ok('GET',`/places?groupId=${gid}&query=park&category=cafe&center=127,37.5`,undefined,a.token);
-    assert.equal(search.provider,'google'); assert.equal(search.places[0].id,placeId);
+    assert.equal(search.provider,'kakao'); assert.equal(search.places[0].id,placeId);
     const visit = await ok('POST',`/schedules/${sid}/visits`,{visitDate:'2026-11-03',providerPlaceId:placeId},a.token);
     assert.equal(visit.name,'지도 검증 장소');
     const again = await call('POST',`/schedules/${sid}/visits`,{visitDate:'2026-11-03',providerPlaceId:placeId},a.token); assert.equal(again.data.code,'DUPLICATE_VISIT');

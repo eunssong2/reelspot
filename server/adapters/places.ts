@@ -25,16 +25,15 @@ export function distanceMeters(a: number[], b: number[]): number {
   return Math.round(6371000 * 2 * Math.asin(Math.min(1, Math.sqrt(h))));
 }
 export async function searchPlaces(q: Record<string, any>) {
-  const provider = process.env.PLACES_PROVIDER ?? 'kakao';
+  const provider = 'kakao'; // D13/Q5: production search remains Kakao in Seoul.
   const center = coordinates(q.center, 2),
     bounds = coordinates(q.bounds, 4);
-  const key =
-    provider === 'google' ? process.env.GOOGLE_PLACES_API_KEY : process.env.KAKAO_REST_KEY;
+  const key = process.env.KAKAO_REST_KEY;
   if (!key) {
     demand(!config.production, 'PROVIDER_UNAVAILABLE', 503);
     return {
       places: [],
-      provider,
+      provider, region: '서울특별시', excludedOutsideSeoul: 0, page: Number(q.page ?? 1), isEnd: true,
       searchContext: {
         query: q.query,
         center: q.center ?? null,
@@ -45,56 +44,8 @@ export async function searchPlaces(q: Record<string, any>) {
   }
   try {
     let places: any[];
-    if (provider === 'google') {
-      const types: Record<string, string> = {
-        restaurant: 'restaurant',
-        cafe: 'cafe',
-        lodging: 'lodging',
-        tourism: 'tourist_attraction',
-      };
-      const body: Record<string, unknown> = {
-        textQuery: q.query,
-        languageCode: 'ko',
-        regionCode: 'KR',
-        pageSize: 20,
-      };
-      if (q.sort === 'distance') body.rankPreference = 'DISTANCE';
-      if (types[q.category])
-        Object.assign(body, { includedType: types[q.category], strictTypeFiltering: true });
-      if (bounds)
-        body.locationRestriction = {
-          rectangle: {
-            low: { longitude: bounds[0], latitude: bounds[1] },
-            high: { longitude: bounds[2], latitude: bounds[3] },
-          },
-        };
-      else if (center)
-        body.locationBias = {
-          circle: { center: { longitude: center[0], latitude: center[1] }, radius: 25000 },
-        };
-      const r = await fetch('https://places.googleapis.com/v1/places:searchText', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': key,
-          'X-Goog-FieldMask':
-            'places.id,places.displayName,places.formattedAddress,places.location,places.attributions',
-        },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(10000),
-      });
-      demand(r.ok, 'PROVIDER_UNAVAILABLE', 503);
-      const data = (await r.json()) as any;
-      places = (data.places ?? []).map((p: any) => ({
-        id: p.id,
-        name: p.displayName?.text ?? '',
-        address: p.formattedAddress ?? '',
-        lat: p.location?.latitude ?? null,
-        lng: p.location?.longitude ?? null,
-        attributions: p.attributions ?? [],
-      }));
-    } else {
-      demand(provider === 'kakao', 'PROVIDER_UNAVAILABLE', 503);
+    let isEnd = true;
+    {
       const categoryOnly = !String(q.query ?? '').trim();
       const u = new URL(
         `https://dapi.kakao.com/v2/local/search/${categoryOnly ? 'category' : 'keyword'}.json`,
@@ -109,8 +60,13 @@ export async function searchPlaces(q: Record<string, any>) {
       };
       if (types[q.category]) u.searchParams.set('category_group_code', types[q.category]);
       else demand(!categoryOnly, 'VALIDATION_ERROR');
-      if (categoryOnly && !bounds) u.searchParams.set('radius', '20000');
-      if (bounds) u.searchParams.set('rect', bounds.join(','));
+      if (categoryOnly) {
+        demand(center, 'VALIDATION_ERROR');
+        u.searchParams.set('radius', '2000');
+        u.searchParams.set('sort', 'distance');
+      } else u.searchParams.set('rect', (bounds ?? [126.75, 37.41, 127.2, 37.72]).join(','));
+      u.searchParams.set('size', '15');
+      u.searchParams.set('page', String(q.page ?? 1));
       if (center) {
         u.searchParams.set('x', String(center[0]));
         u.searchParams.set('y', String(center[1]));
@@ -123,14 +79,17 @@ export async function searchPlaces(q: Record<string, any>) {
       demand(r.status !== 429, 'PROVIDER_QUOTA_EXCEEDED', 429);
       demand(r.ok, 'PROVIDER_UNAVAILABLE', 503);
       const data = (await r.json()) as any;
+      isEnd = data.meta?.is_end ?? true;
       places = data.documents.map((p: any) => ({
-        id: p.id,
+        id: p.id, providerPlaceId: p.id, roadAddress: p.road_address_name, phone: p.phone, category: p.category_name,
         name: p.place_name,
         address: p.road_address_name || p.address_name,
         lat: Number(p.y),
         lng: Number(p.x),
       }));
     }
+    const excludedOutsideSeoul = places.filter((p) => !/^서울(?:특별시)?(?:\s|$)/.test(p.address)).length;
+    places = places.filter((p) => /^서울(?:특별시)?(?:\s|$)/.test(p.address));
     places = places.map((p) => ({
       ...p,
       distance:
@@ -140,8 +99,8 @@ export async function searchPlaces(q: Record<string, any>) {
       places.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
     return {
       places,
-      provider,
-      searchContext: { query: q.query, center: q.center ?? null, available: true },
+      provider, region: '서울특별시', excludedOutsideSeoul, page: Number(q.page ?? 1), isEnd,
+      searchContext: { query: q.query, center: q.center ?? null, radiusMeters: !String(q.query ?? '').trim() ? 2000 : null, requestSequence: q.requestSequence, available: true },
     };
   } catch (e) {
     if (e instanceof DomainError) throw e;

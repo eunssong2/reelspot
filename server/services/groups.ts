@@ -4,7 +4,7 @@ import { one, rows } from '../core/db.js';
 import type { Handler, Context } from '../core/context.js';
 import { demand, version } from '../core/errors.js';
 import { hash, encrypt, decrypt } from '../core/crypto.js';
-import { date, period, plannedTime, text, retention } from '../core/policy.js';
+import { date, period, plannedTime, text, retention, isExpired } from '../core/policy.js';
 import { page } from '../core/paging.js';
 import {
   groupAccess,
@@ -44,7 +44,7 @@ async function addSchedule(c: Context, groupId: string, b: any) {
   );
   return s;
 }
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 async function newInviteCode(c: Context) {
   for (;;) {
     const code = Array.from({ length: 8 }, () => ALPHABET[randomInt(ALPHABET.length)]).join('');
@@ -213,6 +213,21 @@ export const groupHandlers: Record<string, Handler> = {
       dateCounts: counts,
     };
   },
+  vlogSources: async (c) => {
+    await groupAccess(c, c.params.groupId);
+    const schedules = await rows(c.db, "SELECT id FROM schedules WHERE group_id=$1 AND status<>'deleted' ORDER BY start_date,id", [c.params.groupId]);
+    return { scheduleIds: schedules.map((s) => s.id) };
+  },
+  groupDays: async (c) => {
+    await groupAccess(c, c.params.groupId);
+    const schedules = await rows(c.db, "SELECT * FROM schedules WHERE group_id=$1 AND status='active' ORDER BY id", [c.params.groupId]);
+    const days = await scheduleDays(c, schedules.map((s) => s.id));
+    const items = schedules.flatMap((s) => (days.get(s.id) ?? []).filter((d) => d.status === 'active').map((day) => ({
+      scheduleId: s.id, scheduleVersion: Number(s.version), scheduleTitle: s.title, day, expiresAt: s.expires_at ?? null,
+    })));
+    const result = page(items, c.query, c.actor.id, `groupDays:${c.params.groupId}`, (item) => `${item.day.date}:${item.scheduleId}`, 60);
+    return { items: result.items, nextCursor: result.nextCursor };
+  },
   scheduleCreate: async (c) => {
     await groupAccess(c, c.params.groupId, true);
     const s = await addSchedule(c, c.params.groupId, c.body);
@@ -342,7 +357,6 @@ export const groupHandlers: Record<string, Handler> = {
     const { s, day } = await dayTarget(c);
     demand(s.status === 'active', 'SCHEDULE_CANCELLED', 409);
     demand(c.body.title !== undefined || c.body.date !== undefined, 'VALIDATION_ERROR');
-    const n = (await one(c.db, 'SELECT count(*)::int n FROM schedule_days WHERE schedule_id=$1', [s.id])).n;
     let from = day.day_date;
     if (c.body.date !== undefined && c.body.date !== from) {
       const to = date(c.body.date);
@@ -402,17 +416,13 @@ export const groupHandlers: Record<string, Handler> = {
       from = to;
     }
     if (c.body.title !== undefined) {
-      if (n === 1) {
-        demand(c.body.title !== null, 'VALIDATION_ERROR');
-        await c.db.query('UPDATE schedules SET title=$2 WHERE id=$1', [s.id, text(c.body.title, 100)]);
-      } else {
-        const title = c.body.title === null ? null : text(c.body.title, 30, false) || null;
-        await c.db.query(
-          'INSERT INTO day_plans(schedule_id,plan_date,title) VALUES($1,$2,$3) ON CONFLICT(schedule_id,plan_date) DO UPDATE SET title=excluded.title,version=day_plans.version+1',
-          [s.id, from, title],
-        );
-      }
+      const title = text(c.body.title, 100);
+      await c.db.query(
+        'INSERT INTO day_plans(schedule_id,plan_date,title) VALUES($1,$2,$3) ON CONFLICT(schedule_id,plan_date) DO UPDATE SET title=excluded.title,version=day_plans.version+1',
+        [s.id, from, title],
+      );
     }
+
     return dayResult(c, s.id, false);
   },
   dayCancel: async (c) => {
@@ -488,6 +498,7 @@ export const groupHandlers: Record<string, Handler> = {
   },
   visitCreate: async (c) => {
     const s = await scheduleAccess(c, c.params.scheduleId, false, true);
+    demand(!isExpired(s), 'EXPIRED', 410);
     await scheduleDay(c, s, c.body.visitDate);
     demand(Boolean(c.body.manual) !== Boolean(c.body.providerPlaceId), 'VALIDATION_ERROR');
     let p: any;
@@ -510,7 +521,7 @@ export const groupHandlers: Record<string, Handler> = {
       p = await one(
         c.db,
         'SELECT * FROM places WHERE group_id=$1 AND provider=$3 AND provider_place_id=$2',
-        [s.group_id, c.body.providerPlaceId, process.env.PLACES_PROVIDER ?? 'kakao'],
+        [s.group_id, c.body.providerPlaceId, 'kakao'],
       );
       demand(p, 'PLACE_SEARCH_REQUIRED', 409);
     }
@@ -539,7 +550,7 @@ export const groupHandlers: Record<string, Handler> = {
     const v = await one(
       c.db,
       'INSERT INTO visits(schedule_id,place_id,visit_date,position,planned_time,dedupe_key) VALUES($1,$2,$3,$4,$5,$6) RETURNING *',
-      [s.id, p.id, c.body.visitDate, n.n, plannedTime(c.body.plannedTime), key],
+      [s.id, p.id, c.body.visitDate, n.n, null, key],
     );
     await c.db.query(
       'UPDATE day_plans SET version=version+1 WHERE schedule_id=$1 AND plan_date=$2',
@@ -552,8 +563,9 @@ export const groupHandlers: Record<string, Handler> = {
     });
   },
   planUpdate: async (c) => {
-    const s = await scheduleAccess(c, c.params.scheduleId);
-    await scheduleDay(c, s, c.params.date, true);
+    const s = await scheduleAccess(c, c.params.scheduleId, false, true);
+    demand(!isExpired(s), 'EXPIRED', 410);
+    await scheduleDay(c, s, c.params.date);
     await c.db.query(
       'INSERT INTO day_plans(schedule_id,plan_date) VALUES($1,$2) ON CONFLICT DO NOTHING',
       [s.id, c.params.date],
@@ -587,8 +599,9 @@ export const groupHandlers: Record<string, Handler> = {
     const r = await one(
       c.db,
       'UPDATE day_plans SET title=$3,version=version+1 WHERE schedule_id=$1 AND plan_date=$2 RETURNING *',
-      [s.id, c.params.date, text(c.body.title, 30, false)],
+      [s.id, c.params.date, text(c.body.title, c.body.title.normalize('NFC').trim() === (plan.title ?? '') ? 100 : 30, false)],
     );
+    await c.db.query('UPDATE schedules SET version=version+1 WHERE id=$1', [s.id]);
     await activity(c, s.group_id);
     return {
       date: r.plan_date,
@@ -607,6 +620,8 @@ export const groupHandlers: Record<string, Handler> = {
     const v = await one(c.db, 'SELECT * FROM visits WHERE id=$1', [c.params.visitId]);
     demand(v, 'NOT_FOUND', 404);
     const s = await scheduleAccess(c, v.schedule_id);
+    demand(!isExpired(s), 'EXPIRED', 410);
+    await scheduleDay(c, s, v.visit_date);
     version(v, c.body.expectedVersion);
     demand(!v.deleted_at, 'DELETED', 410);
     await c.db.query(
@@ -682,7 +697,7 @@ export const groupHandlers: Record<string, Handler> = {
     demand(g.status === 'active', 'GROUP_CLOSED', 410);
     const i = await one(c.db, 'SELECT * FROM invitations WHERE id=$1 FOR UPDATE', [initial.id]);
     validInvite(i);
-    // Members (including the issuer) checking their own link do not spend one of the 50 uses.
+    // Every successful preview consumes one use, including current members (F05).
     const alreadyMember = !!(
       c.viewer &&
       (await one(
@@ -691,9 +706,7 @@ export const groupHandlers: Record<string, Handler> = {
         [g.id, c.viewer.id],
       ))
     );
-    const next = alreadyMember
-      ? i
-      : await one(
+    const next = await one(
           c.db,
           'UPDATE invitations SET use_count=use_count+1,version=version+1 WHERE id=$1 RETURNING *',
           [i.id],

@@ -228,10 +228,10 @@ test('일정=일차 묶음: 날짜 중복 거부·일차 이동·취소·삭제'
     assert.equal(cal.dateCounts['2026-12-05'], 1);
     // The gap is free for another schedule of the group.
     const gap = await ok('POST', `/groups/${gid}/schedules`, { title: '틈 일정', startDate: '2026-12-02', endDate: '2026-12-02', timezone: tz }, a.token);
-    // A one-day schedule: the day title is the schedule title.
+    // A one-day schedule: the day title is independent of its parent schedule.
     const renamed = await ok('PATCH', `/schedules/${gap.id}/days/2026-12-02`, { title: '하루 나들이', expectedVersion: gap.version }, a.token);
-    assert.equal(renamed.schedule.title, '하루 나들이');
-    assert.equal(renamed.days[0].title, null);
+    assert.equal(renamed.schedule.title, '틈 일정');
+    assert.equal(renamed.days[0].title, '하루 나들이');
   });
 
   await t.test('하루 취소: 기록은 남고 새 방문·업로드는 DAY_CANCELLED', async () => {
@@ -286,7 +286,7 @@ test('일정=일차 묶음: 날짜 중복 거부·일차 이동·취소·삭제'
   });
 });
 
-test('초대 코드 8자리·이전 코드 유지·참여자 확인은 횟수 미차감', { skip: !enabled }, async () => {
+test('초대 코드 8자리·이전 코드 유지·참여자를 포함한 성공 확인 횟수 차감', { skip: !enabled }, async () => {
   const a = await user(),
     b = await user();
   const g = await ok(
@@ -296,20 +296,20 @@ test('초대 코드 8자리·이전 코드 유지·참여자 확인은 횟수 �
     a.token,
   );
   const i = await ok('POST', `/groups/${g.group.id}/invites`, {}, a.token);
-  assert.match(i.code, /^[A-Z0-9]{8}$/);
+  assert.match(i.code, /^[A-HJ-NP-Z2-9]{8}$/);
   let p = await ok('GET', `/invite-preview?tokenOrCode=${i.code}`, undefined, a.token);
   assert.equal(p.alreadyMember, true);
-  assert.equal(p.usesRemaining, 50);
+  assert.equal(p.usesRemaining, 49);
   p = await ok('GET', `/invite-preview?tokenOrCode=${i.code.toLowerCase()}`, undefined, b.token);
   assert.equal(p.alreadyMember, false);
-  assert.equal(p.usesRemaining, 49);
+  assert.equal(p.usesRemaining, 48);
   p = await ok('GET', `/invite-preview?tokenOrCode=${i.code}`);
   assert.equal(p.alreadyMember, false);
-  assert.equal(p.usesRemaining, 48);
+  assert.equal(p.usesRemaining, 47);
   await ok('POST', '/invitations/join', { tokenOrCode: i.code }, b.token);
   p = await ok('GET', `/invite-preview?tokenOrCode=${i.code}`, undefined, b.token);
   assert.equal(p.alreadyMember, true);
-  assert.equal(p.usesRemaining, 48);
+  assert.equal(p.usesRemaining, 46);
   // An invalid bearer on the public preview is treated as anonymous.
   p = await ok('GET', `/invite-preview?tokenOrCode=${i.code}`, undefined, 'not-a-token');
   assert.equal(p.alreadyMember, false);
@@ -445,4 +445,42 @@ test('계정 삭제는 프로필 사진도 정리', { skip: !enabled }, async ()
   assert.equal(u.avatar_asset_id, null);
   assert.equal((await tx((db) => one(db, 'SELECT state FROM assets WHERE id=$1', [asset.id]))).state, 'purged');
   assert.ok(!(await objects.exists(key)));
+});
+
+test('v3.2: 전체 날짜 페이지·독립 제목·긴 제목 보존·1분 시간·업로드 10개', { skip: !enabled }, async () => {
+  const a = await user(), outsider = await user();
+  const g = await ok('POST', '/groups', { name: 'v3.2 검수', firstSchedule: { title: '부모 일정', startDate: '2027-01-01', endDate: '2027-03-10', timezone: tz } }, a.token);
+  const sid = g.firstSchedule.id, gid = g.group.id;
+  const legacyView = await ok('GET', `/schedules/${sid}/media?view=by_time`, undefined, a.token);
+  const currentView = await ok('GET', `/schedules/${sid}/media?view=by_photo`, undefined, a.token);
+  assert.deepEqual(legacyView, currentView);
+  await fail('GET', `/schedules/${sid}/media?view=unknown`, undefined, a.token, 400, 'VALIDATION_ERROR');
+  let version = g.firstSchedule.version;
+  const longTitle = '가'.repeat(80);
+  const changed = await ok('PATCH', `/schedules/${sid}/days/2027-01-01`, { title: longTitle, expectedVersion: version }, a.token);
+  version = changed.schedule.version;
+  assert.equal(changed.schedule.title, '부모 일정'); assert.equal(changed.days[0].title, longTitle);
+  const visit = await ok('POST', `/schedules/${sid}/visits`, { visitDate: '2027-01-01', manual: { name: '서울 장소' } }, a.token);
+  assert.equal(visit.plannedTime, null);
+  const detail = await ok('GET', `/schedules/${sid}`, undefined, a.token);
+  const plan = detail.plan[0];
+  const saved = await ok('PUT', `/schedules/${sid}/plans/2027-01-01`, { title: longTitle, visits: [{ id: visit.id, order: 0, plannedTime: '23:59' }], expectedVersion: plan.version }, a.token);
+  assert.equal(saved.title, longTitle); assert.equal(saved.visits[0].plannedTime, '23:59');
+  await fail('PUT', `/schedules/${sid}/plans/2027-01-01`, { title: '나'.repeat(31), visits: [{ id: visit.id, order: 0, plannedTime: '10:01' }], expectedVersion: saved.version }, a.token, 400, 'VALIDATION_ERROR');
+  const first = await ok('GET', `/groups/${gid}/days`, undefined, a.token);
+  assert.equal(first.items.length, 60); assert.ok(first.nextCursor); assert.equal(first.items[0].day.title, longTitle);
+  const second = await ok('GET', `/groups/${gid}/days?cursor=${encodeURIComponent(first.nextCursor)}`, undefined, a.token);
+  assert.equal(second.items.length, 9); assert.equal(second.nextCursor, null);
+  assert.equal(new Set([...first.items, ...second.items].map((x: any) => x.day.date)).size, 69);
+  await fail('GET', `/groups/${gid}/days`, undefined, outsider.token, 403, 'FORBIDDEN');
+  await fail('GET', `/groups/${gid}/vlog-sources`, undefined, outsider.token, 403, 'FORBIDDEN');
+  const file = { clientFileId: 'f', selectionIndex: 0, name: 'file.jpg', kind: 'photo', mime: 'image/jpeg', declaredBytes: 10, fingerprint: hash('image'), checksum: hash('image'), recordDate: '2027-01-01' };
+  await fail('POST', `/schedules/${sid}/submissions`, { files: Array.from({ length: 11 }, (_, i) => ({ ...file, clientFileId: `f${i}`, selectionIndex: i })) }, a.token, 400, 'VALIDATION_ERROR');
+  const fresh = await ok('GET', `/schedules/${sid}`, undefined, a.token);
+  await ok('POST', `/schedules/${sid}/days/2027-01-01/cancellation`, { expectedVersion: fresh.schedule.version }, a.token);
+  const active = await ok('GET', `/groups/${gid}/days`, undefined, a.token);
+  assert.equal(active.items[0].day.date, '2027-01-02');
+  const sources = await ok('GET', `/groups/${gid}/vlog-sources`, undefined, a.token);
+  assert.deepEqual(sources.scheduleIds, [sid]);
+  await fail('PUT', `/schedules/${sid}/plans/2027-01-01`, { title: longTitle, visits: [{ id: visit.id, order: 0, plannedTime: '10:01' }], expectedVersion: saved.version }, a.token, 409, 'DAY_CANCELLED');
 });

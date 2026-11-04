@@ -27,7 +27,7 @@ export function period(start: string, end: string) {
   demand(n >= 0 && n <= 365, 'VALIDATION_ERROR');
 }
 export function plannedTime(v: string | null | undefined) {
-  demand(v == null || /^([01]\d|2[0-3]):[0-5][05]$/.test(v), 'VALIDATION_ERROR');
+  demand(v == null || /^([01]\d|2[0-3]):[0-5][0-9]$/.test(v), 'VALIDATION_ERROR');
   return v ?? null;
 }
 export function retention(end: string) {

@@ -9,6 +9,18 @@ import { escapeHtml, page, publicPageHeaders } from '../api/public-pages.js';
 export const developmentBodies: Record<string, string> = {
   terms: '개발 환경 이용약관 예시입니다. 실제 서비스 약관이 아닙니다.',
   privacy: '개발 환경 개인정보 안내 예시입니다. 실제 서비스 문서가 아닙니다.',
+  'privacy-consent': '개발 환경 개인정보 수집 및 이용 동의 테스트 문서입니다. 실제 수집 항목이나 서비스 정책을 정하는 운영 문서가 아닙니다.',
+  marketing: '개발 환경 선택 동의 테스트 문서입니다. 미동의 상태에서도 가입할 수 있으며 실제 마케팅 발송에 사용하지 않습니다.',
+  location: '개발 환경 위치정보 이용약관 테스트 문서입니다. 실제 서비스의 위치정보 처리 정책을 정하는 운영 문서가 아닙니다.',
+  'service-policy': '개발 환경 서비스 이용정책 안내 테스트 문서입니다. 실제 서비스 정책을 정하는 운영 문서가 아닙니다.',
+};
+export const developmentDocumentMetadata: Record<string, { title: string; kind: 'consent' | 'notice'; required: boolean }> = {
+  terms: { title: '서비스 이용약관', kind: 'consent', required: true },
+  'privacy-consent': { title: '개인정보 수집 및 이용 동의', kind: 'consent', required: true },
+  marketing: { title: '마케팅 정보 수신 동의', kind: 'consent', required: false },
+  location: { title: '위치정보 이용약관', kind: 'consent', required: false },
+  privacy: { title: '개인정보 처리방침', kind: 'notice', required: false },
+  'service-policy': { title: '서비스 이용정책', kind: 'notice', required: false },
 };
 export async function latestDocuments(db: any) {
   return rows(db, `SELECT DISTINCT ON(item_key) * FROM consent_documents WHERE effective_at<=now()

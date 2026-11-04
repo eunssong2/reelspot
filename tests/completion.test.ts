@@ -63,7 +63,7 @@ test('Google HTTPS 인가 코드 교환: 비밀키 서버 한정·nonce·취소�
   await call(`/v1/auth/google/callback?state=${cancelled.state}&error=access_denied`);
   assert.equal((await call('/v1/auth/google/finish',{state:cancelled.state,verifier})).json().code,'AUTH_CANCELLED');
 });
-test('가입은 이용약관만 동의: 안내는 체크 대상 아님·본문 공개·문서 없는 가입 차단', {skip:!enabled}, async () => {
+test('F02: 필수 2개·선택 2개 동의, 선택 미동의 기록·안내 문서 구분', {skip:!enabled}, async () => {
   const docs=await ok('/v1/consent-documents');
   const privacy=docs.documents.find((d:any)=>d.itemKey==='privacy');
   assert.equal(privacy.kind,'notice');assert.equal(privacy.required,false);
@@ -72,9 +72,15 @@ test('가입은 이용약관만 동의: 안내는 체크 대상 아님·본문 �
   const login=await ok('/v1/auth/exchange',{provider:'kakao',credential:'dev:'+randomUUID(),...attempt});
   const token=login.session.accessToken;
   assert.equal((await call('/v1/onboarding',{displayName:'확인',consents:[]},token)).statusCode,400);
-  const consent=docs.documents.filter((d:any)=>d.kind==='consent').map((d:any)=>({documentId:d.id,version:d.version,agreed:true}));
+  const choices=docs.documents.filter((d:any)=>d.kind==='consent');
+  assert.equal(choices.filter((d:any)=>d.required).length,2);
+  assert.equal(choices.filter((d:any)=>!d.required).length,2);
+  const consent=choices.map((d:any)=>({documentId:d.id,version:d.version,agreed:d.required}));
+  const termsOnly=consent.filter((c:any)=>docs.documents.find((d:any)=>d.id===c.documentId)?.itemKey==='terms');
+  assert.equal((await call('/v1/onboarding',{displayName:'확인',consents:termsOnly},token)).statusCode,400);
   await ok('/v1/onboarding',{displayName:'가입 확인',consents:consent},token);
   const receipts=await ok('/v1/me/consents',undefined,token);
+  for(const d of choices.filter((d:any)=>!d.required)) assert.equal(receipts.consentReceipts.find((r:any)=>r.documentId===d.id).agreed,false);
   assert.ok(!receipts.consentReceipts.some((r:any)=>r.documentId===privacy.id));
   assert.equal((await call('/v1/me/consents',{items:[{documentId:privacy.id,version:privacy.version,agreed:true}]},token,'PATCH')).statusCode,409);
   // Same-day timestamps must never silently select an arbitrary document.

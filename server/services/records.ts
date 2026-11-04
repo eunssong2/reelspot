@@ -110,6 +110,10 @@ async function validVisit(
       'INVALID_VISIT',
     );
 }
+export function mediaSortKey(m: any, order = 'desc') {
+  const time = new Date(m.submission_completed_at ?? m.completed_at).getTime();
+  return `${String(order === 'asc' ? time : 9999999999999 - time).padStart(13, '0')}:${m.submission_id}:${String(m.selection_index).padStart(3, '0')}:${m.id}`;
+}
 export function mediaDto(m: any) {
   return {
     id: m.id,
@@ -123,8 +127,9 @@ export function mediaDto(m: any) {
     kind: m.kind,
     completedAt: m.completed_at,
     capturedAt: m.captured_at,
-    sortAt: m.captured_at ?? m.completed_at,
-    sortBasis: m.captured_at ? 'captured' : 'completed',
+    submissionCompletedAt: m.submission_completed_at ?? m.completed_at,
+    sortAt: m.submission_completed_at ?? m.completed_at,
+    sortBasis: 'submission',
     retentionLastDate: m.retention_last_date,
     expiresAt: m.expires_at,
     version: Number(m.version),
@@ -192,6 +197,7 @@ export const recordHandlers: Record<string, Handler> = {
     };
   },
   uploadPrepare: async (c) => {
+    demand(c.body.files.length >= 1 && c.body.files.length <= 10, 'VALIDATION_ERROR');
     const s = await scheduleAccess(c, c.params.scheduleId, false, true);
     demand(!isExpired(s), 'EXPIRED', 410);
     for (const d of new Set<string>(c.body.files.map((f: any) => f.recordDate)))
@@ -471,6 +477,7 @@ export const recordHandlers: Record<string, Handler> = {
     return { ...(await remaining(c, s.id, visitId, recordDate)), photoLimit: 5, videoLimit: 2 };
   },
   mediaList: async (c) => {
+    if (c.query.view === 'by_time') c.query.view = 'by_photo';
     const s = await scheduleAccess(c, c.params.scheduleId);
     demand(!isExpired(s), 'EXPIRED', 410);
     let snapshot = new Date().toISOString();
@@ -488,7 +495,7 @@ export const recordHandlers: Record<string, Handler> = {
     );
     let all = await rows(
       c.db,
-      `SELECT m.*,s.retention_last_date,s.expires_at,u.display_name,u.avatar_asset_id,u.avatar_version,p.name visit_name,(SELECT (a.probe_result->>'durationMs')::int FROM assets a WHERE a.media_id=m.id AND a.probe_result ? 'durationMs' ORDER BY a.created_at LIMIT 1) duration_ms FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN users u ON u.id=m.author_user_id LEFT JOIN visits v ON v.id=m.visit_id LEFT JOIN places p ON p.id=v.place_id WHERE m.schedule_id=$1 AND m.access_state='available' AND m.completed_at<=$3 AND NOT EXISTS(SELECT 1 FROM personal_blocks b WHERE b.blocker_user_id=$2 AND b.blocked_user_id=m.author_user_id)`,
+      `SELECT m.*,(SELECT first_completed_at FROM submissions WHERE id=m.submission_id) submission_completed_at,s.retention_last_date,s.expires_at,u.display_name,u.avatar_asset_id,u.avatar_version,p.name visit_name,(SELECT (a.probe_result->>'durationMs')::int FROM assets a WHERE a.media_id=m.id AND a.probe_result ? 'durationMs' ORDER BY a.created_at LIMIT 1) duration_ms FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN users u ON u.id=m.author_user_id LEFT JOIN visits v ON v.id=m.visit_id LEFT JOIN places p ON p.id=v.place_id WHERE m.schedule_id=$1 AND m.access_state='available' AND m.completed_at<=$3 AND NOT EXISTS(SELECT 1 FROM personal_blocks b WHERE b.blocker_user_id=$2 AND b.blocked_user_id=m.author_user_id)`,
       [s.id, c.actor.id, snapshot],
     );
     all = all.filter(
@@ -498,6 +505,9 @@ export const recordHandlers: Record<string, Handler> = {
         (!c.query.unassigned || !m.visit_id) &&
         (!c.query.outsideRange || !days.has(m.record_date)),
     );
+    const key = (m: any) => mediaSortKey(m, c.query.order);
+    all.sort((a, b) => key(a).localeCompare(key(b)));
+    // Author cards follow their first appearance in the requested media order.
     const authors = [...new Set(all.map((m) => m.author_user_id))]
       .map((id) => {
         const a = all.filter((m) => m.author_user_id === id);
@@ -508,17 +518,10 @@ export const recordHandlers: Record<string, Handler> = {
           photos: a.filter((m) => m.kind === 'photo').length,
           videos: a.filter((m) => m.kind === 'video').length,
           firstCompletedAt: new Date(
-            Math.min(...a.map((m) => new Date(m.completed_at).getTime())),
+            Math.min(...a.map((m) => new Date(m.submission_completed_at ?? m.completed_at).getTime())),
           ).toISOString(),
         };
-      })
-      .sort(
-        (a, b) =>
-          a.firstCompletedAt.localeCompare(b.firstCompletedAt) ||
-          a.authorUserId.localeCompare(b.authorUserId),
-      );
-    const key = (m: any) =>
-      `${c.query.view === 'by_author' ? `${authors.find((a) => a.authorUserId === m.author_user_id)!.firstCompletedAt}:${m.author_user_id}:` : ''}${String(c.query.order === 'desc' ? 9999999999999 - new Date(m.captured_at ?? m.completed_at).getTime() : new Date(m.captured_at ?? m.completed_at).getTime()).padStart(13, '0')}:${m.id}`;
+      });
     const p = page(all, c.query, c.actor.id, `media:${s.id}`, key, 60, snapshot);
     return {
       items: p.items.map(mediaDto),
@@ -534,7 +537,7 @@ export const recordHandlers: Record<string, Handler> = {
   },
   mediaGet: async (c) => {
     await fileAccess(c, c.params.mediaId, c.query.context);
-    const m = await one(c.db, 'SELECT m.*,s.expires_at,s.retention_last_date,u.display_name,p.name visit_name,(SELECT (a.probe_result->>\'durationMs\')::int FROM assets a WHERE a.media_id=m.id AND a.probe_result ? \'durationMs\' ORDER BY a.created_at LIMIT 1) duration_ms FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN users u ON u.id=m.author_user_id LEFT JOIN visits v ON v.id=m.visit_id LEFT JOIN places p ON p.id=v.place_id WHERE m.id=$1', [c.params.mediaId]);
+    const m = await one(c.db, 'SELECT m.*,(SELECT first_completed_at FROM submissions WHERE id=m.submission_id) submission_completed_at,s.expires_at,s.retention_last_date,u.display_name,p.name visit_name,(SELECT (a.probe_result->>\'durationMs\')::int FROM assets a WHERE a.media_id=m.id AND a.probe_result ? \'durationMs\' ORDER BY a.created_at LIMIT 1) duration_ms FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN users u ON u.id=m.author_user_id LEFT JOIN visits v ON v.id=m.visit_id LEFT JOIN places p ON p.id=v.place_id WHERE m.id=$1', [c.params.mediaId]);
     const active = await one(c.db, "SELECT 1 FROM memberships mem JOIN schedules s ON s.group_id=mem.group_id JOIN groups g ON g.id=s.group_id WHERE s.id=$1 AND mem.user_id=$2 AND mem.ended_at IS NULL AND g.status='active'", [m.schedule_id, c.actor.id]);
     return { media: mediaDto(m), canSave: !!active, canEdit: !!active && m.author_user_id === c.actor.id };
   },
@@ -619,7 +622,7 @@ export const recordHandlers: Record<string, Handler> = {
   mineList: async (c) => {
     let all = await rows(
       c.db,
-      `SELECT m.*,CASE WHEN s.expires_at<=now() THEN 'expired' ELSE m.access_state END access_state,s.expires_at,s.retention_last_date,g.id group_id,g.name group_name,g.status group_status,s.title schedule_title,EXISTS(SELECT 1 FROM memberships mem WHERE mem.group_id=g.id AND mem.user_id=$1 AND mem.ended_at IS NULL) active_member FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN groups g ON g.id=s.group_id WHERE m.author_user_id=$1 AND m.access_state<>'deleted' AND (s.expires_at IS NULL OR s.expires_at>now()-interval '30 days')`,
+      `SELECT m.*,(SELECT first_completed_at FROM submissions WHERE id=m.submission_id) submission_completed_at,CASE WHEN s.expires_at<=now() THEN 'expired' ELSE m.access_state END access_state,s.expires_at,s.retention_last_date,g.id group_id,g.name group_name,g.status group_status,s.title schedule_title,EXISTS(SELECT 1 FROM memberships mem WHERE mem.group_id=g.id AND mem.user_id=$1 AND mem.ended_at IS NULL) active_member FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN groups g ON g.id=s.group_id WHERE m.author_user_id=$1 AND m.access_state<>'deleted' AND (s.expires_at IS NULL OR s.expires_at>now()-interval '30 days')`,
       [c.actor.id],
     );
     all = all.filter(
@@ -638,7 +641,7 @@ export const recordHandlers: Record<string, Handler> = {
       c.actor.id,
       'mine',
       (m) =>
-        `${String(9999999999999 - new Date(m.completed_at).getTime()).padStart(13, '0')}:${m.id}`,
+        `${String(9999999999999 - new Date(m.submission_completed_at ?? m.completed_at).getTime()).padStart(13, '0')}:${m.id}`,
     );
     return {
       items: p.items.map((m) => ({

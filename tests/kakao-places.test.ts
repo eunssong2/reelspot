@@ -36,7 +36,7 @@ test('카카오 카테고리 검색·현재 영역·검색어 검색·무료 한
   });
   assert.equal(sent!.pathname, '/v2/local/search/category.json');
   assert.equal(sent!.searchParams.get('category_group_code'), 'CE7');
-  assert.equal(sent!.searchParams.get('radius'), '20000');
+  assert.equal(sent!.searchParams.get('radius'), '2000');
   assert.equal(sent!.searchParams.has('query'), false);
   assert.equal(r.places[0].distance, 0);
   await searchPlaces({
@@ -45,11 +45,13 @@ test('카카오 카테고리 검색·현재 영역·검색어 검색·무료 한
     center: '127,37.5',
     bounds: '126,37,128,38',
   });
-  assert.equal(sent!.searchParams.get('rect'), '126,37,128,38');
-  assert.equal(sent!.searchParams.has('radius'), false);
+  assert.equal(sent!.searchParams.has('rect'), false);
+  assert.equal(sent!.searchParams.get('radius'), '2000');
   await searchPlaces({ query: '경복궁', category: 'all' });
   assert.equal(sent!.pathname, '/v2/local/search/keyword.json');
   assert.equal(sent!.searchParams.get('query'), '경복궁');
+  assert.equal(sent!.searchParams.get('rect'), '126.75,37.41,127.2,37.72');
+  assert.equal(sent!.searchParams.get('size'), '15');
   quota = true;
   await assert.rejects(
     searchPlaces({ query: '경복궁' }),

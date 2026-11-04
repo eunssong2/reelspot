@@ -23,10 +23,10 @@ design.paths['/me/identities/{identityId}'].delete.parameters.push({
   required: true,
   schema: { type: 'string' },
 });
-const doc = design.paths['/consent-documents'].get.responses['200'].content['application/json'].schema.properties.documents.items;
+const doc = design.components.schemas.ConsentDocument;
 Object.assign(doc.properties, {kind: {enum:['consent','notice']}, title: {type:'string'}, itemKey: {type:'string'}, development:{type:'boolean'}});
 doc.required.push('kind','title','itemKey','development');
-design.info.version = '0.3.2-implementation.1';
+design.info.version = '0.5.0-implementation.1';
 for (const path of Object.values(design.paths)) for (const op of Object.values(path)) {
   if (['inviteCreate','invitesList','inviteRevoke'].includes(op.operationId)) {
     op['x-required-role'] = 'member';
@@ -121,7 +121,7 @@ design.paths['/schedules/{scheduleId}/upload-limits'] = {
     }, required: ['recordDate', 'photos', 'videos', 'photoLimit', 'videoLimit'] } } } } },
   },
 };
-design.paths['/places'].get.responses['200'].content['application/json'].schema.properties.provider.enum = ['google', 'kakao'];
+design.paths['/places'].get.responses['200'].content['application/json'].schema.properties.provider.enum = ['kakao'];
 function jsonResponse(description, schema) {
   return { 200: { description, content: { 'application/json': { schema } } } };
 }
@@ -162,124 +162,27 @@ for (const key of ['countsByDate','countsByVisit']) responseSchema('/schedules/{
 const placeQuery = design.paths['/places'].get.parameters.find(p => p.name === 'query');
 placeQuery.required = false;
 placeQuery.schema = {type:'string',maxLength:100};
-// 2026-11 UI 화면 정리 반영: 일정=일차 묶음, 8자리 초대 코드, 프로필 사진.
-const schemas = design.components.schemas;
-const ref = (name) => ({ $ref: `#/components/schemas/${name}` });
-const withErrors = (ok) => {
-  const base = structuredClone(design.paths['/schedules/{scheduleId}/cancellation'].post.responses);
-  delete base['200'];
-  return { ...ok, ...base };
-};
-const idempotency = { name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 16, maxLength: 128 } };
-const uuidPath = (name) => ({ name, in: 'path', required: true, schema: { type: 'string', format: 'uuid' } });
-const datePath = { name: 'date', in: 'path', required: true, schema: { type: 'string', format: 'date' } };
-const jsonBody = (schema) => ({ required: true, content: { 'application/json': { schema } } });
-schemas.ScheduleDay = {
-  type: 'object',
-  description: '일정의 하루. dayNo는 날짜순 1부터(취소된 날 포함). 같은 모임에서 활성 일정의 활성 일차는 날짜마다 하나뿐이다.',
-  properties: {
-    date: { type: 'string', format: 'date' },
-    dayNo: { type: 'integer', minimum: 1 },
-    title: { type: ['string', 'null'], description: '일차 제목(최대 30 graphemes). 없으면 null' },
-    status: { type: 'string', enum: ['active', 'cancelled'] },
-    visitCount: { type: 'integer', minimum: 0, maximum: 15 },
-  },
-  required: ['date', 'dayNo', 'title', 'status', 'visitCount'],
-  additionalProperties: false,
-};
-schemas.Schedule.properties.days = { type: 'array', items: ref('ScheduleDay'), description: '달력 응답에서만 포함' };
-schemas.DayChangeResult = {
-  type: 'object',
-  properties: { schedule: { anyOf: [ref('Schedule'), { type: 'null' }] }, days: { type: 'array', items: ref('ScheduleDay') } },
-  required: ['schedule', 'days'],
-  additionalProperties: false,
-};
-schemas.Error.properties.details.description +=
-  '; SCHEDULE_DATE_TAKEN: {dates:[date], schedules:[{id,title}]}; DAY_CANCELLED(upload): {date}; TARGET_NOT_EMPTY: {date}';
-const detail = responseSchema('/schedules/{scheduleId}');
-detail.properties.days = { type: 'array', items: ref('ScheduleDay') };
-detail.required.push('days');
-responseSchema('/groups/{groupId}/calendar').properties.schedules.items = { allOf: [ref('Schedule')], required: ['days'] };
-for (const [path, method, code] of [
-  ['/groups', 'post', 'SCHEDULE_DATE_TAKEN'],
-  ['/groups/{groupId}/schedules', 'post', 'SCHEDULE_DATE_TAKEN'],
-  ['/schedules/{scheduleId}', 'patch', 'SCHEDULE_DATE_TAKEN'],
-  ['/schedules/{scheduleId}/visits', 'post', 'DAY_CANCELLED'],
-  ['/schedules/{scheduleId}/submissions', 'post', 'DAY_CANCELLED'],
-])
-  design.paths[path][method].description = design.paths[path][method].description.replace('도메인 오류:', `도메인 오류: ${code}`);
-design.paths['/schedules/{scheduleId}'].patch.description +=
-  ' 기간을 바꾸면 일차를 새 기간 전체로 다시 만든다(남는 날짜의 제목·방문·취소 상태 유지). 새로 들어오는 날짜가 다른 활성 일정의 활성 일차면 409 SCHEDULE_DATE_TAKEN.';
-const dayOp = (operationId, summary, description, body, extra = {}) => ({
-  operationId, summary, tags: ['F08'], description, security: [{ bearerAuth: [] }],
-  parameters: [uuidPath('scheduleId'), datePath, idempotency],
-  requestBody: jsonBody(body),
-  responses: withErrors({ 200: { description: summary, content: { 'application/json': { schema: ref('DayChangeResult') } } }, ...extra }),
-});
-const versionOnly = { type: 'object', properties: { expectedVersion: { type: 'integer', minimum: 1 } }, required: ['expectedVersion'], additionalProperties: false };
-design.paths['/schedules/{scheduleId}/days/{date}'] = {
-  patch: dayOp(
-    'dayUpdate',
-    'expectedVersion(일정), title?, date? → schedule, days',
-    '권한: owner. 일차 제목 변경(여러 날 일정은 최대 30, 빈값/null은 제목 없음; 하루짜리 일정은 일정 제목 1~100) 또는 다른 날짜로 이동. 이동하면 방문·기록 날짜가 함께 옮겨지고 일차 번호가 다시 매겨진다. 도메인 오류: SCHEDULE_DATE_TAKEN(대상 날짜를 다른 일정이 쓰거나 이미 이 일정의 날) DAY_BUSY(그 날짜 파일 전송 진행 중) TARGET_NOT_EMPTY(대상 날짜에 기간 밖 방문/기록 잔존) SCHEDULE_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN TEXT_REJECTED.',
-    { type: 'object', properties: { expectedVersion: { type: 'integer', minimum: 1 }, title: { type: ['string', 'null'] }, date: { type: 'string', format: 'date' } }, required: ['expectedVersion'], additionalProperties: false },
-    { 202: { description: '공개전검사 접수', content: { 'application/json': { schema: ref('Operation') } } } },
-  ),
-};
-design.paths['/schedules/{scheduleId}/days/{date}/cancellation'] = {
-  post: dayOp('dayCancel', 'expectedVersion(일정) → schedule, days', '권한: owner. 하루 취소: 기록은 남고 그 날짜의 새 방문·파일은 409 DAY_CANCELLED. 모든 날이 취소되면 일정도 취소. 도메인 오류: ALREADY_CANCELLED VERSION_CONFLICT NOT_FOUND FORBIDDEN.', versionOnly),
-};
-design.paths['/schedules/{scheduleId}/days/{date}/deletion'] = {
-  post: dayOp('dayDelete', 'expectedVersion(일정) → schedule|null, days', '권한: owner. 장소·방문·기록·진행 파일이 없는 날만 삭제(아니면 409 NOT_EMPTY). 마지막 날이면 일정 삭제(schedule=null). 남은 날이 모두 취소 상태면 일정 취소. 도메인 오류: NOT_EMPTY VERSION_CONFLICT NOT_FOUND FORBIDDEN.', versionOnly),
-};
-schemas.Operation.properties.kind.enum.push('day_update');
-schemas.Operation.properties.result.anyOf[0].anyOf.push(ref('DayChangeResult'));
-// 초대: 8자리 영문 대문자+숫자 코드(기존 12자리 16진 코드도 계속 유효).
-const preview = design.paths['/invite-preview'].get;
-preview.description += ' 코드는 8자리 A-Z0-9(이전 12자리 16진 코드도 허용, 대소문자 무관). 로그인한 현재 참여자(발급자 포함)가 확인하면 사용 횟수를 쓰지 않고 alreadyMember=true. Authorization은 선택.';
-preview.security = [{}, { bearerAuth: [] }];
-const previewBody = responseSchema('/invite-preview');
-previewBody.properties.alreadyMember = { type: 'boolean' };
-previewBody.properties.usesRemaining.maximum = 50;
-previewBody.required.push('alreadyMember');
-schemas.Invitation.properties.code = { type: 'string', pattern: '^[A-Z0-9]{8}$|^[0-9A-F]{12}$', description: '새 코드는 8자리 A-Z0-9' };
-// 프로필 사진: 모임 대표 사진과 같은 업로드·검사 경로.
-schemas.Profile.properties.avatarVersion = { type: ['integer', 'null'], minimum: 0, description: 'null이면 기본 아이콘. 바뀔 때마다 증가(캐시 키)' };
-schemas.Profile.required.push('avatarVersion');
-const member = responseSchema('/groups/{groupId}/members').properties.members.items;
-Object.assign(member.properties, { userId: { type: 'string', format: 'uuid' }, avatarVersion: { type: ['integer', 'null'], minimum: 0 } });
-member.required.push('userId', 'avatarVersion');
-responseSchema('/schedules/{scheduleId}/media').properties.groups.items.properties.avatarVersion = { type: ['integer', 'null'], minimum: 0 };
-task.properties.targetType.enum.push('avatar');
-task.properties.avatarUserId = { type: 'string', format: 'uuid' };
-task.properties.avatarAssetId = { anyOf: [{ type: 'string', format: 'uuid' }, { type: 'null' }] };
-task.oneOf[0].not = { anyOf: [{ required: ['coverGroupId'] }, { required: ['avatarUserId'] }] };
-task.oneOf[1].not = { anyOf: [{ required: ['submissionId'] }, { required: ['avatarUserId'] }] };
-task.oneOf.push({ properties: { targetType: { const: 'avatar' } }, required: ['avatarUserId'], not: { anyOf: [{ required: ['submissionId'] }, { required: ['coverGroupId'] }] } });
-task.allOf.push({ if: { properties: { state: { const: 'complete' }, targetType: { const: 'avatar' } } }, then: { properties: { avatarAssetId: { type: 'string', format: 'uuid' }, mediaId: { type: 'null' }, coverAssetId: { type: 'null' } } } });
-schemas.MediaCommitResult.properties.avatarAssetId = { anyOf: [{ type: 'string', format: 'uuid' }, { type: 'null' }] };
-const coverBody = design.paths['/groups/{groupId}/cover-uploads'].post.requestBody.content['application/json'].schema;
-design.paths['/me/avatar-uploads'] = {
-  post: {
-    operationId: 'avatarPrepare', tags: ['F02'], security: [{ bearerAuth: [] }],
-    summary: 'file:FileInput → UploadTask {targetType:avatar,avatarUserId,transport}',
-    description: '권한: self(active). 완료되면 task.avatarAssetId를 PATCH /me/profile avatarAssetId로 적용. 위치 제거·검사는 대표 사진과 같다. 도메인 오류: FILE_INVALID ACCESS_REVOKED.',
-    parameters: [idempotency],
-    requestBody: jsonBody(structuredClone(coverBody)),
-    responses: withErrors({ 200: { description: 'UploadTask', content: { 'application/json': { schema: ref('UploadTask') } } } }),
-  },
-};
-design.paths['/users/{userId}/avatar'] = {
-  get: {
-    operationId: 'avatarStream', tags: ['F02', 'F22'], security: [{ bearerAuth: [] }],
-    description: '권한: 본인 또는 활성 모임을 함께하는 참여자. 사진이 없으면 404 NOT_FOUND, 비참여자는 403 FORBIDDEN.',
-    parameters: [uuidPath('userId'), { name: 'v', in: 'query', required: false, schema: { type: 'string', maxLength: 32 }, description: '캐시 키(avatarVersion)' }],
-    responses: { 200: { description: '위치 제거된 프로필 사진', content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } } } },
-  },
-};
-const profileBody = design.paths['/me/profile'].patch.requestBody.content['application/json'].schema;
-Object.assign(profileBody.properties, { avatarAssetId: { type: 'string', format: 'uuid' }, restoreDefaultAvatar: { const: true } });
-profileBody.required = ['expectedVersion'];
-profileBody.additionalProperties = false;
-design.paths['/me/profile'].patch.description = '권한: self. displayName(NFC 1~20 graphemes), avatarAssetId(완료된 본인 프로필 사진 작업의 결과) 또는 restoreDefaultAvatar=true 중 하나 이상. 이전 사진은 정리된다. 도메인 오류: VALIDATION_ERROR FILE_INVALID TEXT_REJECTED VERSION_CONFLICT.';
+// Runtime additions preserve the current design policies. Historical accepted tasks may
+// have selectionIndex > 9; only new FileInput is limited to 0..9.
+const preview = responseSchema('/invite-preview');
+preview.properties.alreadyMember = { type: 'boolean' };
+preview.required.push('alreadyMember');
+design.paths['/invite-preview'].get.security = [{}, { bearerAuth: [] }];
+// Preserve valid issued legacy codes while all newly issued codes use D19's alphabet.
+design.components.schemas.Invitation.properties.code = { type: 'string', pattern: '^[A-Z0-9]{8}$|^[0-9A-F]{12}$', description: '신규: 0/O/1/I 제외 8자. 기존 발급 코드는 만료까지 허용' };
+design.paths['/groups/{groupId}/vlog-sources'] = { get: {
+  operationId: 'vlogSources', tags: ['F30'], security: [{ bearerAuth: [] }],
+  description: '현재 참여자만. 취소 일정의 보존 기록도 브이로그에서 조회하기 위한 일정 식별자 목록. 실제 미디어 조회마다 기존 권한·만료·차단을 다시 검사한다.',
+  parameters: [{ name: 'groupId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+  responses: jsonResponse('모임의 삭제되지 않은 일정 식별자', { type: 'object', properties: { scheduleIds: { type: 'array', items: { type: 'string', format: 'uuid' } } }, required: ['scheduleIds'], additionalProperties: false }),
+} };
+function uniqueRequired(value) {
+  if (!value || typeof value !== 'object') return;
+  if (Array.isArray(value.required)) value.required = [...new Set(value.required)];
+  Object.values(value).forEach(uniqueRequired);
+}
+uniqueRequired(design);
+const mediaView = design.paths['/schedules/{scheduleId}/media'].get.parameters.find(p => p.name === 'view');
+mediaView.schema.enum = ['by_photo', 'by_author', 'by_time'];
+mediaView.description = '새 앱은 by_photo/by_author. by_time은 기존 APK 호환용 별칭이며 by_photo와 같은 게시 묶음 정렬을 사용한다. 기존 APK 지원 종료 전 제거하지 않는다.';
 await writeFile(new URL('openapi.json', dir), JSON.stringify(design, null, 2) + '\n');
