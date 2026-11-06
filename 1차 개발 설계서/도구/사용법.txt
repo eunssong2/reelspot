@@ -1,14 +1,15 @@
-At that place 설계 v0.5.0 / 기능명세 v3.2 (2026-11-04)
+At that place 설계 v0.5.1 / 기능명세 v3.3 (2026-11-05)
 
 현재 기준
-- feature/ui-prototype@9f64b5e의 일반 /prototype 연결 화면·동작 우선. 브이로그 캡처는 UI/브이로그, 과거 캡처47개와 PPT는870be87 출처 보존.
+- feature/ui-prototype@ff5a5d0의 일반 /prototype 연결 화면·동작 우선. 브이로그 캡처는 UI/브이로그(9f64b5e)·UI/브이로그/편집설정(ff5a5d0), 과거 캡처47개와 PPT는870be87 출처 보존.
 - 11 브이로그 제작 설계.md → 10 프로토타입 대조 보완.md(이전 대조) → 00 설계서 안내.html → 09 구현 계약 보완 → 01~04 → UI → 06 검수 및 추적.xlsx 순서.
 - 정책 원본은 ../기능 명세서/기능명세서.md. 기준/기능명세서.md는 동일 SHA256 사본.
-- D01~D27·Q1~Q21 적용. 11월3일 요청 C06/C13은 UI 부분 반영·렌더/저장 대기, 나머지는 반영 대기. 과거 P/A 항목은 현행 원본과 충돌하면 원본 우선.
+- D01~D28·Q1~Q22 적용. 11월3일 요청 C06/C13은 UI 부분 반영·렌더/저장 대기, 나머지는 반영 대기. 과거 P/A 항목은 현행 원본과 충돌하면 원본 우선.
 - 기존 캡처47개를 보존하고 신규 캡처는 개별 commit으로 구분한다. 문서/계약/DB 검증은 실제 앱·서버·실기기 검수 완료가 아니다.
 
 편집 원천
-- vlog_revision.py: F30·UI39~49·D25~27·Q19~21·TC-F30 및 11 브이로그 제작 설계 생성 원천.
+- vlog_revision.py: F30·UI39~49·D25~28·Q19~22·TC-F30 및 11 브이로그 제작 설계 생성 원천.
+- capture_vlog_edit.py: ff5a5d0 UI45 설정 접힘/펼침·요약·스크롤 웹 관찰. --source <checkout> --url http://localhost:18086. 검증된 소스로 띄운 일반 Expo에 연결한다. UI/브이로그/편집설정에만 저장하고 과거 근거는 보존한다.
 - capture_vlog.py: 일반 프로토타입 브이로그 웹 예시 캡처. --source <checkout> --url http://localhost:18084. 저장은 UI/브이로그/실행결과.json이며 과거 캡처 manifest를 덮어쓰지 않는다.
 - design_model.py: 화면·기능/API 매핑·QA·D/Q 결정·QA_PENDING_DECISIONS(임시값 의존 검수). review_20261103.py: 추가 대조/변경 요청/인계.
 - api_contract.py / contract_v02.py: OpenAPI·업무 결과·업로드 transport.
@@ -72,7 +73,7 @@ PDF는 동일 HTML의 인쇄본이며 Office와 페이지 나눔이 다를 수 �
 
 06·07 검수/결정표 관리
 - 06 기대결과의 (Qxx 임시 · 확인 대기)는 고객 확정과 구분한다. 실제 앱 검수 상태는 미실행 유지.
-- 07은 현행 관리 파일: 읽기안내 / 프로토타입결정(D01~D27) / 확인대기(Q1~Q21) / 과거자료차이 / 기술결정 등.
+- 07은 현행 관리 파일: 읽기안내 / 프로토타입결정(D01~D28) / 확인대기(Q1~Q22) / 과거자료차이 / 기술결정 등.
 - Q 확정 시 명세·API·UI와 QA 기대결과를 갱신하고 QA_PENDING_DECISIONS 연결도 함께 정리한다.
 
 브이로그 결함 재현 도구
@@ -85,3 +86,17 @@ PDF는 동일 HTML의 인쇄본이며 Office와 페이지 나눔이 다를 수 �
 - 수정 커밋은 기존 재현 근거와 다르므로 이 도구가 거부한다. 수정 검수 시 별도 검수 도구/기준과 기대값을 준비하며 과거 증거를 덮어쓰지 않는다.
 - VB03·VB04는 코드 확인 상태다. UI 담당자의 실행 검수와 수정 후 확인이 필요하다.
 - Q21은 구현 인계·검증 대기다. Q1~Q20의 정책 결정/임시값과 구분한다.
+
+2026-11-05 보완 검토
+- review_vlog_edit_feedback.py --source <ff5a5d0 checkout> --url <해당 checkout의 Expo 웹 URL>: 웹 높이 축소·VB01·Q22를 편집설정/피드백검토에 보존. Android IME 실측과 구분한다.
+- UI/브이로그/편집설정/Android15/실행결과.json: Android 에뮬레이터 입력/접근성 관찰. 실제 앱·실기기 검수 완료 아님.
+- Q22 현재 동작은 의도 확인 전 요구/합격값으로 확정하지 않는다.
+- TC-F30-17~20은 로컬 UI 검수. VB05는19, Q22는18/20. frontend 반영은 구현 인계 대기.
+
+Android15 관찰 재현
+1. emulator -avd Android15 실행, adb devices로 serial 확인. 같은 ff5a5d0의 Expo를 npx expo start --android --port 18087로 연다(Expo Go54.0.8 관찰).
+2. /prototype/group-calendar?groupId=g-walk 예시 진입 → 브이로그 →10/17→오후의 커피→15초/8초 영상→이어재생→편집. 실제 카카오 로그인 불필요.
+3. 자막을 펼치고 설정을 끝까지 올려 입력창이 보이는 상태를 capture_vlog_android.py --source <checkout> --name caption-before-ime로 저장.
+4. show_ime_with_hard_keyboard=1 조건에서 입력창 탭·Keyboard-test 입력, --name caption-ime-open. UI 스크롤과 키보드 창 경계는 XML·PNG 및 IME 상태로 구분.
+5. TalkBack15.0의 display speech output 및 서비스 활성 상태에서 이름·상태를 관찰한다. 접근성 서비스 응답 없음은 환경 장애로 별도 기록하며 앱 결함/검수 통과로 바꾸지 않는다. 종료 후 변경한 접근성 설정을 복원한다.
+6. PNG/XML/JSON은 당시 관찰 근거다. UI 캡처에서 기기 시계는 호스트 설정값일 수 있으며 결과 기록일은 Asia/Seoul의 작업일2026-11-05를 따른다.

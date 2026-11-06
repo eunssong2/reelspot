@@ -1,0 +1,45 @@
+{
+  "name": "caption-ime-open",
+  "ime": [
+    "mCurMethodId=com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME",
+    "mInputShown=true",
+    "mIsInputViewShown=true mStatusIcon=0"
+  ],
+  "nodes": [
+    {
+      "text": "",
+      "desc": "",
+      "cls": "android.widget.ScrollView",
+      "bounds": "[0,0][720,1560]",
+      "focused": "false"
+    },
+    {
+      "text": "",
+      "desc": "",
+      "cls": "android.widget.ScrollView",
+      "bounds": "[0,0][720,1560]",
+      "focused": "false"
+    },
+    {
+      "text": "",
+      "desc": "",
+      "cls": "android.widget.ScrollView",
+      "bounds": "[37,828][683,1326]",
+      "focused": "false"
+    },
+    {
+      "text": "",
+      "desc": "이 장면 자막 (선택), ▲",
+      "cls": "android.widget.Button",
+      "bounds": "[37,887][683,982]",
+      "focused": "false"
+    },
+    {
+      "text": "Keyboard-test",
+      "desc": "이 장면 자막",
+      "cls": "android.widget.EditText",
+      "bounds": "[37,982][683,1079]",
+      "focused": "true"
+    }
+  ]
+}

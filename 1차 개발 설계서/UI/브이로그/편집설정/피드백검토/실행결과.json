@@ -1,0 +1,91 @@
+{
+  "commit": "ff5a5d0ecf477ee9e7d652e9d2a4f4748ab271c5",
+  "date": "2026-11-05",
+  "environment": "Chromium 웹·예시 데이터·ko-KR·Asia/Seoul",
+  "scope": "VB05는 화면 높이 축소 모사이며 Android 키보드 실측 아님. VB01은 결함 재현, Q22는 의도 확인 전 관찰.",
+  "sizes": [
+    {
+      "width": 390,
+      "viewportHeight": 844,
+      "originalHeight": 844,
+      "assumedKeyboardHeight": 0,
+      "settingsHeight": 314,
+      "settingsY": 426.109375,
+      "inputHeight": 52,
+      "visibleInputHeight": 52,
+      "scrollTop": 156
+    },
+    {
+      "width": 360,
+      "viewportHeight": 640,
+      "originalHeight": 640,
+      "assumedKeyboardHeight": 0,
+      "settingsHeight": 110,
+      "settingsY": 426.109375,
+      "inputHeight": 52,
+      "visibleInputHeight": 52,
+      "scrollTop": 258
+    },
+    {
+      "width": 390,
+      "viewportHeight": 544,
+      "originalHeight": 844,
+      "assumedKeyboardHeight": 300,
+      "settingsHeight": 14,
+      "settingsY": 426.109375,
+      "inputHeight": 52,
+      "visibleInputHeight": 13.890625,
+      "scrollTop": 306
+    },
+    {
+      "width": 360,
+      "viewportHeight": 500,
+      "originalHeight": 800,
+      "assumedKeyboardHeight": 300,
+      "settingsHeight": 0,
+      "settingsY": 426.109375,
+      "inputHeight": 52,
+      "visibleInputHeight": 0,
+      "scrollTop": 313
+    }
+  ],
+  "next_keeps_open": true,
+  "whitespace_summary": "이 장면 자막 (선택)\n▼",
+  "trim_return": {
+    "openCount": 0,
+    "sceneOne": true
+  },
+  "accessibility": {
+    "expanded": null,
+    "radios": [
+      {
+        "text": "원본",
+        "checked": null,
+        "selected": null
+      },
+      {
+        "text": "밝게",
+        "checked": null,
+        "selected": null
+      },
+      {
+        "text": "어둡게",
+        "checked": null,
+        "selected": null
+      },
+      {
+        "text": "흑백",
+        "checked": null,
+        "selected": null
+      }
+    ]
+  },
+  "VB01": {
+    "reproduced": true,
+    "body": "‹\n영상 생성\n닫기\n5 / 5 생성\n영상 생성 기능이 아직 연결되지 않았어요\n영상 렌더링 기능이 앱에 연결되면 만들 수 있어요. 편집 내용은 그대로 남아 있어요.\n편집으로\n다시 생성\n🧪"
+  },
+  "split_video_length": {
+    "lengthRow": 0,
+    "fixedLink": 1
+  }
+}

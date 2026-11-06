@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-05",
+  "branch": "feature/ui-prototype",
+  "commit": "ff5a5d0ecf477ee9e7d652e9d2a4f4748ab271c5",
+  "previous_commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+  "scope": "UI45 변경 파일 정적 대조. 실행 관찰은 실행결과.json",
+  "sources": [
+    {
+      "path": "src/prototype/vlog/EditStep.tsx",
+      "sha256": "51d7b879cf94b72a97c1fbefd7c7494611f78a8ccf1208f0d4ce60646ed2f641"
+    }
+  ]
+}

@@ -1,0 +1,259 @@
+{
+  "commit": "ff5a5d0ecf477ee9e7d652e9d2a4f4748ab271c5",
+  "environment": "Expo 일반 모드·예시 데이터·Chromium·390×844·DPR2·ko-KR·Asia/Seoul",
+  "scope": "UI45 웹 조작 관찰. Android·실제 렌더/저장·기존 결함 수정 검수 아님",
+  "screens": [
+    {
+      "id": "VLOG-EDIT-ACCORDION",
+      "title": "장면 편집 · 접힌 설정",
+      "ui": "UI45",
+      "related_ui": "UI45",
+      "image": "../브이로그/편집설정/VLOG-EDIT-ACCORDION.png",
+      "source": "src/prototype/vlog/EditStep.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "일반 모임 달력 → 날짜/장소 → 영상2개 → 이어 재생 → 편집",
+      "notes": [
+        "ff5a5d0: 상단 미리보기와 하단 완료 고정, 설정만 스크롤.",
+        "다섯 설정은 처음 모두 접힘. 선택값 요약·글씨체 별도 행."
+      ],
+      "text": "‹\n장면 순서·자막\n닫기\n4 / 5 편집 · 10.17 · 오후의 커피\n이어 재생 · 순서 편집 ›\n▶\n2026.10.17 · 오후의 커피\n‹ 이전\n  장면 1 / 2  \n다음 ›\n동영상 길이\n원본 15초 중 5초 사용\n구간 이동 ›\n−\n5초\n+\n색감 효과 (지금 보는 장면)\n원본\n▼\n화면 맞춤 (지금 보는 장면)\n채우기\n▼\n날짜·장소명 표시\n날짜 켬 · 장소명 켬\n▼\n이 장면 자막 (선택)\n없음\n▼\n글씨체\n기본 고딕 ›\n장면 전환 (이 장면이 시작될 때)\n없음\n▼\n이 장소 완료\n🧪",
+      "captured_at": "2026-11-05",
+      "commit": "ff5a5d0ecf477ee9e7d652e9d2a4f4748ab271c5",
+      "sha256": "8b0dbeecba6386d5ad06344c0d6a1f3adba380986760deab9098dc8a345831ee"
+    },
+    {
+      "id": "VLOG-EDIT-TRANSITION",
+      "title": "장면 편집 · 설정 스크롤",
+      "ui": null,
+      "related_ui": "UI45",
+      "image": "../브이로그/편집설정/VLOG-EDIT-TRANSITION.png",
+      "source": "src/prototype/vlog/EditStep.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "전환 펼치기 → 페이드 → 설정 맨 아래",
+      "notes": [
+        "설정을 아래로 내려도 미리보기·이전/다음·완료 위치 유지.",
+        "선택한 전환의 예시 재생 제공. 첫 장소의 실제 진입 전환 없음 안내 유지."
+      ],
+      "text": "‹\n장면 순서·자막\n닫기\n4 / 5 편집 · 10.17 · 오후의 커피\n이어 재생 · 순서 편집 ›\n▶\n오후의 커피\n고정 미리보기에서 자막 확인\n‹ 이전\n  장면 1 / 2  \n다음 ›\n동영상 길이\n원본 15초 중 5초 사용\n구간 이동 ›\n−\n5초\n+\n색감 효과 (지금 보는 장면)\n흑백\n▼\n화면 맞춤 (지금 보는 장면)\n맞춤\n▼\n날짜·장소명 표시\n날짜 끔 · 장소명 켬\n▼\n이 장면 자막 (선택)\n고정 미리보기에서 자막 확인\n▼\n글씨체\n기본 고딕 ›\n장면 전환 (이 장면이 시작될 때)\n▲\n없음\n페이드\n슬라이드\n확대\n▶ 전환 미리보기 다시 보기\n서서히 겹치며 바뀜 · 첫 장면은 앞 장면이 없어 전환이 보이지 않아요.\n이 장소 완료\n🧪",
+      "captured_at": "2026-11-05",
+      "commit": "ff5a5d0ecf477ee9e7d652e9d2a4f4748ab271c5",
+      "sha256": "c907a6cd069eae162a7304a14c9cc48a47d886d378590c4cfe0d611facaf9fe0"
+    },
+    {
+      "id": "VLOG-EDIT-CAPTION",
+      "title": "장면 편집 · 자막 펼침",
+      "ui": null,
+      "related_ui": "UI45",
+      "image": "../브이로그/편집설정/VLOG-EDIT-CAPTION.png",
+      "source": "src/prototype/vlog/EditStep.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "자막 펼치기",
+      "notes": [
+        "자막만 펼쳐지고 다른 설정은 접힘. 입력한 자막은 상단 커버에 표시.",
+        "웹 예시 관찰이며 Android 키보드·최종 영상 검수 아님."
+      ],
+      "text": "‹\n장면 순서·자막\n닫기\n4 / 5 편집 · 10.17 · 오후의 커피\n이어 재생 · 순서 편집 ›\n▶\n오후의 커피\n고정 미리보기에서 자막 확인\n‹ 이전\n  장면 1 / 2  \n다음 ›\n동영상 길이\n원본 15초 중 5초 사용\n구간 이동 ›\n−\n5초\n+\n색감 효과 (지금 보는 장면)\n흑백\n▼\n화면 맞춤 (지금 보는 장면)\n맞춤\n▼\n날짜·장소명 표시\n날짜 끔 · 장소명 켬\n▼\n이 장면 자막 (선택)\n▲\n글씨체\n기본 고딕 ›\n장면 전환 (이 장면이 시작될 때)\n페이드\n▼\n이 장소 완료\n🧪",
+      "captured_at": "2026-11-05",
+      "commit": "ff5a5d0ecf477ee9e7d652e9d2a4f4748ab271c5",
+      "sha256": "b0858697b67853b6e29a1b0eceb9f918a86f77311a96dcf5aab042bfd2324946"
+    },
+    {
+      "id": "VLOG-EDIT-SPLIT",
+      "title": "장면 편집 · 분할 칸별 맞춤",
+      "ui": null,
+      "related_ui": "UI45",
+      "image": "../브이로그/편집설정/VLOG-EDIT-SPLIT.png",
+      "source": "src/prototype/vlog/EditStep.tsx",
+      "route": "/prototype/vlog?groupId=g-walk",
+      "actions": "2분할 → 공통길이 → 편집 → 1번 칸 맞춤",
+      "notes": [
+        "분할은 선택 칸에 화면 맞춤을 적용하며 다른 칸은 보존.",
+        "색감·자막은 분할 장면 전체. 설정 열림은 초안에 저장하지 않음."
+      ],
+      "text": "‹\n장면 순서·자막\n닫기\n4 / 5 편집 · 10.17 · 오후의 커피\n2분할 · 칸 배치 편집 ›\n▶\n▶\n2026.10.17 · 오후의 커피\n장면 1 / 1  8초\n · 길이 변경 ›\n색감 효과 (분할 장면 전체)\n원본\n▼\n화면 맞춤 (1번 칸)\n▲\n위 미리보기에서 칸을 눌러 고른 뒤 조절하세요.\n채우기\n맞춤\n여백 모양\n검정\n흰색\n흐리게\n날짜·장소명 표시\n날짜 켬 · 장소명 켬\n▼\n이 장면 자막 (선택) · 분할 화면 전체에 1개\n없음\n▼\n글씨체\n기본 고딕 ›\n장면 전환 (이 장면이 시작될 때)\n없음\n▼\n이 장소 완료\n🧪",
+      "captured_at": "2026-11-05",
+      "commit": "ff5a5d0ecf477ee9e7d652e9d2a4f4748ab271c5",
+      "sha256": "9b256c60289bb06006c35615eda52ba1b0eb4d64f15d337a4b59b0793c45733f"
+    }
+  ],
+  "checks": [
+    {
+      "check": "최초 다섯 설정 모두 접힘",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "웹 접근성 관찰: expanded DOM 속성 누락(제품 검수 통과 아님)",
+      "passed": true,
+      "detail": "소스는 accessibilityState.expanded 선언. 현재 웹 DOM에는 없음. 웹 관찰의 한계. Android 결함으로 판정하지 않고 TalkBack으로 별도 검수"
+    },
+    {
+      "check": "색감 효과만 펼침",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "색감 효과 재탭 닫힘",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "화면 맞춤만 펼침",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "화면 맞춤 재탭 닫힘",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "날짜·장소명 표시만 펼침",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "날짜·장소명 표시 재탭 닫힘",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "이 장면 자막만 펼침",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "이 장면 자막 재탭 닫힘",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "장면 전환만 펼침",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "장면 전환 재탭 닫힘",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "다른 항목을 열면 기존 항목 닫힘",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "열기/접기만으로 저장된 초안 불변",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "색감 접힘 요약",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "화면 맞춤 접힘 요약",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "표시 접힘 요약",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "자막 접힘 요약",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "이어 재생 대상별 요약 재계산",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "설정 실제 스크롤·상단 미리보기/이동·하단 완료 좌표 고정",
+      "passed": true,
+      "detail": {
+        "scroll": {
+          "top": 217,
+          "height": 314,
+          "content": 531
+        },
+        "before": [
+          {
+            "x": 20,
+            "y": 106,
+            "width": 350,
+            "height": 34
+          },
+          {
+            "x": 228.703125,
+            "y": 395.109375,
+            "width": 31.953125,
+            "height": 19
+          },
+          {
+            "x": 20,
+            "y": 774,
+            "width": 350,
+            "height": 56
+          },
+          {
+            "x": 146,
+            "y": 333.109375,
+            "width": 98,
+            "height": 34
+          }
+        ],
+        "after": [
+          {
+            "x": 20,
+            "y": 106,
+            "width": 350,
+            "height": 34
+          },
+          {
+            "x": 228.703125,
+            "y": 395.109375,
+            "width": 31.953125,
+            "height": 19
+          },
+          {
+            "x": 20,
+            "y": 774,
+            "width": 350,
+            "height": 56
+          },
+          {
+            "x": 146,
+            "y": 333.109375,
+            "width": 98,
+            "height": 34
+          }
+        ]
+      }
+    },
+    {
+      "check": "전환 접힘 요약",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "재마운트 시 모두 접힘·편집값 보존",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "분할 1번 칸 맞춤 요약",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "check": "분할 2번 칸 요약 독립",
+      "passed": true,
+      "detail": null
+    }
+  ]
+}

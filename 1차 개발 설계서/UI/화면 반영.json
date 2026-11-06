@@ -1,5 +1,5 @@
 {
-  "current_commit": "9f64b5e88d7d3e663726975f2408b181f13a0413",
+  "current_commit": "ff5a5d0ecf477ee9e7d652e9d2a4f4748ab271c5",
   "source_commit": "870be871c97e8687a2ae7592fcbc48f59875e148",
   "overview_commit": "870be871c97e8687a2ae7592fcbc48f59875e148",
   "overview_sha256": "fc4b061a0d96326478d0dbc45750adf85fba386e98364be652541f283844665e",
@@ -57,8 +57,8 @@
     "UI47",
     "UI48"
   ],
-  "captures": 59,
-  "supplemental_screens": 72,
+  "captures": 63,
+  "supplemental_screens": 76,
   "gallery_pages": [
     "UI01",
     "LOGIN",
@@ -169,6 +169,10 @@
     "UI43",
     "UI44",
     "UI45",
+    "VLOG-EDIT",
+    "VLOG-EDIT-TRANSITION",
+    "VLOG-EDIT-CAPTION",
+    "VLOG-EDIT-SPLIT",
     "UI46",
     "UI47",
     "UI48",
@@ -181,6 +185,6 @@
     "S0"
   ],
   "pdf_intro_pages": 3,
-  "pdf_pages": 122,
-  "pptx_slides": 126
+  "pdf_pages": 126,
+  "pptx_slides": 130
 }

@@ -59,7 +59,7 @@ def main():
     ov_primary={}
     for img in overview['images']:ov_primary.setdefault(img['ui'],img)
     for shot in prototype['screens']:
-        if shot.get('commit','').startswith('9f64b5e') and shot['ui']: ov_primary.pop(shot['ui'],None)
+        if shot.get('commit',prototype['commit']) != prototype['commit'] and shot['ui']: ov_primary.pop(shot['ui'],None)
     applied=json.loads((ROOT/'UI/화면 반영.json').read_text())
     replaced=set(applied['replaced_ui'])
     check('프로토타입 출처와 캡처 무결성',len(prototype['screens'])==applied['captures'] and
@@ -69,7 +69,20 @@ def main():
           {'commit':prototype['commit'],'overview':overview['commit'],'captures':len(prototype['screens']),'overview_images':len(overview['images']),'replaced':sorted(replaced)})
     vlog=json.loads((ROOT/'UI/브이로그/출처.json').read_text())
     check('브이로그 검토 소스 SHA256',all(hashlib.sha256((ROOT/'UI/브이로그/소스'/x['path']).read_bytes()).hexdigest()==x['sha256'] for x in vlog['sources']),vlog['commit'])
-    check('브이로그 11단계와 확인항목 추적',len([x for x in SCREENS if x['id']>='UI39'])==11 and len(QA['F30'])==16,'F30 / UI39~49 / TC-F30-01~16')
+    edit_root=ROOT/'UI/브이로그/편집설정'
+    edit=json.loads((edit_root/'출처.json').read_text())
+    observations=json.loads((edit_root/'실행결과.json').read_text())
+    check('편집 설정 변경 소스 SHA256',all(hashlib.sha256((edit_root/'소스'/x['path']).read_bytes()).hexdigest()==x['sha256'] for x in edit['sources']),edit['commit'])
+    check('UI45 최신 캡처와 기준 커밋',applied['current_commit']==edit['commit']==observations['commit'] and next(s for s in prototype['screens'] if s['ui']=='UI45')['commit']==edit['commit'],edit['commit'])
+    check('편집 설정 웹 관찰 기록',bool(observations['checks']) and all(c['passed'] for c in observations['checks']),len(observations['checks']))
+    from vlog_revision import DEFECTS, QUESTIONS
+    check('VB05와 Q22 추적',any(x['id']=='VB05' and 19 in x['tests'] for x in DEFECTS) and any(x[0]=='Q22' for x in QUESTIONS),'VB05→TC-F30-19 / Q22→18,20')
+    feedback=json.loads((edit_root/'피드백검토/실행결과.json').read_text())
+    check('웹 축소 측정 조건과 최신 VB01 근거',feedback['commit']==edit['commit'] and feedback['VB01']['reproduced'] and [(x['width'],x['viewportHeight'],x['assumedKeyboardHeight']) for x in feedback['sizes']]==[(390,844,0),(360,640,0),(390,544,300),(360,500,300)],'웹 재현 범위만 확인; Android/실기기 합격 아님')
+    android=json.loads((edit_root/'Android15/실행결과.json').read_text())
+    check('Android15 관찰 근거 무결성과 범위',android['commit']==edit['commit'] and android['keyboard']['reproduced'] and android['talkback']['status']=='미확인' and all(hashlib.sha256((edit_root/'Android15'/e['path']).read_bytes()).hexdigest()==e['sha256'] for e in android['evidence']),'Expo Go 입력 가림 관찰 / TalkBack 미확인 / 실기기 검수 별도')
+    check('이전 UI45 캡처 대체 표시',next(x for x in prototype['screens'] if x['id']=='VLOG-EDIT').get('superseded_by')=='UI45','원본 캡처 보존 + 이전 화면 표시')
+    check('브이로그 11단계와 확인항목 추적',len([x for x in SCREENS if x['id']>='UI39'])==11 and len(QA['F30'])==20,'F30 / UI39~49 / TC-F30-01~20')
     svg_ok=True
     for p in svg_paths:
         el=ET.parse(p)

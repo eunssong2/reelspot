@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-05",
+  "commit": "ff5a5d0ecf477ee9e7d652e9d2a4f4748ab271c5",
+  "scope": "Android15 에뮬레이터의 Expo Go 예시 프로토타입 관찰. 독립 APK/물리 기기/서버 연동 검수 아님. 카카오 로그인 불필요.",
+  "environment": {
+    "avd": "Android15",
+    "android": "15",
+    "api": 35,
+    "display_px": [
+      720,
+      1560
+    ],
+    "density_dpi": 293,
+    "expo_go": "54.0.8",
+    "keyboard": "Gboard / com.google.android.inputmethod.latin.LatinIME",
+    "show_ime_with_hard_keyboard": 1,
+    "talkback": "15.0.0.639625893",
+    "clock_note": "캡처 기기 시계는 호스트 시각 설정을 따른다. 기록일은 작업일 Asia/Seoul 2026-11-05."
+  },
+  "steps": [
+    "일반 prototype/group-calendar?groupId=g-walk → 브이로그 →10/17 오후의 커피→15초/8초 영상 선택→이어 재생·9:16→UI45",
+    "자막 펼침→설정 스크롤→키보드 전 캡처",
+    "입력란 탭→Keyboard-test 입력→실제 Gboard 노출 상태 캡처",
+    "TalkBack 활성화→응답 없음→재시작→서비스 바인딩/앱 포커스 확인",
+    "TalkBack 비활성 복원→자막 입력 재시도→키보드 열린 채 위로 스크롤→추가 캡처"
+  ],
+  "keyboard": {
+    "defect": "VB05",
+    "reproduced": true,
+    "settings_bounds_before_and_after": "[37,828][683,1326]",
+    "input_before_and_first_ime": "[37,982][683,1079]",
+    "input_after_scroll_attempt": "[37,960][683,1057]",
+    "ime_visible": true,
+    "observation": "설정 영역 높이는 유지되고 IME 상단 약1005px가 자막 입력란·커서를 덮는다. 입력 문자열은 미리보기/입력 데이터에 반영되지만 텍스트·커서 가시성 요구를 만족하지 못했다. 스크롤 시도 후에도 가림 잔존. 웹 축소의14/0px와 다른 현상이다.",
+    "status": "요구 미충족 관찰·실기기 확인 필요"
+  },
+  "talkback": {
+    "status": "미확인",
+    "environment_issue": "최초 Android Accessibility Suite 응답 없음. 재시작 후 서비스 바인딩과 접근성 포커스 확인. 안정적인 헤더 이름/펼침 상태 낭독 판정까지 완료하지 못함.",
+    "xml_observation": "자막 헤더 content-desc에 ▲ 포함. 낭독 결과로 단정하지 않음.",
+    "remaining": [
+      "헤더 이름",
+      "펼침/접힘 상태 안내",
+      "불필요한 ▼/▲ 낭독 여부"
+    ],
+    "app_defect_claim": false
+  },
+  "restored": {
+    "accessibility_enabled": "0",
+    "enabled_accessibility_services": "null"
+  },
+  "evidence": [
+    {
+      "path": "caption-before-ime.json",
+      "sha256": "5072255ad210938d47c407dd98da273814b34b86051406e890682ed4a9d0ed41"
+    },
+    {
+      "path": "caption-before-ime.png",
+      "sha256": "6c2f1502be4337f6d37a1739e627fefa5f75724fbdcdd01dbbc7bfe8b5621186"
+    },
+    {
+      "path": "caption-before-ime.xml",
+      "sha256": "32e34f7840d48a6727ed36562caa5c53c679077711e80162085184c2592e6e2a"
+    },
+    {
+      "path": "caption-ime-open.json",
+      "sha256": "df70ac5838d14add37c74f78b11b4715f4d85bfca5b93840d813972c06885361"
+    },
+    {
+      "path": "caption-ime-open.png",
+      "sha256": "7e0ff7e52fb57682f31ba4b6ee85035c9746d995a9d311148c34f3533878250c"
+    },
+    {
+      "path": "caption-ime-open.xml",
+      "sha256": "196de12d47e63007d70467a68bd47bded8ff96733f1a1bfac2b4435a2068141a"
+    },
+    {
+      "path": "caption-ime-scroll-attempt.json",
+      "sha256": "710e4f4eb243e1fd2c890cde279d528181da7e2e129551f9eb6b29bece3691df"
+    },
+    {
+      "path": "caption-ime-scroll-attempt.png",
+      "sha256": "4c43a309ae4536ec7d98e66ee595b1b2c7500c2ae751d9e22722017e4f7fa1a7"
+    },
+    {
+      "path": "caption-ime-scroll-attempt.xml",
+      "sha256": "78afb7f6ae41184227e44269b45f24f200573eaa622763b8efc91ed1abea666e"
+    },
+    {
+      "path": "talkback-anr.png",
+      "sha256": "daceeebb8b7e7ba41bc6729270ce08ec3fb4136d0839d39b9ef405f7fb327c4c"
+    },
+    {
+      "path": "talkback-app-return.png",
+      "sha256": "609e822c36b583b4aa0d598c18623f8e5e22bb0f7783d870fef04f5886c6b723"
+    }
+  ]
+}

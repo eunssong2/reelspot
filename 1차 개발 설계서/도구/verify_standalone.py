@@ -13,6 +13,7 @@ def main():
         before=digest(isolated/'근거/APK/실행검토.json')
         prototype_before=json.loads((isolated/'UI/프로토타입/출처.json').read_text())
         vlog_before=json.loads((isolated/'UI/브이로그/실행결과.json').read_text())
+        edit_before=json.loads((isolated/'UI/브이로그/편집설정/실행결과.json').read_text())
         for tool in ['build_design.py','build_evidence.py']:
             result=subprocess.run([sys.executable,str(isolated/'도구'/tool)],cwd=isolated,env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'},capture_output=True,text=True)
             checks.append({'check':tool+' 독립 실행','passed':result.returncode==0,'output':result.stdout[-800:],'error':result.stderr[-800:]})
@@ -20,9 +21,9 @@ def main():
         checks.append({'check':'기준 사본과 패키지 내부 참조','passed':(isolated/'기준/기능명세서.md').exists() and (isolated/'09 구현 계약 보완.docx').exists()})
         applied=json.loads((isolated/'UI/화면 반영.json').read_text())
         checks.append({'check':'브랜치 체크아웃 없는 UI 화면 재생성',
-                       'passed':applied['source_commit']==prototype_before['commit'] and applied['captures']==len(prototype_before['screens'])+len(vlog_before['screens']) and
+                       'passed':applied['source_commit']==prototype_before['commit'] and applied['current_commit']==edit_before['commit'] and applied['captures']==len(prototype_before['screens'])+len(vlog_before['screens'])+len(edit_before['screens']) and
                        prototype_before['commit'][:7] in (isolated/'UI/05 UI 화면 갤러리.html').read_text() and
-                       all(digest(isolated/'UI/프로토타입'/s['image'])==s['sha256'] for s in prototype_before['screens']+vlog_before['screens'])})
+                       all(digest(isolated/'UI/프로토타입'/s['image'])==s['sha256'] for s in prototype_before['screens']+vlog_before['screens']+edit_before['screens'])})
         overview=json.loads((isolated/'UI/전체화면정리/출처.json').read_text())
         checks.append({'check':'UI 담당 전체 화면 정리(최우선) 이미지 보존',
                        'passed':applied['overview_commit']==overview['commit'] and
