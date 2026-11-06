@@ -52,7 +52,7 @@ npm run server:start -- --build-only
 docker compose --profile worker run --rm -e NODE_ENV=development -e AUTH_MODE=development -e OPS_MODE=development -e MODERATION_MODE=development worker
 ```
 
-실제 소셜 인증으로 API·DB·워커를 상시 실행하려면 `npm run server:start`를 사용합니다. 이 명령은 DB 백업·마이그레이션 후 production/provider 모드로 시작하며, 콘텐츠는 운영 검토를 기다립니다. 공개 Nginx 연결은 [HTTPS 연결 절차](docs/HTTPS_연결.md)의 `sudo python3 deploy/install-nginx.py`로 별도 적용합니다.
+실제 소셜 인증으로 API·DB·워커를 상시 실행하려면 `npm run server:start`를 사용합니다. 이 명령은 새 이미지의 API·워커 설정을 먼저 검사하고 DB 백업·마이그레이션 후 production/provider 모드로 시작합니다. 콘텐츠 판정은 `.env` 또는 명령 환경의 `MODERATION_MODE`를 따릅니다(미지정 시 `review`). 테스트 서버의 검토 해제는 아래 별도 허용값이 필요합니다. 공개 Nginx 연결은 [HTTPS 연결 절차](docs/HTTPS_연결.md)의 `sudo python3 deploy/install-nginx.py`로 별도 적용합니다.
 
 호스트에 FFmpeg·ffprobe·ImageMagick·ExifTool이 모두 설치되어 있으면 `npm run worker`로 실행할 수도 있습니다. 단순한 파일 업로드 성공만으로 완료 파일을 만들지 않습니다.
 
@@ -68,7 +68,7 @@ npm run ops
 
 앱은 `frontend` 브랜치(`samsun/frontend`)에서 관리합니다. 앱의 기본 API 주소는 `https://sphan0325.ddns.net`이며 서버 `.env`는 `HOST=127.0.0.1`, `PORT=8081`, `PUBLIC_URL=https://sphan0325.ddns.net`을 사용합니다. 외부 HTTPS 443에서 Nginx가 로컬 API로 전달합니다. [HTTPS 연결 안내](docs/HTTPS_연결.md)를 확인하세요.
 
-API 계약을 바꾸면 `npm run contracts`로 `contracts/generated.ts`를 다시 만들고, 같은 파일을 `frontend` 브랜치의 `contracts/generated.ts`로 복사해 커밋합니다.
+API 계약을 바꾸면 `npm run contracts`로 `contracts/generated.ts`를 다시 만들고, `contracts/openapi.json`과 `contracts/generated.ts`를 `frontend`의 같은 경로로 함께 복사합니다.
 
 개발 모드 로그인에서 테스트 사용자 식별자를 입력합니다. 같은 공급자·식별자로 로그인하면 같은 사용자로 연결되며 공급자가 다르면 별도 계정입니다. 실제 카카오·Google 인증, 지도, 콘텐츠 판정은 아래 설정을 사용합니다.
 
@@ -113,3 +113,19 @@ docker compose run --rm -e MEDIA_TESTS=1 worker npm run test:integration
 사진 5·영상 2, 방문 15, 초대 확인 50, 10명 정원, 고정 보관 기한, 참여 종료 후 본인 열람/삭제, 만료·차단 후 새 파일 GET 차단을 서버에서 판정합니다. 실패 작업은 자리를 반환하고 재시도 시 다시 확보합니다. 초대 50번째 확인 뒤 참여가 거부되는 현행 정책은 유지했습니다. 자세한 보완 내용은 `docs/구현결정.md`를 참고하세요.
 
 앱 빌드·릴리즈 기록과 사용설명서는 `frontend` 브랜치의 `docs/`에 있습니다.
+
+
+### 2026-11-05 결함 수정 검증과 적용
+
+최신 수정 파일·검증 결과·미확인 범위: [재검토 피드백 보완](docs/2026-11-05_재검토_보완.md).
+
+- 전체 검증은 격리된 테스트 DB/객체 경로에서 `RUN_INTEGRATION=1 MEDIA_TESTS=1 npm run test:integration`으로 실행한다. 기본 `npm test`의 건너뜀을 통과로 집계하지 않는다.
+- `014_terminal_upload_cleanup.sql`은 기존 실패·취소 작업과 잘못 취소된 완료 모임 사진의 정리를 다시 예약한다. 워커가 최신 상태·현재 사용 여부를 확인하고 정리한다. 원본 객체를 SQL에서 직접 지우지 않는다.
+- 배포는 새 이미지 API·워커 설정 사전 검사 → DB 백업 → 기존 API/워커 중지 → 013·014·015 포함 미적용 migration → 수정한 API/워커 함께 시작 순서다. 구 워커가 재정리 작업을 먼저 소비하지 않도록 `server:start`에도 중지 단계를 반영했다. migration 실패 시 원인을 해결하기 전 서비스를 재시작하지 않는다.
+- production 기본값은 `MODERATION_MODE=review` 또는 `provider`만 허용한다. 테스트 서버만 `MODERATION_MODE=disabled`와 `ALLOW_TEST_MODERATION_BYPASS=true`를 함께 지정하면 텍스트·미디어의 검토를 해제한다. 허용값 누락·false·오타일 때 disabled는 시작 오류이며, development 모드와 인증/OIDC 우회는 허용하지 않는다. 정식 출시에서는 허용값을 false로 설정한다. 실제 판정 엔진 미연결의 review 모드는 검토 대기로 처리한다.
+- 이번 작업에서 실제 서버 `.env`는 변경하지 않았다. 적용할 값과 중단 전 검사 절차는 [테스트 서버 운영 문서](docs/2026-11-01_테스트_서버_운영.md)를 따른다.
+- 참여자 입장·퇴장은 membership 자체 버전과 활동 시각을 갱신한다. group 버전은 올리지 않으므로 복구의 7일 대기를 무효화하지 않는다. 방장·모임 설정 변경의 버전 검사는 유지한다. 이전 코드로 이미 충돌한 신청의 버전은 자동으로 덮어쓰지 않는다(실제 방장 변경 이력을 구분하지 않고 복구하면 안 됨).
+- `015_retry_generation_cleanup.sql`은 재시도 이력이 있는 작업의 정리를 다시 예약해 이미 성공한 작업에 남은 이전 세대 파일도 회수한다.
+- 작업 정리는 현재 처리 중인 세대·DB에 등록된 파일을 보존하고 이전 실패 세대의 산출물을 제거한다. 재시도 중에는 재사용하는 청크를 보존하고, 종료 상태가 되면 격리 원본을 정리한다.
+- `/schedules/{scheduleId}/upload-limits` 구현 계약은 `maxFilesPerSubmission: 10`을 필수 응답으로 포함하며 앱의 계약·생성 타입 사본과 일치한다.
+- 복구·파일 정리·중복 접수·취소 날짜·보관 경계 회귀는 `tests/review-regressions.test.ts`, 시작 설정 검증은 `tests/production-config.test.ts`에 있다. 앱 실기기·카카오 연동 검수와 구분한다.

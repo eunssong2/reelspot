@@ -117,8 +117,8 @@ design.paths['/schedules/{scheduleId}/upload-limits'] = {
       { name: 'visitId', in: 'query', required: false, schema: { type: 'string', format: 'uuid' } },
     ],
     responses: { 200: { description: '작성자의 완료·진행 파일을 반영한 남은 업로드 개수', content: { 'application/json': { schema: { type: 'object', properties: {
-      visitId: { type: ['string', 'null'] }, recordDate: { type: 'string', format: 'date' }, photos: { type: 'integer', minimum: 0, maximum: 5 }, videos: { type: 'integer', minimum: 0, maximum: 2 }, photoLimit: { const: 5 }, videoLimit: { const: 2 },
-    }, required: ['recordDate', 'photos', 'videos', 'photoLimit', 'videoLimit'] } } } } },
+      visitId: { type: ['string', 'null'] }, recordDate: { type: 'string', format: 'date' }, photos: { type: 'integer', minimum: 0, maximum: 5 }, videos: { type: 'integer', minimum: 0, maximum: 2 }, photoLimit: { const: 5 }, videoLimit: { const: 2 }, maxFilesPerSubmission: { const: 10 },
+    }, required: ['recordDate', 'photos', 'videos', 'photoLimit', 'videoLimit', 'maxFilesPerSubmission'] } } } } },
   },
 };
 design.paths['/places'].get.responses['200'].content['application/json'].schema.properties.provider.enum = ['kakao'];

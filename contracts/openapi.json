@@ -5240,6 +5240,9 @@
                     },
                     "videoLimit": {
                       "const": 2
+                    },
+                    "maxFilesPerSubmission": {
+                      "const": 10
                     }
                   },
                   "required": [
@@ -5247,7 +5250,8 @@
                     "photos",
                     "videos",
                     "photoLimit",
-                    "videoLimit"
+                    "videoLimit",
+                    "maxFilesPerSubmission"
                   ]
                 }
               }

@@ -2,6 +2,7 @@ import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 process.env.AUTH_MODE = 'development';
+process.env.MODERATION_MODE = 'development';
 process.env.KAKAO_APP_ID = '123456';
 process.env.KAKAO_REST_KEY = 'fixture-rest-key';
 process.env.KAKAO_CLIENT_SECRET = 'fixture-client-secret';

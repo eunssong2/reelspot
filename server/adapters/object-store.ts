@@ -1,4 +1,4 @@
-import { mkdir, open, rename, readFile, stat, rm } from 'node:fs/promises';
+import { mkdir, open, rename, readFile, stat, rm, readdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { config } from '../core/config.js';
@@ -39,6 +39,15 @@ export class LocalObjectStore {
       return true;
     } catch {
       return false;
+    }
+  }
+  async directories(key: string): Promise<string[]> {
+    try {
+      return (await readdir(this.path(key), { withFileTypes: true }))
+        .filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+      throw error;
     }
   }
   async remove(key: string) {

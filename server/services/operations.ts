@@ -540,6 +540,7 @@ export const operationHandlers: Record<string, Handler> = {
           "UPDATE upload_tasks SET state='failed',error_code='MODERATION_REJECTED',reserved_bytes=0,version=version+1 WHERE id=$1",
           [t.id],
         );
+        await cleanup(c, 'task', t.id, Number(t.version) + 1);
       }
       after = { state: action };
       await notify(c, t.author_user_id, 'moderation_result', { message: reason }, r.id);
@@ -591,6 +592,7 @@ export const operationHandlers: Record<string, Handler> = {
       c.params.requestId,
     ]);
     demand(r, 'NOT_FOUND', 404);
+    demand(!['applied', 'rejected'].includes(r.state), 'VERSION_CONFLICT', 409);
     const g = await one(c.db, 'SELECT * FROM groups WHERE id=$1 FOR UPDATE', [r.group_id]);
     demand(g.status === 'active', 'GROUP_CLOSED', 410);
     version(g, c.body.expectedGroupVersion);
@@ -651,7 +653,7 @@ export const operationHandlers: Record<string, Handler> = {
 export async function notifyRecoveryOwner(c: Context, id: string) {
   role(c, 'recovery_approver');
   const r = await one(c.db, 'SELECT * FROM recovery_requests WHERE id=$1 FOR UPDATE', [id]);
-  demand(r && r.candidate_consent_at && !r.notified_at, 'VERSION_CONFLICT', 409);
+  demand(r && !['applied', 'rejected'].includes(r.state) && r.candidate_consent_at && !r.notified_at, 'VERSION_CONFLICT', 409);
   const g = await one(c.db, 'SELECT * FROM groups WHERE id=$1 FOR UPDATE', [r.group_id]);
   demand(g.status === 'active' && g.owner_user_id === r.owner_snapshot, 'VERSION_CONFLICT', 409);
   await notify(

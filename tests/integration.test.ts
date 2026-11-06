@@ -243,8 +243,8 @@ test('DB API 통합: 인증·원자 생성·멱등·권한·일정·초대·한�
       kind: 'photo',
       mime: 'image/jpeg',
       declaredBytes: content.length,
-      fingerprint: hash(content),
-      checksum: hash(content),
+      fingerprint: hash(i === 0 ? content : Buffer.from(`different-image-${i}`)),
+      checksum: hash(i === 0 ? content : Buffer.from(`different-image-${i}`)),
       recordDate: '2026-10-25',
     }));
     const r = await ok('POST', `/schedules/${sid()}/submissions`, { files }, a.token);

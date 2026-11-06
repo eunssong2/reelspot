@@ -211,11 +211,9 @@ export const recordHandlers: Record<string, Handler> = {
         409,
         { date: d },
       );
-    demand(
-      new Set(c.body.files.map((f: any) => f.selectionIndex)).size === c.body.files.length &&
-        new Set(c.body.files.map((f: any) => f.clientFileId)).size === c.body.files.length,
-      'VALIDATION_ERROR',
-    );
+    const duplicates = c.body.files.filter((f: any, i: number, files: any[]) =>
+      files.some((other, j) => i !== j && (other.fingerprint === f.fingerprint || other.clientFileId === f.clientFileId || other.selectionIndex === f.selectionIndex)));
+    demand(!duplicates.length, 'DUPLICATE_FILE', 400, { clientFileIds: duplicates.map((f: any) => f.clientFileId) });
     const sub = await one(
         c.db,
         'INSERT INTO submissions(schedule_id,author_user_id) VALUES($1,$2) RETURNING *',
@@ -471,10 +469,11 @@ export const recordHandlers: Record<string, Handler> = {
   },
   uploadLimits: async (c) => {
     const s = await scheduleAccess(c, c.params.scheduleId, false, true);
+    demand(!isExpired(s), 'EXPIRED', 410);
     const recordDate = c.query.recordDate;
     const visitId = c.query.visitId || null;
     await validVisit(c, s, recordDate, visitId);
-    return { ...(await remaining(c, s.id, visitId, recordDate)), photoLimit: 5, videoLimit: 2 };
+    return { ...(await remaining(c, s.id, visitId, recordDate)), photoLimit: 5, videoLimit: 2, maxFilesPerSubmission: 10 };
   },
   mediaList: async (c) => {
     if (c.query.view === 'by_time') c.query.view = 'by_photo';

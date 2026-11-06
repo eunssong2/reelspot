@@ -23,6 +23,11 @@ export function version(row: { version: number | string }, expected: number) {
 export function mapDbError(e: unknown): DomainError {
   if (e instanceof DomainError) return e;
   const err = e as { code?: string; message?: string };
+  if (['FST_ERR_CTP_INVALID_JSON_BODY', 'FST_ERR_CTP_EMPTY_JSON_BODY'].includes(err.code ?? ''))
+    return new DomainError('VALIDATION_ERROR', 400);
+  if (err.code === 'FST_ERR_CTP_INVALID_MEDIA_TYPE') return new DomainError('UNSUPPORTED_MEDIA_TYPE', 415);
+  if (err.code === 'FST_ERR_CTP_BODY_TOO_LARGE') return new DomainError('FILE_TOO_LARGE', 413);
+  if ((e as { statusCode?: number }).statusCode === 429) return new DomainError('RATE_LIMITED', 429);
   if (err.code === '23505') return new DomainError('DUPLICATE_RESOURCE', 409);
   if (err.code === '23503' || err.code === '22P02' || err.code === '22007')
     return new DomainError('VALIDATION_ERROR');

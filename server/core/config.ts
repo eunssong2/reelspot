@@ -27,6 +27,7 @@ export const config = {
   publicUrl: process.env.PUBLIC_URL ?? 'https://sphan0325.ddns.net',
   authMode: process.env.AUTH_MODE ?? 'development',
   moderationMode: process.env.MODERATION_MODE ?? 'review',
+  allowTestModerationBypass: process.env.ALLOW_TEST_MODERATION_BYPASS === 'true',
   opsMode: process.env.OPS_MODE ?? 'development',
   devOpsToken: secret('DEV_OPS_TOKEN', 'local-operator-development-only'),
   cors: (process.env.CORS_ORIGINS ?? 'https://sphan0325.ddns.net').split(','),
@@ -35,8 +36,9 @@ if (
   config.production &&
   (config.authMode !== 'provider' ||
     config.opsMode !== 'oidc' ||
-    config.moderationMode === 'development')
+    (!['review', 'provider'].includes(config.moderationMode) &&
+      !(config.moderationMode === 'disabled' && config.allowTestModerationBypass)))
 )
-  throw new Error('Production cannot use development adapters');
+  throw new Error('Production requires provider authentication, OIDC and content moderation');
 
 if (new URL(config.publicUrl).protocol !== 'https:') throw new Error('PUBLIC_URL must use HTTPS');

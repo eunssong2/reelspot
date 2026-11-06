@@ -87,8 +87,10 @@ export async function taskAccess(c: Context, id: string, transfer = false) {
   }
   return t;
 }
+// Memberships have their own versions. Activity and membership churn do not change
+// group settings or ownership, and must not invalidate the recovery snapshot.
 export async function activity(c: Context, groupId: string) {
-  await c.db.query('UPDATE groups SET activity_at=now(),version=version+1 WHERE id=$1', [groupId]);
+  await c.db.query('UPDATE groups SET activity_at=now() WHERE id=$1', [groupId]);
 }
 export function profileDto(r: any) {
   return {
@@ -140,9 +142,9 @@ export async function groupDto(c: Context, g: any) {
   const warnings = await rows(
     c.db,
     `SELECT id,title,retention_last_date,expires_at,
-       CASE WHEN expires_at <= now() + interval '1 day' THEN 'last_day' ELSE 'week' END urgency
+       CASE WHEN retention_last_date <= (now() AT TIME ZONE 'Asia/Seoul')::date + 1 THEN 'last_day' ELSE 'week' END urgency
      FROM schedules WHERE group_id=$1 AND status<>'deleted' AND retention_fixed_at IS NOT NULL
-       AND expires_at>now() AND expires_at<=now()+interval '7 days'
+       AND expires_at>now() AND retention_last_date<=(now() AT TIME ZONE 'Asia/Seoul')::date+7
      ORDER BY expires_at,id`,
     [g.id],
   );
@@ -187,7 +189,7 @@ export async function requireReauth(c: Context, proof: string) {
 export async function cancelPending(c: Context, where: string, args: unknown[]) {
   const tasks = await rows(
     c.db,
-    `SELECT * FROM upload_tasks WHERE ${where} AND state NOT IN ('complete','cancelled') FOR UPDATE`,
+    `SELECT * FROM upload_tasks WHERE (${where}) AND state NOT IN ('complete','cancelled') FOR UPDATE`,
     args,
   );
   for (const t of tasks) {

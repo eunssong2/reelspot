@@ -27,6 +27,7 @@ services:
       AUTH_MODE: provider
       OPS_MODE: oidc
       MODERATION_MODE: ${MODERATION_MODE:-review}
+      ALLOW_TEST_MODERATION_BYPASS: ${ALLOW_TEST_MODERATION_BYPASS:-false}
       HOST: 127.0.0.1
       PORT: 8081
       DATABASE_URL: postgres://atp:atp-local-only@127.0.0.1:55432/atp
@@ -47,6 +48,7 @@ services:
       AUTH_MODE: provider
       OPS_MODE: oidc
       MODERATION_MODE: ${MODERATION_MODE:-review}
+      ALLOW_TEST_MODERATION_BYPASS: ${ALLOW_TEST_MODERATION_BYPASS:-false}
       DATABASE_URL: postgres://atp:atp-local-only@db:5432/atp
       OBJECT_ROOT: /app/.data/objects
     volumes: ["./.data/objects:/app/.data/objects"]

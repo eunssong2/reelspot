@@ -5,9 +5,13 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+try { process.loadEnvFile(resolve(root, '.env')); } catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 const env = {
   ...process.env,
-  NODE_ENV: 'production', AUTH_MODE: 'provider', OPS_MODE: 'oidc', MODERATION_MODE: 'review',
+  NODE_ENV: 'production', AUTH_MODE: 'provider', OPS_MODE: 'oidc', MODERATION_MODE: process.env.MODERATION_MODE ?? 'review',
+  ALLOW_TEST_MODERATION_BYPASS: process.env.ALLOW_TEST_MODERATION_BYPASS ?? 'false',
   DATABASE_URL: 'postgres://atp:atp-local-only@127.0.0.1:55432/atp',
 };
 function run(command, args, options = {}) {
@@ -37,6 +41,12 @@ try {
 } finally { rmSync(scratch, { recursive: true, force: true }); }
 if (process.argv.includes('--build-only')) process.exit(0);
 
+// Validate the built API and worker configuration before touching running services or the DB.
+for (const service of ['api', 'worker']) {
+  run('docker', ['compose', '--profile', 'app', 'run', '--rm', '--no-deps', service,
+    'node', '--import', 'tsx', '--input-type=module', '-e',
+    "await import('./server/core/config.ts')"]);
+}
 run('docker', ['compose', 'up', '-d', '--wait', 'db']);
 const backups = resolve(root, '.data/backups');
 mkdirSync(backups, { recursive: true, mode: 0o700 });
@@ -45,6 +55,9 @@ const fd = openSync(backup, 'wx', 0o600);
 try { run('docker', ['compose', 'exec', '-T', 'db', 'pg_dump', '-U', 'atp', '-d', 'atp', '-Fc'], { stdio: ['ignore', fd, 'inherit'] }); }
 finally { closeSync(fd); }
 console.log('Database backup saved:', backup);
+// Backfill cleanup jobs must only be consumed by the matching new worker.
+// Keep both old mutation handlers and old workers stopped across migration.
+run('docker', ['compose', '--profile', 'app', 'stop', 'api', 'worker']);
 run('npm', ['run', 'db:migrate']);
 run('docker', ['compose', '--profile', 'app', 'up', '-d', '--no-build', 'api', 'worker']);
 let health;
@@ -57,6 +70,6 @@ for (let i = 0; i < 30; i++) {
 }
 if (!health || health.mode !== 'production' || health.auth !== 'provider')
   throw new Error('API did not become ready. Check docker compose logs api.');
-console.log('API running on loopback: production/provider, content review required.');
+console.log(`API running on loopback: production/provider, moderation=${env.MODERATION_MODE}.`);
 console.log('Nginx activation (sudo): python3 deploy/install-nginx.py');
 console.log('Published documents and operator review configuration are still required for general release.');

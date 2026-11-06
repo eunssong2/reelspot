@@ -6,7 +6,7 @@ export async function moderate(input: {
   mime?: string;
 }): Promise<Verdict> {
   // Explicit pre-release testing mode, shared by text mutations and media processing.
-  if (config.moderationMode === 'disabled') return 'passed';
+  if (config.moderationMode === 'disabled') return !config.production || config.allowTestModerationBypass ? 'passed' : 'review';
   if (config.moderationMode === 'development' && !config.production)
     return input.text?.includes('[reject]')
       ? 'rejected'

@@ -221,6 +221,10 @@ export async function processOne() {
           ],
         );
       }
+      if (['verifying', 'failed', 'cancelled'].includes(current.state)) {
+        await db.query('UPDATE upload_tasks SET processing_claim=NULL,processing_until=NULL WHERE id=$1', [t.id]);
+        await cleanup(makeContext(db, undefined, e.operation_id), 'task', t.id, Date.now());
+      }
       await finishOperation(db, e.operation_id, 'media_commit', 'failed', null, [
         { code: mapDbError(err).code, message: '파일 처리 또는 최종 권한 검증에 실패했습니다.' },
       ]);
@@ -300,10 +304,30 @@ export async function cleanupOne() {
         );
       }
     } else if (job.target_type === 'task') {
-      const t = await tx((db) =>
-        one(db, 'SELECT * FROM upload_tasks WHERE id=$1', [job.target_id]),
-      );
-      if (t && ['cancelled', 'complete'].includes(t.state)) await objects.remove(t.quarantine_key);
+      await tx(async (db) => {
+        // Serialize deletion with retry/chunk writes, and never erase an active worker's output.
+        const t = await one(db, 'SELECT * FROM upload_tasks WHERE id=$1 FOR UPDATE', [job.target_id]);
+        if (!t) return;
+        demand(!t.processing_claim || !t.processing_until || new Date(t.processing_until) <= new Date(), 'CLEANUP_BUSY', 409);
+        const terminal = ['failed', 'cancelled', 'complete'].includes(t.state);
+        const prefix = `assets/${t.id}`;
+        const published = await rows(db, 'SELECT object_key FROM assets WHERE object_key LIKE $1', [`${prefix}/%`]);
+        // A retry may overtake an old cleanup job. Keep the active generation and
+        // published assets, but remove abandoned output from every older attempt.
+        for (const generation of await objects.directories(prefix)) {
+          if (!/^\d+$/.test(generation)) continue;
+          if (!terminal && Number(generation) === Number(t.upload_generation)) continue;
+          const directory = `${prefix}/${generation}`;
+          if (!published.some((asset) => asset.object_key.startsWith(`${directory}/`)))
+            await objects.remove(directory);
+        }
+        if (terminal) {
+          await objects.remove(t.quarantine_key);
+          if (!published.length) await objects.remove(prefix);
+          if (t.state !== 'complete')
+            await db.query("UPDATE upload_tasks SET upload_offset=0,chunk_manifest='[]'::jsonb WHERE id=$1", [t.id]);
+        }
+      });
     } else if (job.target_type === 'cover_task' || job.target_type === 'avatar_task') {
       const pending = await tx(async (db) => {
         const initial = await one(db, 'SELECT * FROM upload_tasks WHERE id=$1', [job.target_id]);
@@ -315,7 +339,10 @@ export async function cleanupOne() {
         const task = await one(db, 'SELECT * FROM upload_tasks WHERE id=$1 FOR UPDATE', [
           initial.id,
         ]);
-        if (task.state !== 'complete' || task.storage_released_at) return null;
+        if (!['complete', 'cancelled'].includes(task.state) || task.storage_released_at) return null;
+        // Earlier group-close code incorrectly cancelled completed cover tasks.
+        // Only published assets prove those tasks charged completed storage.
+        if (task.state === 'cancelled' && !(await one(db, 'SELECT 1 FROM assets WHERE object_key LIKE $1', [`assets/${task.id}/%`]))) return null;
         const used = await one(
           db,
           task.avatar_user_id

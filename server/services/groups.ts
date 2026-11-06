@@ -356,6 +356,7 @@ export const groupHandlers: Record<string, Handler> = {
   dayUpdate: async (c) => {
     const { s, day } = await dayTarget(c);
     demand(s.status === 'active', 'SCHEDULE_CANCELLED', 409);
+    demand(day.status === 'active', 'DAY_CANCELLED', 409);
     demand(c.body.title !== undefined || c.body.date !== undefined, 'VALIDATION_ERROR');
     let from = day.day_date;
     if (c.body.date !== undefined && c.body.date !== from) {
