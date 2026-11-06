@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 let focused = true;
 const listeners = new Set<() => void>();
 export function setFocused(next: boolean) { focused = next; listeners.forEach((fn) => fn()); }
-export const router = { push: vi.fn(() => setFocused(false)), back: vi.fn(), replace: vi.fn(), dismissTo: vi.fn() };
+export const router = { canGoBack: vi.fn(() => false), push: vi.fn(() => setFocused(false)), back: vi.fn(), replace: vi.fn(), dismissTo: vi.fn() };
 export let params: Record<string, string> = {};
 export const setParams = (next: Record<string, string>) => { params = next; };
 export const useLocalSearchParams = () => params;

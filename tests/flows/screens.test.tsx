@@ -346,3 +346,27 @@ test('legacy cleanup link is absent when empty and disappears after the last his
   fixtures.storage.clear(); await act(async () => setFocused(false)); await act(async () => setFocused(true));
   expect(tree.toJSON()).toBeNull();
 });
+
+describe('expired schedule stays on its guidance screen', () => {
+  test('a fast device clock cannot expire records accepted by the server', async () => {
+    mockApi(); setParams({id:'schedule'});
+    const original=fixtures.api.getMockImplementation()!;
+    fixtures.api.mockImplementation(async (path,...args) => path==='/schedules/schedule'
+      ? {...detail(),retention:{expiresAt:'2020-01-01T00:00:00Z',lastDate:'2019-12-31'}} : original(path,...args));
+    await mount(<Schedule />);
+    expect(textOf(tree.toJSON())).not.toContain('기록 보관 기한이 지났어요');
+    expect(fixtures.api.mock.calls.some(([path])=>path.includes('/media?'))).toBe(true);
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+  test('server expiry during media loading also shows expiry guidance', async () => {
+    mockApi(); setParams({id:'schedule'});
+    const original=fixtures.api.getMockImplementation()!;
+    fixtures.api.mockImplementation(async (path,...args)=>{
+      if(path.includes('/media?'))throw new ApiError('EXPIRED');
+      return original(path,...args);
+    });
+    await mount(<Schedule />);
+    expect(textOf(tree.toJSON())).toContain('기록 보관 기한이 지났어요');
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+});

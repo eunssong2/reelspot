@@ -5393,6 +5393,8 @@ export interface operations {
                         photoLimit: 5;
                         /** @constant */
                         videoLimit: 2;
+                        /** @constant */
+                        maxFilesPerSubmission: 10;
                     };
                 };
             };

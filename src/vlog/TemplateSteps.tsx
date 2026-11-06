@@ -64,7 +64,10 @@ export function TemplateStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: strin
 
   const apply = () => {
     const split = choice !== 'seq';
-    patchSetting(ctx, found.place.key, split ? { mode: 'split', templateId: choice } : { mode: 'sequence', templateId: undefined, lengthSec: undefined, photoSec: undefined });
+    const splitSetting: PlaceSetting = { ...setting, mode: 'split', templateId: choice };
+    const maximum = commonLength(media);
+    const splitPatch = maximum === undefined ? {} : resizeSplit(splitSetting, media, splitLength(media, splitSetting), maximum);
+    patchSetting(ctx, found.place.key, split ? { mode: 'split', templateId: choice, ...splitPatch } : { mode: 'sequence', templateId: undefined, lengthSec: undefined, photoSec: undefined });
     if (split && needsLengthStep(media.filter((m) => m.item.kind === 'video').map((m) => m.seconds ?? 0))) {
       ctx.go({ step: 'length', placeKey: found.place.key });
     } else {

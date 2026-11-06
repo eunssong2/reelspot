@@ -46,6 +46,7 @@ export function Screen({
   children,
   back = true,
   scrollKey,
+  restoreScroll = true,
   footer,
   compact = false,
   tabs = false,
@@ -59,6 +60,7 @@ export function Screen({
   children: React.ReactNode;
   back?: boolean;
   scrollKey?: string;
+  restoreScroll?: boolean;
   footer?: React.ReactNode;
   compact?: boolean;
   tabs?: boolean;
@@ -131,12 +133,20 @@ export function Screen({
             contentContainerStyle={[s.screen, contentStyle]}
             keyboardShouldPersistTaps="handled"
             scrollEventThrottle={100}
+            onLayout={() => {
+              if (!restoreScroll) scroll.current?.scrollTo({ y: 0, animated: false });
+            }}
             onScroll={(e) => {
+              if (!restoreScroll) return;
               scrollPositions.set(key, e.nativeEvent.contentOffset.y);
               if (scrollPositions.size > 100)
                 scrollPositions.delete(scrollPositions.keys().next().value!);
             }}
             onContentSizeChange={(_, height) => {
+              if (!restoreScroll) {
+                scroll.current?.scrollTo({ y: 0, animated: false });
+                return;
+              }
               const y = scrollPositions.get(key) ?? 0;
               if (!restored.current && height > y) {
                 restored.current = true;
@@ -344,9 +354,10 @@ export function ClearableInput({
   onChangeText,
   limit,
   helper,
+  normalizedCount = false,
   ...props
-}: TextInputProps & { value: string; onChangeText: (v: string) => void; limit: number; helper?: string }) {
-  const count = [...new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(value)].length;
+}: TextInputProps & { value: string; onChangeText: (v: string) => void; limit: number; helper?: string; normalizedCount?: boolean }) {
+  const count = [...new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(normalizedCount ? value.normalize('NFC').trim() : value)].length;
   return (
     <View style={{ marginBottom: 18 }}>
       <View style={[s.input, { flexDirection: 'row', alignItems: 'center', paddingVertical: 0 }]}>

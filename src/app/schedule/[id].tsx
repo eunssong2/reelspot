@@ -34,6 +34,7 @@ export default function Schedule() {
   const { id, date: dateParam, recordVisit, openUpload } = useLocalSearchParams<{ id: string; date?: string; recordVisit?: string; openUpload?: string }>(),
     { session } = useAccount(),
     [detail, setDetail] = useState<any>(null),
+    [expired, setExpired] = useState(false),
     [files, setFiles] = useState<any[]>([]),
     [tab, setTab] = useState<'plan' | 'records'>(openUpload === '1' ? 'records' : 'plan'),
     [options, setOptions] = useState({
@@ -69,7 +70,7 @@ export default function Schedule() {
   const timeNeedsRefresh = useRef(false);
   async function refreshTimePlan() {
     const fresh = await api(`/schedules/${id}`);
-    setDetail({ ...fresh, writable: Date.parse(fresh.retention.expiresAt) > Date.now() });
+    setDetail({ ...fresh, writable: !expired });
     const latest = fresh.plan.find((p: any) => p.date === date);
     setTimeLatest(latest ? `최신 계획\n${latest.title}\n${latest.visits.map((v: any) => `${v.name} · ${v.plannedTime ?? '시간 미정'}`).join('\n')}` : '이 날짜의 계획이 없어졌어요.');
     timeNeedsRefresh.current = false;
@@ -94,40 +95,49 @@ export default function Schedule() {
     let live = true;
     setSummary(null);
     a.run(async () => {
-      const d = await api(`/schedules/${id}`);
-      if (!live) return;
-      if (openUpload === '1' && recordVisit && !d.plan.some((day: any) => day.date === dateParam && day.visits.some((v: any) => v.id === recordVisit))) { setAdding(false); throw new Error('이전 후보의 장소가 이동·삭제됐어요. 후보는 원래 날짜·장소로 보존됩니다.'); }
-      const visitIds = d.plan.flatMap((day: any) => day.visits.map((v: any) => v.id)) as string[];
-      setHighlightedVisits(
-        previousVisits.current ? visitIds.filter((id) => !previousVisits.current!.has(id)) : [],
-      );
-      previousVisits.current = new Set(visitIds);
-      setDetail({ ...d, writable: Date.parse(d.retention.expiresAt) > Date.now() });
-      const own = (Array.isArray(d.days) ? d.days : scheduleDayList(d.schedule)) as any[];
-      if (date && !own.some((x) => x.date === date)) throw new Error('선택한 날짜가 이동되거나 삭제됐어요. 모임 달력에서 다시 선택해 주세요.');
-      if (!date) {
-        const active = own.filter((x) => x.status === 'active'),
-          today = todayInSeoul();
-        setDate(
-          (active.find((x) => x.date === today) ?? active.find((x) => x.date > today) ?? active[0] ?? own[0])
-            ?.date ?? d.schedule.startDate,
+      try {
+        const d = await api(`/schedules/${id}`);
+        if (!live) return;
+        setExpired(false);
+        if (openUpload === '1' && recordVisit && !d.plan.some((day: any) => day.date === dateParam && day.visits.some((v: any) => v.id === recordVisit))) { setAdding(false); throw new Error('이전 후보의 장소가 이동·삭제됐어요. 후보는 원래 날짜·장소로 보존됩니다.'); }
+        const visitIds = d.plan.flatMap((day: any) => day.visits.map((v: any) => v.id)) as string[];
+        setHighlightedVisits(
+          previousVisits.current ? visitIds.filter((id) => !previousVisits.current!.has(id)) : [],
         );
+        previousVisits.current = new Set(visitIds);
+        setDetail({ ...d, writable: false });
+        const own = (Array.isArray(d.days) ? d.days : scheduleDayList(d.schedule)) as any[];
+        if (date && !own.some((x) => x.date === date)) throw new Error('선택한 날짜가 이동되거나 삭제됐어요. 모임 달력에서 다시 선택해 주세요.');
+        if (!date) {
+          const active = own.filter((x) => x.status === 'active'),
+            today = todayInSeoul();
+          setDate(
+            (active.find((x) => x.date === today) ?? active.find((x) => x.date > today) ?? active[0] ?? own[0])
+              ?.date ?? d.schedule.startDate,
+          );
+        }
+        const g = await getGroup(d.schedule.groupId);
+        if (!live) return;
+        setGroup(g);
+        setOwner(g.ownerUserId === session?.userId);
+        const [cal, members, totals] = await Promise.all([
+          loadGroupDays(g.id),
+          api(`/groups/${g.id}/members`).catch(() => null),
+          api(`/schedules/${id}/media?limit=1`),
+        ]);
+        if (!live) return;
+        setGroupDayList(cal);
+        if (members)
+          setAvatars(Object.fromEntries(members.members.map((m: any) => [m.userId, m.avatarVersion ?? null])));
+        // The server media response confirms retention; device clocks may be wrong.
+        setDetail({ ...d, writable: true });
+        setSummary(totals);
+        if (tab === 'records') await load(undefined, () => live);
+      } catch (e) {
+        if (live && e instanceof ApiError && e.code === 'EXPIRED') {
+          setExpired(true); setDetail((old: any) => old ? { ...old, writable: false } : old); setAdding(false); setFiles([]);
+        } else throw e;
       }
-      const g = await getGroup(d.schedule.groupId);
-      if (!live) return;
-      setGroup(g);
-      setOwner(g.ownerUserId === session?.userId);
-      const [cal, members, totals] = await Promise.all([
-        loadGroupDays(g.id),
-        api(`/groups/${g.id}/members`).catch(() => null),
-        api(`/schedules/${id}/media?limit=1`),
-      ]);
-      if (!live) return;
-      setGroupDayList(cal);
-      if (members)
-        setAvatars(Object.fromEntries(members.members.map((m: any) => [m.userId, m.avatarVersion ?? null])));
-      setSummary(totals);
-      if (tab === 'records') await load(undefined, () => live);
     });
     return () => {
       live = false;
@@ -171,6 +181,14 @@ export default function Schedule() {
     };
     if (tab === 'records') candidateExit.requestExit(enter); else enter();
   }
+  if (expired) return (
+    <Screen key={`expired:${id}`} scrollKey={`expired:${id}`} restoreScroll={false} title="보관 기간 만료">
+      <H>기록 보관 기한이 지났어요</H>
+      {detail && <P>{detail.schedule.title} · 보관 마지막 날 {detail.retention.lastDate}</P>}
+      <P>이 일정의 사진·동영상을 더 이상 열거나 저장할 수 없어요.</P>
+      <Button onPress={() => detail ? router.replace(`/group/${detail.schedule.groupId}`) : router.replace('/mine')}>돌아가기</Button>
+    </Screen>
+  );
   return (
     <Screen
       title={title}
@@ -279,7 +297,7 @@ export default function Schedule() {
             throw e;
           }
           const fresh = await api(`/schedules/${id}`);
-          setDetail({ ...fresh, writable: Date.parse(fresh.retention.expiresAt) > Date.now() });
+          setDetail({ ...fresh, writable: !expired });
           setTimeVisit('');
           timeAction.clear();
         })} />

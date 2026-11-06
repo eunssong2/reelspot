@@ -322,11 +322,14 @@ export function Records({
       </View>
     );
   };
-  const authorPhotos = authorMenu
+  const authorMedia = authorMenu
     ? items.filter(
-        (m) => m.authorUserId === authorMenu.authorUserId && m.kind === 'photo' && m.accessState === 'available',
+        (m) => m.authorUserId === authorMenu.authorUserId && ['photo', 'video'].includes(m.kind) && m.accessState === 'available',
       )
     : [];
+  const authorSaveCount = recordScope
+    ? (authorMenu?.photos ?? 0) + (authorMenu?.videos ?? 0)
+    : new Set(authorMedia.map((m) => m.id)).size;
   return (
     <>
       {toolbar && items.length > 0 ? (
@@ -397,19 +400,19 @@ export function Records({
         {batchAction.errorView}
         {allowSave && (
           <Button
-            disabled={batchAction.busy || !(authorMenu?.photos)}
+            disabled={batchAction.busy || !authorSaveCount}
             onPress={() => batchAction.run(async () => {
               const ids = recordScope ? await authorPhotoIds(authorMenu!.authorUserId, async (cursor) => {
                 const query = new URLSearchParams(recordScope.query);
                 if (cursor) query.set('cursor', cursor);
                 return api(`/schedules/${recordScope.scheduleId}/media?${query}`);
-              }) : authorPhotos.map((m) => m.id);
-              if (!ids.length) throw new Error('지금 저장할 수 있는 사진이 없어요.');
+              }) : [...new Set(authorMedia.map((m) => m.id))];
+              if (!ids.length) throw new Error('지금 저장할 수 있는 사진·동영상이 없어요.');
               setAuthorMenu(null);
               router.push({ pathname: '/save', params: { ids: ids.join(',') } });
             })}
           >
-            {authorMenu?.photos ? `사진 다운받기 · ${authorMenu.photos}개` : '받을 수 있는 사진이 없어요'}
+            {authorSaveCount ? `사진 다운받기 · ${authorSaveCount}개` : '받을 수 있는 사진·동영상이 없어요'}
           </Button>
         )}
         {authorMenu?.authorUserId === own && (

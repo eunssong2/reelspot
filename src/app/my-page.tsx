@@ -5,10 +5,13 @@ import { useAccount } from '../lib/state';
 import { useFocusLoad } from '../lib/effects';
 import { api, awaitOperation } from '../lib/api';
 import { inputText } from '../lib/validation';
+import { canSaveNickname, editNickname } from '../lib/nickname';
+import { useAppToast } from '../components/toast-provider';
 import { uploadAndApplyImage } from '../lib/uploads';
 import { EditableAvatar } from '../components/profile-ui';
 import { Screen, Button, ClearableInput, Sheet, colors, useAction } from '../components/ui';
 export default function MyPage() {
+  const showToast = useAppToast();
   const { profile, refresh } = useAccount();
   const [count, setCount] = useState<number | null>(null);
   const a = useAction();
@@ -38,6 +41,16 @@ export default function MyPage() {
     save = useAction({ inlineRetry: false });
   const [editing, setEditing] = useState(false),
     [name, setName] = useState('');
+  const saveName = () => {
+    if (save.busy || !profile || !canSaveNickname(name)) return;
+    return save.run(async () => {
+      const displayName = inputText(name, '닉네임', 12);
+      await awaitOperation(await api('/me/profile', { displayName, expectedVersion: profile.version }, 'PATCH'));
+      await refresh();
+      setEditing(false);
+      showToast('닉네임을 바꿨어요');
+    });
+  };
   return (
     <Screen
       title="마이페이지"
@@ -133,9 +146,13 @@ export default function MyPage() {
       <Sheet visible={editing} title="닉네임 변경" onClose={() => setEditing(false)}>
         <ClearableInput
           accessibilityLabel="닉네임"
-          limit={20}
+          limit={12}
           value={name}
-          onChangeText={setName}
+          onChangeText={(next) => setName((old) => editNickname(old, next))}
+          placeholder="닉네임을 입력하세요"
+          returnKeyType="done"
+          onSubmitEditing={saveName}
+          normalizedCount
           editable={!save.busy}
           autoFocus
         />
@@ -146,17 +163,8 @@ export default function MyPage() {
           </Button>
           <Button
             style={{ flex: 1 }}
-            disabled={save.busy || !profile || !name.trim()}
-            onPress={() =>
-              save.run(async () => {
-                const displayName = inputText(name, '닉네임', 20);
-                await awaitOperation(
-                  await api('/me/profile', { displayName, expectedVersion: profile.version }, 'PATCH'),
-                );
-                await refresh();
-                setEditing(false);
-              })
-            }
+            disabled={save.busy || !profile || !canSaveNickname(name)}
+            onPress={saveName}
           >
             저장
           </Button>

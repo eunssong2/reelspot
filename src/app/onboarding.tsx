@@ -1,3 +1,4 @@
+import { installationId } from '../lib/device';
 import { useInitialize } from '../lib/effects';
 import React, { useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
@@ -24,10 +25,10 @@ export default function Onboard() {
     [name, setName] = useState('');
   const { refresh, profile } = useAccount(),
     a = useAction();
-  const leave = useFormExit(!!name || Object.values(agreed).some(Boolean), async () => {
-    await api('/auth/logout', {});
+  const leave = useFormExit(true, async () => {
+    await api('/auth/logout', { deviceId: await installationId(), pendingAction: 'none' });
     await setSession(null);
-  });
+  }, false, { title: '가입을 그만둘까요?', body: '입력한 내용은 저장되지 않아요.', cancel: '계속하기', discard: '그만두기' });
   const load = async () => {
     const next = (await api('/consent-documents?locale=ko')).documents;
     setAgreed((old) =>
@@ -128,6 +129,10 @@ export default function Onboard() {
   );
   return (
     <Screen
+      onBack={() => {
+        leave.confirmExit(() => router.replace('/login'));
+        return true;
+      }}
       compact
       heading
       title="처음 오셨네요 👋"

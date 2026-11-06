@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Modal, PanResponder, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -49,8 +49,9 @@ function CropEditor({ visible, clip, aspect, crop, onApply, onClose, nat }: Prop
   const ratio = aspectOf(aspect).ratio;
   const stageW = Math.min(width, 430) - 24;
   const stageH = height * 0.6;
-  // 사진 전체가 작업 영역 안에 꽉 차게 보이는 크기
-  const fit = Math.min(stageW / nat.w, stageH / nat.h);
+  // 손잡이가 잘리거나 Android 가장자리 뒤로가기 제스처와 겹치지 않게
+  // 사진 주위에 조작 여백을 둔다. 저장 좌표는 여전히 원본 사진 기준이다.
+  const fit = Math.min((stageW - HANDLE * 2) / nat.w, (stageH - HANDLE * 2) / nat.h);
   const dispW = nat.w * fit;
   const dispH = nat.h * fit;
   const offX = (stageW - dispW) / 2;
@@ -71,7 +72,9 @@ function CropEditor({ visible, clip, aspect, crop, onApply, onClose, nat }: Prop
     setLocked(true);
   };
 
-  const [start, setStart] = useState<Box>(box);
+  const start = useRef<Box>(box);
+  const current = useRef({ box, dispW, dispH, ratio, locked });
+  current.current = { box, dispW, dispH, ratio, locked };
 
   const moveResponder = useMemo(
     () =>
@@ -79,15 +82,15 @@ function CropEditor({ visible, clip, aspect, crop, onApply, onClose, nat }: Prop
         onStartShouldSetPanResponder: () => true,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
-          setStart(box);
+          start.current = current.current.box;
         },
         onPanResponderMove: (_e, g) => {
-          const s = start;
-          const d = { dispW, dispH, ratio, locked };
+          const s = start.current;
+          const d = current.current;
           setBox({ ...s, x: clamp(s.x + g.dx, 0, d.dispW - s.w), y: clamp(s.y + g.dy, 0, d.dispH - s.h) });
         },
       }),
-    [box, start, dispW, dispH, ratio, locked],
+    [],
   );
 
   const cornerResponders = useMemo(() => {
@@ -96,11 +99,11 @@ function CropEditor({ visible, clip, aspect, crop, onApply, onClose, nat }: Prop
         onStartShouldSetPanResponder: () => true,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
-          setStart(box);
+          start.current = current.current.box;
         },
         onPanResponderMove: (_e, g) => {
-          const s = start;
-          const d = { dispW, dispH, ratio, locked };
+          const s = start.current;
+          const d = current.current;
           const left = corner === 'tl' || corner === 'bl';
           const top = corner === 'tl' || corner === 'tr';
           // 움직이는 두 변의 새 위치(반대쪽 변은 그대로)
@@ -130,7 +133,7 @@ function CropEditor({ visible, clip, aspect, crop, onApply, onClose, nat }: Prop
         },
       });
     return { tl: make('tl'), tr: make('tr'), bl: make('bl'), br: make('br') };
-  }, [box, start, dispW, dispH, ratio, locked]);
+  }, []);
 
   const full = box.x <= 0.5 && box.y <= 0.5 && box.w >= dispW - 1 && box.h >= dispH - 1;
   const apply = () => {

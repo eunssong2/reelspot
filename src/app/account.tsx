@@ -6,6 +6,8 @@ import { useAccount } from '../lib/state';
 import { useFocusLoad } from '../lib/effects';
 import { api, awaitOperation } from '../lib/api';
 import { inputText } from '../lib/validation';
+import { canSaveNickname, editNickname } from '../lib/nickname';
+import { useAppToast } from '../components/toast-provider';
 import { EditableAvatar, MenuRow } from '../components/profile-ui';
 import {
   Screen,
@@ -18,10 +20,11 @@ import {
   useAction,
 } from '../components/ui';
 export default function Account() {
+  const showToast = useAppToast();
   const { edit } = useLocalSearchParams<{ edit?: string }>();
   const [editing, setEditing] = useState(edit === 'yes');
   const { profile, refresh } = useAccount(),
-    [name, setName] = useState(profile?.displayName ?? ''),
+    [name, setName] = useState<string>(profile?.displayName ?? ''),
     [identities, setIdentities] = useState<any[] | null>(null);
   const a = useAction();
   useFocusLoad(() => {
@@ -37,6 +40,17 @@ export default function Account() {
   }, []);
   const photo = useAction({ inlineRetry: false });
   const providers = [...new Set((identities ?? []).map((i) => i.provider))];
+  const saveName = () => {
+    if (a.busy || !profile || !canSaveNickname(name)) return;
+    return a.run(async () => {
+      const displayName = inputText(name, '닉네임', 12);
+      await awaitOperation(await api('/me/profile', { displayName, expectedVersion: profile.version }, 'PATCH'));
+      await refresh();
+      setEditing(false);
+      showToast('닉네임을 바꿨어요');
+      if (edit === 'yes' && router.canGoBack()) router.back();
+    });
+  };
   return (
     <Screen title="프로필 및 계정">
       <View style={{ alignItems: 'center', marginTop: 24 }}>
@@ -110,7 +124,11 @@ export default function Account() {
           accessibilityLabel="닉네임"
           limit={12}
           value={name}
-          onChangeText={setName}
+          onChangeText={(next) => setName((old) => editNickname(old, next))}
+          placeholder="닉네임을 입력하세요"
+          returnKeyType="done"
+          onSubmitEditing={saveName}
+          normalizedCount
           editable={!a.busy}
           autoFocus
         />
@@ -126,19 +144,8 @@ export default function Account() {
           </Button>
           <Button
             style={{ flex: 1 }}
-            disabled={a.busy || !profile || !name.trim()}
-            onPress={() =>
-              a.run(async () => {
-                const displayName = inputText(name, '닉네임', 12);
-                await awaitOperation(
-                  await api('/me/profile', { displayName, expectedVersion: profile.version }, 'PATCH'),
-                );
-                await refresh();
-                setEditing(false);
-                // Opened from an older link with edit=yes: return there after saving.
-                if (edit === 'yes' && router.canGoBack()) router.back();
-              })
-            }
+            disabled={a.busy || !profile || !canSaveNickname(name)}
+            onPress={saveName}
           >
             저장
           </Button>

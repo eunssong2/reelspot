@@ -66,7 +66,7 @@ export default function Invite() {
     });
   }
   const hint = inviteCodeHint(opaqueToken ? '' : token),
-    blocked = ['INVITE_REVOKED', 'INVITE_EXPIRED', 'INVITE_EXHAUSTED', 'INVITE_INVALID', 'GROUP_CLOSED', 'GROUP_FULL', 'REENTRY_BLOCKED'].includes(a.errorCode),
+    blocked = ['INVITE_REVOKED', 'INVITE_EXPIRED', 'INVITE_EXHAUSTED', 'INVITE_INVALID', 'GROUP_CLOSED', 'CAPACITY_FULL', 'REENTRY_BLOCKED'].includes(a.errorCode),
     x = preview?.scheduleSummary;
   const chip = (label: string, on: boolean) => (
     <Text
@@ -89,7 +89,7 @@ export default function Invite() {
       compact
       title="초대 확인"
       footer={
-        preview ? (
+        preview && !blocked ? (
           <>
             <Button disabled={a.busy} onPress={join}>
               {!session

@@ -7,6 +7,7 @@ import { restorePendingTransfers } from '../lib/uploads';
 import { setVideoCacheSizeAsync } from 'expo-video';
 import { accessLostEvents } from '../lib/api';
 import { resetTo } from '../components/ui';
+import { ToastProvider } from '../components/toast-provider';
 function TransferRecovery() {
   const { ready, session } = useAccount();
   const userId = session?.userId;
@@ -47,7 +48,9 @@ export default function Layout() {
     <Provider>
       <TransferRecovery />
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FFFFFF' } }} />
+      <ToastProvider>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FFFFFF' } }} />
+      </ToastProvider>
     </Provider>
   );
 }

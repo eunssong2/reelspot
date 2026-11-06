@@ -1,23 +1,18 @@
-import { useFocusLoad } from '../../lib/effects';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { api, getGroup } from '../../lib/api';
+import { useGroupCalendar } from '../../lib/group-calendar';
 import { useAccount } from '../../lib/state';
 import { usePreference, todayInSeoul } from '../../lib/preferences';
-import { monthDays, moveMonth } from '../../lib/calendar';
+import { moveMonth } from '../../lib/calendar';
 import { dateHeading, dayLabel, groupDays, shortDate, type GroupDay } from '../../lib/day-labels';
 import { MonthGrid, MonthHeader, type DayChip } from '../../components/period-picker';
 import { Avatar } from '../../components/profile-ui';
-import { Screen, Button, Card, P, Sheet, useAction, colors, TextButton } from '../../components/ui';
+import { Screen, Button, Card, P, Sheet, colors, TextButton, resetTo } from '../../components/ui';
 export default function Group() {
   const { id, focusDate } = useLocalSearchParams<{ id: string; focusDate?: string }>(),
     { session } = useAccount();
-  const [group, setGroup] = useState<any>(null),
-    [schedules, setSchedules] = useState<any[]>([]),
-    [members, setMembers] = useState<any[]>([]),
-    [plans, setPlans] = useState<Record<string, any[]>>({}),
-    [menuDay, setMenuDay] = useState<GroupDay | null>(null);
+  const [menuDay, setMenuDay] = useState<GroupDay | null>(null);
   const [calendar, setCalendar, ready] = usePreference(`calendar:${id}`, {
     month: todayInSeoul().slice(0, 7),
     selected: todayInSeoul(),
@@ -30,48 +25,14 @@ export default function Group() {
       setCalendar((old) => ({ ...old, month: focusDate.slice(0, 7), selected: focusDate }));
     }
   }, [ready, focusDate, id, setCalendar]);
-  const { month, selected, list } = calendar,
-    a = useAction();
-  useFocusLoad(() => {
-    if (!ready) return;
-    let live = true;
-    setSchedules([]);
-    void a.run(async () => {
-      try {
-        const days = monthDays(month);
-        const [g, r] = await Promise.all([
-          getGroup(id),
-          api(`/groups/${id}/calendar?from=${days[0]}&to=${days[41]}`),
-        ]);
-        if (!live) return;
-        setGroup(g);
-        setSchedules(r.schedules);
-        api(`/groups/${id}/members`)
-          .then((m) => live && setMembers(m.members))
-          .catch(() => {});
-        // Day cards show the first place of each date, which only the schedule detail has.
-        const details = await Promise.allSettled(
-          r.schedules
-            .filter((x: any) => x.status !== 'deleted')
-            .slice(0, 20)
-            .map((x: any) => api(`/schedules/${x.id}`)),
-        );
-        if (live)
-          setPlans(
-            Object.fromEntries(
-              details
-                .filter((d) => d.status === 'fulfilled')
-                .map((d: any) => [d.value.schedule.id, d.value.plan]),
-            ),
-          );
-      } catch (e) {
-        if (live) throw e;
-      }
-    });
-    return () => {
-      live = false;
-    };
-  }, [id, month, ready]);
+  const { month, selected, list } = calendar;
+  const state = useGroupCalendar(session?.userId, id, month, ready);
+  const { group, schedules, members, plans } = state;
+  if (state.denied) return (
+    <Screen compact title="모임 달력" back={false} footer={<Button onPress={() => resetTo('/')}>내 모임으로</Button>}>
+      <P>이 모임을 확인할 수 없어요.</P>
+    </Screen>
+  );
   const owner = group?.ownerUserId === session?.userId;
   const ownerMember = members.find((m) => m.isOwner);
   const days = groupDays(schedules);
@@ -154,10 +115,10 @@ export default function Group() {
       title={group?.name ?? '모임 달력'}
       footer={
         <>
-        <Button secondary disabled={a.busy || !group} onPress={() => router.push({ pathname: '/vlog', params: { groupId: id } })}>브이로그 만들기</Button>
+        <Button secondary disabled={state.busy || !group} onPress={() => router.push({ pathname: '/vlog', params: { groupId: id } })}>브이로그 만들기</Button>
         {owner ? (
           <Button
-            disabled={a.busy}
+            disabled={state.busy}
             onPress={() =>
               router.push({
                 pathname: '/schedule/edit',
@@ -171,6 +132,13 @@ export default function Group() {
         </>
       }
     >
+      {state.busy && !state.loaded && <View accessibilityRole="progressbar" accessibilityLabel="일정을 불러오는 중">
+        <ActivityIndicator color={colors.accent} /><P>일정을 불러오는 중</P>
+      </View>}
+      {state.failed && <View accessibilityRole="alert" style={{ backgroundColor: colors.surface, padding: 14, borderRadius: 12, gap: 8 }}>
+        <P>{state.loaded ? '최신 정보를 불러오지 못했어요' : '일정을 불러오지 못했어요'}</P>
+        <TextButton onPress={state.retry}>다시 시도</TextButton>
+      </View>}
       <Sheet
         visible={!!menuDay}
         title={menuDay ? dayLabel(menuDay) : ''}
@@ -363,10 +331,10 @@ export default function Group() {
             </View>
           ))
         : visible.map(dayCard)}
-      {a.hasRun && !a.busy && !a.error && !visible.length && (
+      {state.loaded && !visible.length && (
         <P>{list ? '이 달에 등록된 일정이 없어요.' : `${dateHeading(selected)}에는 일정이 없어요.`}</P>
       )}
-      {a.errorView}
+
     </Screen>
   );
 }
