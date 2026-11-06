@@ -91,7 +91,7 @@ PDF는 동일 HTML의 인쇄본이며 Office와 페이지 나눔이 다를 수 �
 - review_vlog_edit_feedback.py --source <ff5a5d0 checkout> --url <해당 checkout의 Expo 웹 URL>: 웹 높이 축소·VB01·Q22를 편집설정/피드백검토에 보존. Android IME 실측과 구분한다.
 - UI/브이로그/편집설정/Android15/실행결과.json: Android 에뮬레이터 입력/접근성 관찰. 실제 앱·실기기 검수 완료 아님.
 - Q22 현재 동작은 의도 확인 전 요구/합격값으로 확정하지 않는다.
-- TC-F30-17~20은 로컬 UI 검수. VB05는19, Q22는18/20. frontend 반영은 구현 인계 대기.
+- TC-F30-17~20은 로컬 UI 검수. VB05는19, Q22는18/20. frontend v3.3 아코디언·고정 미리보기는 11월 6일 미커밋 반영. VB05 축소 방식은 11월 10일 회의 제안안이며 Gboard·실기기·TalkBack 미확인.
 
 Android15 관찰 재현
 1. emulator -avd Android15 실행, adb devices로 serial 확인. 같은 ff5a5d0의 Expo를 npx expo start --android --port 18087로 연다(Expo Go54.0.8 관찰).
