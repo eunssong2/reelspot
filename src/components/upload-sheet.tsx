@@ -117,7 +117,7 @@ function ScopedUploadSheet({
       const enqueueErrors: string[] = [];
       for (const t of r.tasks) {
         const f = files.find((f) => f.clientFileId === t.clientFileId);
-        if (f) { try { await enqueueTask(t, f); } catch { enqueueErrors.push(f.name); } }
+        if (f) { try { await enqueueTask(t, { ...f, scheduleId }); } catch { enqueueErrors.push(f.name); } }
       }
       await draft.replace(remaining);
       if (enqueueErrors.length) throw new Error('접수된 파일은 전송 상태에서 다시 시도해 주세요: ' + enqueueErrors.join(', '));
@@ -179,9 +179,9 @@ function ScopedUploadSheet({
                 position: 'absolute',
                 top: 4,
                 right: 4,
-                width: 24,
-                height: 24,
-                borderRadius: 12,
+                width: 48,
+                height: 48,
+                borderRadius: 24,
                 backgroundColor: '#191F28B3',
                 alignItems: 'center',
                 justifyContent: 'center',

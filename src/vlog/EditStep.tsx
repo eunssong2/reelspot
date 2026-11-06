@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { applyFont } from './edits';
 import { SafeImage } from './ui/SafeImage';
@@ -8,6 +8,7 @@ import { colors, GUTTER, radius, shadow } from './tokens';
 import { shortDotDateLabel } from './date';
 import { locate, selectedPlaces, type StepCtx } from './ctx';
 import {
+  aspectOf,
   BG_OPTIONS,
   FILTERS,
   clampFrame,
@@ -42,12 +43,28 @@ const patch = (ctx: StepCtx, placeKey: string, change: Partial<PlaceSetting>) =>
 
 /** 4단계: 장면 순서·자막·날짜/장소명 표시·글씨체를 정하고 장소를 완료한다. */
 export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string }) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const settingsScroll = useRef<ScrollView>(null);
+  const captionY = useRef(0);
+  const captionBodyY = useRef(0);
+  const captionFocused = useRef(false);
+  const revealCaption = () => {
+    if (captionFocused.current) settingsScroll.current?.scrollTo({ y: captionY.current + captionBodyY.current, animated: true });
+  };
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => { setKeyboardOpen(true); });
+    const hide = Keyboard.addListener('keyboardDidHide', () => { setKeyboardOpen(false); });
+    return () => { show.remove(); hide.remove(); };
+  }, []);
   const [clipIndex, setClipIndex] = useState(0);
   // 분할 장면에서 고른 칸(0부터)
   const [cell, setCell] = useState(0);
   const [orderOpen, setOrderOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
+  // 아코디언: 한 번에 하나만 펼친다(null 이면 모두 접힘).
+  const [openSec, setOpenSec] = useState<string | null>(null);
+  const toggleSec = (id: string) => setOpenSec((cur) => (cur === id ? null : id));
   // 전환 효과를 골랐을 때 이 미리보기에서 예시로 한 번 보여 주기 위한 진행도(0~1, 재생 중이 아니면 null)
   const [demo, setDemo] = useState<{ id: TransitionId; p: number } | null>(null);
   const demoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -138,7 +155,9 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   };
 
   const maxW = Math.min(width, 430) - GUTTER * 2;
-  const previewW = fitWidth(scene.aspect, Math.min(170, maxW * 0.5), maxW);
+  const previewW = fitWidth(scene.aspect, Math.min(keyboardOpen ? 40 : height < 700 ? 85 : 130, maxW * 0.5), maxW);
+  const canvasW = fitWidth(scene.aspect, Math.min(130, maxW * 0.5), maxW);
+  const previewScale = previewW / canvasW;
   const modeLabel = split ? `${scene.clips.length}분할 · 칸 배치 편집 ›` : '이어 재생 · 순서 편집 ›';
   const dateStr = found.day.date.replace(/-/g, '.');
 
@@ -151,29 +170,36 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
       onBack={ctx.back}
       onClose={ctx.close}
       toast={ctx.toastMessage}
+      // 미리보기는 위에 고정하고 설정만 스크롤한다(아래 설정을 바꾸면서 효과를 바로 보려고).
+      scroll={false}
+      compact={keyboardOpen}
       footer={<FooterButtons label="이 장소 완료" onPress={complete} />}
     >
-      <Pressable onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={8} disabled={media.length < 2}>
+      {!keyboardOpen && <Pressable onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={8} disabled={media.length < 2}>
         <Heading title={media.length < 2 ? '단일 재생' : modeLabel} />
-      </Pressable>
+      </Pressable>}
 
       <View style={styles.center}>
+        <View testID="vlog-edit-preview" style={{ width: previewW, height: previewW / aspectOf(scene.aspect).ratio, overflow: 'hidden' }}>
+        <View style={{ width: canvasW, transform: [{ scale: previewScale }], transformOrigin: 'top left' }}>
         {demo ? (
           // 전환 예시: 앞 장면(첫 장면이면 어두운 바탕)에서 이 장면으로 넘어오는 모습
           <TransitionStage
             scene={scene}
             prev={ctx.timeline.scenes[ctx.timeline.scenes.indexOf(scene) - 1]}
-            width={previewW}
+            width={canvasW}
             localSec={split ? 0 : scene.clips.slice(0, idx).reduce((s, c) => s + c.seconds, 0)}
             transition={demo.id}
             progress={demo.p}
           />
         ) : (
-          <SceneCanvas scene={scene} width={previewW} clipIndex={split ? undefined : idx} selectedCell={split ? cell : undefined} onSelectCell={split ? setCell : undefined} />
+          <SceneCanvas scene={scene} width={canvasW} clipIndex={split ? undefined : idx} selectedCell={split ? cell : undefined} onSelectCell={split ? setCell : undefined} />
         )}
+        </View>
+        </View>
       </View>
 
-      {split ? (
+      {!keyboardOpen && (split ? (
         <View style={styles.navRow}>
           <Text style={styles.navText}>장면 1 / 1  {scene.seconds}초</Text>
           {media.some((m) => m.item.kind === 'video') ? (
@@ -184,7 +210,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         </View>
       ) : (
         <View style={styles.navRow}>
-          <Pressable onPress={() => setClipIndex(Math.max(0, idx - 1))} disabled={idx === 0} accessibilityRole="button" hitSlop={8} style={idx === 0 && styles.off}>
+          <Pressable onPress={() => setClipIndex(Math.max(0, idx - 1))} disabled={idx === 0} accessibilityRole="button" hitSlop={8} style={[styles.navButton, idx === 0 && styles.off]}>
             <Text style={styles.link}>‹ 이전</Text>
           </Pressable>
           <Text style={styles.navText}>  장면 {idx + 1} / {scene.clips.length}  </Text>
@@ -193,13 +219,14 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
             disabled={idx >= scene.clips.length - 1}
             accessibilityRole="button"
             hitSlop={8}
-            style={idx >= scene.clips.length - 1 && styles.off}
+            style={[styles.navButton, idx >= scene.clips.length - 1 && styles.off]}
           >
             <Text style={styles.link}>다음 ›</Text>
           </Pressable>
         </View>
-      )}
+      ))}
 
+      <ScrollView ref={settingsScroll} testID="vlog-edit-settings" onLayout={revealCaption} keyboardShouldPersistTaps="handled" style={styles.settings} contentContainerStyle={styles.settingsContent} showsVerticalScrollIndicator={false}>
       {curVideo ? (
         <View style={styles.toggleRow}>
           <View style={styles.toggleText}>
@@ -244,8 +271,13 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         </View>
       ) : null}
 
-      <View style={styles.transBox}>
-        <Text style={styles.label}>색감 효과 {split ? '(분할 장면 전체)' : '(지금 보는 장면)'}</Text>
+      <Accordion
+        id="filter"
+        open={openSec === 'filter'}
+        onToggle={toggleSec}
+        title={`색감 효과 ${split ? '(분할 장면 전체)' : '(지금 보는 장면)'}`}
+        summary={FILTERS.find((f) => f.id === (setting.filters?.[filterKey] ?? 'none'))?.label ?? ''}
+      >
         <View style={styles.transRow}>
           {FILTERS.map((f) => {
             const on = (setting.filters?.[filterKey] ?? 'none') === f.id;
@@ -263,11 +295,16 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
           })}
         </View>
         <Text style={styles.value}>원본 파일은 바뀌지 않고, 영상으로 만들 때만 적용돼요.</Text>
-      </View>
+      </Accordion>
 
       {curClip ? (
-        <View style={styles.transBox}>
-          <Text style={styles.label}>화면 맞춤 {split ? `(${Math.min(cell, scene.clips.length - 1) + 1}번 칸)` : '(지금 보는 장면)'}</Text>
+        <Accordion
+          id="fit"
+          open={openSec === 'fit'}
+          onToggle={toggleSec}
+          title={`화면 맞춤 ${split ? `(${Math.min(cell, scene.clips.length - 1) + 1}번 칸)` : '(지금 보는 장면)'}`}
+          summary={curClip.frame.fit === 'fill' ? '채우기' : '맞춤'}
+        >
           {split ? <Text style={styles.value}>위 미리보기에서 칸을 눌러 고른 뒤 조절하세요.</Text> : null}
           <View style={styles.transRow}>
             {([['fill', '채우기'], ['contain', '맞춤']] as const).map(([id, label]) => {
@@ -294,18 +331,36 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
               </View>
             </>
           ) : null}
-        </View>
+        </Accordion>
       ) : null}
 
+      <Accordion
+        id="show"
+        open={openSec === 'show'}
+        onToggle={toggleSec}
+        title="날짜·장소명 표시"
+        summary={`날짜 ${setting.showDate ? '켬' : '끔'} · 장소명 ${setting.showPlace ? '켬' : '끔'}`}
+      >
       <Row label="날짜 표시" value={dateStr}>
         <Switch value={setting.showDate} onValueChange={(v) => patch(ctx, key, { showDate: v })} trackColor={{ true: colors.primary }} accessibilityLabel="날짜 표시" />
       </Row>
       <Row label="장소명 표시" value={found.place.place.name}>
         <Switch value={setting.showPlace} onValueChange={(v) => patch(ctx, key, { showPlace: v })} trackColor={{ true: colors.primary }} accessibilityLabel="장소명 표시" />
       </Row>
+      </Accordion>
 
-      <Text style={styles.label}>{split ? '이 장면 자막 (선택) · 분할 화면 전체에 1개' : '이 장면 자막 (선택)'}</Text>
+      <Accordion
+        id="caption"
+        onBodyLayout={(event) => { captionBodyY.current = event.nativeEvent.layout.y; revealCaption(); }}
+        onLayout={(event) => { captionY.current = event.nativeEvent.layout.y; }}
+        open={openSec === 'caption'}
+        onToggle={toggleSec}
+        title={split ? '이 장면 자막 (선택) · 분할 화면 전체에 1개' : '이 장면 자막 (선택)'}
+        summary={setting.captions[captionKey] || '없음'}
+      >
       <TextInput
+        onFocus={() => { captionFocused.current = true; revealCaption(); }}
+        onBlur={() => { captionFocused.current = false; }}
         value={setting.captions[captionKey] ?? ''}
         onChangeText={setCaption}
         placeholder="자막을 입력하세요"
@@ -314,14 +369,20 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         style={styles.input}
         accessibilityLabel="이 장면 자막"
       />
+      </Accordion>
 
       <Pressable onPress={() => setFontOpen(true)} accessibilityRole="button" style={styles.fontRow}>
         <Text style={styles.label}>글씨체</Text>
         <Text style={styles.link}>{fontOf(setting.fontId).label} ›</Text>
       </Pressable>
 
-      <View style={styles.transBox}>
-        <Text style={styles.label}>장면 전환 (이 장면이 시작될 때)</Text>
+      <Accordion
+        id="transition"
+        open={openSec === 'transition'}
+        onToggle={toggleSec}
+        title="장면 전환 (이 장면이 시작될 때)"
+        summary={TRANSITIONS.find((x) => x.id === (setting.transition ?? 'none'))?.label ?? ''}
+      >
         <View style={styles.transRow}>
           {TRANSITIONS.map((tr) => {
             const on = (setting.transition ?? 'none') === tr.id;
@@ -349,7 +410,9 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
           {TRANSITIONS.find((x) => x.id === (setting.transition ?? 'none'))?.desc}
           {ctx.timeline.scenes[0]?.placeKey === key ? ' · 첫 장면은 앞 장면이 없어 전환이 보이지 않아요.' : ''}
         </Text>
-      </View>
+      </Accordion>
+
+      </ScrollView>
 
       <OrderSheet
         visible={orderOpen}
@@ -371,6 +434,44 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         }}
       />
     </StepFrame>
+  );
+}
+
+/** 접고 펼치는 설정 묶음. 접힌 상태에서도 지금 고른 값을 요약으로 보여 준다. */
+function Accordion({
+  id,
+  title,
+  summary,
+  open,
+  onToggle,
+  children,
+  onLayout,
+  onBodyLayout,
+}: {
+  onBodyLayout?: import('react-native').ViewProps['onLayout'];
+  onLayout?: import('react-native').ViewProps['onLayout'];
+  id: string;
+  title: string;
+  summary: string;
+  open: boolean;
+  onToggle: (id: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={styles.acc} onLayout={onLayout}>
+      <Pressable onPress={() => onToggle(id)} accessibilityRole="button" accessibilityLabel={title} accessibilityValue={{ text: summary }} accessibilityState={{ expanded: open }} style={styles.accHead}>
+        <View style={styles.accTitleBox}>
+          <Text style={styles.label}>{title}</Text>
+          {open ? null : (
+            <Text style={styles.value} numberOfLines={1}>
+              {summary}
+            </Text>
+          )}
+        </View>
+        <Text accessible={false} importantForAccessibility="no" style={styles.link}>{open ? '▲' : '▼'}</Text>
+      </Pressable>
+      {open ? <View style={styles.accBody} onLayout={onBodyLayout}>{children}</View> : null}
+    </View>
   );
 }
 
@@ -482,13 +583,21 @@ function FontSheet({
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center' },
+  settings: { flex: 1, minHeight: 0 },
+  settingsContent: { gap: 4, paddingBottom: 24 },
+  navButton: { minHeight: 48, minWidth: 48, justifyContent: 'center' },
   navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   navText: { fontSize: 13, fontWeight: '700', color: colors.primary },
   link: { fontSize: 13, fontWeight: '700', color: colors.primary },
   off: { opacity: 0.35 },
   transBox: { gap: 8 },
+  // 카드 대신 가로로 꽉 찬 구분선만 둔다.
+  acc: { borderBottomWidth: 1, borderBottomColor: colors.surface },
+  accHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 52 },
+  accTitleBox: { flex: 1, gap: 2 },
+  accBody: { gap: 8, paddingBottom: 14 },
   transRow: { flexDirection: 'row', gap: 6 },
-  transChip: { flex: 1, minHeight: 44, borderRadius: radius.item, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  transChip: { flex: 1, minHeight: 48, borderRadius: radius.item, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   transChipOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   transLabel: { fontSize: 13, fontWeight: '700', color: colors.textSub },
   transLabelOn: { color: colors.primary },
@@ -512,8 +621,8 @@ const styles = StyleSheet.create({
   fontMark: { fontSize: 15, color: colors.primary },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   orderNo: { width: 20, fontSize: 14, fontWeight: '800', color: colors.primary, textAlign: 'center' },
-  orderThumb: { width: 44, height: 44, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.surface },
+  orderThumb: { width: 48, height: 48, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.surface },
   orderKind: { flex: 1, fontSize: 13, color: colors.textSub },
-  mini: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  mini: { width: 48, height: 48, borderRadius: 12, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   miniText: { fontSize: 16, fontWeight: '800', color: colors.text },
 });

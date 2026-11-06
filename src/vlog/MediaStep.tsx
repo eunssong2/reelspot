@@ -136,11 +136,11 @@ export function MediaStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string }
       <View style={styles.listHead}>
         <Text style={styles.listTitle}>전체 {place.media.length}개</Text>
         <View style={styles.listTools}>
-          <Pressable onPress={() => setNewestFirst((v) => !v)} accessibilityRole="button" hitSlop={8}>
+          <Pressable onPress={() => setNewestFirst((v) => !v)} accessibilityRole="button" style={styles.toolButton}>
             <Text style={styles.tool}>{newestFirst ? '최신순' : '오래된순'}</Text>
           </Pressable>
           <Text style={styles.tool}> · </Text>
-          <Pressable onPress={toggleAll} accessibilityRole="button" hitSlop={8}>
+          <Pressable onPress={toggleAll} accessibilityRole="button" style={styles.toolButton}>
             <Text style={styles.tool}>{allOn ? '전체 해제' : '전체 선택'}</Text>
           </Pressable>
         </View>
@@ -251,13 +251,14 @@ const styles = StyleSheet.create({
   footerGap: { gap: 10 },
   summary: { fontSize: 12, color: colors.textSub },
   chips: { gap: 8, paddingRight: GUTTER },
-  chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surface },
+  chip: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.surface },
   chipOn: { backgroundColor: colors.primarySoft },
   chipText: { fontSize: 13, fontWeight: '700', color: colors.textSub },
   chipTextOn: { color: colors.primary },
   listHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   listTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
   listTools: { flexDirection: 'row', alignItems: 'center' },
+  toolButton: { minWidth: 48, minHeight: 48, justifyContent: 'center', alignItems: 'center' },
   tool: { fontSize: 12, fontWeight: '600', color: colors.textSub },
   warn: { backgroundColor: '#FDE7E9', borderRadius: 12, padding: 12 },
   warnText: { fontSize: 13, fontWeight: '700', color: colors.danger },
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
   tile: { borderRadius: 10, overflow: 'hidden', backgroundColor: colors.surface, borderWidth: 2, borderColor: 'transparent' },
   tileOn: { borderColor: colors.primary },
   videoBadge: { position: 'absolute', left: 5, bottom: 5, fontSize: 10, fontWeight: '700', color: colors.onPrimary, backgroundColor: 'rgba(25,31,40,0.6)', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 6, overflow: 'hidden' },
-  zoom: { position: 'absolute', right: 5, bottom: 5, width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(25,31,40,0.6)', alignItems: 'center', justifyContent: 'center' },
+  zoom: { position: 'absolute', right: 5, bottom: 5, width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(25,31,40,0.6)', alignItems: 'center', justifyContent: 'center' },
   zoomText: { fontSize: 16, color: colors.onPrimary, fontWeight: '800', marginTop: -1 },
   order: { position: 'absolute', right: 5, top: 5, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   orderText: { fontSize: 12, fontWeight: '800', color: colors.onPrimary },

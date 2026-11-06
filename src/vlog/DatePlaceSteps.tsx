@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   group: { gap: 8, marginTop: 4 },
   groupHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   groupTitle: { fontSize: 13, fontWeight: '800', color: colors.primary },
-  allBtn: { minHeight: 36, justifyContent: 'center' },
+  allBtn: { minHeight: 48, justifyContent: 'center' },
   allText: { fontSize: 13, fontWeight: '700', color: colors.primary },
   note: { fontSize: 12, color: colors.textMuted },
 });

@@ -1,3 +1,4 @@
+import { useAppToast } from '../components/toast-provider';
 import { useInitialize } from '../lib/effects';
 import React, { useRef, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -8,6 +9,7 @@ import { inviteCodeHint, parseInviteInput } from '../lib/invite-input';
 import { dDay } from '../lib/day-labels';
 import { todayInSeoul } from '../lib/preferences';
 import { useAccount } from '../lib/state';
+import { markInviteRestoreHandled } from '../lib/invite-restore';
 import { Screen, Button, colors, s, useAction } from '../components/ui';
 // A typed code keeps the label "코드 형식이 맞아요"; links and tokens stay opaque.
 const isInviteCode = (value: string) => /^([A-Z0-9]{8}|[0-9A-F]{12})$/.test(value);
@@ -19,6 +21,13 @@ export default function Invite() {
     generation = useRef(0);
   const { session, profile } = useAccount(),
     a = useAction({ inlineRetry: false });
+  const toast = useAppToast();
+  useInitialize(() => { if (session) markInviteRestoreHandled(session.userId); }, [session?.userId]);
+  const backToHome = () => {
+    if (session) markInviteRestoreHandled(session.userId);
+    router.canGoBack() ? router.back() : router.replace(session ? '/' : '/login');
+    return true;
+  };
   async function check(input = token, preserveToken = opaqueToken) {
     const request = ++generation.current;
     setToken(input);
@@ -62,6 +71,7 @@ export default function Invite() {
     await a.run(async () => {
       const result = await api('/invitations/join', { tokenOrCode: token });
       await AsyncStorage.removeItem('atp.pending-invite');
+      toast(result.alreadyMember ? '이미 참여 중인 모임이에요' : `'${preview?.groupName ?? preview?.group?.name ?? '모임'}'에 참여했어요`);
       router.replace(`/group/${result.groupId}`);
     });
   }
@@ -88,6 +98,7 @@ export default function Invite() {
     <Screen
       compact
       title="초대 확인"
+      onBack={backToHome}
       footer={
         preview && !blocked ? (
           <>
@@ -107,7 +118,7 @@ export default function Invite() {
             </Text>
           </>
         ) : blocked ? (
-          <Button secondary onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
+          <Button secondary onPress={async () => { await AsyncStorage.removeItem('atp.pending-invite'); router.canGoBack() ? router.back() : router.replace('/'); }}>
             닫기
           </Button>
         ) : undefined

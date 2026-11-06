@@ -3,7 +3,8 @@ import { useFocusLoad } from '../../lib/effects';
 import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { inputText } from '../../lib/validation';
-import { Alert, View, Text, Pressable, Image, Share } from 'react-native';
+import { Alert, View, Text, Pressable, Image } from 'react-native';
+import { shareGroupInvite } from '../../lib/invite-share';
 import * as Clipboard from 'expo-clipboard';
 import { api, awaitOperation, getGroup, coverSource } from '../../lib/api';
 import { useAccount } from '../../lib/state';
@@ -60,9 +61,7 @@ export default function Manage() {
       }
       if (!invite) throw new Error('초대를 만들지 못했어요. 초대·관리에서 다시 시도해 주세요.');
       if (action === 'share')
-        await Share.share({
-          message: `${group.name}에 초대합니다.\n${invite.link}\n초대 코드 ${invite.code}`,
-        });
+        await shareGroupInvite(group, invite);
       else {
         await Clipboard.setStringAsync(invite.link);
         setCopied('초대 링크를 복사했어요.');
@@ -192,7 +191,7 @@ export default function Manage() {
                   accessibilityRole="button"
                   accessibilityLabel={`${m.displayName} 메뉴`}
                   onPress={() => setSelected(m.id)}
-                  style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+                  style={{ minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}
                 >
                   <Text style={{ fontSize: 20, color: colors.muted }}>⋯</Text>
                 </Pressable>

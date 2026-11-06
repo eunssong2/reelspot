@@ -229,7 +229,7 @@ export function Button({
         tone === 'dark' && { backgroundColor: colors.ink },
         tone === 'danger' && { backgroundColor: '#B8433F' },
         tone === 'outline' && { backgroundColor: 'white', borderWidth: 1, borderColor: '#F9C9C6' },
-        small && { minHeight: 36, paddingVertical: 8, paddingHorizontal: 12, marginVertical: 0 },
+        small && { minHeight: 48, paddingVertical: 8, paddingHorizontal: 12, marginVertical: 0 },
         style,
         pressed && s.pressed,
         disabled && { opacity: 0.45 },
@@ -374,8 +374,8 @@ export function ClearableInput({
             accessibilityLabel="입력 지우기"
             onPress={() => onChangeText('')}
             style={{
-              width: 30,
-              height: 30,
+              width: 48,
+              height: 48,
               borderRadius: 15,
               backgroundColor: '#E5E8EB',
               alignItems: 'center',
@@ -412,7 +412,7 @@ export function TextButton({
       disabled={disabled}
       onPress={onPress}
       style={{
-        minHeight: 44,
+        minHeight: 48,
         paddingHorizontal: 8,
         justifyContent: 'center',
         opacity: disabled ? 0.4 : 1,
@@ -440,7 +440,7 @@ export function Chip({
         backgroundColor: selected ? colors.accent : colors.surface,
         borderRadius: 20,
         paddingHorizontal: 14,
-        minHeight: 36,
+        minHeight: 48,
         justifyContent: 'center',
       }}
     >
@@ -636,8 +636,8 @@ export const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   screen: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24, flexGrow: 1 },
   header: { minHeight: 56, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12 },
-  headerSide: { width: 44 },
-  headerButton: { width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  headerSide: { width: 48 },
+  headerButton: { width: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 17, fontWeight: '700', color: colors.ink },
   headerSubtitle: { fontSize: 11, color: colors.muted, marginTop: 2 },
   footer: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.bg },

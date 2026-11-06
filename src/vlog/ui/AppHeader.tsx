@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   side: { width: 76, justifyContent: 'center' },
   sideRight: { alignItems: 'flex-end' },
   center: { flex: 1, alignItems: 'center' },
-  back: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
+  back: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
   pressed: { backgroundColor: colors.surface },
   backGlyph: { fontSize: 34, lineHeight: 38, color: colors.text, marginTop: -3 },
   title: { fontSize: 18, fontWeight: '700', color: colors.text },

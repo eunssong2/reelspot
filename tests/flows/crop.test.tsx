@@ -64,6 +64,8 @@ test('full-image crop leaves every corner handle inside the stage', async () => 
     for (const handle of handles) {
       const bounds = Object.assign({}, ...handle.props.style);
       const stage = Object.assign({}, ...handle.parent.props.style);
+      expect(bounds.width).toBeGreaterThanOrEqual(48);
+      expect(bounds.height).toBeGreaterThanOrEqual(48);
       expect(bounds.left).toBeGreaterThanOrEqual(0);
       expect(bounds.top).toBeGreaterThanOrEqual(0);
       expect(bounds.left + bounds.width).toBeLessThanOrEqual(stage.width);

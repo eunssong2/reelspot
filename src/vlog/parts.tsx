@@ -26,6 +26,7 @@ interface FrameProps {
   footer?: ReactNode;
   toast?: string | null;
   scroll?: boolean;
+  compact?: boolean;
 }
 
 export const StepNoticeContext = createContext<ReactNode>(null);
@@ -40,7 +41,7 @@ export function RecoveryNotice({ message, label, onPress }: { message: string; l
 }
 
 /** 브이로그 제작 화면 공통 틀: 뒤로가기·제목·닫기 + 단계 표시 + 본문 + 하단 버튼. */
-export function StepFrame({ title, step, stepLabel, context, onBack, onClose, children, footer, toast, scroll = true }: FrameProps) {
+export function StepFrame({ title, step, stepLabel, context, onBack, onClose, children, footer, toast, scroll = true, compact = false }: FrameProps) {
   const notices = useContext(StepNoticeContext);
   return (
     <ScreenFrame>
@@ -53,7 +54,7 @@ export function StepFrame({ title, step, stepLabel, context, onBack, onClose, ch
           </Pressable>
         }
       />
-      <View style={styles.progressWrap}>
+      {!compact && <View style={styles.progressWrap}>
         <Text style={styles.stepText}>
           {step} / 5 {stepLabel}
           {context ? ` · ${context}` : ''}
@@ -61,16 +62,16 @@ export function StepFrame({ title, step, stepLabel, context, onBack, onClose, ch
         <View style={styles.track}>
           <View style={[styles.fill, { width: `${(step / 5) * 100}%` }]} />
         </View>
-      </View>
+      </View>}
       {scroll ? (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {notices}
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.content, styles.fill1]}>{notices}{children}</View>
+        <View style={[styles.content, styles.fill1, compact && { paddingTop: 4, paddingBottom: 4, gap: 4 }]}>{notices}{children}</View>
       )}
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
+      {footer ? <View style={[styles.footer, compact && { paddingTop: 4, paddingBottom: 4 }]}>{footer}</View> : null}
       <Toast message={toast ?? null} bottom={footer ? 110 : 40} />
     </ScreenFrame>
   );
@@ -342,7 +343,7 @@ export function LayoutThumb({ rects, images, width, ratio = 9 / 16 }: { rects: R
 }
 
 const styles = StyleSheet.create({
-  close: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 },
+  close: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 6 },
   closeText: { fontSize: 13, fontWeight: '600', color: colors.textSub },
   progressWrap: { paddingHorizontal: GUTTER, gap: 6, paddingBottom: 6 },
   stepText: { fontSize: 12, fontWeight: '800', color: colors.primary },
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
   aspectTitle: { fontSize: 14, fontWeight: '800', color: colors.text },
   aspectRow: { flexDirection: 'row', gap: 8 },
   aspectChip: { flex: 1, minHeight: 56, borderRadius: radius.item, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
-  aspectChipCompact: { minHeight: 44 },
+  aspectChipCompact: { minHeight: 48 },
   aspectChipOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   aspectIcon: { borderWidth: 2, borderColor: colors.textMuted, borderRadius: 3 },
   aspectIconTall: { width: 12, height: 20 },

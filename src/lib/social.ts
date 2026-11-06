@@ -4,6 +4,7 @@ import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 import { api, setSession } from './api';
 import { requireHttps } from './https';
+export class LoginCancelled extends Error {}
 type Provider = 'google' | 'kakao';
 type PendingLogin = {
   provider: Provider; state: string; verifier: string; expiresAt: number;
@@ -52,7 +53,7 @@ async function beginBrowser(provider: Provider, purpose: PendingLogin['purpose']
   const result = await WebBrowser.openAuthSessionAsync(requireHttps(start.authorizationUrl), expectedReturn);
   if (result.type !== 'success') {
     if ((await pendingBrowserLogin())?.state === pending.state) await clearBrowserLogin(pending.state);
-    throw new Error('로그인을 취소했습니다.');
+    throw new LoginCancelled('로그인을 취소했습니다.');
   }
   const returned = new URL(result.url);
   if (returned.protocol !== 'atthatplace:' || returned.hostname !== 'oauth' ||

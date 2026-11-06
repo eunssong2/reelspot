@@ -5,6 +5,8 @@ import { api, ApiError, awaitOperation, getGroup } from '../../lib/api';
 import { useInitialize } from '../../lib/effects';
 import { useAccount } from '../../lib/state';
 import { moveMonth } from '../../lib/calendar';
+import { useFormExit } from '../../lib/unsaved';
+import { useAppToast } from '../../components/toast-provider';
 import { inputText } from '../../lib/validation';
 import { scheduleDayList, type ScheduleDay } from '../../lib/day-labels';
 import { loadGroupDays } from '../../lib/group-days';
@@ -27,7 +29,7 @@ export default function DayEdit() {
     [pickMonth, setPickMonth] = useState(date.slice(0, 7)),
     [pick, setPick] = useState(date),
     [allowed, setAllowed] = useState(false);
-  async function load() {
+  async function load(preserveInput = false) {
     const r = await api(`/schedules/${scheduleId}`);
     const g = await getGroup(r.schedule.groupId);
     if (g.ownerUserId !== session?.userId) throw new Error('방장만 일정을 바꿀 수 있어요.');
@@ -40,9 +42,8 @@ export default function DayEdit() {
     setSingle(one);
     setGroupName(g.name);
     setPlaces(r.plan?.find((p: any) => p.date === date)?.visitCount ?? d.visitCount ?? 0);
-    setTitle(d.title ?? (one ? r.schedule.title : `${d.dayNo}일차 · ${r.schedule.title}`));
-    // Title and date can be changed even for a cancelled day while the schedule is active.
-    setAllowed(r.schedule.status === 'active');
+    if (!preserveInput) setTitle(d.title ?? (one ? r.schedule.title : `${d.dayNo}일차 · ${r.schedule.title}`));
+    setAllowed(r.schedule.status === 'active' && d.status !== 'cancelled');
     // Dates the day cannot move to.
     const activeDays = await loadGroupDays(g.id);
     setTaken(new Set([
@@ -62,6 +63,8 @@ export default function DayEdit() {
   }
   const original = day?.title ?? (single ? schedule?.title : `${day?.dayNo}일차 · ${schedule?.title}`);
   const changed = !!day && (title.trim() !== (original ?? '') || newDate !== date);
+  const toast = useAppToast();
+  const leave = useFormExit(changed, async () => {}, false, { title: '저장하지 않고 나갈까요?', body: '바꾼 내용이 사라져요.', cancel: '계속 편집', discard: '나가기' });
   async function save() {
     await a.run(async () => {
       try {
@@ -71,15 +74,16 @@ export default function DayEdit() {
         if (newDate !== date) body.date = newDate;
         await awaitOperation(await api(`/schedules/${scheduleId}/days/${date}`, body, 'PATCH'));
         // Return to the calendar already in the stack instead of stacking another copy.
-        router.dismissTo({
+        toast('일정을 바꿨어요');
+        leave(() => router.dismissTo({
           pathname: '/group/[id]',
           params: { id: schedule.groupId, focusDate: newDate },
-        });
+        }));
       } catch (e) {
         if (e instanceof ApiError && e.code === 'SCHEDULE_DATE_TAKEN')
-          throw new Error('그 날짜에는 이미 다른 일정이 있어요. 다른 날짜를 골라 주세요.');
+          throw new Error('이미 다른 일정이 있는 날짜예요. 하루에는 일정을 하나만 만들 수 있어요.');
         if (e instanceof ApiError && e.code === 'VERSION_CONFLICT') {
-          await load();
+          await load(true);
           throw new Error('다른 곳에서 일정이 바뀌었어요. 최신 내용을 불러왔으니 다시 확인해 주세요.');
         }
         throw e;
@@ -91,7 +95,8 @@ export default function DayEdit() {
       await api(`/schedules/${scheduleId}/days/${date}/${kind}`, {
         expectedVersion: schedule.version,
       });
-      router.dismissTo({ pathname: '/group/[id]', params: { id: schedule.groupId, focusDate: date } });
+      toast(kind === 'cancellation' ? '일정을 취소했어요' : '일정을 삭제했어요');
+      leave(() => router.dismissTo({ pathname: '/group/[id]', params: { id: schedule.groupId, focusDate: date } }));
     });
   }
   const row = (
@@ -134,7 +139,11 @@ export default function DayEdit() {
     </Pressable>
   );
   return (
-    <Screen compact title="일정 변경" subtitle={groupName}>
+    <Screen compact title="일정 변경" subtitle={groupName} onBack={() => {
+      if (!changed) return false;
+      leave.confirmExit(() => router.canGoBack() ? router.back() : router.replace({ pathname: '/group/[id]', params: { id: schedule.groupId } }));
+      return true;
+    }}>
       <View
         style={{
           flexDirection: 'row',
@@ -199,9 +208,7 @@ export default function DayEdit() {
         {a.busy ? '저장 중…' : '✓ 저장하기'}
       </Button>
       {day && !allowed && <P>취소된 일정은 바꿀 수 없어요. 기록은 보관 기한까지 볼 수 있어요.</P>}
-      {day && allowed && day.status === 'cancelled' && (
-        <P>취소된 날이에요. 제목과 날짜는 바꿀 수 있지만 새 사진·영상은 올릴 수 없어요.</P>
-      )}
+
       <View
         style={{
           backgroundColor: colors.surface,

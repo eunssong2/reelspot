@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Image, Share, Text, View, Pressable } from 'react-native';
+import { Image, Text, View, Pressable } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { shareGroupInvite } from '../../lib/invite-share';
 import * as Clipboard from 'expo-clipboard';
-import { api, awaitOperation, coverSource, getGroup } from '../../lib/api';
+import { ApiError, api, awaitOperation, coverSource, getGroup } from '../../lib/api';
+import { useAppToast } from '../../components/toast-provider';
 import { useFocusLoad } from '../../lib/effects';
 import { useAccount } from '../../lib/state';
 import { monthDayTime } from '../../lib/day-labels';
@@ -15,6 +17,8 @@ export default function Invites() {
     [group, setGroup] = useState<any>(null),
     [items, setItems] = useState<any[]>([]),
     [message, setMessage] = useState('');
+  const toast = useAppToast();
+  const [now, setNow] = useState(Date.now());
   const a = useAction(),
     cover = useAction({ inlineRetry: false });
   async function load() {
@@ -27,7 +31,10 @@ export default function Invites() {
     );
   }
   useFocusLoad(() => {
+    setNow(Date.now());
     void a.run(load);
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
   }, [id]);
   async function live(inviteId: string) {
     const r = await api(`/groups/${id}/invites`);
@@ -44,25 +51,29 @@ export default function Invites() {
     await a.run(async () => {
       const fresh = await live(item.id);
       if (action === 'share')
-        await Share.share({
-          message: `${group.name}에 초대합니다.\n${group.scheduleSummary?.title ?? '함께할 일정을 만들어요.'}\n${fresh.link}\n초대 코드 ${fresh.code}\n받은 초대는 재전달할 수 있어요.`,
-        });
+        await shareGroupInvite(group, fresh);
       else {
         await Clipboard.setStringAsync(action === 'link' ? fresh.link : fresh.code);
-        setMessage(action === 'link' ? '초대 링크를 복사했어요.' : '초대 코드를 복사했어요.');
+        toast(action === 'link' ? '링크를 복사했어요' : '코드를 복사했어요');
       }
     });
   }
   const revoke = (item: any) =>
-    confirm('이 초대를 취소할까요?', '기존 참여자와 다른 초대에는 영향을 주지 않아요.', () =>
+    confirm('이 초대를 취소할까요?', `${item.code}\n이 링크와 코드로는 더 이상 참여할 수 없어요. 이미 참여한 사람은 그대로예요.`, () =>
       a.run(async () => {
-        await api(`/invites/${item.id}/revocation`, { expectedVersion: item.version });
+        try { await api(`/invites/${item.id}/revocation`, { expectedVersion: item.version }); }
+        catch (error) {
+          if (error instanceof ApiError && error.code === 'VERSION_CONFLICT') { await load(); toast('초대 상태가 바뀌어 다시 불러왔어요'); return; }
+          throw error;
+        }
         await load();
+        toast('초대를 취소했어요');
       }),
     );
   const owner = group?.ownerUserId === session?.userId;
-  const current = items.find((x) => x.state === 'active');
-  const previous = items.filter((x) => x !== current);
+  const timedItems = items.map((x) => ({ ...x, state: x.state === 'active' && Date.parse(x.expiresAt) <= now ? 'expired' : x.state }));
+  const current = timedItems.find((x) => x.state === 'active');
+  const previous = timedItems.filter((x) => x !== current);
   return (
     <Screen
       compact
@@ -76,6 +87,7 @@ export default function Invites() {
               a.run(async () => {
                 await api(`/groups/${id}/invites`, {});
                 await load();
+                toast('새 초대를 만들었어요');
               })
             }
           >
@@ -139,7 +151,7 @@ export default function Invites() {
                 const done = await uploadAndApplyImage({ kind: 'cover', groupId: id });
                 if (done === false)
                   setMessage('업로드가 끝나면 파일 전송 상태에서 대표 사진으로 적용할 수 있어요.');
-                if (done) setMessage('모임 사진을 바꿨어요.');
+                if (done) toast('모임 사진을 바꿨어요');
                 await load();
               })
             }
@@ -148,6 +160,8 @@ export default function Invites() {
           </TextButton>
         </View>
       )}
+      {!!group?.coverAssetId && <TextButton onPress={() => router.push({ pathname: '/report', params: { targetType: 'cover', targetId: group.coverAssetId } })}>모임 사진 신고</TextButton>}
+      {group?.activeCount >= 10 && <P>지금은 정원이 다 찼어요. 자리가 나야 새로 참여할 수 있어요.</P>}
       {cover.error ? cover.errorView : null}
       {group && (
         <>
@@ -223,7 +237,7 @@ export default function Invites() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text style={{ fontSize: 12, color: colors.muted }}>👁 확인 횟수</Text>
             <Text style={{ fontSize: 13, fontWeight: '800', color: colors.ink }}>
-              <Text style={{ color: colors.accent }}>{current.useCount}</Text> / 50회
+              <Text style={{ color: colors.accent }}>{current.useCount}</Text> / 50회{50 - current.useCount <= 10 ? ` · ${Math.max(0, 50 - current.useCount)}회 남음` : ''}
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
@@ -317,6 +331,7 @@ export default function Invites() {
       <TextButton color={colors.sub} onPress={() => router.push(`/group/manage?id=${id}`)}>
         함께하는 친구 보기 ›
       </TextButton>
+      {a.error && group && <P>초대 목록을 새로 불러오지 못했어요.</P>}
       {a.errorView}
     </Screen>
   );

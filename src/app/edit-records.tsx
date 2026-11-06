@@ -1,9 +1,11 @@
 import { useInitialize } from '../lib/effects';
 import React, { useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Switch, View } from 'react-native';
-import { api, awaitOperation, currentSession } from '../lib/api';
-import { Screen, Field, Button, Card, H, P, confirm, useAction } from '../components/ui';
+import { Image, ScrollView, Switch, View } from 'react-native';
+import { API, api, awaitOperation, currentSession } from '../lib/api';
+import { inputText } from '../lib/validation';
+import { useAppToast } from '../components/toast-provider';
+import { Screen, Sheet, Field, Button, Card, H, P, confirm, useAction } from '../components/ui';
 export default function Edit() {
   const p = useLocalSearchParams<{
       ids?: string;
@@ -13,6 +15,7 @@ export default function Edit() {
     }>(),
     [targets, setTargets] = useState<any[]>([]),
     [selected, setSelected] = useState<string[]>(p.ids?.split(',') ?? []),
+    [deleting, setDeleting] = useState(false),
     [description, setDescription] = useState(''),
     [date, setDate] = useState(''),
     [visit, setVisit] = useState<string | null>(null),
@@ -21,6 +24,9 @@ export default function Edit() {
     [canEdit, setCanEdit] = useState(false),
     [next, setNext] = useState<string | null>(null);
   const a = useAction();
+  const toast = useAppToast();
+  let descriptionError = '';
+  try { if (apply.description) inputText(description, '설명', 1000, false, true); } catch (e) { descriptionError = (e as Error).message; }
   useInitialize(() => {
     a.run(async () => {
       if (p.allOwn) {
@@ -52,7 +58,7 @@ export default function Edit() {
           cursor = r.nextCursor;
         } while (cursor && selected.some((id) => !all.some((m) => m.media.id === id)));
         const chosen = all.filter((m) => selected.includes(m.media.id));
-        setTargets(chosen.map((m) => m.media));
+        setTargets(chosen.map((m) => ({ ...m.media, groupName: m.groupName, scheduleTitle: m.scheduleTitle })));
         setCanEdit(
           chosen.every((m) => m.membershipState === 'active') &&
             new Set(chosen.map((m) => m.media.scheduleId)).size === 1,
@@ -68,6 +74,10 @@ export default function Edit() {
       }
     });
   }, []);
+  const deletionTargets = targets.filter((m) => selected.includes(m.id));
+  const deletionPhotos = deletionTargets.filter((m) => m.kind === 'photo').length;
+  const deletionVideos = deletionTargets.filter((m) => m.kind === 'video').length;
+  const deletionGroups = [...new Set(deletionTargets.map((m) => m.groupName).filter(Boolean))];
   return (
     <Screen
       title="본인 기록 일괄 수정"
@@ -86,6 +96,7 @@ export default function Edit() {
             )
           }
         >
+          <Image accessibilityLabel="삭제·수정 대상 기록 미리보기" style={{ width: 96, height: 72, borderRadius: 8 }} source={[{ uri: `${API}/v1/media/${m.id}/content?variant=thumbnail&context=mine`, headers: { Authorization: `Bearer ${currentSession()?.accessToken}` } }]} />
           <H>
             {selected.includes(m.id) ? '✓ ' : ''}
             {m.description || m.recordDate}
@@ -180,11 +191,14 @@ export default function Edit() {
           {apply.description && (
             <Field
               label="설명 · 빈칸이면 지우기"
+              limit={1000}
+              helper="설명은 1000자까지 쓸 수 있어요"
               multiline
               value={description}
               onChangeText={setDescription}
             />
           )}
+          {!!descriptionError && <P>{descriptionError}</P>}
           {apply.recordDate && (
             <Field
               label="새 기록일"
@@ -216,7 +230,7 @@ export default function Edit() {
             </>
           )}
           <Button
-            disabled={a.busy || !selected.length || !Object.values(apply).some(Boolean)}
+            disabled={a.busy || !selected.length || !!descriptionError || !Object.values(apply).some(Boolean)}
             onPress={() =>
               confirm(
                 '선택한 기록을 변경할까요?',
@@ -224,7 +238,7 @@ export default function Edit() {
                 () =>
                   a.run(async () => {
                     const fields: any = {};
-                    if (apply.description) fields.description = { apply: true, value: description };
+                    if (apply.description) fields.description = { apply: true, value: inputText(description, '설명', 1000, false, true) };
                     if (apply.recordDate) fields.recordDate = { apply: true, value: date };
                     if (apply.visitId) fields.visitId = { apply: true, value: visit };
                     await awaitOperation(
@@ -235,6 +249,7 @@ export default function Edit() {
                         fields,
                       }),
                     );
+                    toast('기록 정보를 바꿨어요');
                     router.back();
                   }),
               )
@@ -244,37 +259,28 @@ export default function Edit() {
           </Button>
         </>
       )}
-      <Button
-        secondary
-        disabled={!selected.length || a.busy}
-        onPress={() =>
-          confirm(
-            '서버 기록을 삭제할까요?',
-            `${selected.length}개 본인 파일(사진 ${targets.filter((m) => selected.includes(m.id) && m.kind === 'photo').length}개 · 영상 ${targets.filter((m) => selected.includes(m.id) && m.kind === 'video').length}개)을 삭제합니다. ${[
-              ...new Set(
-                targets
-                  .filter((m) => selected.includes(m.id))
-                  .map((m) => m.groupName)
-                  .filter(Boolean),
-              ),
-            ].join(', ')} 복구할 수 없으며 기기 앨범 원본은 유지됩니다.`,
-            () =>
-              a.run(async () => {
-                const r = await api('/media/deletions', { mediaIds: selected });
-                const failed = r.results.filter((r: any) => r.status === 'failed');
-                if (failed.length) {
-                  setSelected(failed.map((r: any) => r.id));
-                  throw new Error(
-                    `${failed.length}개 삭제에 실패했습니다. 실패 파일만 다시 시도해 주세요.`,
-                  );
-                }
-                router.back();
-              }),
-          )
-        }
-      >
-        선택한 본인 기록 삭제
-      </Button>
+      <Button secondary disabled={!selected.length || a.busy} onPress={() => setDeleting(true)}>선택한 본인 기록 삭제</Button>
+      <Sheet visible={deleting} title="서버 기록을 삭제할까요?" onClose={() => { if (!a.busy) setDeleting(false); }}>
+        <P>사진 {deletionPhotos}개 · 동영상 {deletionVideos}개를 삭제해요. 복구할 수 없으며 기기 앨범 원본은 유지됩니다.</P>
+        {deletionGroups.length > 0 && <P>모임: {deletionGroups.join(', ')}</P>}
+        <ScrollView horizontal contentContainerStyle={{ gap: 8 }}>
+          {deletionTargets.map((m) => <View key={m.id} style={{ width: 96 }}>
+            <Image accessibilityLabel="삭제 대상 미리보기" style={{ width: 96, height: 72 }} source={[{ uri: `${API}/v1/media/${m.id}/content?variant=thumbnail&context=mine`, headers: { Authorization: `Bearer ${currentSession()?.accessToken}` } }]} />
+            <P>{m.kind === 'video' ? '동영상' : '사진'} · {m.recordDate}</P>
+          </View>)}
+        </ScrollView>
+        <Button disabled={a.busy} onPress={() => a.run(async () => {
+          const r = await api('/media/deletions', { mediaIds: selected });
+          const failed = r.results.filter((r: any) => r.status === 'failed');
+          if (failed.length) {
+            setSelected(failed.map((r: any) => r.id));
+            throw new Error(`${failed.length}개 삭제에 실패했습니다. 실패 파일만 다시 시도해 주세요.`);
+          }
+          setDeleting(false); toast('기록을 삭제했어요'); router.back();
+        })}>삭제</Button>
+        <Button secondary disabled={a.busy} onPress={() => setDeleting(false)}>돌아가기</Button>
+        {a.errorView}
+      </Sheet>
       {a.errorCode === 'VERSION_CONFLICT' && (
         <Button
           secondary

@@ -1,5 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusLoad } from '../lib/effects';
 import React, { useState } from 'react';
+import { claimInviteRestore } from '../lib/invite-restore';
 import { ActivityIndicator, Image, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useAccount } from '../lib/state';
@@ -23,6 +25,12 @@ export default function Home() {
     let live = true;
     if (session)
       void a.run(async () => {
+        const me = profile ?? await api('/me/profile');
+        if (!live) return;
+        if (me?.status === 'onboarding') { router.replace('/onboarding'); return; }
+        const pending = await AsyncStorage.getItem('atp.pending-invite');
+        if (!live) return;
+        if (claimInviteRestore(session.userId) && pending) { router.replace('/invite'); return; }
         const r = await api('/groups');
         if (live) {
           setGroups(r.items);

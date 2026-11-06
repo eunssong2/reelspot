@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, PanResponder } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useGroupCalendar } from '../../lib/group-calendar';
 import { useAccount } from '../../lib/state';
@@ -28,6 +28,10 @@ export default function Group() {
   const { month, selected, list } = calendar;
   const state = useGroupCalendar(session?.userId, id, month, ready);
   const { group, schedules, members, plans } = state;
+  const swipe = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
+    onPanResponderRelease: (_, g) => { if (Math.abs(g.dx) > 60) setCalendar({ ...calendar, month: moveMonth(month, g.dx < 0 ? 1 : -1) }); },
+  });
   if (state.denied) return (
     <Screen compact title="모임 달력" back={false} footer={<Button onPress={() => resetTo('/')}>내 모임으로</Button>}>
       <P>이 모임을 확인할 수 없어요.</P>
@@ -59,7 +63,7 @@ export default function Group() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <View style={{ flex: 1 }}>
             <Text
-              numberOfLines={1}
+              numberOfLines={2}
               style={{
                 fontSize: 17,
                 fontWeight: '800',
@@ -74,6 +78,7 @@ export default function Group() {
               {count ? ` · 장소 ${count}곳` : ''}
               {cancelled ? ' · 취소된 일정' : ''}
             </Text>
+            {!cancelled && d.date >= todayInSeoul() && <P>{d.date === todayInSeoul() ? '진행 중' : '진행 예정'}</P>}
             {!!first && (
               <Text
                 numberOfLines={1}
@@ -100,7 +105,7 @@ export default function Group() {
               accessibilityRole="button"
               accessibilityLabel={`${dayLabel(d)} 메뉴`}
               onPress={() => setMenuDay(d)}
-              style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+              style={{ minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}
             >
               <Text style={{ fontSize: 22, color: colors.sub }}>⋯</Text>
             </Pressable>
@@ -245,7 +250,7 @@ export default function Group() {
         <Button
           secondary
           small
-          style={{ borderRadius: 20, minHeight: 40, paddingHorizontal: 16 }}
+          style={{ borderRadius: 20, minHeight: 48, paddingHorizontal: 16 }}
           onPress={() =>
             setCalendar({
               ...calendar,
@@ -288,7 +293,7 @@ export default function Group() {
               onPress={() => setCalendar({ ...calendar, list: value })}
               style={{
                 paddingHorizontal: 14,
-                minHeight: 36,
+                minHeight: 48,
                 justifyContent: 'center',
                 backgroundColor: list === value ? '#FFFFFF' : colors.surface,
                 borderRadius: 10,
@@ -311,14 +316,14 @@ export default function Group() {
       </View>
       {!list && (
         <Card style={{ padding: 4, backgroundColor: colors.surface, borderWidth: 0, borderRadius: 22 }}>
-          <MonthGrid
+          <View {...swipe.panHandlers}><MonthGrid
             month={month}
             selected={selected}
             labels={labels}
             onSelect={(date) =>
               setCalendar({ ...calendar, month: date.slice(0, 7), selected: date })
             }
-          />
+          /></View>
         </Card>
       )}
       {list

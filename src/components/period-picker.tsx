@@ -57,7 +57,7 @@ export function MonthGrid({
             onPress={() => onSelect(date)}
             style={{
               width: '14.2857%',
-              minHeight: labels ? 76 : 46,
+              minHeight: labels ? 76 : 48,
               paddingVertical: 3,
               paddingHorizontal: 2,
               backgroundColor: between ? colors.sage : 'transparent',
@@ -131,8 +131,8 @@ export function MonthHeader({
       accessibilityLabel={label}
       onPress={() => onMove(n)}
       style={({ pressed }) => ({
-        width: 44,
-        height: 44,
+        width: 48,
+        height: 48,
         borderRadius: 12,
         backgroundColor: colors.surface,
         alignItems: 'center',

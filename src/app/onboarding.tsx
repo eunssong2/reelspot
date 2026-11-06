@@ -1,7 +1,8 @@
 import { installationId } from '../lib/device';
 import { useInitialize } from '../lib/effects';
 import React, { useState } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, awaitOperation, documentUrl, ApiError, setSession } from '../lib/api';
@@ -10,6 +11,7 @@ import { useAccount } from '../lib/state';
 import { useFormExit } from '../lib/unsaved';
 import {
   Screen,
+  Sheet,
   Button,
   P,
   Info,
@@ -22,7 +24,12 @@ import {
 export default function Onboard() {
   const [docs, setDocs] = useState<any[]>([]),
     [agreed, setAgreed] = useState<Record<string, boolean>>({}),
-    [name, setName] = useState('');
+    [name, setName] = useState(''),
+    [touched, setTouched] = useState(false),
+    [reading, setReading] = useState<any>(null),
+    [documentLoaded, setDocumentLoaded] = useState(false),
+    [documentFailed, setDocumentFailed] = useState(false),
+    [documentRetry, setDocumentRetry] = useState(0);
   const { refresh, profile } = useAccount(),
     a = useAction();
   const leave = useFormExit(true, async () => {
@@ -75,7 +82,7 @@ export default function Onboard() {
         const invite = await AsyncStorage.getItem('atp.pending-invite');
         leave(() => router.replace(invite ? '/invite' : '/'));
       } catch (e) {
-        if (e instanceof ApiError && e.code === 'CONSENT_REQUIRED') await load();
+        if (e instanceof ApiError && e.code === 'CONSENT_REQUIRED') { await load(); throw new Error('동의 문서가 바뀌었어요. 바뀐 항목을 다시 확인해 주세요.'); }
         throw e;
       }
     });
@@ -98,7 +105,7 @@ export default function Onboard() {
           accessibilityLabel={`${d.title || d.itemKey} 동의`}
           accessibilityState={{ checked: !!agreed[d.id] }}
           onPress={() => setAgreed((old) => ({ ...old, [d.id]: !old[d.id] }))}
-          style={{ minWidth: 44, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}
+          style={{ minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}
         >
           <CheckCircle checked={!!agreed[d.id]} />
         </Pressable>
@@ -109,8 +116,8 @@ export default function Onboard() {
       )}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${d.title || d.itemKey} 전문 보기`}
-        onPress={() => a.run(() => Linking.openURL(documentUrl(d.url)))}
+        accessibilityLabel={`${d.title || d.itemKey} ${d.kind === 'consent' ? '동의 선택' : '전문 보기'}`}
+        onPress={() => { if (d.kind === 'consent') setAgreed((old) => ({ ...old, [d.id]: !old[d.id] })); else { setReading(d); setDocumentLoaded(false); setDocumentFailed(false); } }}
         style={{ flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8 }}
       >
         <Text style={{ color: colors.ink, fontSize: 15, flex: 1 }}>{d.title || d.itemKey}</Text>
@@ -123,8 +130,8 @@ export default function Onboard() {
             선택
           </Text>
         )}
-        <Text style={{ fontSize: 20, color: colors.muted }}>›</Text>
       </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${d.title || d.itemKey} 전문 보기`} onPress={() => { setReading(d); setDocumentLoaded(false); setDocumentFailed(false); }} style={{ minWidth: 48, minHeight: 48, justifyContent: 'center', alignItems: 'center' }}><Text>›</Text></Pressable>
     </View>
   );
   return (
@@ -226,15 +233,26 @@ export default function Onboard() {
         placeholder="사용하실 이름을 적어주세요"
         value={name}
         editable={!a.busy}
-        onChangeText={setName}
+        onBlur={() => setTouched(true)}
+        onChangeText={(value) => setName(value.replace(/[\r\n]/g, ''))}
       />
-      {!!name && !!nameError && (
+      {(!!name || touched) && !!nameError && (
         <Text accessibilityRole="alert" style={{ color: '#B8433F', marginBottom: 8 }}>
           {nameError}
         </Text>
       )}
       <Info icon="👥">친구들과의 약속 캘린더에서 가장 친근한 별칭으로 함께해보세요!</Info>
+      {a.error && !docs.length && <P>동의 문서를 불러오지 못했어요</P>}
       {a.errorView}
+      <Sheet visible={!!reading} title={reading?.title ?? '동의 문서'} onClose={() => setReading(null)}>
+        {!!reading && <>
+          <P>버전 {reading.version}{reading.effectiveAt ? ` · 시행일 ${reading.effectiveAt.slice(0, 10).replaceAll('-', '.')}` : ''}</P>
+          {String(reading.version).startsWith('dev-') && <P>초안 · 법무 검토 전이며 운영 문서 확정 후 바뀔 수 있어요.</P>}
+          <View style={{ height: 300 }}><WebView key={`${reading.id}:${documentRetry}`} source={{ uri: documentUrl(reading.url) }} javaScriptEnabled={false} mixedContentMode="never" onLoad={() => setDocumentLoaded(true)} onError={() => { setDocumentFailed(true); setDocumentLoaded(false); }} onHttpError={() => { setDocumentFailed(true); setDocumentLoaded(false); }} /></View>
+          {documentFailed && <Button onPress={() => { setDocumentFailed(false); setDocumentLoaded(false); setDocumentRetry((v) => v + 1); }}>문서 다시 시도</Button>}
+          <Button disabled={!documentLoaded || documentFailed} onPress={() => { if (reading.kind === 'consent') setAgreed((old) => ({ ...old, [reading.id]: true })); setReading(null); }}>{reading.kind === 'consent' ? '동의하고 닫기' : '닫기'}</Button>
+        </>}
+      </Sheet>
     </Screen>
   );
 }

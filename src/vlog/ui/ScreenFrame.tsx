@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '../tokens';
@@ -19,7 +19,7 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
 export function ScreenFrame({ children }: { children: ReactNode }) {
   return (
     <SafeAreaView style={styles.screen}>
-      {children}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>{children}</KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

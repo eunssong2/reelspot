@@ -9,6 +9,7 @@ import { loadGroupDays } from '../../lib/group-days';
 import { validDate } from '../../lib/validation';
 import { dayLabel, groupDays, periodLabel, scheduleDayList, shortDate, weekday } from '../../lib/day-labels';
 import { useAccount } from '../../lib/state';
+import { UploadProgress } from '../../components/upload-progress';
 import { Records } from '../../components/records';
 import { TimeEditModal } from '../../components/time-edit-modal';
 import { UploadSheet } from '../../components/upload-sheet';
@@ -387,6 +388,7 @@ export default function Schedule() {
         </>
       ) : (
         <>
+          <UploadProgress unassigned={unassigned} scheduleId={id} visitId={visitId} recordDate={recordDate} onComplete={() => { void a.run(() => load()); }} />
           {dayActive && (
             <Button tone="outline" onPress={() => setAdding(true)}>
               ＋ 사진·동영상 올리기
@@ -394,8 +396,9 @@ export default function Schedule() {
           )}
           {!dayActive && detail && <P>취소된 날에는 새 사진·동영상을 올릴 수 없어요.</P>}
           <Text style={{ fontSize: 19, fontWeight: '800', color: colors.ink, marginTop: 14, marginBottom: 10 }}>
-            함께 남긴 순간
+            {counts?.videos === 0 ? '함께 남긴 사진' : '함께 남긴 순간'}
           </Text>
+          {!!visitId && counts && <P>사진 {counts.photos} · 동영상 {counts.videos}</P>}
           {!visitId && (
             <>
               <TextButton color={colors.sub} onPress={() => setFilters(true)}>
@@ -450,16 +453,16 @@ export default function Schedule() {
               )}
             </>
           )}
-          {!a.busy && !a.error && (
+          <View style={{ display: a.busy || a.error ? 'none' : 'flex' }}>
             <Records
-              key={`${id}:${recordDate}:${visitId}:${unassigned}:${outside}:${view}`}
+              key={`${id}:${recordDate}:${visitId}:${unassigned}:${outside}`}
               items={files}
               recordScope={{ scheduleId: id, query: { view: 'by_photo', order, ...(recordDate ? { recordDate } : {}), ...(visitId ? { visitId } : {}), ...(unassigned ? { unassigned: 'true' } : {}), ...(outside ? { outsideRange: 'true' } : {}) } }}
               groups={view === 'by_author' ? groups : undefined}
               avatars={avatars}
               toolbar={{ view, onView: setView, order, onOrder: setOrder }}
             />
-          )}
+          </View>
           {next && (
             <Button secondary onPress={() => a.run(() => load(next))}>
               기록 더 보기

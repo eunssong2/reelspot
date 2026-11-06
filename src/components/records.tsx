@@ -63,8 +63,8 @@ export function ViewToggle({ view, onView }: { view: string; onView: (v: string)
           accessibilityState={{ selected: view === value }}
           onPress={() => onView(value)}
           style={{
-            width: 44,
-            height: 34,
+            width: 48,
+            height: 48,
             borderRadius: 14,
             alignItems: 'center',
             justifyContent: 'center',
@@ -128,6 +128,8 @@ export function Records({
     });
   }
   const selected = selection.filter((id) => items.some((m) => m.id === id));
+  const selectable = items.filter((i) => i.accessState === 'available').slice(0, 120).map((i) => i.id);
+  const allSelected = selectable.length > 0 && selectable.every((id) => selected.includes(id));
   function toggle(id: string) {
     setSelected((old) =>
       old.includes(id)
@@ -303,7 +305,7 @@ export function Records({
             accessibilityRole="button"
             accessibilityLabel={`${g.displayName} 기록 메뉴`}
             onPress={() => setAuthorMenu(g)}
-            style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+            style={{ minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}
           >
             <Text style={{ fontSize: 20, color: colors.sub }}>⋯</Text>
           </Pressable>
@@ -354,9 +356,9 @@ export function Records({
             {mode ? (
               <TextButton
                 color={colors.sub}
-                onPress={() => setSelected(items.filter((i) => i.accessState === 'available').slice(0, 120).map((i) => i.id))}
+                onPress={() => setSelected(allSelected ? [] : selectable)}
               >
-                전체 선택
+                {allSelected ? '전체 해제' : '전체 선택'}
               </TextButton>
             ) : (
               <TextButton

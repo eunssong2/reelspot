@@ -9,6 +9,25 @@ vi.mock('../../src/components/profile-ui', () => ({ Avatar: () => null }));
 const media = (id: string, kind: string, accessState = 'available', authorUserId = 'author') =>
   ({ id, kind, accessState, authorUserId, displayName: '친구', version: 1, scheduleId: 'schedule' }) as any;
 const text = (node: any): string => typeof node === 'string' ? node : (node.children ?? []).map(text).join('');
+test('selection survives record refresh, supports clear-all, and ends on view change as F19 requires', async () => {
+  let tree: any;
+  const items = [media('p', 'photo'), media('v', 'video')];
+  const toolbar = { view: 'by_photo', order: 'desc', onView: vi.fn(), onOrder: vi.fn() };
+  const press = async (label: string) => {
+    const n = tree.root.findAll((n: any) => typeof n.type === 'string' && n.props.onPress && (text(n) === label || n.props.accessibilityLabel === label))[0];
+    expect(n, label).toBeTruthy(); await act(async () => n.props.onPress());
+  };
+  try {
+    await act(async () => { tree = create(<Records items={items} toolbar={toolbar} />); });
+    await press('선택'); await press('전체 선택');
+    await act(async () => tree.update(<Records items={[...items].reverse()} toolbar={toolbar} />));
+    expect(JSON.stringify(tree.toJSON())).toContain('2개 다운받기');
+    await press('전체 해제'); expect(JSON.stringify(tree.toJSON())).toContain('다운받을 기록을 선택해 주세요');
+    await press('전체 선택'); await press('사람별 보기');
+    expect(JSON.stringify(tree.toJSON())).not.toContain('2개 다운받기');
+    expect(toolbar.onView).toHaveBeenCalledWith('by_author');
+  } finally { if (tree) await act(async () => tree.unmount()); }
+});
 for (const scoped of [false, true]) {
   for (const mixed of [false, true]) {
     test(`actual author menu includes videos and matches save count (scope=${scoped}, mixed=${mixed})`, async () => {

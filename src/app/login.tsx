@@ -1,9 +1,10 @@
 import { installationId } from '../lib/device';
 import { useInitialize } from '../lib/effects';
 import React, { useState } from 'react';
-import { Image, Linking, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { signInWithProvider } from '../lib/social';
+import { LoginCancelled, signInWithProvider } from '../lib/social';
+import { loginFailure } from '../lib/login-error';
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,7 +12,8 @@ import { api, documentUrl, setSession } from '../lib/api';
 import { Screen, Field, Button, P, colors, useAction } from '../components/ui';
 WebBrowser.maybeCompleteAuthSession();
 export default function Login() {
-  const [dev, setDev] = useState(false),
+  const [signing, setSigning] = useState<'kakao' | 'google' | null>(null),
+    [dev, setDev] = useState(false),
     [name, setName] = useState('demo'),
     [kakao, setKakao] = useState(false),
     [google, setGoogle] = useState(false),
@@ -41,7 +43,16 @@ export default function Login() {
         r = await api('/auth/exchange', { provider: 'kakao', credential, ...attempt });
         await SecureStore.setItemAsync('atp.dev-credential', credential);
         await setSession(r.session);
-      } else r = await signInWithProvider(provider);
+      } else {
+        setSigning(provider);
+        try { r = await signInWithProvider(provider); }
+        catch (error) {
+          if (error instanceof LoginCancelled) return;
+          const failure = loginFailure(error, provider);
+          if (!failure) return;
+          throw failure;
+        } finally { setSigning(null); }
+      }
       router.replace(
         r.onboardingRequired
           ? '/onboarding'
@@ -59,14 +70,15 @@ export default function Login() {
       footer={
         <>
           <Button tone="kakao" disabled={a.busy || !kakao} onPress={() => login()}>
-            💬　카카오로 시작하기
+            {signing === 'kakao' ? <ActivityIndicator accessibilityLabel="카카오 로그인 중" /> : '💬　카카오로 시작하기'}
           </Button>
-          {google && (
-            <Button tone="outline" style={{ borderColor: colors.line }} disabled={a.busy} onPress={() => login(false, 'google')}>
+          {(
+            <Button tone="outline" style={{ borderColor: colors.line }} disabled={a.busy || !google} onPress={() => login(false, 'google')}>
               <Text style={{ color: '#4285F4', fontWeight: '800' }}>G</Text>
-              <Text style={{ color: colors.ink }}>　Google로 시작하기</Text>
+              {signing === 'google' ? <ActivityIndicator accessibilityLabel="Google 로그인 중" /> : <Text style={{ color: colors.ink }}>　Google로 시작하기</Text>}
             </Button>
           )}
+          {!google && !a.busy && <P>Google 로그인을 준비하고 있어요.</P>}
           {!kakao && !a.busy && <P>카카오 로그인 연결을 확인해 주세요.</P>}
           <View
             style={{
@@ -88,7 +100,7 @@ export default function Login() {
                   <Pressable
                     accessibilityRole="link"
                     onPress={() => a.run(() => Linking.openURL(documentUrl(d.url)))}
-                    style={{ minHeight: 44, justifyContent: 'center' }}
+                    style={{ minHeight: 48, justifyContent: 'center' }}
                   >
                     <Text style={{ color: colors.sub, fontSize: 12, textDecorationLine: 'underline' }}>
                       {i === 0 && ['terms', 'terms-service'].includes(d.itemKey) ? '이용약관' : '개인정보처리방침'}

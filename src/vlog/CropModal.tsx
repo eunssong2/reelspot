@@ -26,9 +26,9 @@ interface Box {
 }
 
 type Corner = 'tl' | 'tr' | 'bl' | 'br';
-const HANDLE = 28;
+const HANDLE = 48;
 /** 화면에서 자를 영역의 최소 크기(px) */
-const MIN_PX = 40;
+const MIN_PX = 48;
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: 'rgba(10,10,12,0.96)' },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
   title: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  close: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' },
+  close: { width: 48, height: 48, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' },
   closeGlyph: { color: '#fff', fontSize: 18, fontWeight: '700' },
   body: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   stage: { overflow: 'hidden', backgroundColor: '#000', borderRadius: 8 },
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   handleDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#F3706B', borderWidth: 2, borderColor: '#fff' },
   hint: { color: 'rgba(255,255,255,0.8)', fontSize: 13, textAlign: 'center', paddingHorizontal: 20 },
   chips: { flexDirection: 'row', gap: 8 },
-  chip: { minHeight: 40, paddingHorizontal: 14, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' },
+  chip: { minHeight: 48, paddingHorizontal: 14, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' },
   chipOn: { backgroundColor: '#F3706B' },
   chipText: { color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '700' },
   chipTextOn: { color: '#fff' },

@@ -1,4 +1,4 @@
-import { ApiError, shouldLeaveSharedScope } from './api-errors';
+import { ApiError, NetworkError, shouldLeaveSharedScope } from './api-errors';
 export { ApiError } from './api-errors';
 import { requireHttps } from './https';
 import { randomUUID, digestStringAsync, CryptoDigestAlgorithm } from 'expo-crypto';
@@ -94,9 +94,7 @@ async function fetchTimed(url: string, options: RequestInit) {
   try {
     return await fetch(url, { ...options, signal: controller.signal });
   } catch {
-    throw new Error(
-      '서버에 연결할 수 없습니다. 네트워크를 확인하고 다시 시도해 주세요. 입력과 대기 파일은 유지됩니다.',
-    );
+    throw new NetworkError();
   } finally {
     clearTimeout(timer);
   }

@@ -14,3 +14,10 @@ export const Alert = { alert() {} };
 export const PanResponder = { create: () => ({ panHandlers: {} }) };
 export const Linking = { openURL: async () => {} };
 export const PermissionsAndroid = { request: async () => 'granted', PERMISSIONS: { POST_NOTIFICATIONS: 'notifications' } };
+
+const keyboardListeners = new Map<string, Set<() => void>>();
+export const Keyboard = { addListener: (event: string, fn: () => void) => { const list = keyboardListeners.get(event) ?? new Set(); list.add(fn); keyboardListeners.set(event, list); return { remove: () => list.delete(fn) }; }, emit: (event: string) => keyboardListeners.get(event)?.forEach((fn) => fn()), dismiss() {} };
+
+export const KeyboardAvoidingView = View;
+
+export const Share = { share: async (_: any) => ({ action: 'dismissedAction' }) };

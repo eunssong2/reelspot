@@ -27,12 +27,14 @@ vi.mock('expo-clipboard', () => ({ setStringAsync: async () => {} }));
 vi.mock('expo-file-system/legacy', () => ({ documentDirectory: 'file:private/', deleteAsync: vi.fn(async () => {}) }));
 vi.mock('../../modules/atp-transfer', () => ({ Transfer: { normalizeCapture: async (uri: string) => uri } }));
 vi.mock('../../src/lib/uploads', () => ({
+  queue: async () => ({}),
   candidate: async (uri: string, name: string, mime: string, recordDate: string, visitId: string | null, selectionIndex: number) => ({ uri, name, mime, recordDate, visitId, selectionIndex, kind: mime.startsWith('video/') ? 'video' : 'photo', clientFileId: `file-${++fixtures.counter}`, fingerprint: uri }),
   submissionFile: (f: any, selectionIndex: number) => ({ ...f, selectionIndex }), enqueueTask: fixtures.queue,
 }));
 vi.mock('../../src/lib/state', () => ({ useAccount: () => ({ session: { userId: fixtures.userId } }) }));
 vi.mock('../../src/vlog/data', () => ({ loadVlog: fixtures.source }));
 vi.mock('../../src/components/ui', () => ({
+  ScreenFooter: ({ children }: any) => <footer>{children}</footer>,
   resetTo: (path: string) => router.replace(path),
   colors: { ink: '#000', sub: '#555', surface: '#eee', accent: '#f00', muted: '#888' }, s: {},
   Screen: ({ children, footer, title, onBack }: any) => <screen title={title}><button onPress={onBack}>뒤로</button>{children}{footer}</screen>,
@@ -52,5 +54,6 @@ vi.mock('../../src/components/schedule-plan', () => ({
 vi.mock('../../src/components/records', () => ({ Records: ({ toolbar }: any) => <records view={toolbar.view} order={toolbar.order}><button onPress={() => toolbar.onView('by_author')}>사람별</button><button onPress={() => toolbar.onOrder('asc')}>오래된순</button><button onPress={() => router.push('/record/media')}>사진 열기</button></records> }));
 vi.mock('../../src/lib/unsaved', () => ({ useUnsavedChanges: () => (fn: any) => fn() }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: ({ children }: any) => <safe>{children}</safe> }));
+vi.mock('react-native-webview', () => ({ WebView: (props: any) => <webview {...props} /> }));
 vi.mock('expo-video', () => ({ useVideoPlayer: () => ({ play() {} }), VideoView: () => null }));
 beforeEach(() => { fixtures.storage.clear(); fixtures.userId = 'user'; fixtures.counter = 0; fixtures.api.mockReset(); fixtures.camera.mockReset(); fixtures.album.mockReset(); fixtures.source.mockReset(); fixtures.queue.mockReset(); AppState.clear(); setFocused(true); setParams({}); vi.clearAllMocks(); });

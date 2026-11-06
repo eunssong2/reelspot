@@ -1,3 +1,4 @@
+import { notifyUploadQueue } from './upload-events';
 import { flushUploadDrafts } from './upload-draft';
 import { flushDraftWrites } from '../vlog/storage';
 import { randomUUID } from 'expo-crypto';
@@ -8,6 +9,8 @@ import { Transfer } from '../../modules/atp-transfer';
 import * as ImagePicker from 'expo-image-picker';
 import { API, api, awaitOperation, currentSession, getGroup } from './api';
 export type Candidate = {
+  /** Local queue scope; not sent as a file field in the submission API. */
+  scheduleId?: string;
   uri: string;
   name: string;
   mime: string;
@@ -57,6 +60,7 @@ export async function enqueueTask(task: any, file: Candidate) {
     q = JSON.parse((await AsyncStorage.getItem(key)) ?? '{}');
   q[task.id] = { file, task };
   await AsyncStorage.setItem(key, JSON.stringify(q));
+  notifyUploadQueue();
   if (!Transfer) throw new Error('Android 개발 빌드가 필요합니다.');
   if (Platform.OS === 'android' && Number(Platform.Version) >= 33)
     await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);

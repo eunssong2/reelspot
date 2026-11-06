@@ -97,6 +97,7 @@ export default function MyPage() {
           onPress={() =>
             photo.run(async () => {
               const done = await uploadAndApplyImage({ kind: 'avatar' });
+              if (done) showToast('프로필 사진을 바꿨어요');
               if (done === false)
                 throw new Error('사진을 올리고 있어요. 끝나면 파일 전송 상태에서 프로필 사진으로 적용할 수 있어요.');
               if (done) await refresh();

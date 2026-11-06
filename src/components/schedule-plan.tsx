@@ -100,7 +100,7 @@ export function DayTimeline({
             accessibilityRole="button"
             accessibilityLabel={`${date} 순서 편집`}
             onPress={() => onEdit()}
-            style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' }}
+            style={{ minHeight: 48, minWidth: 48, justifyContent: 'center', alignItems: 'flex-end' }}
           >
             <Text style={{ color: colors.sub, fontWeight: '700', fontSize: 15 }}>편집</Text>
           </Pressable>
@@ -143,7 +143,7 @@ export function DayTimeline({
                   accessibilityRole="button"
                   accessibilityLabel={`${v.name} 방문 시간 수정`}
                   onPress={() => onEdit(v.id)}
-                  style={{ minHeight: 28, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}
+                  style={{ minHeight: 48, minWidth: 48, alignItems: 'center', justifyContent: 'center' }}
                 >
                   <Text style={{ color: colors.accent, fontSize: 11 }}>수정</Text>
                 </Pressable>
