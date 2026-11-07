@@ -2,6 +2,7 @@ import { installationId } from './device';
 import * as WebBrowser from 'expo-web-browser';
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
+import { ApiError } from './api-errors';
 import { api, setSession } from './api';
 import { requireHttps } from './https';
 export class LoginCancelled extends Error {}
@@ -29,7 +30,14 @@ async function finishCredential(pending: PendingLogin) {
   let flight = finishes.get(pending.state);
   if (!flight) {
     flight = (async () => {
-      const result = await api(`/auth/${pending.provider}/finish`, { state: pending.state, verifier: pending.verifier });
+      let result;
+      try { result = await api(`/auth/${pending.provider}/finish`, { state: pending.state, verifier: pending.verifier }); }
+      catch (error) {
+        // A definitive finish response consumes/rejects the browser state.
+        // Transport failures keep it, since the server may not have received it.
+        if (error instanceof ApiError) await clearBrowserLogin(pending.state);
+        throw error;
+      }
       // Preserve the exchanged credential only until sign-in/reauthentication completes.
       if ((await pendingBrowserLogin())?.state === pending.state)
         await SecureStore.setItemAsync(pendingKey, JSON.stringify({ ...pending, result }));

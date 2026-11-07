@@ -7,16 +7,16 @@ afterAll(() => { if (originalJpg) localRequire.extensions['.jpg'] = originalJpg;
 import { afterAll, afterEach, expect, test, vi } from 'vitest';
 import { act, create } from 'react-test-renderer';
 import { fixtures } from './setup';
-import { router, setFocused } from './router';
+import { router, setFocused, setParams } from './router';
 import Home from '../../src/app/index';
 import Invite from '../../src/app/invite';
 import Login from '../../src/app/login';
 import Identities from '../../src/app/identities';
 import { LoginCancelled } from '../../src/lib/social';
-const auth = vi.hoisted(() => ({ signIn: vi.fn(), credential: vi.fn() }));
+const auth = vi.hoisted(() => ({ signIn: vi.fn(), credential: vi.fn(), complete: vi.fn() }));
 vi.mock('../../src/lib/state', () => ({ useAccount: () => ({ ready: true, session: { userId: 'user' }, profile: { status: 'active' } }) }));
 vi.mock('../../src/lib/device', () => ({ installationId: async () => 'test-device' }));
-vi.mock('../../src/lib/social', () => ({ LoginCancelled: class extends Error {}, signInWithProvider: auth.signIn, reauth: async () => 'proof', socialCredential: auth.credential }));
+vi.mock('../../src/lib/social', () => ({ LoginCancelled: class extends Error {}, signInWithProvider: auth.signIn, reauth: async () => 'proof', socialCredential: auth.credential, pendingBrowserLogin: async () => ({ purpose: 'signin' }), completePendingSignIn: auth.complete }));
 vi.mock('expo-web-browser', () => ({ maybeCompleteAuthSession() {} }));
 vi.mock('expo-secure-store', () => ({ setItemAsync: async () => {} }));
 (globalThis as any).__DEV__ = true;
@@ -84,5 +84,25 @@ test.each([
   auth.signIn.mockRejectedValue(error);
   await act(async () => { tree = create(<Login />); }); await press('카카오로 시작하기');
   expect(output()).toContain(message);
+  expect(fixtures.storage.get('atp.pending-invite')).toBe('keep');
+});
+
+import { OAuthReturn } from '../../src/components/oauth-return';
+test.each([
+  [new NetworkError(), '네트워크를 확인하고'],
+  [new ApiError('PROVIDER_UNAVAILABLE'), '카카오 로그인이 잠시 원활하지 않아요'],
+  [new ApiError('PROVIDER_QUOTA_EXCEEDED'), '카카오 로그인이 잠시 원활하지 않아요'],
+  [new ApiError('AUTH_INVALID'), '로그인하지 못했어요. 다시 시도해 주세요.'],
+])('OAuth return uses the same typed login errors: %s', async (error, message) => {
+  setParams({ state: 'fixture-state' }); fixtures.storage.set('atp.pending-invite', 'keep');
+  auth.complete.mockRejectedValue(error);
+  await act(async () => { tree = create(<OAuthReturn provider="kakao" />); });
+  expect(output()).toContain(message); expect(fixtures.storage.get('atp.pending-invite')).toBe('keep');
+});
+test('OAuth return cancellation returns to login silently and preserves pending invite', async () => {
+  setParams({ state: 'fixture-state' }); fixtures.storage.set('atp.pending-invite', 'keep');
+  auth.complete.mockRejectedValue(new ApiError('AUTH_CANCELLED'));
+  await act(async () => { tree = create(<OAuthReturn provider="kakao" />); });
+  expect(router.replace).toHaveBeenCalledWith('/login'); expect(tree.root.findAllByType('error')).toHaveLength(0);
   expect(fixtures.storage.get('atp.pending-invite')).toBe('keep');
 });

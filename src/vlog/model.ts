@@ -153,21 +153,19 @@ export interface FontPreset {
  * (최종 렌더링 연결 시 같은 id 를 실제 글꼴 파일에 매핑한다).
  */
 export const FONTS: FontPreset[] = [
-  { id: 'gothic', label: '기본 고딕', style: { fontWeight: '800' } },
+  { id: 'gothic', label: '기본 고딕', style: { fontFamily: 'VlogGothic' } },
   {
     id: 'round',
     label: '둥근체',
     style: {
-      fontWeight: '700',
-      fontFamily: 'sans-serif-rounded',
+      fontFamily: 'VlogRound',
     },
   },
   {
     id: 'hand',
     label: '손글씨체',
     style: {
-      fontWeight: '600',
-      fontFamily: 'cursive',
+      fontFamily: 'VlogHand',
     },
   },
 ];
@@ -232,6 +230,7 @@ export interface PlaceSetting {
   showDate: boolean;
   showPlace: boolean;
   fontId: FontId;
+  captionPosition?: 'top' | 'center' | 'bottom';
   /** 자막. 이어 재생은 기록 id, 분할은 'all' 이 키다. */
   captions: Record<string, string>;
   /** 분할 장면의 공통 길이를 직접 줄였을 때(초). 없으면 자동 맞춤 */
@@ -258,6 +257,7 @@ export const defaultSetting = (): PlaceSetting => ({
   showPlace: true,
   fontId: 'gothic',
   captions: {},
+  captionPosition: 'bottom',
   videoStart: {},
   done: false,
 });
@@ -445,6 +445,7 @@ export interface TimelineScene {
   dateText?: string;
   placeText?: string;
   fontId: FontId;
+  captionPosition?: 'top' | 'center' | 'bottom';
 }
 
 export interface Timeline {
@@ -503,6 +504,7 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
         dateText: setting.showDate ? day.date.replace(/-/g, '.') : undefined,
         placeText: setting.showPlace ? place.place.name : undefined,
         fontId: setting.fontId,
+        captionPosition: setting.captionPosition ?? 'bottom',
       });
     }
     if (placeScenes.length === 0) continue;
@@ -558,7 +560,7 @@ export function draftSignature(draft: VlogDraft, timeline: Timeline): string {
     t: draft.title,
     a: timeline.aspect,
     x: timeline.transition,
-    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.dateText, s.placeText, s.caption, s.fontId, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.caption, c.filter, c.frame])]),
+    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.dateText, s.placeText, s.caption, s.fontId, s.captionPosition, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.caption, c.filter, c.frame])]),
   });
 }
 

@@ -177,7 +177,7 @@ export default function Edit() {
                   }[k]
                 }
               </P>
-              <Switch
+              <Switch style={{ minWidth: 48, minHeight: 48 }}
                 trackColor={{ false: '#D1D6DB', true: '#F9C9C6' }}
                 thumbColor={apply[k] ? '#F1706B' : '#FFFFFF'}
                 accessibilityLabel={

@@ -175,7 +175,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
       compact={keyboardOpen}
       footer={<FooterButtons label="이 장소 완료" onPress={complete} />}
     >
-      {!keyboardOpen && <Pressable onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={8} disabled={media.length < 2}>
+      {!keyboardOpen && <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={8} disabled={media.length < 2}>
         <Heading title={media.length < 2 ? '단일 재생' : modeLabel} />
       </Pressable>}
 
@@ -203,7 +203,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         <View style={styles.navRow}>
           <Text style={styles.navText}>장면 1 / 1  {scene.seconds}초</Text>
           {media.some((m) => m.item.kind === 'video') ? (
-            <Pressable onPress={() => ctx.go({ step: 'length', placeKey: key })} accessibilityRole="button" hitSlop={8}>
+            <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} onPress={() => ctx.go({ step: 'length', placeKey: key })} accessibilityRole="button" hitSlop={8}>
               <Text style={styles.link}> · 길이 변경 ›</Text>
             </Pressable>
           ) : null}
@@ -236,7 +236,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
               {(setting.videoStart[curVideo.item.id] ?? 0) > 0 ? ` · ${setting.videoStart[curVideo.item.id]}초부터` : ''}
             </Text>
             {(curVideo.seconds ?? 0) > curLen ? (
-              <Pressable onPress={() => ctx.go({ step: 'trim', placeKey: key, clipId: curVideo.item.id })} accessibilityRole="button" hitSlop={8}>
+              <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} onPress={() => ctx.go({ step: 'trim', placeKey: key, clipId: curVideo.item.id })} accessibilityRole="button" hitSlop={8}>
                 <Text style={styles.link}>구간 이동 ›</Text>
               </Pressable>
             ) : null}
@@ -342,10 +342,10 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         summary={`날짜 ${setting.showDate ? '켬' : '끔'} · 장소명 ${setting.showPlace ? '켬' : '끔'}`}
       >
       <Row label="날짜 표시" value={dateStr}>
-        <Switch value={setting.showDate} onValueChange={(v) => patch(ctx, key, { showDate: v })} trackColor={{ true: colors.primary }} accessibilityLabel="날짜 표시" />
+        <Switch style={{ minWidth: 48, minHeight: 48 }} value={setting.showDate} onValueChange={(v) => patch(ctx, key, { showDate: v })} trackColor={{ true: colors.primary }} accessibilityLabel="날짜 표시" />
       </Row>
       <Row label="장소명 표시" value={found.place.place.name}>
-        <Switch value={setting.showPlace} onValueChange={(v) => patch(ctx, key, { showPlace: v })} trackColor={{ true: colors.primary }} accessibilityLabel="장소명 표시" />
+        <Switch style={{ minWidth: 48, minHeight: 48 }} value={setting.showPlace} onValueChange={(v) => patch(ctx, key, { showPlace: v })} trackColor={{ true: colors.primary }} accessibilityLabel="장소명 표시" />
       </Row>
       </Accordion>
 
@@ -356,8 +356,13 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         open={openSec === 'caption'}
         onToggle={toggleSec}
         title={split ? '이 장면 자막 (선택) · 분할 화면 전체에 1개' : '이 장면 자막 (선택)'}
-        summary={setting.captions[captionKey] || '없음'}
+        summary={setting.captions[captionKey]?.trim() || '없음'}
       >
+      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+        {(['top', 'center', 'bottom'] as const).map((position) => <Pressable key={position} accessibilityRole="radio" accessibilityLabel={`자막 위치 ${position === 'top' ? '위' : position === 'center' ? '가운데' : '아래'}`} accessibilityState={{ selected: (setting.captionPosition ?? 'bottom') === position }} onPress={() => patch(ctx, key, { captionPosition: position })} style={[styles.transChip, (setting.captionPosition ?? 'bottom') === position && styles.transChipOn]}>
+          <Text>{position === 'top' ? '위' : position === 'center' ? '가운데' : '아래'}</Text>
+        </Pressable>)}
+      </View>
       <TextInput
         onFocus={() => { captionFocused.current = true; revealCaption(); }}
         onBlur={() => { captionFocused.current = false; }}
@@ -403,7 +408,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
             );
           })}
         </View>
-        <Pressable onPress={() => playDemo(setting.transition ?? 'none')} disabled={(setting.transition ?? 'none') === 'none'} accessibilityRole="button" hitSlop={8}>
+        <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} onPress={() => playDemo(setting.transition ?? 'none')} disabled={(setting.transition ?? 'none') === 'none'} accessibilityRole="button" hitSlop={8}>
           <Text style={[styles.link, (setting.transition ?? 'none') === 'none' && styles.off]}>▶ 전환 미리보기 다시 보기</Text>
         </Pressable>
         <Text style={styles.value}>
@@ -572,7 +577,7 @@ function FontSheet({
           ))}
           <View style={styles.toggleRow}>
             <Text style={styles.label}>모든 장면에 적용</Text>
-            <Switch value={all} onValueChange={setAll} trackColor={{ true: colors.primary }} accessibilityLabel="모든 장면에 적용" />
+            <Switch style={{ minWidth: 48, minHeight: 48 }} value={all} onValueChange={setAll} trackColor={{ true: colors.primary }} accessibilityLabel="모든 장면에 적용" />
           </View>
           <ActionButton label={all ? '모든 장면에 적용' : '현재 장면에 적용'} onPress={() => onApply(picked, all)} />
         </View>

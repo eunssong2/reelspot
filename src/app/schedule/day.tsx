@@ -14,7 +14,11 @@ import { MonthGrid, MonthHeader } from '../../components/period-picker';
 import { Screen, Button, ClearableInput, P, Sheet, colors, confirm, s, useAction } from '../../components/ui';
 /** Edit one day of a schedule: its title and date, or cancel/delete just that day (owner only). */
 export default function DayEdit() {
-  const { scheduleId, date } = useLocalSearchParams<{ scheduleId: string; date: string }>(),
+  const params = useLocalSearchParams<{ scheduleId?: string; date?: string }>();
+  const scheduleId = typeof params.scheduleId === 'string' ? params.scheduleId : '';
+  const date = typeof params.date === 'string' ? params.date : '';
+  const validRoute = !!scheduleId && /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(Date.parse(date));
+  const
     { session } = useAccount(),
     a = useAction({ inlineRetry: false });
   const [schedule, setSchedule] = useState<any>(null),
@@ -30,6 +34,7 @@ export default function DayEdit() {
     [pick, setPick] = useState(date),
     [allowed, setAllowed] = useState(false);
   async function load(preserveInput = false) {
+    if (!validRoute) throw new Error('일정과 날짜를 확인할 수 없어요. 모임에서 다시 선택해 주세요.');
     const r = await api(`/schedules/${scheduleId}`);
     const g = await getGroup(r.schedule.groupId);
     if (g.ownerUserId !== session?.userId) throw new Error('방장만 일정을 바꿀 수 있어요.');
@@ -104,13 +109,13 @@ export default function DayEdit() {
     label: string,
     sub: string,
     onPress: () => void,
-    opts: { danger?: boolean; locked?: boolean } = {},
+    opts: { danger?: boolean; locked?: boolean; allowCancelled?: boolean } = {},
   ) => (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled: !!opts.locked || !allowed }}
-      disabled={opts.locked || !allowed || a.busy}
+      accessibilityState={{ disabled: !!opts.locked || !day || (!allowed && !opts.allowCancelled) || a.busy }}
+      disabled={opts.locked || !day || (!allowed && !opts.allowCancelled) || a.busy}
       onPress={onPress}
       style={({ pressed }) => ({
         flexDirection: 'row',
@@ -126,7 +131,7 @@ export default function DayEdit() {
           style={{
             fontSize: 16,
             fontWeight: '800',
-            color: opts.locked || !allowed ? '#B0B8C1' : opts.danger ? '#E5484D' : colors.ink,
+            color: opts.locked || !day || (!allowed && !opts.allowCancelled) ? '#B0B8C1' : opts.danger ? '#E5484D' : colors.ink,
           }}
         >
           {label}
@@ -239,7 +244,7 @@ export default function DayEdit() {
             confirm('이 날 일정을 삭제할까요?', '이 날짜가 일정에서 빠지고 되돌릴 수 없어요.', () =>
               remove('deletion'),
             ),
-          { locked: places > 0 },
+          { locked: places > 0, allowCancelled: true },
         )}
       </View>
       {a.errorView}

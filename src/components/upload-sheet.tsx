@@ -4,14 +4,14 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import { api, ApiError, currentSession } from '../lib/api';
+import { API, api, ApiError, currentSession } from '../lib/api';
 import { candidate, enqueueTask, submissionFile, type Candidate } from '../lib/uploads';
 import { remainingCandidates } from '../lib/upload-acceptance';
 import { useUploadDraft } from '../lib/upload-draft';
 import { uploadDraftKey, assertUploadScope } from '../lib/upload-scope';
 import { Transfer } from '../../modules/atp-transfer';
 import { formatDuration } from '../lib/day-labels';
-import { Button, Sheet, colors, useAction } from './ui';
+import { Button, Sheet, colors, useAction, confirm } from './ui';
 export const UPLOAD_SHEET_MAX = 10;
 /** "지금 이 순간 남기기": pick up to 10 photos/videos and upload them to one visit or date. */
 function ScopedUploadSheet({
@@ -33,6 +33,9 @@ function ScopedUploadSheet({
   const draft = useUploadDraft(scope);
   const { files } = draft;
   const [choosing, setChoosing] = useState(false);
+  const [existing, setExisting] = useState<any[]>([]);
+  const [existingError, setExistingError] = useState('');
+  const [reload, setReload] = useState(0);
   const [legacyDraft, setLegacyDraft] = useState(false);
   const [notice, setNotice] = useState(''),
     [limits, setLimits] = useState<{ photos: number; videos: number } | null>(null);
@@ -45,6 +48,14 @@ function ScopedUploadSheet({
     AsyncStorage.getItem(`atp.upload-draft:${scope.userId}:${scheduleId}`)
       .then((saved) => live && setLegacyDraft(!!saved && saved !== '[]'))
       .catch(() => live && setLegacyDraft(true));
+    void (async () => {
+      const all: any[] = []; let cursor: string | null = null;
+      do {
+        const result: any = await api(`/schedules/${scheduleId}/media${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`);
+        all.push(...result.items); cursor = result.nextCursor;
+      } while (cursor && live);
+      if (live) { setExisting(all.filter((m) => m.authorUserId === scope.userId && m.recordDate === recordDate && (m.visitId ?? null) === visitId)); setExistingError(''); }
+    })().catch(() => { if (live) setExistingError('올린 기록을 불러오지 못했어요.'); });
     const q = new URLSearchParams({ recordDate });
     if (visitId) q.set('visitId', visitId);
     api(`/schedules/${scheduleId}/upload-limits?${q}`)
@@ -53,7 +64,7 @@ function ScopedUploadSheet({
     return () => {
       live = false;
     };
-  }, [visible, scheduleId, visitId, recordDate, scope.userId]);
+  }, [visible, scheduleId, visitId, recordDate, scope.userId, reload]);
   const discard = (list: Candidate[]) =>
     list.forEach((f) => void FileSystem.deleteAsync(f.uri, { idempotent: true }).catch(() => {}));
   async function pick(kind: 'photo' | 'video', camera = false) {
@@ -217,6 +228,18 @@ function ScopedUploadSheet({
         사진·동영상 최대 {UPLOAD_SHEET_MAX}개
         {limits ? ` · 이 장소에 더 올릴 수 있는 사진 ${limits.photos} · 동영상 ${limits.videos}` : ''}
       </Text>
+      {!!existing.length && <Text style={{ marginTop: 16, fontWeight: '700' }}>이미 올린 내 기록</Text>}
+      <ScrollView horizontal contentContainerStyle={{ gap: 12, paddingVertical: 8 }}>
+        {existing.map((m) => <View key={m.id} style={{ width: 96 }}>
+          <Image accessibilityLabel="이미 올린 기록" source={[{ uri: `${API}/v1/media/${m.id}/content?variant=thumbnail`, headers: { Authorization: `Bearer ${currentSession()?.accessToken}` } }]} style={{ width: 96, height: 72, borderRadius: 8 }} />
+          <Pressable accessibilityRole="button" accessibilityLabel={`${m.kind === 'video' ? '동영상' : '사진'} 삭제`} disabled={a.busy} style={{ minHeight: 48, minWidth: 48, justifyContent: 'center', alignItems: 'center' }} onPress={() => confirm('올린 기록을 삭제할까요?', `${m.kind === 'video' ? '동영상' : '사진'} 1개가 서버에서 삭제됩니다. 휴대폰 원본은 유지돼요.`, () => a.run(async () => {
+            const result = await api('/media/deletions', { mediaIds: [m.id] });
+            if (result.results.some((x: any) => x.status === 'failed')) throw new Error('삭제하지 못했어요. 다시 시도해 주세요.');
+            setExisting((old) => old.filter((x) => x.id !== m.id)); setReload((n) => n + 1); setNotice('올린 기록을 삭제했어요.');
+          }))}><Text>✕ 삭제</Text></Pressable>
+        </View>)}
+      </ScrollView>
+      {!!existingError && <><Text>{existingError}</Text><Button secondary onPress={() => setReload((n) => n + 1)}>올린 기록 다시 불러오기</Button></>}
       {!!notice && <Text style={{ fontSize: 12, color: colors.sub, marginTop: 6 }}>{notice}</Text>}
       {a.errorView}
       {legacyDraft && <Button secondary disabled={a.busy} onPress={() => {

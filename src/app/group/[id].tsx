@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, PanResponder } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useGroupCalendar } from '../../lib/group-calendar';
 import { useAccount } from '../../lib/state';
 import { usePreference, todayInSeoul } from '../../lib/preferences';
 import { moveMonth } from '../../lib/calendar';
 import { dateHeading, dayLabel, groupDays, shortDate, type GroupDay } from '../../lib/day-labels';
-import { MonthGrid, MonthHeader, type DayChip } from '../../components/period-picker';
+import { MonthHeader } from '../../components/period-picker';
 import { Avatar } from '../../components/profile-ui';
 import { Screen, Button, Card, P, Sheet, colors, TextButton, resetTo } from '../../components/ui';
 export default function Group() {
@@ -16,7 +16,6 @@ export default function Group() {
   const [calendar, setCalendar, ready] = usePreference(`calendar:${id}`, {
     month: todayInSeoul().slice(0, 7),
     selected: todayInSeoul(),
-    list: false,
   });
   const focused = useRef('');
   useEffect(() => {
@@ -25,28 +24,18 @@ export default function Group() {
       setCalendar((old) => ({ ...old, month: focusDate.slice(0, 7), selected: focusDate }));
     }
   }, [ready, focusDate, id, setCalendar]);
-  const { month, selected, list } = calendar;
+  const { month, selected } = calendar;
   const state = useGroupCalendar(session?.userId, id, month, ready);
   const { group, schedules, members, plans } = state;
-  const swipe = PanResponder.create({
-    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
-    onPanResponderRelease: (_, g) => { if (Math.abs(g.dx) > 60) setCalendar({ ...calendar, month: moveMonth(month, g.dx < 0 ? 1 : -1) }); },
-  });
   if (state.denied) return (
-    <Screen compact title="모임 달력" back={false} footer={<Button onPress={() => resetTo('/')}>내 모임으로</Button>}>
+    <Screen compact title="모임 일정" back={false} footer={<Button onPress={() => resetTo('/')}>내 모임으로</Button>}>
       <P>이 모임을 확인할 수 없어요.</P>
     </Screen>
   );
   const owner = group?.ownerUserId === session?.userId;
   const ownerMember = members.find((m) => m.isOwner);
   const days = groupDays(schedules);
-  const labels: Record<string, DayChip> = {};
-  for (const d of days)
-    if (!labels[d.date] || (labels[d.date].cancelled && d.status === 'active'))
-      labels[d.date] = { text: dayLabel(d), cancelled: d.status === 'cancelled' };
-  const visible = list
-    ? days.filter((d) => d.date.startsWith(month))
-    : days.filter((d) => d.date === selected);
+  const visible = days.filter((d) => d.date.startsWith(month));
   function dayCard(d: GroupDay) {
     const plan = plans[d.scheduleId]?.find((p) => p.date === d.date),
       count = plan?.visitCount ?? d.visitCount,
@@ -100,7 +89,7 @@ export default function Group() {
               </Text>
             )}
           </View>
-          {owner && !cancelled && (
+          {owner && (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`${dayLabel(d)} 메뉴`}
@@ -185,7 +174,7 @@ export default function Group() {
         >
           <Text style={{ color: colors.accent, fontSize: 12 }}>●</Text>
           <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>
-            {group.activeCount}/10명
+            {group.activeCount === 1 ? '혼자 기록 중 · 친구를 초대해 보세요' : `${group.activeCount}명 함께 기록 중`}
           </Text>
           <Text
             numberOfLines={1}
@@ -247,20 +236,6 @@ export default function Group() {
             })
           }
         />
-        <Button
-          secondary
-          small
-          style={{ borderRadius: 20, minHeight: 48, paddingHorizontal: 16 }}
-          onPress={() =>
-            setCalendar({
-              ...calendar,
-              month: todayInSeoul().slice(0, 7),
-              selected: todayInSeoul(),
-            })
-          }
-        >
-          오늘
-        </Button>
       </View>
       <View
         style={{
@@ -271,73 +246,20 @@ export default function Group() {
           marginBottom: 8,
         }}
       >
-        <View
-          style={{
-            flexDirection: 'row',
-            gap: 4,
-            backgroundColor: colors.surface,
-            padding: 4,
-            borderRadius: 14,
-          }}
-        >
-          {(
-            [
-              [false, '달력'],
-              [true, '일정 목록'],
-            ] as const
-          ).map(([value, label]) => (
-            <Pressable
-              key={label}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: list === value }}
-              onPress={() => setCalendar({ ...calendar, list: value })}
-              style={{
-                paddingHorizontal: 14,
-                minHeight: 48,
-                justifyContent: 'center',
-                backgroundColor: list === value ? '#FFFFFF' : colors.surface,
-                borderRadius: 10,
-              }}
-            >
-              <Text
-                style={{
-                  fontWeight: list === value ? '800' : '500',
-                  color: list === value ? colors.ink : colors.muted,
-                }}
-              >
-                {label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
         <TextButton color={colors.sub} onPress={() => router.push(`/group/invites?id=${id}`)}>
           초대·관리 ›
         </TextButton>
       </View>
-      {!list && (
-        <Card style={{ padding: 4, backgroundColor: colors.surface, borderWidth: 0, borderRadius: 22 }}>
-          <View {...swipe.panHandlers}><MonthGrid
-            month={month}
-            selected={selected}
-            labels={labels}
-            onSelect={(date) =>
-              setCalendar({ ...calendar, month: date.slice(0, 7), selected: date })
-            }
-          /></View>
-        </Card>
-      )}
-      {list
-        ? [...new Set(visible.map((d) => d.date))].map((date) => (
+      {[...new Set(visible.map((d) => d.date))].map((date) => (
             <View key={date}>
               <Text style={{ fontSize: 13, fontWeight: '700', color: colors.sub, marginTop: 14 }}>
                 {dateHeading(date)}
               </Text>
               {visible.filter((d) => d.date === date).map(dayCard)}
             </View>
-          ))
-        : visible.map(dayCard)}
+          ))}
       {state.loaded && !visible.length && (
-        <P>{list ? '이 달에 등록된 일정이 없어요.' : `${dateHeading(selected)}에는 일정이 없어요.`}</P>
+        <P>이 달에 등록된 일정이 없어요.</P>
       )}
 
     </Screen>

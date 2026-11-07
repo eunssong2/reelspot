@@ -50,16 +50,7 @@ export default function Manage() {
   /** Share or copy the newest active invite link, issuing one when none is active. */
   async function shareInvite(action: 'share' | 'copy') {
     await a.run(async () => {
-      const latest = async () =>
-        ((await api(`/groups/${id}/invites`)).invites as any[])
-          .filter((x) => x.state === 'active')
-          .sort((x, y) => y.issuedAt.localeCompare(x.issuedAt))[0];
-      let invite = await latest();
-      if (!invite) {
-        const created = await api(`/groups/${id}/invites`, {});
-        invite = created?.link ? created : await latest();
-      }
-      if (!invite) throw new Error('초대를 만들지 못했어요. 초대·관리에서 다시 시도해 주세요.');
+      const invite = await api(`/groups/${id}/invites/current`, {});
       if (action === 'share')
         await shareGroupInvite(group, invite);
       else {
@@ -142,7 +133,7 @@ export default function Manage() {
             함께하는 친구 <Text style={{ color: '#3182F6' }}>{members.length}</Text>
           </Text>
           <Text style={{ fontSize: 14, lineHeight: 21, color: colors.muted, marginTop: 8 }}>
-            함께할 친구나 가족을 초대해보세요.{'\n'}일정을 함께 기록할 수 있습니다. (최대 10명)
+            함께할 친구나 가족을 초대해보세요.{'\n'}일정을 함께 기록할 수 있습니다. (최대 15명)
           </Text>
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
             <Button

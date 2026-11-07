@@ -1,5 +1,5 @@
 import { useInitialize } from '../lib/effects';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Linking, View, Text, ScrollView } from 'react-native';
 import * as Location from 'expo-location';
@@ -49,7 +49,7 @@ export default function Places() {
     [collapsed, setCollapsed] = useState(false),
     [lat, setLat] = useState(''),
     [lng, setLng] = useState(''),
-    [category, setCategory] = useState('all'),
+    [category] = useState('all'),
     [chosen, setChosen] = useState<any>(null),
     [highlighted, setHighlighted] = useState<string>(),
     [excluded, setExcluded] = useState(0),
@@ -84,7 +84,8 @@ export default function Places() {
         category: selectedCategory, sort: selectedCategory === 'all' ? searchSort : 'distance',
         center: `${center.lng},${center.lat}`, ...(inArea && bounds ? { bounds } : {}),
       }).toString();
-      const r = await api(`/places?${parameters}&page=${nextPage}`).catch(() => { throw new Error('검색에 실패했어요. 잠시 후 다시 시도해 주세요.'); });
+      const r = await api(`/places?${parameters}&page=${nextPage}`).catch(() => { if (sequence.current !== seq) return null; throw new Error('검색에 실패했어요. 잠시 후 다시 시도해 주세요.'); });
+      if (!r) return;
       if (sequence.current === seq) {
         lastSearch.current = parameters;
         setPage(r.page); setIsEnd(r.isEnd);
@@ -100,6 +101,11 @@ export default function Places() {
       }
     });
   }
+  useEffect(() => {
+    if (!query.trim()) { sequence.current++; setResults([]); setSearched(false); setIsEnd(true); return; }
+    const timer = setTimeout(() => { void search(false, 'all', query); }, 350);
+    return () => { clearTimeout(timer); sequence.current++; };
+  }, [query]);
   // Same place twice on one date is not allowed (screen 15); match by name and address.
   const alreadyOn = (place: any) =>
     !!place &&
@@ -209,40 +215,10 @@ export default function Places() {
             label="장소 검색"
             placeholder="장소를 검색하세요 (예: 성수 카페)"
             value={query}
-            onChangeText={setQuery}
+            onChangeText={(text) => { sequence.current++; setQuery(text); }}
             returnKeyType="search"
             onSubmitEditing={() => search()}
           />
-          <ScrollView
-            horizontal
-            style={{ flexGrow: 0 }}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8, paddingBottom: 12 }}
-          >
-            {Object.entries({
-              all: '전체',
-              tourism: '관광지',
-              restaurant: '맛집',
-              cafe: '카페',
-              lodging: '숙소',
-            }).map(([c, label]) => (
-              <Chip
-                key={c}
-                selected={category === c}
-                onPress={() => {
-                  setCategory(c);
-                  if (c !== 'all') {
-                    setSort('distance');
-                    setQuery('');
-                    void search(true, c, '');
-                  } else if (query.trim()) void search(false, 'all');
-                  else { sequence.current++; setResults([]); setSearched(false); setIsEnd(true); setChosen(null); }
-                }}
-              >
-                {label}
-              </Chip>
-            ))}
-          </ScrollView>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <TextButton
               onPress={() => search()}
@@ -355,7 +331,7 @@ export default function Places() {
             </Card>
             </View>
           ))}
-          {!searched && <P>장소를 검색하거나 카테고리를 눌러 보세요</P>}
+          {!searched && <P>한 글자부터 장소를 추천해 드려요</P>}
           <TextButton onPress={() => { setManual(true); setChosen(null); }}>검색에 없나요? 직접 등록</TextButton>
           </ScrollView>
           {!isEnd && <Button secondary disabled={a.busy} onPress={() => search(false, category, query, page + 1)}>장소 더 보기</Button>}

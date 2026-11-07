@@ -160,7 +160,7 @@ export default function Plan() {
                   backgroundColor: colors.surface,
                   borderRadius: 16,
                   paddingHorizontal: 12,
-                  minHeight: 34,
+                  minHeight: 48,
                   justifyContent: 'center',
                 }}
               >
@@ -212,8 +212,8 @@ export default function Plan() {
                   disabled={off}
                   onPress={() => move(i, delta)}
                   style={{
-                    width: 46,
-                    height: 46,
+                    width: 48,
+                    height: 48,
                     borderRadius: 12,
                     backgroundColor: off ? '#F9FAFB' : colors.surface,
                     alignItems: 'center',

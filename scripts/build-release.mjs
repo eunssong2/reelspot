@@ -99,7 +99,7 @@ run(
   [
     ':app:assembleRelease',
     '--no-daemon',
-    '--max-workers=2',
+    '--max-workers=4',
     '-PreactNativeArchitectures=x86_64,arm64-v8a',
   ],
   resolve(mobile, 'android'),

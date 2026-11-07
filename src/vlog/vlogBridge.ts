@@ -1,13 +1,6 @@
 import type { Timeline } from './model';
 
-/**
- * 브이로그 영상 생성·갤러리 저장 연결 지점(기획서 18페이지 "실제 동작을 위한 선행 작업").
- *
- * 기록 접근은 기존 API로 검증한다. 브이로그 렌더·결과 저장은 Q20 결정 후 앱 시작 시
- * setRenderHandler() / setGallerySaveHandler() 로 처리 함수를 등록한다.
- * 등록 전에는 not_connected 가 돌아가고 화면은 "아직 연결되지 않았어요"만 보여 준다
- * (진행률·저장 완료를 지어내서 보여 주지 않는다).
- */
+/** Authenticated editors register the server render and gallery-save handlers for their lifetime. */
 
 export interface RenderRequest {
   title: string;

@@ -14,7 +14,8 @@
     "release:android": "node scripts/build-release.mjs",
     "test": "npx --yes tsx --test tests/*.test.ts tests/*.test.mts",
     "emulator:fast": "node scripts/start-emulator.mjs",
-    "test:flows": "vitest run"
+    "test:flows": "vitest run",
+    "postinstall": "node scripts/patch-activity-results.mjs"
   },
   "dependencies": {
     "@formatjs/intl-segmenter": "^12.2.15",

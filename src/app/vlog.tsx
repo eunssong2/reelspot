@@ -1,3 +1,8 @@
+import gothic from '../../assets/vlog-fonts/gothic.ttf';
+import round from '../../assets/vlog-fonts/round.ttf';
+import hand from '../../assets/vlog-fonts/hand.ttf';
+import { useFonts } from 'expo-font';
+import { connectServerRenderer } from '../vlog/server-render';
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { RecoveryNotice } from '../vlog/parts';
@@ -11,6 +16,7 @@ import { VlogProvider, useVlog } from '../vlog/VlogProvider';
 import { draftProblem } from '../vlog/model';
 function Editor({ groupId }: { groupId: string }) {
   const store = useVlog();
+  useEffect(() => connectServerRenderer(groupId, currentSession()!.userId), [groupId]);
   const [source, setSource] = useState<Awaited<ReturnType<typeof loadVlog>> | null>(null);
   const [error, setError] = useState('');
   const [accessLost, setAccessLost] = useState(false);
@@ -39,6 +45,8 @@ function Editor({ groupId }: { groupId: string }) {
 export default function Vlog() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const { session } = useAccount();
+  const [fonts, fontError] = useFonts({ VlogGothic: gothic, VlogRound: round, VlogHand: hand });
+  if (!fonts) return <Screen title="브이로그 만들기"><P>{fontError ? '글꼴을 불러오지 못했어요. 화면을 다시 열어 주세요.' : '편집 화면을 준비하고 있어요.'}</P></Screen>;
   if (!session || !groupId) return <Screen title="브이로그 만들기"><P>로그인 후 모임에서 다시 열어 주세요.</P></Screen>;
   return <VlogProvider key={`${session.userId}:${groupId}`} userId={session.userId} groupId={groupId}><Editor groupId={groupId} /></VlogProvider>;
 }

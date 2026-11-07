@@ -6,7 +6,6 @@ import { ActivityIndicator, Image, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useAccount } from '../lib/state';
 import { api, coverSource } from '../lib/api';
-import { todayInSeoul } from '../lib/preferences';
 import { Screen, Button, Card, H, P, TextButton, colors, useAction } from '../components/ui';
 export default function Home() {
   const { session, profile, ready } = useAccount(),
@@ -98,12 +97,7 @@ export default function Home() {
         </Text>
       </View>
       {groups.map((g) => {
-        const x = g.scheduleSummary,
-          today = todayInSeoul(),
-          owner = g.ownerUserId === session.userId,
-          summary = x
-            ? `${x.startDate <= today && x.endDate >= today ? '진행 중' : x.startDate > today ? '다음 일정' : '최근 일정'}: ${x.title}`
-            : '아직 일정이 없어요';
+        const owner = g.ownerUserId === session.userId;
         return (
           <Card
             key={g.id}
@@ -157,9 +151,7 @@ export default function Home() {
                   </Text>
                 </View>
                 <Text numberOfLines={1} style={{ fontSize: 13, color: colors.muted, marginTop: 6 }}>
-                  <Text style={{ fontWeight: '700', color: colors.ink }}>{g.activeCount}/10명</Text>
-                  {' · '}
-                  {summary}
+                  {g.activeCount === 1 ? '혼자서도 기록할 수 있어요' : `${g.activeCount}명이 함께 기록하고 있어요`}
                 </Text>
               </View>
               <Text style={{ fontSize: 22, color: colors.muted }}>›</Text>

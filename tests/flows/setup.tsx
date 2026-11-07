@@ -1,3 +1,4 @@
+vi.mock('expo-font', () => ({ useFonts: () => [true, null] }));
 import React, { useState } from 'react';
 import { vi, beforeEach } from 'vitest';
 import { AppState } from './native';
@@ -44,8 +45,8 @@ vi.mock('../../src/components/ui', () => ({
   Badge: ({ children }: any) => <text>{children}</text>, CheckCircle: () => null, ClearableInput: (props: any) => <input {...props} />,
   P: ({ children }: any) => <text>{children}</text>, H: ({ children }: any) => <text>{children}</text>,
   Info: ({ children }: any) => <text>{children}</text>, confirm: (_title: string, _body: string, action: any) => action(),
-  Field: (props: any) => <input {...props} />, Card: ({ children }: any) => <card>{children}</card>, Chip: ({ children }: any) => <chip>{children}</chip>,
-  useAction: () => { const [error, setError] = useState(''); const [errorCode, setErrorCode] = useState(''); const [busy, setBusy] = useState(false); return { error, errorCode, busy, clear: () => setError(''), errorView: error ? <error>{error}</error> : null, run: async (fn: any) => { setBusy(true); setError(''); setErrorCode(''); try { await fn(); return true; } catch (e) { setError((e as Error).message); setErrorCode((e as any).code ?? ''); return false; } finally { setBusy(false); } } }; },
+  Field: (props: any) => <input {...props} />, Card: ({ children, ...props }: any) => <card {...props}>{children}</card>, Chip: ({ children, ...props }: any) => <chip {...props}>{children}</chip>,
+  useAction: () => { const [error, setError] = useState(''); const [errorCode, setErrorCode] = useState(''); const [busy, setBusy] = useState(false); const [hasRun, setHasRun] = useState(false); return { hasRun, error, errorCode, busy, clear: () => setError(''), errorView: error ? <error>{error}</error> : null, run: async (fn: any) => { setBusy(true); setError(''); setErrorCode(''); try { await fn(); return true; } catch (e) { setError((e as Error).message); setErrorCode((e as any).code ?? ''); return false; } finally { setBusy(false); setHasRun(true); } } }; },
 }));
 vi.mock('../../src/components/schedule-plan', () => ({
   DateTabs: () => null,

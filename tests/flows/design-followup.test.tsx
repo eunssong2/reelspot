@@ -77,3 +77,26 @@ test('delete confirmation retains photo/video counts, thumbnails and every selec
   expect(text(sheet)).toContain('첫 모임'); expect(text(sheet)).toContain('둘째 모임');
   expect(sheet.findAllByType('image')).toHaveLength(2);
 });
+
+test('missing day route shows recovery guidance without making an invalid API request', async () => {
+  setParams({});
+  await act(async () => { tree = create(<DayEdit />); });
+  expect(JSON.stringify(tree.toJSON())).toContain('일정과 날짜를 확인할 수 없어요');
+  expect(fixtures.api).not.toHaveBeenCalled();
+});
+test('cancelled empty day permits deletion but still blocks editing and cancellation', async () => {
+  schedule(true);
+  await act(async () => { tree = create(<DayEdit />); });
+  expect(button('이 날 일정 삭제').props.disabled).toBe(false);
+  expect(button('일정 취소(기록 보존)').props.disabled).toBe(true);
+  await press('이 날 일정 삭제');
+  expect(fixtures.api).toHaveBeenCalledWith('/schedules/s/days/2026-11-06/deletion', { expectedVersion: 1 });
+});
+test('onboarding accepts the published required document set without hardcoded item keys', async () => {
+  fixtures.api.mockResolvedValue({ documents: [{ id: 'custom', itemKey: 'required-v2', title: '필수 문서', kind: 'consent', required: true, version: '2' }] });
+  await act(async () => { tree = create(<Onboard />); });
+  await act(async () => tree.root.findByType('input').props.onChangeText('닉네임'));
+  expect(button('동의하고 시작하기 →').props.disabled).toBe(true);
+  await press('필수 문서 동의 선택');
+  expect(button('동의하고 시작하기 →').props.disabled).toBe(false);
+});

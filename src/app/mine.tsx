@@ -1,5 +1,5 @@
 import { useFocusLoad } from '../lib/effects';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { api } from '../lib/api';
@@ -8,33 +8,35 @@ import { Screen, Button, Card, H, P, useAction, Chip } from '../components/ui';
 export default function Mine() {
   const [items, setItems] = useState<any[]>([]),
     [next, setNext] = useState<string | null>(null),
-    [status, setStatus] = useState('');
+    [status, setStatus] = useState(''),
+    [groupId, setGroupId] = useState(''),
+    [groups, setGroups] = useState<{ id: string; name: string }[]>([]),
+    [order, setOrder] = useState('newest');
+  const generation = useRef(0);
   const a = useAction();
   async function load(cursor?: string) {
-    const q = new URLSearchParams();
+    const request = ++generation.current;
+    const q = new URLSearchParams({ order });
+    if (groupId) q.set('groupId', groupId);
     if (cursor) q.set('cursor', cursor);
     if (status) q.set('status', status);
-    const r = await api(`/me/media?${q}`);
+    const r = await api(`/me/media?${q}`).catch((error) => { if (request !== generation.current) return null; throw error; });
+    if (!r || request !== generation.current) return;
+    setGroups(r.groups ?? []);
     setItems((old) => (cursor ? [...old, ...r.items] : r.items));
     setNext(r.nextCursor);
   }
   useFocusLoad(() => {
+    setItems([]); setNext(null);
     a.run(() => load());
-  }, [status]);
+    return () => { generation.current++; };
+  }, [status, groupId, order]);
   return (
     <Screen
       title="내가 올린 기록"
       compact
-      back={false}
-      tabs
       subtitle="모임에서 나간 뒤에도 본인 기록을 열람하고 삭제할 수 있어요."
     >
-      <Button
-        secondary
-        onPress={() => router.push({ pathname: '/edit-records', params: { allOwn: 'true' } })}
-      >
-        여러 모임의 내 기록 선택·삭제
-      </Button>
       <ScrollView
         horizontal
         style={{ flexGrow: 0 }}
@@ -52,6 +54,13 @@ export default function Mine() {
           </Chip>
         ))}
       </ScrollView>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingVertical: 8 }}>
+        <Chip selected={!groupId} onPress={() => setGroupId('')}>모든 모임</Chip>
+        {groups.map((g) => <Chip key={g.id} selected={groupId === g.id} onPress={() => setGroupId(g.id)}>{g.name}</Chip>)}
+      </ScrollView>
+      <Button secondary onPress={() => setOrder(order === 'newest' ? 'expires_first' : 'newest')}>
+        {order === 'newest' ? '최근 기록순 ↕' : '보관 기한 임박순 ↕'}
+      </Button>
       {a.hasRun && !a.busy && !a.error && !items.length && (
         <P>선택한 조건에 맞는 본인 기록이 없습니다.</P>
       )}

@@ -11,13 +11,17 @@ export class ApiError extends Error {
     super(
       (
         {
+          INVALID_VLOG: '영상 편집 내용을 확인해 주세요. 기록을 다시 선택한 뒤 완료해 주세요.',
+          VLOG_SOURCE_CHANGED: '원본 기록이 바뀌었어요. 기록을 다시 선택해 주세요.',
+          VLOG_RANGE_INVALID: '영상 구간이 원본 길이를 넘어요. 구간을 다시 선택해 주세요.',
+          VLOG_BUSY: '만들고 있는 영상이 있어요. 완료하거나 중단한 뒤 다시 시도해 주세요.',
           GROUP_LIMIT: '참여할 수 있는 모임 수를 초과했어요.',
           OWNER_CREATE_LIMIT: '방장으로 만들 수 있는 모임 수를 초과했어요.',
           TEXT_REJECTED: '사용할 수 없는 표현이 있어요. 입력한 내용을 바꿔 주세요.',
           FILE_CHANGED: '선택한 파일이 바뀌었어요. 파일을 다시 선택해 주세요.',
           MODERATION_RESTRICTED: '검토 또는 이용 제한으로 현재 볼 수 없는 기록이에요.',
           UNSUPPORTED_MEDIA_TYPE: '지원하지 않는 요청 형식이에요. 앱을 최신 버전으로 업데이트해 주세요.',
-          CAPACITY_FULL: '모임 정원 10명이 모두 찼어요.',
+          CAPACITY_FULL: '모임 정원 15명이 모두 찼어요.',
           INTERNAL_ERROR: '서버에서 요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.',
           CONCURRENT_CHANGE: '다른 변경과 겹쳤어요. 최신 상태를 확인한 뒤 다시 시도해 주세요.',
           OWNER_TRANSFER_REQUIRED: '방장을 다른 참여자에게 넘긴 뒤 나갈 수 있어요.',

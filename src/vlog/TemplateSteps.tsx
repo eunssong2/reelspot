@@ -87,7 +87,7 @@ export function TemplateStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: strin
       footer={<FooterButtons label="선택한 방식으로 다음" onPress={apply} />}
     >
       <Heading title={`${n}개를 어떻게 보여줄까요?`} />
-      <Pressable onPress={() => ctx.replace({ step: 'media', placeKey: found.place.key })} accessibilityRole="button" hitSlop={8}>
+      <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} onPress={() => ctx.replace({ step: 'media', placeKey: found.place.key })} accessibilityRole="button" hitSlop={8}>
         <Text style={styles.sub}>
           {[photos ? `사진 ${photos}` : '', n - photos ? `동영상 ${n - photos}` : ''].filter(Boolean).join(' · ')} 선택 · 변경 ›
         </Text>
@@ -213,7 +213,7 @@ export function LengthStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string 
               영상 {String.fromCharCode(65 + i)}  원본 {orig}초   사용 {mmss(start)}~{mmss(start + len)}
             </Text>
             {orig > len ? (
-              <Pressable onPress={() => ctx.go({ step: 'trim', placeKey: found.place.key, clipId: m.item.id })} accessibilityRole="button" hitSlop={8}>
+              <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} onPress={() => ctx.go({ step: 'trim', placeKey: found.place.key, clipId: m.item.id })} accessibilityRole="button" hitSlop={8}>
                 <Text style={styles.link}>구간 이동 ›</Text>
               </Pressable>
             ) : null}
@@ -289,6 +289,12 @@ export function TrimStep({ ctx, placeKey, clipId }: { ctx: StepCtx; placeKey?: s
         onLayout={(e: LayoutChangeEvent) => setTrackW(e.nativeEvent.layout.width)}
         accessibilityRole="adjustable"
         accessibilityLabel={`사용 구간 시작 ${start}초`}
+        accessibilityValue={{ min: 0, max: maxStart, now: start }}
+        accessibilityActions={[{ name: 'increment', label: '1초 뒤로' }, { name: 'decrement', label: '1초 앞으로' }]}
+        onAccessibilityAction={(event) => {
+          if (event.nativeEvent.actionName === 'increment') setStart(clamp(start + 1));
+          if (event.nativeEvent.actionName === 'decrement') setStart(clamp(start - 1));
+        }}
         style={styles.track}
       >
         {trackW > 0 ? <View style={[styles.window, { left: (start / total) * trackW, width: (len / total) * trackW }]} /> : null}
@@ -340,7 +346,7 @@ const styles = StyleSheet.create({
   off: { opacity: 0.35 },
   hint: { fontSize: 12, color: colors.textMuted },
   cover: { width: '100%', aspectRatio: 1, borderRadius: radius.item, overflow: 'hidden', backgroundColor: colors.surface },
-  track: { height: 44, borderRadius: 10, backgroundColor: colors.surface, justifyContent: 'center' },
+  track: { height: 48, borderRadius: 10, backgroundColor: colors.surface, justifyContent: 'center' },
   window: { position: 'absolute', top: 0, bottom: 0, borderRadius: 10, borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.primarySoft },
   axis: { flexDirection: 'row', justifyContent: 'space-between' },
   axisText: { fontSize: 11, color: colors.textMuted },

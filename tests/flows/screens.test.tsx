@@ -48,6 +48,26 @@ function mockApi() {
 }
 const uploadProps = { visible: true, onClose() {}, scheduleId: 'schedule', recordDate: '2027-01-01', visitId: 'A' };
 describe('actual upload sheet interactions (camera/storage/network mocked)', () => {
+  test('deleting an existing own record restores capacity without discarding new candidates', async () => {
+    let deleted = false;
+    const own = { id: 'own', kind: 'photo', authorUserId: 'user', recordDate: uploadProps.recordDate, visitId: 'A' };
+    fixtures.api.mockImplementation(async (path, body) => {
+      if (path === '/schedules/schedule/media') return { items: [...(deleted ? [] : [own]), { ...own, id: 'other', authorUserId: 'someone-else' }, { ...own, id: 'other-place', visitId: 'B' }], nextCursor: null };
+      if (path.includes('/upload-limits?')) return { photos: deleted ? 5 : 4, videos: 2 };
+      if (path === '/media/deletions') { expect(body.mediaIds).toEqual(['own']); deleted = true; return { results: [{ id: 'own', status: 'deleted' }] }; }
+      throw Error(path);
+    });
+    fixtures.album.mockResolvedValue({ canceled: false, assets: [{ uri: 'file:new', fileName: 'new.jpg', mimeType: 'image/jpeg' }] });
+    await mount(<UploadSheet {...uploadProps} />);
+    await press('사진·동영상 추가'); await press('🖼️ 사진 보관함에서 선택');
+    expect(tree.root.findAll((n) => typeof n.type === 'string' && n.props.accessibilityLabel === '사진 삭제')).toHaveLength(1);
+    expect(JSON.stringify(tree.toJSON())).toContain('사진 4');
+    await press('사진 삭제');
+    expect(JSON.stringify(tree.toJSON())).toContain('사진 5');
+    expect(JSON.stringify(tree.toJSON())).toContain('1개 업로드하기');
+    expect(tree.root.findAll((n) => typeof n.type === 'string' && n.props.accessibilityLabel === '사진 삭제')).toHaveLength(0);
+    expect(fixtures.api.mock.calls.some(([path]) => path.endsWith('/submissions'))).toBe(false);
+  });
   test('legacy mixed candidates are discoverable and recover only into their original scope', async () => {
     mockApi();
     const oldA = { clientFileId: 'old-A', uri: 'file:A', name: 'A.jpg', recordDate: '2027-01-01', visitId: 'A' };

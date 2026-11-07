@@ -16,13 +16,18 @@ export default function Invites() {
     { session } = useAccount(),
     [group, setGroup] = useState<any>(null),
     [items, setItems] = useState<any[]>([]),
-    [message, setMessage] = useState('');
+    [message, setMessage] = useState(''),
+    [advanced, setAdvanced] = useState(false);
   const toast = useAppToast();
   const [now, setNow] = useState(Date.now());
   const a = useAction(),
     cover = useAction({ inlineRetry: false });
-  async function load() {
-    const [g, r] = await Promise.all([getGroup(id), api(`/groups/${id}/invites`)]);
+  async function load(createFirst = false) {
+    let [g, r] = await Promise.all([getGroup(id), api(`/groups/${id}/invites`)]);
+    if (createFirst && r.invites.length === 0) {
+      await api(`/groups/${id}/invites/current`, {});
+      r = await api(`/groups/${id}/invites`);
+    }
     setGroup(g);
     setItems(
       r.invites.sort(
@@ -32,8 +37,8 @@ export default function Invites() {
   }
   useFocusLoad(() => {
     setNow(Date.now());
-    void a.run(load);
-    const timer = setInterval(() => setNow(Date.now()), 60000);
+    void a.run(() => load(true));
+    const timer = setInterval(() => { setNow(Date.now()); void a.run(load); }, 60000);
     return () => clearInterval(timer);
   }, [id]);
   async function live(inviteId: string) {
@@ -43,7 +48,11 @@ export default function Invites() {
         (x: any, y: any) => y.issuedAt.localeCompare(x.issuedAt) || y.id.localeCompare(x.id),
       ),
     );
-    const item = r.invites.find((x: any) => x.id === inviteId && x.state === 'active');
+    let item = r.invites.find((x: any) => x.id === inviteId && x.state === 'active');
+    if (!item) {
+      item = await api(`/groups/${id}/invites/current`, {});
+      await load();
+    }
     if (!item) throw new Error('현재 사용할 수 없는 초대입니다. 새 초대를 발급해 주세요.');
     return item;
   }
@@ -80,7 +89,8 @@ export default function Invites() {
       title="모임에 초대하기"
       footer={
         <>
-          <Button
+          <Button secondary onPress={() => setAdvanced(!advanced)}>{advanced ? '초대 관리 접기' : '이전 초대·관리'}</Button>
+          {advanced && <Button
             tone="dark"
             disabled={a.busy || !group}
             onPress={() =>
@@ -92,9 +102,9 @@ export default function Invites() {
             }
           >
             ＋ 새 초대 발급하기
-          </Button>
+          </Button>}
           <Text style={{ fontSize: 12, color: colors.muted, textAlign: 'center' }}>
-            새 코드를 만들어도 기존 초대는 그대로 쓸 수 있어요
+            사용 중인 초대는 7일 또는 확인 50회 후 자동으로 교체돼요
           </Text>
         </>
       }
@@ -161,7 +171,7 @@ export default function Invites() {
         </View>
       )}
       {!!group?.coverAssetId && <TextButton onPress={() => router.push({ pathname: '/report', params: { targetType: 'cover', targetId: group.coverAssetId } })}>모임 사진 신고</TextButton>}
-      {group?.activeCount >= 10 && <P>지금은 정원이 다 찼어요. 자리가 나야 새로 참여할 수 있어요.</P>}
+      {group?.activeCount >= 15 && <P>지금은 정원이 다 찼어요. 자리가 나야 새로 참여할 수 있어요.</P>}
       {cover.error ? cover.errorView : null}
       {group && (
         <>
@@ -182,7 +192,7 @@ export default function Invites() {
             👥 {group.name}
           </Text>
           <Text style={{ fontSize: 13, color: colors.muted, marginVertical: 10 }}>
-            현재 {group.activeCount}/10명 · 초대는 7일 · 확인 50회까지
+            현재 {group.activeCount === 1 ? '혼자 기록 중 · 친구를 초대해 보세요' : `${group.activeCount}명 함께 기록 중`} · 초대는 7일 · 확인 50회까지
           </Text>
         </>
       )}
@@ -220,6 +230,7 @@ export default function Invites() {
               👆 탭하여 코드 복사하기
             </Text>
           </Pressable>
+          {advanced && <>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text style={{ fontSize: 13, color: colors.sub }}>발급 {monthDayTime(current.issuedAt)}</Text>
             <Text style={{ fontSize: 13, color: colors.sub }}>만료 {monthDayTime(current.expiresAt)}</Text>
@@ -240,6 +251,7 @@ export default function Invites() {
               <Text style={{ color: colors.accent }}>{current.useCount}</Text> / 50회{50 - current.useCount <= 10 ? ` · ${Math.max(0, 50 - current.useCount)}회 남음` : ''}
             </Text>
           </View>
+          </>}
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
             <Button secondary style={{ flex: 1, backgroundColor: 'transparent' }} disabled={a.busy} onPress={() => send(current, 'link')}>
               링크 복사
@@ -248,19 +260,19 @@ export default function Invites() {
               ↗ 공유하기
             </Button>
           </View>
-          <View style={{ alignItems: 'center' }}>
+          {advanced && <View style={{ alignItems: 'center' }}>
             <TextButton color="#E5484D" disabled={a.busy} onPress={() => revoke(current)}>
               이 초대 취소하기 ›
             </TextButton>
-          </View>
+          </View>}
         </View>
       ) : (
         a.hasRun &&
         !a.busy &&
-        !a.error && <P>지금 사용할 수 있는 초대가 없어요. 아래에서 새 초대를 발급해 주세요.</P>
+        !a.error && <><P>지금 사용할 수 있는 초대가 없어요. 새 초대를 만들면 다시 공유할 수 있어요.</P><Button onPress={() => a.run(async () => { await api(`/groups/${id}/invites/current`, {}); await load(); })}>새 초대 만들기</Button></>
       )}
       <Info>받은 사람이 다른 사람에게 전달하면 그 사람도 참여할 수 있어요.</Info>
-      {previous.length > 0 && (
+      {advanced && previous.length > 0 && (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, marginBottom: 6 }}>
           <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink }}>이전 초대</Text>
           <Text
@@ -279,7 +291,7 @@ export default function Invites() {
           </Text>
         </View>
       )}
-      {previous.map((item) => {
+      {advanced && previous.map((item) => {
         const active = item.state === 'active';
         return (
           <View

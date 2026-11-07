@@ -192,10 +192,8 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCel
   if (scene.kind === 'title') {
     return (
       <View style={[styles.canvas, styles.titleCanvas, { width, height }]}>
-        <Text style={styles.titleDate}>{scene.titleDate}</Text>
-        <Text style={styles.titleName} numberOfLines={3}>
-          {scene.titleText}
-        </Text>
+        <Text allowFontScaling={false} style={{ position: 'absolute', top: '40%', fontFamily: 'VlogGothic', fontSize: 48 * width / aspectOf(scene.aspect).width, color: colors.primary }}>{scene.titleDate}</Text>
+        <Text allowFontScaling={false} style={{ position: 'absolute', top: '52%', maxWidth: '90%', fontFamily: 'VlogGothic', fontSize: 56 * width / aspectOf(scene.aspect).width, color: colors.text, textAlign: 'center' }}>{scene.titleText}</Text>
       </View>
     );
   }
@@ -245,12 +243,8 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCel
           {clip.kind === 'video' ? <Text style={styles.videoMark}>▶</Text> : null}
         </>
       ) : null}
-      {line || caption ? (
-        <View style={styles.overlay}>
-          {line ? <Text style={[styles.overlayLine, font]}>{line}</Text> : null}
-          {caption ? <Text style={[styles.overlayCaption, font]}>{caption}</Text> : null}
-        </View>
-      ) : null}
+      {line ? <Text allowFontScaling={false} style={[font, { position: 'absolute', top: '78%', alignSelf: 'center', maxWidth: '90%', fontSize: 32 * width / aspectOf(scene.aspect).width, color: 'white', backgroundColor: 'rgba(0,0,0,0.5)', textAlign: 'center' }]}>{line}</Text> : null}
+      {caption ? <Text allowFontScaling={false} style={[font, { position: 'absolute', top: scene.captionPosition === 'top' ? '10%' : scene.captionPosition === 'center' ? '50%' : '86%', alignSelf: 'center', maxWidth: '90%', fontSize: 48 * width / aspectOf(scene.aspect).width, color: 'white', backgroundColor: 'rgba(0,0,0,0.5)', textAlign: 'center' }]}>{caption}</Text> : null}
     </View>
   );
 }
@@ -343,7 +337,7 @@ export function LayoutThumb({ rects, images, width, ratio = 9 / 16 }: { rects: R
 }
 
 const styles = StyleSheet.create({
-  close: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 6 },
+  close: { minWidth: 48, alignItems: 'center', minHeight: 48, justifyContent: 'center', paddingHorizontal: 6 },
   closeText: { fontSize: 13, fontWeight: '600', color: colors.textSub },
   progressWrap: { paddingHorizontal: GUTTER, gap: 6, paddingBottom: 6 },
   stepText: { fontSize: 12, fontWeight: '800', color: colors.primary },

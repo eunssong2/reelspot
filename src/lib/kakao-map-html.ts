@@ -4,7 +4,7 @@ export const scriptJson = (value: unknown) =>
     .replace(/\u2028/g, '\\u2028')
     .replace(/\u2029/g, '\\u2029');
 export function kakaoMapHtml(key: string) {
-  return `<!doctype html><html lang="ko"><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><style>html,body,#map{margin:0;width:100%;height:100%;background:#F2F4F6}#status{position:absolute;inset:0;display:grid;place-items:center;font:14px sans-serif;padding:20px}</style></head><body><div id="map"></div><div id="status">지도를 불러오는 중…</div><script>
+  return `<!doctype html><html lang="ko"><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><style>html,body,#map{margin:0;width:100%;height:100%;background:#F2F4F6}#zoom{position:absolute;right:8px;top:8px;display:grid;gap:4px;z-index:2}#zoom button{width:48px;height:48px;font:28px sans-serif;border:1px solid #ddd;border-radius:10px;background:white;color:#191F28}#status{position:absolute;inset:0;display:grid;place-items:center;font:14px sans-serif;padding:20px}</style></head><body><div id="map"></div><div id="zoom"><button type="button" aria-label="지도 확대" id="zoom-in">+</button><button type="button" aria-label="지도 축소" id="zoom-out">−</button></div><div id="status">지도를 불러오는 중…</div><script>
   const send=(type,data)=>window.ReactNativeWebView.postMessage(JSON.stringify({type,...data}));
   const failure=()=>{document.getElementById('status').textContent='지도를 불러오지 못했어요. 목록 검색과 직접 등록을 이용해 주세요.';send('error',{});};
   let map,markers=[],pin,fitted=0;
@@ -15,7 +15,8 @@ export function kakaoMapHtml(key: string) {
   sdk.onload=()=>{try{kakao.maps.load(()=>{
     clearTimeout(timer);document.getElementById('status').style.display='none';
     map=new kakao.maps.Map(document.getElementById('map'),{center:new kakao.maps.LatLng(37.5665,126.978),level:6});
-    map.addControl(new kakao.maps.ZoomControl(),kakao.maps.ControlPosition.RIGHT);
+    document.getElementById('zoom-in').onclick=()=>map.setLevel(Math.max(1,map.getLevel()-1));
+    document.getElementById('zoom-out').onclick=()=>map.setLevel(Math.min(14,map.getLevel()+1));
     kakao.maps.event.addListener(map,'idle',()=>{const c=map.getCenter(),b=map.getBounds(),sw=b.getSouthWest(),ne=b.getNorthEast();send('region',{lat:c.getLat(),lng:c.getLng(),bounds:[sw.getLng(),sw.getLat(),ne.getLng(),ne.getLat()].join(',')});});
     kakao.maps.event.addListener(map,'click',e=>send('pin',{lat:e.latLng.getLat(),lng:e.latLng.getLng()}));
     window.updateMap=(data)=>{

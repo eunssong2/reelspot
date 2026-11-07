@@ -5,7 +5,11 @@ import { parseEnv } from 'node:util';
 export default ({ config }: ConfigContext): ExpoConfig => {
   let rootEnv: Record<string, string> = {};
   try {
-    rootEnv = parseEnv(readFileSync(resolve(__dirname, '../.env'), 'utf8'));
+    // Worktrees keep server configuration in backend/.env. Only public map
+    // fields below may enter the app; no server credentials are exported.
+    for (const path of ['../backend/.env', '../.env']) {
+      try { Object.assign(rootEnv, parseEnv(readFileSync(resolve(__dirname, path), 'utf8'))); } catch { /* Optional local configuration. */ }
+    }
   } catch {
     /* Public config may come from CI. */
   }

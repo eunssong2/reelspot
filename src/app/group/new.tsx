@@ -118,7 +118,7 @@ export default function NewGroup() {
       />
       <Info icon="">
         ℹ️ 시간은 장소를 추가할 때 입력해요. 반복 설정은 없어요. 필요하면 일정을 더 추가해요.
-        {'\n\n'}👥 한국 시간 기준 · 최대 10명 고정 · 정원 변경 없음
+        {'\n\n'}👥 한국 시간 기준 · 최대 15명 고정 · 정원 변경 없음
       </Info>
       {pending && <Info title="저장 결과를 확인 중이에요">요청은 접수됐을 수 있어요. 내용을 다시 만들지 않고 확인할게요.{'\n'}문의용 번호 {v.requestKey}</Info>}
       {a.errorView}

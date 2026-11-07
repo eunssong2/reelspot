@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { randomUUID, createHash } from 'node:crypto';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { ApiError } from '../src/lib/api-errors';
 const source = await readFile(new URL('../src/lib/social.ts',import.meta.url),'utf8');
 const compiled = ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 function fixture() {
@@ -15,6 +16,7 @@ function fixture() {
   const browser=new Promise<any>((r)=>{reply=r;});
   const state='S'.repeat(43);
   const mocks:any={
+    './api-errors':{ApiError},
     'expo-web-browser':{openAuthSessionAsync:()=>{opened();return browser;}},
     'expo-crypto':{randomUUID,digestStringAsync:async (_:any,v:string)=>createHash('sha256').update(v).digest('hex'),CryptoDigestAlgorithm:{SHA256:'sha256'}},
     'expo-secure-store':{getItemAsync:async(k:string)=>storage.get(k)??null,setItemAsync:async(k:string,v:string)=>{storage.set(k,v);},deleteItemAsync:async(k:string)=>{storage.delete(k);}},

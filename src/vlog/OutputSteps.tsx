@@ -82,7 +82,7 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
             <View style={styles.dayTitleBox}>
               <View style={styles.dayTitleTop}>
                 <Text style={styles.cardSub}>날짜 제목 화면 {TITLE_CARD_SEC}초</Text>
-                <Switch
+                <Switch style={{ minWidth: 48, minHeight: 48 }}
                   value={Boolean(draft.dayTitleCard?.[day.key])}
                   onValueChange={(v) => ctx.update((d) => ({ ...d, dayTitleCard: { ...(d.dayTitleCard ?? {}), [day.key]: v } }))}
                   trackColor={{ true: colors.primary }}
@@ -233,12 +233,12 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
         />
       }
     >
-      <Pressable onPress={ctx.back} accessibilityRole="button" hitSlop={8}>
+      <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} onPress={ctx.back} accessibilityRole="button" hitSlop={8}>
         <Text style={styles.previewTitle}>{titleOf(ctx)}  <Text style={styles.link}>수정</Text></Text>
       </Pressable>
 
       <View style={styles.center}>
-        <Pressable onPress={play} accessibilityRole="button" accessibilityLabel={playing ? '일시정지' : '재생'}>
+        <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} onPress={play} accessibilityRole="button" accessibilityLabel={playing ? '일시정지' : '재생'}>
           <TransitionStage scene={scene} prev={prevScene} width={canvasW} localSec={t - scene.startSec} transition={scene.transition} progress={transProgress} />
           {!playing ? (
             <View style={styles.playWrap} pointerEvents="none">
@@ -258,13 +258,16 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
         onLayout={(e) => setTrackW(e.nativeEvent.layout.width)}
         accessibilityRole="adjustable"
         accessibilityLabel={`재생 위치 ${mmss2(t)}`}
-        style={styles.bar}
+        accessibilityValue={{ min: 0, max: total, now: t, text: `${mmss2(t)} / ${mmss2(total)}` }}
+        accessibilityActions={[{ name: 'increment', label: '1초 뒤로' }, { name: 'decrement', label: '1초 앞으로' }]}
+        onAccessibilityAction={(e) => seek(t + (e.nativeEvent.actionName === 'increment' ? 1 : -1))}
+        style={{ minHeight: 48, justifyContent: 'center' }}
       >
-        <View style={[styles.barFill, { width: total > 0 ? `${(t / total) * 100}%` : '0%' }]} />
+        <View style={styles.bar}><View style={[styles.barFill, { width: total > 0 ? `${(t / total) * 100}%` : '0%' }]} /></View>
       </Pressable>
       <View style={styles.marks}>
         {marks.map(({ s, day }) => (
-          <Pressable key={s.dayKey} onPress={() => seek(s.startSec)} accessibilityRole="button" hitSlop={8}>
+          <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} key={s.dayKey} onPress={() => seek(s.startSec)} accessibilityRole="button" hitSlop={8}>
             <Text style={styles.mark}>
               {day ? shortDotDateLabel(day.date) : ''} {mmss2(s.startSec).replace(/^00:/, '0:')}
             </Text>
@@ -273,7 +276,7 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
       </View>
       <Text style={styles.format}>{aspectOf(timeline.aspect).output}</Text>
       {problem ? <Text style={styles.problem}>{problem}</Text> : null}
-      <Pressable onPress={() => ctx.go({ step: 'compose' })} accessibilityRole="button" hitSlop={8}>
+      <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} onPress={() => ctx.go({ step: 'compose' })} accessibilityRole="button" hitSlop={8}>
         <Text style={[styles.link, styles.centerText]}>자막·장면 수정</Text>
       </Pressable>
     </StepFrame>
@@ -315,7 +318,7 @@ export function GenerateStep({ ctx }: { ctx: StepCtx }) {
       });
       if (isCancelled()) return;
       running.current = false;
-      if (outcome.status === 'cancelled') return;
+      if (outcome.status === 'cancelled') { setState('failed'); c.toast('영상 생성이 중단됐어요. 다시 시도해 주세요.'); return; }
       if (outcome.status === 'done') {
         ctxRef.current.update((d) => ({
           ...d,

@@ -177,7 +177,7 @@ export function BottomTabs() {
       {(
         [
           ['/', '모임', '👥'],
-          ['/mine', '내 기록', '📖'],
+          ['/calendar', '전체 일정', '📅'],
           ['/my-page', '마이페이지', '👤'],
         ] as const
       ).map(([href, label, icon]) => (
@@ -413,6 +413,7 @@ export function TextButton({
       onPress={onPress}
       style={{
         minHeight: 48,
+        minWidth: 48,
         paddingHorizontal: 8,
         justifyContent: 'center',
         opacity: disabled ? 0.4 : 1,
@@ -441,6 +442,7 @@ export function Chip({
         borderRadius: 20,
         paddingHorizontal: 14,
         minHeight: 48,
+        minWidth: 48,
         justifyContent: 'center',
       }}
     >
@@ -658,6 +660,7 @@ export const s = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     minHeight: 56,
+    minWidth: 48,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',

@@ -128,7 +128,7 @@ function ZoomPhoto({ uri }: { uri: string }) {
             scale.setValue(z);
             offset.setValue({ x: 0, y: 0 });
           }}
-          style={{ padding: 12, borderRadius: 24, backgroundColor: '#29292B' }}
+          style={{ padding: 12, minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24, backgroundColor: '#29292B' }}
         >
           <Text style={{ color: 'white' }}>−</Text>
         </Pressable>
@@ -141,7 +141,7 @@ function ZoomPhoto({ uri }: { uri: string }) {
             setZoom(z);
             scale.setValue(z);
           }}
-          style={{ padding: 12, borderRadius: 24, backgroundColor: '#29292B' }}
+          style={{ padding: 12, minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24, backgroundColor: '#29292B' }}
         >
           <Text style={{ color: 'white' }}>＋</Text>
         </Pressable>

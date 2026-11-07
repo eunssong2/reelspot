@@ -10,8 +10,8 @@ function Video({ uri }: { uri: string }) {
 }
 export function MediaViewerModal({ target, onClose, action }: { target: ViewerTarget | null; onClose: () => void; action?: { label: string; onPress: () => void } }) {
   return <Modal visible={!!target} onRequestClose={onClose}><SafeAreaView style={{ flex: 1, backgroundColor: '#fff', padding: 16 }}>
-    <Pressable accessibilityRole="button" onPress={onClose}><Text style={{ padding: 16 }}>닫기</Text></Pressable>
+    <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} accessibilityRole="button" onPress={onClose}><Text style={{ padding: 16 }}>닫기</Text></Pressable>
     {target && <><View style={{ flex: 1 }}>{target.item.videoSource ? <Video uri={target.item.videoSource} /> : <SafeImage source={target.item.imageUrl} style={{ flex: 1 }} resizeMode="contain" />}</View><Text>{target.author} · {target.time}</Text></>}
-    {action && <Pressable accessibilityRole="button" onPress={action.onPress}><Text style={{ padding: 20 }}>{action.label}</Text></Pressable>}
+    {action && <Pressable style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }} accessibilityRole="button" onPress={action.onPress}><Text style={{ padding: 20 }}>{action.label}</Text></Pressable>}
   </SafeAreaView></Modal>;
 }

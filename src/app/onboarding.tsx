@@ -63,7 +63,7 @@ export default function Onboard() {
   const consentDocs = docs.filter((d) => d.kind === 'consent');
   const valid =
     !nameError &&
-    consentDocs.some((d) => d.required && ['terms', 'terms-service'].includes(d.itemKey)) &&
+    consentDocs.some((d) => d.required) &&
     !consentDocs.some((d) => d.required && !agreed[d.id]);
   async function submit() {
     await a.run(async () => {

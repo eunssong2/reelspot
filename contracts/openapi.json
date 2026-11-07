@@ -7119,6 +7119,18 @@
               "maximum": 60,
               "default": 60
             }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "newest",
+                "expires_first"
+              ],
+              "default": "newest"
+            }
           }
         ],
         "responses": {
@@ -7148,6 +7160,10 @@
                           },
                           "groupState": {
                             "type": "string"
+                          },
+                          "groupId": {
+                            "type": "string",
+                            "format": "uuid"
                           }
                         },
                         "required": [
@@ -7164,11 +7180,31 @@
                         "string",
                         "null"
                       ]
+                    },
+                    "groups": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ]
+                      }
                     }
                   },
                   "required": [
                     "items",
-                    "nextCursor"
+                    "nextCursor",
+                    "groups"
                   ]
                 }
               }
@@ -14361,6 +14397,490 @@
         }
       }
     },
+    "/groups/{groupId}/invites/current": {
+      "post": {
+        "operationId": "inviteCurrent",
+        "summary": "현재 유효한 초대 코드 조회 또는 자동 교체",
+        "tags": [
+          "F05"
+        ],
+        "description": "권한: member. 도메인 오류: GROUP_CLOSED FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다. F05 v2.1: 방장을 포함한 모든 현재 참여자가 같은 모임의 초대를 관리한다. 다른 참여자가 발급한 초대도 조회·공유·취소할 수 있다. 발급자 ID는 이력용이다. 탈퇴·퇴장·서비스 이용 제한·모임 종료 시 거부하며 멱등 재시도에서도 현재 권한을 재검증한다.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "invite{id,link,code(8자 ABCDEFGHJKLMNPQRSTUVWXYZ23456789),issuedAt,expiresAt(+168h),useCount:0,maxUses:50,state}",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invitation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력/규격 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 만료/재인증 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한/참여/차단/운영 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전/상태/멱등본문 충돌",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "삭제/만료/종료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "파일 크기 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청률 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공급자/서비스 일시 장애",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-role": "member",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}/vlogs": {
+      "post": {
+        "operationId": "vlogCreate",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "timeline": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "title",
+                  "timeline"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "enum": [
+                        "queued",
+                        "rendering",
+                        "complete",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ]
+                    },
+                    "progress": {
+                      "type": "number"
+                    },
+                    "durationSec": {
+                      "type": "number"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "contentUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "state",
+                    "progress",
+                    "durationSec",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vlogs/{jobId}": {
+      "get": {
+        "operationId": "vlogGet",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "enum": [
+                        "queued",
+                        "rendering",
+                        "complete",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ]
+                    },
+                    "progress": {
+                      "type": "number"
+                    },
+                    "durationSec": {
+                      "type": "number"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "contentUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "state",
+                    "progress",
+                    "durationSec",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vlogs/{jobId}/cancellation": {
+      "post": {
+        "operationId": "vlogCancel",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "enum": [
+                        "queued",
+                        "rendering",
+                        "complete",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ]
+                    },
+                    "progress": {
+                      "type": "number"
+                    },
+                    "durationSec": {
+                      "type": "number"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "contentUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "state",
+                    "progress",
+                    "durationSec",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vlogs/{jobId}/content": {
+      "get": {
+        "operationId": "vlogContent",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "video/mp4": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/groups/{groupId}/cover": {
       "get": {
         "operationId": "coverStream",
@@ -15728,7 +16248,7 @@
           },
           "capacity": {
             "type": "integer",
-            "const": 10
+            "const": 15
           },
           "activityAt": {
             "type": "string",
