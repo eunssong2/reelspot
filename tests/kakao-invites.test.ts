@@ -222,3 +222,30 @@ test(
 
   },
 );
+
+test('Kakao identity distinguishes provider outages from invalid credentials and rejects missing subject', async (t) => {
+  for (const [status,code] of [[503,'PROVIDER_UNAVAILABLE'],[429,'PROVIDER_QUOTA_EXCEEDED'],[401,'AUTH_INVALID']] as const) {
+    t.mock.method(globalThis,'fetch',async()=>new Response('{}',{status}));
+    await assert.rejects(verifyIdentity('kakao','real-token'),(e:any)=>e.code===code);
+    t.mock.restoreAll();
+  }
+  t.mock.method(globalThis,'fetch',async()=>{throw new TypeError('fetch failed');});
+  await assert.rejects(verifyIdentity('kakao','real-token'),(e:any)=>e.code==='PROVIDER_UNAVAILABLE');t.mock.restoreAll();
+  t.mock.method(globalThis,'fetch',async()=>new Response(JSON.stringify({app_id:123456})));
+  await assert.rejects(verifyIdentity('kakao','real-token'),(e:any)=>e.code==='AUTH_INVALID');
+});
+test('Kakao callback preserves outage, rate limit, generic failure and cancellation categories', {skip:!integration},async(t)=>{
+  const verifier='c'.repeat(64);
+  for (const [status,code,httpStatus] of [[503,'PROVIDER_UNAVAILABLE',503],[429,'PROVIDER_QUOTA_EXCEEDED',503],[400,'AUTH_INVALID',401],[0,'PROVIDER_UNAVAILABLE',503]] as const) {
+    t.mock.method(globalThis,'fetch',async()=>{if(status===0)throw new TypeError('offline');return new Response('{}',{status});});
+    const f=await ok('POST','/auth/kakao/start',{verifierHash:hash(verifier),deviceId:randomUUID()});
+    assert.equal((await call('GET',`/auth/kakao/callback?state=${f.state}&code=fixture-code`)).status,302);
+    const r=await call('POST','/auth/kakao/finish',{state:f.state,verifier});assert.equal(r.status,httpStatus);assert.equal(r.data.code,code);
+    t.mock.restoreAll();
+  }
+  for(const [error,code] of [['temporarily_unavailable','PROVIDER_UNAVAILABLE'],['access_denied','AUTH_CANCELLED']]) {
+    const f=await ok('POST','/auth/kakao/start',{verifierHash:hash(verifier),deviceId:randomUUID()});
+    await call('GET',`/auth/kakao/callback?state=${f.state}&error=${error}`);
+    assert.equal((await call('POST','/auth/kakao/finish',{state:f.state,verifier})).data.code,code);
+  }
+});

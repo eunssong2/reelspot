@@ -624,6 +624,7 @@ export const recordHandlers: Record<string, Handler> = {
       `SELECT m.*,(SELECT first_completed_at FROM submissions WHERE id=m.submission_id) submission_completed_at,CASE WHEN s.expires_at<=now() THEN 'expired' ELSE m.access_state END access_state,s.expires_at,s.retention_last_date,g.id group_id,g.name group_name,g.status group_status,s.title schedule_title,EXISTS(SELECT 1 FROM memberships mem WHERE mem.group_id=g.id AND mem.user_id=$1 AND mem.ended_at IS NULL) active_member FROM media m JOIN schedules s ON s.id=m.schedule_id JOIN groups g ON g.id=s.group_id WHERE m.author_user_id=$1 AND m.access_state<>'deleted' AND (s.expires_at IS NULL OR s.expires_at>now()-interval '30 days')`,
       [c.actor.id],
     );
+    const groups = [...new Map(all.map((m) => [m.group_id, { id: m.group_id, name: m.group_name }])).values()];
     all = all.filter(
       (m) =>
         (!c.query.groupId || m.group_id === c.query.groupId) &&
@@ -639,10 +640,12 @@ export const recordHandlers: Record<string, Handler> = {
       c.query,
       c.actor.id,
       'mine',
-      (m) =>
-        `${String(9999999999999 - new Date(m.submission_completed_at ?? m.completed_at).getTime()).padStart(13, '0')}:${m.id}`,
+      (m) => c.query.order === 'expires_first'
+        ? `${m.expires_at ? new Date(m.expires_at).toISOString() : '9999-12-31T23:59:59.999Z'}:${m.id}`
+        : `${String(9999999999999 - new Date(m.submission_completed_at ?? m.completed_at).getTime()).padStart(13, '0')}:${m.id}`,
     );
     return {
+      groups,
       items: p.items.map((m) => ({
         media: mediaDto(m),
         groupId: m.group_id,

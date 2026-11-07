@@ -662,7 +662,13 @@ export const groupHandlers: Record<string, Handler> = {
         Buffer.from(encrypt(token)),
       ],
     );
+    await c.db.query('UPDATE groups SET invite_rotation_paused=false WHERE id=$1', [c.params.groupId]);
     return invitationDto(i);
+  },
+  inviteCurrent: async (c) => {
+    await groupAccess(c, c.params.groupId);
+    const current = await one(c.db, "SELECT * FROM invitations WHERE group_id=$1 AND revoked_at IS NULL AND expires_at>now() AND use_count<max_uses ORDER BY issued_at DESC LIMIT 1", [c.params.groupId]);
+    return current ? invitationDto(current) : groupHandlers.inviteCreate(c);
   },
   invitesList: async (c) => {
     await groupAccess(c, c.params.groupId);
@@ -684,13 +690,11 @@ export const groupHandlers: Record<string, Handler> = {
       c.params.inviteId,
     ]);
     version(i, c.body.expectedVersion);
-    return invitationDto(
-      await one(
-        c.db,
-        'UPDATE invitations SET revoked_at=COALESCE(revoked_at,now()),version=version+1 WHERE id=$1 RETURNING *',
-        [i.id],
-      ),
-    );
+    const revoked = await one(c.db,
+      'UPDATE invitations SET revoked_at=COALESCE(revoked_at,now()),version=version+1 WHERE id=$1 RETURNING *', [i.id]);
+    await c.db.query(`UPDATE groups SET invite_rotation_paused=true WHERE id=$1
+      AND NOT EXISTS(SELECT 1 FROM invitations WHERE group_id=$1 AND revoked_at IS NULL AND expires_at>now() AND use_count<max_uses)`, [i.group_id]);
+    return invitationDto(revoked);
   },
   invitePreview: async (c) => {
     const initial = await findInvite(c, c.query.tokenOrCode);

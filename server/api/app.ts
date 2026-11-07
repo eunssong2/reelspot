@@ -63,6 +63,7 @@ const consentWriteIds = new Set([
   'metadataPatch',
   'profilePatch',
   'inviteJoin',
+  'vlogCreate',
 ]);
 function texts(value: any, key = ''): string[] {
   if (value == null) return [];
@@ -287,7 +288,7 @@ export async function buildApp(opts: { logging?: boolean } = {}) {
               );
             }
             // Cached mutation responses must not restore invitation access after leaving/kicking.
-            if (['inviteCreate', 'invitesList', 'inviteRevoke'].includes(id)) {
+            if (['inviteCreate', 'inviteCurrent', 'invitesList', 'inviteRevoke', 'vlogCreate'].includes(id)) {
               let groupId = params.groupId;
               if (id === 'inviteRevoke') {
                 const invitation = await one(db, 'SELECT group_id FROM invitations WHERE id=$1', [

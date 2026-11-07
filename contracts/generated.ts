@@ -1472,6 +1472,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/groups/{groupId}/invites/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 현재 유효한 초대 코드 조회 또는 자동 교체
+         * @description 권한: member. 도메인 오류: GROUP_CLOSED FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다. F05 v2.1: 방장을 포함한 모든 현재 참여자가 같은 모임의 초대를 관리한다. 다른 참여자가 발급한 초대도 조회·공유·취소할 수 있다. 발급자 ID는 이력용이다. 탈퇴·퇴장·서비스 이용 제한·모임 종료 시 거부하며 멱등 재시도에서도 현재 권한을 재검증한다.
+         */
+        post: operations["inviteCurrent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groups/{groupId}/vlogs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["vlogCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vlogs/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["vlogGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vlogs/{jobId}/cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["vlogCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vlogs/{jobId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["vlogContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/groups/{groupId}/cover": {
         parameters: {
             query?: never;
@@ -1719,7 +1803,7 @@ export interface components {
             status: "active" | "closed";
             activeCount: number;
             /** @constant */
-            capacity: 10;
+            capacity: 15;
             /** Format: date-time */
             activityAt: string;
             version: number;
@@ -6500,6 +6584,7 @@ export interface operations {
                 status?: "active_membership" | "ended_membership" | "expired";
                 cursor?: string;
                 limit?: number;
+                order?: "newest" | "expires_first";
             };
             header?: never;
             path?: never;
@@ -6520,8 +6605,15 @@ export interface operations {
                             scheduleTitle: string;
                             membershipState: string;
                             groupState: string;
+                            /** Format: uuid */
+                            groupId?: string;
                         }[];
                         nextCursor: string | null;
+                        groups: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                        }[];
                     };
                 };
             };
@@ -11266,6 +11358,248 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    inviteCurrent: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description invite{id,link,code(8자 ABCDEFGHJKLMNPQRSTUVWXYZ23456789),issuedAt,expiresAt(+168h),useCount:0,maxUses:50,state} */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            /** @description 입력/규격 오류 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 인증 만료/재인증 필요 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 권한/참여/차단/운영 제한 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 대상 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 버전/상태/멱등본문 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 삭제/만료/종료 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 파일 크기 초과 */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 요청률 제한 */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description 공급자/서비스 일시 장애 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    vlogCreate: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                groupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    timeline: Record<string, never>;
+                };
+            };
+        };
+        responses: {
+            /** @description 본인 브이로그 작업; 현재 참여·원본 권한 재확인 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {unknown} */
+                        state: "queued" | "rendering" | "complete" | "failed" | "cancelled" | "expired";
+                        progress: number;
+                        durationSec: number;
+                        expiresAt: string;
+                        reason?: string | null;
+                        contentUrl?: string | null;
+                    };
+                };
+            };
+        };
+    };
+    vlogGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 본인 브이로그 작업; 현재 참여·원본 권한 재확인 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {unknown} */
+                        state: "queued" | "rendering" | "complete" | "failed" | "cancelled" | "expired";
+                        progress: number;
+                        durationSec: number;
+                        expiresAt: string;
+                        reason?: string | null;
+                        contentUrl?: string | null;
+                    };
+                };
+            };
+        };
+    };
+    vlogCancel: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description 본인 브이로그 작업; 현재 참여·원본 권한 재확인 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {unknown} */
+                        state: "queued" | "rendering" | "complete" | "failed" | "cancelled" | "expired";
+                        progress: number;
+                        durationSec: number;
+                        expiresAt: string;
+                        reason?: string | null;
+                        contentUrl?: string | null;
+                    };
+                };
+            };
+        };
+    };
+    vlogContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 본인 브이로그 작업; 현재 참여·원본 권한 재확인 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "video/mp4": string;
                 };
             };
         };

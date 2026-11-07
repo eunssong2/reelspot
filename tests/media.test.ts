@@ -114,6 +114,21 @@ async function call(method: string, path: string, body: any, token?: string) {
   assert.ok(r.statusCode < 300, `${path}: ${r.body}`);
   return r.json() as any;
 }
+test('MP4 location atom is removed without rejecting an otherwise valid recording', { skip: !enabled }, async () => {
+  const prefix = `fixtures/${randomUUID()}`;
+  await mkdir(objects.path(prefix), { recursive: true });
+  const path = objects.path(`${prefix}/location.mp4`);
+  await tool('ffmpeg', ['-v','error','-y','-f','lavfi','-i','color=c=blue:s=160x120:r=10','-t','0.3','-c:v','libx264','-pix_fmt','yuv420p','-metadata','location=+37.5000+127.0000/',path]);
+  const before = JSON.parse(await tool('exiftool', ['-j','-G1',path]))[0];
+  assert.ok(before['UserData:LocationInformation']);
+  const data = await readFile(path), key = `${prefix}/chunk`;
+  await objects.put(key, data);
+  const prepared = await prepareMedia({ id:randomUUID(),kind:'video',file_name:'location.mp4',declared_bytes:data.length,fingerprint:hash(data),upload_generation:1,chunk_manifest:[{key,offset:0,size:data.length,hash:hash(data)}] });
+  for (const asset of prepared.assets.filter(a => a.variant !== 'original_private')) {
+    const tags=JSON.parse(await tool('exiftool',['-j','-G1',objects.path(asset.key)]))[0];
+    assert.ok(!Object.keys(tags).some(k=>/GPS|LocationISO6709|LocationInformation/i.test(k)));
+  }
+});
 async function user() {
   const credential = `dev:${randomUUID()}`,
     p = await call('POST', '/auth/attempts', { provider: 'google', deviceId: 'media-test' }),

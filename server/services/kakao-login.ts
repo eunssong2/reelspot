@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { config } from '../core/config.js';
-import { demand } from '../core/errors.js';
+import { demand, DomainError } from '../core/errors.js';
 import { encrypt, decrypt, hash, randomToken } from '../core/crypto.js';
 import { one, tx } from '../core/db.js';
 import { createAttempt } from './auth.js';
@@ -77,7 +77,8 @@ function registerBrowserLogin(app: FastifyInstance, provider: Provider) {
       );
       let credential: string | null = null,
         failure: string | null = null;
-      if (q.error) failure = q.error === 'access_denied' ? 'AUTH_CANCELLED' : 'AUTH_INVALID';
+      if (q.error) failure = q.error === 'access_denied' ? 'AUTH_CANCELLED' :
+        provider === 'kakao' && ['server_error', 'temporarily_unavailable'].includes(q.error) ? 'PROVIDER_UNAVAILABLE' : 'AUTH_INVALID';
       else {
         try {
           demand(typeof q.code === 'string' && q.code.length <= 2048, 'AUTH_INVALID', 401);
@@ -95,6 +96,10 @@ function registerBrowserLogin(app: FastifyInstance, provider: Provider) {
             body: form.toString(),
             signal: AbortSignal.timeout(10000),
           });
+          if (provider === 'kakao') {
+            demand(r.status !== 429, 'PROVIDER_QUOTA_EXCEEDED', 503);
+            demand(r.status < 500, 'PROVIDER_UNAVAILABLE', 503);
+          }
           demand(r.ok, 'AUTH_INVALID', 401);
           const tokens = (await r.json()) as any;
           demand(
@@ -103,8 +108,10 @@ function registerBrowserLogin(app: FastifyInstance, provider: Provider) {
             401,
           );
           credential = encrypt(tokens[provider === 'kakao' ? 'access_token' : 'id_token']);
-        } catch {
-          failure = 'AUTH_INVALID';
+        } catch (error) {
+          failure = provider === 'kakao'
+            ? error instanceof DomainError ? error.code : 'PROVIDER_UNAVAILABLE'
+            : 'AUTH_INVALID';
         }
       }
       await db.query(
@@ -152,7 +159,8 @@ function registerBrowserLogin(app: FastifyInstance, provider: Provider) {
       );
       return { credential, failure: f.failure, loginAttemptId: attempt.id, nonce: attempt.nonce };
     });
-    demand(!result.failure && result.credential, result.failure || 'AUTH_INVALID', 401);
+    demand(!result.failure && result.credential, result.failure || 'AUTH_INVALID',
+      provider === 'kakao' && ['PROVIDER_UNAVAILABLE', 'PROVIDER_QUOTA_EXCEEDED'].includes(result.failure) ? 503 : 401);
     return {
       credential: result.credential,
       loginAttemptId: result.loginAttemptId,

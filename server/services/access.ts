@@ -164,7 +164,7 @@ export async function groupDto(c: Context, g: any) {
     ownerUserId: g.owner_user_id,
     status: g.status,
     activeCount: n.n,
-    capacity: 10,
+    capacity: 15,
     activityAt: g.activity_at,
     version: Number(g.version),
     ...(s ? { scheduleSummary: scheduleDto(s) } : {}),

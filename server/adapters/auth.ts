@@ -27,17 +27,24 @@ export async function verifyIdentity(
     }
     demand(provider === 'kakao' && process.env.KAKAO_APP_ID, 'PROVIDER_UNAVAILABLE', 503);
     const call = async (path: string) => {
+      try {
       const r = await fetch(`https://kapi.kakao.com${path}`, {
         headers: { Authorization: `Bearer ${credential}` },
         signal: AbortSignal.timeout(10000),
       });
+      demand(r.status !== 429, 'PROVIDER_QUOTA_EXCEEDED', 503);
+      demand(r.status < 500, 'PROVIDER_UNAVAILABLE', 503);
       demand(r.ok, 'AUTH_INVALID', 401);
       return (await r.json()) as any;
+      } catch (error) {
+        if (error instanceof DomainError) throw error;
+        throw new DomainError('PROVIDER_UNAVAILABLE', 503);
+      }
     };
     const info = await call('/v1/user/access_token_info');
     demand(String(info.app_id) === process.env.KAKAO_APP_ID, 'AUTH_INVALID', 401);
     const user = await call('/v2/user/me');
-    demand(String(user.id) === String(info.id), 'AUTH_INVALID', 401);
+    demand(/^[1-9]\d*$/.test(String(info.id)) && String(user.id) === String(info.id), 'AUTH_INVALID', 401);
     return {
       subject: String(user.id),
       name: user.kakao_account?.profile?.nickname ?? user.properties?.nickname ?? '새 사용자',

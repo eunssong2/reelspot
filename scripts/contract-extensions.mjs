@@ -1,6 +1,28 @@
 import { readFile, writeFile } from 'node:fs/promises';
 const dir = new URL('../contracts/', import.meta.url),
   design = JSON.parse(await readFile(new URL('design.openapi.json', dir), 'utf8'));
+const mine = design.paths['/me/media'].get;
+mine.parameters.push({ name: 'order', in: 'query', schema: { type: 'string', enum: ['newest', 'expires_first'], default: 'newest' } });
+const mineResponse = mine.responses['200'].content['application/json'].schema;
+mineResponse.properties.groups = { type: 'array', items: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, name: { type: 'string' } }, required: ['id', 'name'] } };
+mineResponse.properties.items.items.properties.groupId = { type: 'string', format: 'uuid' };
+mineResponse.required.push('groups');
+design.paths['/groups/{groupId}/invites/current'] = { post: {
+  ...structuredClone(design.paths['/groups/{groupId}/invites'].post),
+  operationId: 'inviteCurrent', summary: '현재 유효한 초대 코드 조회 또는 자동 교체',
+} };
+const renderJob = { type:'object', properties:{ id:{type:'string',format:'uuid'},state:{enum:['queued','rendering','complete','failed','cancelled','expired']},progress:{type:'number'},durationSec:{type:'number'},expiresAt:{type:'string'},reason:{type:['string','null']},contentUrl:{type:['string','null']} }, required:['id','state','progress','durationSec','expiresAt'] };
+for (const [path,method,id,param] of [
+ ['/groups/{groupId}/vlogs','post','vlogCreate','groupId'], ['/vlogs/{jobId}','get','vlogGet','jobId'],
+ ['/vlogs/{jobId}/cancellation','post','vlogCancel','jobId'], ['/vlogs/{jobId}/content','get','vlogContent','jobId'],
+]) {
+ design.paths[path] ??= {};
+ design.paths[path][method] = { operationId:id,tags:['F30'],security:[{bearerAuth:[]}],
+ parameters:[{name:param,in:'path',required:true,schema:{type:'string',format:'uuid'}}, ...(method==='post'?[{name:'Idempotency-Key',in:'header',required:true,schema:{type:'string',minLength:16,maxLength:128}}]:[])],
+ ...(method==='post'?{requestBody:{required:true,content:{'application/json':{schema:id==='vlogCreate'?{type:'object',additionalProperties:false,properties:{title:{type:'string',minLength:1,maxLength:100},timeline:{type:'object'}},required:['title','timeline']}:{type:'object',additionalProperties:false}}}}}:{}),
+ responses:{200:{description:'본인 브이로그 작업; 현재 참여·원본 권한 재확인',content:{[id==='vlogContent'?'video/mp4':'application/json']:{schema:id==='vlogContent'?{type:'string',format:'binary'}:renderJob}}}} };
+}
+design.components.schemas.Group.properties.capacity.const = 15;
 const task = design.components.schemas.UploadTask;
 design.components.schemas.Group.properties.retentionWarnings = {
   type: 'array', items: { type: 'object', properties: {

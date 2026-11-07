@@ -1,3 +1,4 @@
+import { vlogHandlers } from '../services/vlogs.js';
 import type { Handler, Context } from '../core/context.js';
 import { authHandlers } from '../services/auth.js';
 import { groupHandlers } from '../services/groups.js';
@@ -5,6 +6,7 @@ import { recordHandlers } from '../services/records.js';
 import { operationHandlers } from '../services/operations.js';
 import { demand } from '../core/errors.js';
 export const handlers: Record<string, Handler> = {
+  ...vlogHandlers,
   ...authHandlers,
   ...groupHandlers,
   ...recordHandlers,

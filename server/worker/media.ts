@@ -121,6 +121,7 @@ export async function prepareMedia(t: any): Promise<{
     '-QuickTime:GPSCoordinates=',
     '-Keys:GPSCoordinates=',
     '-UserData:GPSCoordinates=',
+    '-UserData:LocationInformation=',
     '-ItemList:GPSCoordinates=',
     sanitized,
   ]);
