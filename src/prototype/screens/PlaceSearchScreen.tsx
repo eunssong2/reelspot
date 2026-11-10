@@ -6,6 +6,7 @@ import { PlaceDetailPanel } from '../components/PlaceDetailPanel';
 import { PlaceResultSheet, SHEET_COLLAPSED_HEIGHT, type SortKey } from '../components/PlaceResultSheet';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenFrame } from '../components/ScreenFrame';
+import { TimeEditModal } from '../components/TimeEditModal';
 import { Toast, useToast } from '../components/Toast';
 import { IS_DEMO_BUILD } from '../../demo/config';
 import { missingMapConfig } from '../config/env';
@@ -13,7 +14,7 @@ import { DemoMapView } from '../map/DemoMapView';
 import { distanceMeters } from '../map/geo';
 import { KakaoMapView } from '../map/KakaoMapView';
 import { toItineraryPlace } from '../map/placeStyle';
-import { CATEGORIES, type CategoryKey, type MapEvent, type MapHandle, type Place, type SearchStatus } from '../map/types';
+import type { MapEvent, MapHandle, Place, SearchStatus } from '../map/types';
 import type { Itinerary, ItineraryDay, ItineraryPlace } from '../mock/tripData';
 import type { Nav } from '../navigation/routes';
 import { colors, GUTTER, radius, shadow } from '../styles/tokens';
@@ -25,13 +26,7 @@ const TILES_TIMEOUT_MS = 15000;
 const SHEET_RATIO = 0.5;
 
 type Stage = 'loading' | 'sdk' | 'tiles' | 'error';
-type Filter = 'all' | CategoryKey;
-type LastQuery = { type: 'keyword'; keyword: string } | { type: 'category'; key: CategoryKey } | null;
-
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all', label: '전체' },
-  ...CATEGORIES.map((c) => ({ key: c.key, label: c.label })),
-];
+type LastQuery = { type: 'keyword'; keyword: string } | null;
 
 interface Props {
   nav: Nav;
@@ -40,6 +35,11 @@ interface Props {
   day: ItineraryDay;
   /** 담았으면 true, 이미 그 날짜에 있어 담지 않았으면 false(반환값이 없는 기존 구현은 담은 것으로 본다). */
   onAddPlace: (place: ItineraryPlace) => boolean | void;
+  /** 있으면 "장소 수정": 이 장소의 이름·주소·위치·방문 시간을 고친다. */
+  editPlace?: ItineraryPlace;
+  /** 수정 중인 장소에 사진·동영상 기록이 있는지. 있으면 다른 장소로 바꾸지 못한다(기록이 따라가지 않으므로). */
+  editHasRecords?: boolean;
+  onUpdatePlace?: (place: ItineraryPlace) => void;
 }
 
 /**
@@ -49,13 +49,16 @@ interface Props {
  * - 결과 목록의 '+ 장소 추가' 버튼으로도 바로 담을 수 있다.
  * 지도를 못 띄우면 임시 지도로 대체하지 않고 카카오가 돌려준 실제 오류를 보여 준다.
  */
-export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
+export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace, editPlace, editHasRecords = false, onUpdatePlace }: Props) {
+  const editing = !!editPlace;
   const toast = useToast();
   const mapRef = useRef<MapHandle>(null);
   const tilesShown = useRef(false);
   /** 지도 중심의 최신 좌표. 검색을 시작할 때의 값을 거리 계산 기준으로 쓴다. */
   const centerRef = useRef<{ lat: number; lng: number } | null>(null);
   const lastQueryRef = useRef<LastQuery>(null);
+  /** 지도 이벤트 콜백(useCallback)에서 직접 등록 여부를 읽기 위한 최신 값 */
+  const manualRef = useRef(editing);
 
   const [attempt, setAttempt] = useState(0);
   const [stage, setStage] = useState<Stage>('loading');
@@ -63,7 +66,16 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
   const [mapHeight, setMapHeight] = useState(0);
 
   const [keyword, setKeyword] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
+  // 직접 등록: 검색 대신 이름·주소를 입력하고, 위치는 지도에서 눌러 정한다(선택).
+  const [manual, setManual] = useState(editing);
+  const [manualName, setManualName] = useState(editPlace?.name ?? '');
+  const [manualAddress, setManualAddress] = useState(editPlace?.address ?? '');
+  const [pin, setPin] = useState<{ lat: number; lng: number } | null>(
+    editPlace?.lat !== undefined && editPlace?.lng !== undefined ? { lat: editPlace.lat, lng: editPlace.lng } : null,
+  );
+  // 장소 수정: 방문 시간(미정이면 undefined)
+  const [visitTime, setVisitTime] = useState<string | undefined>(editPlace?.visitTime);
+  const [timeOpen, setTimeOpen] = useState(false);
   const [status, setStatus] = useState<SearchStatus>('idle');
   const [excluded, setExcluded] = useState(0);
   const [results, setResults] = useState<Place[]>([]);
@@ -87,7 +99,8 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
   const hasResults = results.length > 0;
   const dateLabel = fullDateLabel(day.date);
 
-  const addedIds = useMemo(() => new Set(day.places.map((p) => p.id)), [day]);
+  // 수정 중인 장소 자신은 "이미 담김"으로 막지 않는다(같은 장소를 그대로 두고 시간만 고칠 수 있게).
+  const addedIds = useMemo(() => new Set(day.places.filter((p) => p.id !== editPlace?.id).map((p) => p.id)), [day, editPlace]);
 
   const distances = useMemo(() => {
     const map: Record<string, number> = {};
@@ -134,6 +147,15 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
         setDetailPlace(event.place);
         break;
       case 'mapPress':
+        if (manualRef.current) {
+          // 직접 등록 중에는 누른 곳에 핀을 꽂는다(좌표가 없는 예시 지도는 무시).
+          if (event.lat !== undefined && event.lng !== undefined) {
+            const next = { lat: event.lat, lng: event.lng };
+            setPin(next);
+            mapRef.current?.setPin(next);
+          }
+          break;
+        }
         setSelectedId(null);
         setDetailPlace(null);
         mapRef.current?.select(null);
@@ -158,7 +180,6 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
     setStage('loading');
     setError(null);
     setKeyword('');
-    setFilter('all');
     setResults([]);
     setOrigin(null);
     setSelectedId(null);
@@ -203,36 +224,9 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
   const searchKeyword = () => {
     const q = keyword.trim();
     if (!q || !ready) return;
-    setFilter('all');
     startSearching();
     lastQueryRef.current = { type: 'keyword', keyword: q };
     mapRef.current?.search(q);
-  };
-
-  const pickFilter = (next: Filter) => {
-    if (!ready) return;
-    setFilter(next);
-    if (next === 'all') {
-      // '전체'는 카테고리 검색을 풀고, 검색어가 있으면 그 검색어로 다시 찾는다.
-      const q = keyword.trim();
-      if (q) {
-        startSearching();
-        lastQueryRef.current = { type: 'keyword', keyword: q };
-        mapRef.current?.search(q);
-      } else {
-        mapRef.current?.clear();
-        setResults([]);
-        setSelectedId(null);
-        setDetailPlace(null);
-        setStatus('idle');
-        lastQueryRef.current = null;
-      }
-      return;
-    }
-    setKeyword('');
-    startSearching();
-    lastQueryRef.current = { type: 'category', key: next };
-    mapRef.current?.searchCategory(next);
   };
 
   /** 지도를 옮긴 뒤 같은 검색을 현재 지도 범위에서 다시 실행한다. */
@@ -240,8 +234,7 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
     const q = lastQueryRef.current;
     if (!q || !ready) return;
     startSearching();
-    if (q.type === 'keyword') mapRef.current?.search(q.keyword);
-    else mapRef.current?.searchCategory(q.key);
+    mapRef.current?.search(q.keyword);
   };
 
   const locateMe = () => {
@@ -259,6 +252,13 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
     if (addedIds.has(place.id) || saving) return;
     setSaving(true);
     const item = toItineraryPlace(place);
+    if (editPlace && onUpdatePlace) {
+      // 장소 수정: 같은 자리에서 다른 장소로 바꾸고 방문 시간은 유지한다.
+      onUpdatePlace({ ...item, ...(visitTime ? { visitTime } : {}) });
+      setSaving(false);
+      nav.back();
+      return;
+    }
     // 프로토타입은 실제 저장 API가 없어 지연을 흉내 내지 않고 바로 반영한다(실패를 꾸며내지 않는다).
     const added = onAddPlace(item);
     setSaving(false);
@@ -267,6 +267,60 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
       return;
     }
     // 담으면 곧바로 그 날짜의 장소 목록으로 돌아가 추가된 것을 확인하게 한다(목록에서 "추가됨"으로 강조된다).
+    nav.back();
+  };
+
+  /** 검색 ↔ 직접 등록 전환. 검색 결과와 핀은 모두 지운다. */
+  const toggleManual = () => {
+    const next = !manual;
+    manualRef.current = next;
+    Keyboard.dismiss();
+    mapRef.current?.clear();
+    mapRef.current?.select(null);
+    mapRef.current?.setPin(null);
+    lastQueryRef.current = null;
+    setResults([]);
+    setSelectedId(null);
+    setDetailPlace(null);
+    setStatus('idle');
+    setPin(null);
+    setManual(next);
+  };
+
+  /** 직접 입력한 장소를 담는다. 카카오 장소 ID 가 없으므로 임의 ID 를 만든다. */
+  const commitManual = () => {
+    const name = manualName.trim();
+    if (!name || saving) return;
+    setSaving(true);
+    const base: ItineraryPlace = editPlace ?? {
+      id: `manual-${Date.now()}`,
+      name,
+      address: '',
+      categoryLabel: '장소',
+      emoji: '📍',
+      tint: '#FFECCB',
+    };
+    // 장소 수정은 id 를 그대로 둬서 이 장소의 사진·동영상 기록과 순서·메모가 유지된다.
+    const item: ItineraryPlace = {
+      ...base,
+      name,
+      address: manualAddress.trim(),
+      lat: pin?.lat,
+      lng: pin?.lng,
+      visitTime: editPlace ? visitTime : undefined,
+    };
+    if (editPlace && onUpdatePlace) {
+      onUpdatePlace(item);
+      setSaving(false);
+      nav.back();
+      return;
+    }
+    const added = onAddPlace(item);
+    setSaving(false);
+    if (added === false) {
+      toast.show(`${item.name}은(는) 이미 ${dateLabel} 장소에 담겨 있어요`);
+      return;
+    }
     nav.back();
   };
 
@@ -281,13 +335,65 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
         : status === 'error'
           ? '검색에 실패했어요. 잠시 후 다시 시도해 주세요.'
           : sampleMode
-            ? '예시 장소를 검색하거나 카테고리를 눌러 보세요 (예: 카페, 성수, 호텔)'
-            : '장소를 검색하거나 카테고리를 눌러 보세요';
+            ? '예시 장소를 검색해 보세요 (예: 카페, 성수, 호텔)'
+            : '한 글자부터 장소를 추천해 드려요';
 
   return (
     <ScreenFrame>
-      <AppHeader title="장소 추가" subtitle={`${itinerary.name} · ${dateLabel}`} onBack={nav.back} />
+      <AppHeader
+        title={editing ? '장소 수정' : manual ? '장소 직접 등록' : '장소 추가'}
+        subtitle={`${itinerary.name} · ${dateLabel}`}
+        onBack={nav.back}
+        right={
+          // 기록이 있는 장소는 다른 장소로 바꿀 수 없어 검색 전환 버튼을 숨긴다.
+          editing && editHasRecords ? null : (
+            <Pressable onPress={toggleManual} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.headerAction}>{manual ? '검색' : editing ? '다른 장소로' : '직접'}</Text>
+            </Pressable>
+          )
+        }
+      />
 
+      {editing ? (
+        <View style={styles.timeRowWrap}>
+          <Text style={styles.fieldLabel}>방문 시간</Text>
+          <Pressable onPress={() => setTimeOpen(true)} accessibilityRole="button" accessibilityLabel="방문 시간 수정" hitSlop={6}>
+            <Text style={visitTime ? styles.timeValue : styles.timeValueMuted}>{visitTime ?? '시간 미정'} ✎</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {editing && editHasRecords ? (
+        <Text style={styles.recordNote}>사진·동영상 기록이 연결된 장소예요. 이름·주소·위치와 시간만 고칠 수 있어요.</Text>
+      ) : null}
+
+      {manual ? (
+        <View style={styles.searchArea}>
+          <Text style={styles.fieldLabel}>
+            장소 이름 <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={manualName}
+            onChangeText={setManualName}
+            placeholder="예: 우리만의 피크닉 자리"
+            placeholderTextColor={colors.textMuted}
+            maxLength={100}
+            accessibilityLabel="장소 이름"
+          />
+          <View style={styles.fieldHead}>
+            <Text style={styles.fieldLabel}>주소</Text>
+            <Text style={styles.optional}>선택</Text>
+          </View>
+          <TextInput
+            style={styles.fieldInput}
+            value={manualAddress}
+            onChangeText={setManualAddress}
+            placeholder="입력하지 않아도 괜찮아요"
+            placeholderTextColor={colors.textMuted}
+            accessibilityLabel="주소"
+          />
+        </View>
+      ) : (
       <View style={styles.searchArea}>
         <View style={styles.searchBox}>
           <Pressable onPress={searchKeyword} hitSlop={8} accessibilityRole="button" accessibilityLabel="검색">
@@ -310,24 +416,8 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
             </Pressable>
           ) : null}
         </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-          {FILTERS.map((f) => {
-            const active = f.key === filter;
-            return (
-              <Pressable
-                key={f.key}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                onPress={() => pickFilter(f.key)}
-                style={[styles.chip, active && styles.chipActive, !ready && styles.chipDisabled]}
-              >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{f.label}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
       </View>
+      )}
 
       {IS_DEMO_BUILD ? (
         <View style={styles.modeRow}>
@@ -376,7 +466,7 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
           </View>
         ) : null}
 
-        {ready && lastQueryRef.current ? (
+        {!manual && ready && lastQueryRef.current ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="이 지역 다시 검색"
@@ -416,7 +506,7 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
           </View>
         ) : null}
 
-        {detailPlace ? (
+        {manual ? null : detailPlace ? (
           <PlaceDetailPanel
             place={detailPlace}
             dateLabel={dateLabel}
@@ -428,6 +518,7 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
               mapRef.current?.select(null);
             }}
             onAdd={() => commitAddPlace(detailPlace)}
+            addLabel={editing ? '이 장소로 바꾸기' : undefined}
           />
         ) : hasResults ? (
           <PlaceResultSheet
@@ -450,6 +541,26 @@ export function PlaceSearchScreen({ nav, itinerary, day, onAddPlace }: Props) {
           </View>
         ) : null}
       </View>
+
+      {manual ? (
+        <View style={styles.manualFoot}>
+          <Text style={styles.manualHint}>
+            {pin ? '지도에서 누른 위치가 저장돼요.' : '지도에서 핀을 지정할 수 있어요. 위치는 선택 사항입니다.'}
+          </Text>
+          <PrimaryButton label={editing ? '수정 완료' : '장소 등록'} onPress={commitManual} disabled={!manualName.trim() || saving} />
+        </View>
+      ) : null}
+
+      <TimeEditModal
+        visible={timeOpen}
+        placeName={editPlace?.name ?? ''}
+        value={visitTime}
+        onSave={(time) => {
+          setVisitTime(time);
+          setTimeOpen(false);
+        }}
+        onClose={() => setTimeOpen(false)}
+      />
 
       <Toast
         message={toast.message}
@@ -474,17 +585,18 @@ const styles = StyleSheet.create({
   searchIcon: { fontSize: 15 },
   input: { flex: 1, fontSize: 15, color: colors.text, paddingVertical: 10, outlineWidth: 0 },
   clear: { fontSize: 14, color: colors.textSub },
-  chips: { gap: 8 },
-  chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipDisabled: { opacity: 0.5 },
+  timeRowWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: GUTTER, paddingBottom: 10 },
+  timeValue: { fontSize: 15, fontWeight: '800', color: colors.primary },
+  timeValueMuted: { fontSize: 15, fontWeight: '700', color: colors.textSub },
+  recordNote: { fontSize: 12, color: colors.textSub, paddingHorizontal: GUTTER, paddingBottom: 10 },
+  headerAction: { fontSize: 15, fontWeight: '700', color: colors.primary },
+  fieldLabel: { fontSize: 14, fontWeight: '800', color: colors.text },
+  required: { color: colors.primary },
+  fieldHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  optional: { fontSize: 12, color: colors.textSub },
+  fieldInput: { backgroundColor: colors.surface, borderRadius: radius.item, paddingHorizontal: 16, minHeight: 48, fontSize: 15, color: colors.text, outlineWidth: 0 },
+  manualFoot: { paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 14, gap: 8, backgroundColor: colors.bg },
+  manualHint: { fontSize: 12, color: colors.textSub },
   modeRow: { flexDirection: 'row', gap: 8, paddingHorizontal: GUTTER, paddingBottom: 8 },
   modeChip: {
     flex: 1,
@@ -499,8 +611,6 @@ const styles = StyleSheet.create({
   modeText: { fontSize: 12, fontWeight: '700', color: colors.textSub },
   modeTextActive: { color: colors.primary },
   sampleNotice: { fontSize: 12, fontWeight: '600', color: colors.primary, paddingHorizontal: GUTTER, paddingBottom: 8 },
-  chipText: { fontSize: 13, fontWeight: '600', color: colors.textSub },
-  chipTextActive: { color: colors.onPrimary },
 
   mapWrap: {
     flex: 1,

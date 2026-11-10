@@ -187,6 +187,7 @@ export function buildKakaoMapHtml(jsKey: string): string {
         post({ type: 'searchResult', status: 'done', places: list, excluded: excluded });
       }
 
+      var pinMarker = null;
       window.reelspot = {
         search: function (keyword) {
           clearMarkers();
@@ -215,6 +216,12 @@ export function buildKakaoMapHtml(jsKey: string): string {
         setPadding: function (bottom) {
           padBottom = Number(bottom) || 0;
         },
+        // 직접 등록용 핀 하나(검색 마커와 별개)
+        setPin: function (lat, lng) {
+          if (pinMarker) { pinMarker.setMap(null); pinMarker = null; }
+          if (lat === null || lng === null) return;
+          pinMarker = new kakao.maps.Marker({ map: map, position: new kakao.maps.LatLng(lat, lng) });
+        },
         locate: function () {
           if (!navigator.geolocation) {
             post({ type: 'locateError', message: '이 환경은 위치 기능을 지원하지 않아요.' });
@@ -237,8 +244,8 @@ export function buildKakaoMapHtml(jsKey: string): string {
         }
       };
 
-      kakao.maps.event.addListener(map, 'click', function () {
-        post({ type: 'mapPress' });
+      kakao.maps.event.addListener(map, 'click', function (e) {
+        post({ type: 'mapPress', lat: e.latLng.getLat(), lng: e.latLng.getLng() });
       });
 
       // 'idle' 은 첫 로드에는 오지 않으므로 초기 중심·레벨을 직접 알린다.
@@ -275,3 +282,10 @@ export function paddingScript(bottom: number): string {
 }
 
 export const locateScript = 'window.reelspot && window.reelspot.locate(); true;';
+
+/** 직접 등록용 핀 표시. 좌표는 숫자만 삽입하고, null 이면 지운다. */
+export function pinScript(pos: { lat: number; lng: number } | null): string {
+  return pos && Number.isFinite(pos.lat) && Number.isFinite(pos.lng)
+    ? `window.reelspot && window.reelspot.setPin(${pos.lat}, ${pos.lng}); true;`
+    : 'window.reelspot && window.reelspot.setPin(null, null); true;';
+}

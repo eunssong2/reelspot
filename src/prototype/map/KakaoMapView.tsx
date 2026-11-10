@@ -12,6 +12,7 @@ import {
   paddingScript,
   searchScript,
   selectScript,
+  pinScript,
 } from './kakaoMapHtml';
 import { CATEGORIES, parseMapEvent, type MapEvent, type MapHandle } from './types';
 
@@ -37,6 +38,7 @@ export const KakaoMapView = forwardRef<MapHandle, Props>(function KakaoMapView(
     select: (id) => webViewRef.current?.injectJavaScript(selectScript(id)),
     setPadding: (bottom) => webViewRef.current?.injectJavaScript(paddingScript(bottom)),
     locate: () => webViewRef.current?.injectJavaScript(locateScript),
+    setPin: (pos) => webViewRef.current?.injectJavaScript(pinScript(pos)),
   }));
 
   const handleMessage = (e: WebViewMessageEvent) => {

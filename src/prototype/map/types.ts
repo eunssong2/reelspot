@@ -29,7 +29,8 @@ export type MapEvent =
       excluded: number;
     }
   | { type: 'markerPress'; place: Place }
-  | { type: 'mapPress' }
+  /** 지도를 눌렀다. 좌표는 실제 지도(카카오)에서만 온다. */
+  | { type: 'mapPress'; lat?: number; lng?: number }
   | { type: 'locateResult'; lat: number; lng: number }
   | { type: 'locateError'; message: string };
 
@@ -67,8 +68,11 @@ export function parseMapEvent(data: string): MapEvent | null {
   switch (m.type) {
     case 'ready':
       return { type: 'ready', origin: str(m.origin) || undefined };
-    case 'mapPress':
-      return { type: 'mapPress' };
+    case 'mapPress': {
+      const lat = Number(m.lat);
+      const lng = Number(m.lng);
+      return Number.isFinite(lat) && Number.isFinite(lng) ? { type: 'mapPress', lat, lng } : { type: 'mapPress' };
+    }
     case 'tilesLoaded':
       return { type: 'tilesLoaded' };
     case 'viewChanged': {
@@ -126,4 +130,6 @@ export interface MapHandle {
   setPadding(bottom: number): void;
   /** 브라우저/기기 위치 권한을 요청해 현재 위치로 지도를 옮긴다. 결과는 onEvent(locateResult/locateError)로 온다. */
   locate(): void;
+  /** 직접 등록용 핀을 그 좌표에 표시한다. null 이면 지운다. */
+  setPin(pos: { lat: number; lng: number } | null): void;
 }

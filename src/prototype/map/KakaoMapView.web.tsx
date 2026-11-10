@@ -58,6 +58,7 @@ export const KakaoMapView = forwardRef<MapHandle, Props>(function KakaoMapView({
     select(id: string | null): void;
     setPadding(bottom: number): void;
     locate(): void;
+    setPin(pos: { lat: number; lng: number } | null): void;
   } | null>(null);
 
   useImperativeHandle(ref, () => ({
@@ -70,6 +71,7 @@ export const KakaoMapView = forwardRef<MapHandle, Props>(function KakaoMapView({
     select: (id) => api.current?.select(id),
     setPadding: (bottom) => api.current?.setPadding(bottom),
     locate: () => api.current?.locate(),
+    setPin: (pos) => api.current?.setPin(pos),
   }));
 
   useEffect(() => {
@@ -199,8 +201,15 @@ export const KakaoMapView = forwardRef<MapHandle, Props>(function KakaoMapView({
           map.setBounds(bounds, 40, 24, padBottom + 16, 24);
           onEventRef.current({ type: 'searchResult', status: 'done', places: list, excluded });
         };
-        kakao.maps.event.addListener(map, 'click', () => onEventRef.current({ type: 'mapPress' }));
+        kakao.maps.event.addListener(map, 'click', (e: Kakao) =>
+          onEventRef.current({ type: 'mapPress', lat: e.latLng.getLat(), lng: e.latLng.getLng() }),
+        );
+        let pinMarker: Kakao = null;
         api.current = {
+          setPin: (pos) => {
+            if (pinMarker) pinMarker.setMap(null);
+            pinMarker = pos ? new kakao.maps.Marker({ map, position: new kakao.maps.LatLng(pos.lat, pos.lng) }) : null;
+          },
           search: (keyword) => {
             clearMarkers();
             places.keywordSearch(keyword, onResult, { size: 15, bounds: seoulBounds });

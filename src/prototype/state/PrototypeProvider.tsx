@@ -314,7 +314,7 @@ const toHref = (route: Route) => {
     case 'placeSearch':
       return {
         pathname: '/prototype/place-search',
-        params: { tripId: route.tripId, itineraryId: route.itineraryId, dayId: route.dayId },
+        params: { tripId: route.tripId, itineraryId: route.itineraryId, dayId: route.dayId, placeId: route.placeId ?? '' },
       } as const;
     case 'placeRecords':
       return {

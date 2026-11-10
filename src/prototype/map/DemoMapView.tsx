@@ -76,6 +76,8 @@ export const DemoMapView = forwardRef<MapHandle, Props>(function DemoMapView({ o
         setSelectedId(null);
       },
       select: (id) => setSelectedId(id),
+      // 예시 지도는 좌표를 고르지 않는다(직접 등록의 위치 지정은 실제 지도에서만).
+      setPin: () => {},
       setPadding: (bottom) => setPadding(bottom),
       locate: () => emit.current({ type: 'locateError', message: '예시 지도에서는 현재 위치를 쓰지 않아요' }),
     }),

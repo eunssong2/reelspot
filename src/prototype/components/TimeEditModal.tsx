@@ -12,6 +12,8 @@ interface Props {
   /** 저장. undefined 이면 "시간 미정"으로 되돌린 것 */
   onSave: (time: string | undefined) => void;
   onClose: () => void;
+  /** 있으면 장소 이름 옆에 "장소 수정" 버튼을 보여 준다. 누르면 창을 닫지 않고 이 함수만 부른다(이동은 호출한 쪽이 한다). */
+  onEditPlace?: () => void;
 }
 
 const DEFAULT_TIME = '12:00';
@@ -93,7 +95,7 @@ function Wheel({
     <ScrollView
       ref={ref}
       accessibilityLabel={label}
-      style={[styles.wheel, { flex }]}
+      style={[styles.wheel, { flex }, styles.noOutline]}
       contentContainerStyle={{ paddingVertical: ITEM * ((VISIBLE - 1) / 2) }}
       showsVerticalScrollIndicator={false}
       snapToInterval={ITEM}
@@ -140,7 +142,7 @@ function Wheel({
  * 방문 시간을 고치는 창. 오전/오후 · 시 · 분을 위아래로 돌려서 고른다(분은 1분 단위).
  * "시간 미정"으로 되돌릴 수도 있다.
  */
-export function TimeEditModal({ visible, placeName, value, onSave, onClose }: Props) {
+export function TimeEditModal({ visible, placeName, value, onSave, onClose, onEditPlace }: Props) {
   const [time, setTime] = useState(parse(value));
 
   // 창이 열릴 때마다 현재 값에서 시작한다.
@@ -153,9 +155,18 @@ export function TimeEditModal({ visible, placeName, value, onSave, onClose }: Pr
       <View style={styles.backdrop}>
         <View style={styles.card} accessibilityViewIsModal>
           <Text style={styles.title}>방문 시간</Text>
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {placeName}
-          </Text>
+          {onEditPlace ? (
+            <Pressable accessibilityRole="button" accessibilityLabel={`${placeName} 장소 수정`} onPress={onEditPlace} style={styles.placeChip}>
+              <Text style={styles.placeChipName} numberOfLines={1}>
+                📍 {placeName}
+              </Text>
+              <Text style={styles.placeChipAction}>장소 수정 ›</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {placeName}
+            </Text>
+          )}
 
           <View style={styles.pickArea}>
             {/* 가운데 줄(선택 위치)을 표시하는 두 선 */}
@@ -191,6 +202,11 @@ const styles = StyleSheet.create({
   card: { width: '100%', maxWidth: 360, backgroundColor: colors.bg, borderRadius: radius.card, padding: 22, gap: 12 },
   title: { fontSize: 17, fontWeight: '900', color: colors.text },
   subtitle: { fontSize: 13, color: colors.textSub, marginTop: -6 },
+  // 웹에서 휠을 눌렀을 때 생기는 검은 포커스 테두리를 없앤다.
+  noOutline: { outlineWidth: 0 },
+  placeChip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, backgroundColor: colors.surface, borderRadius: radius.item, paddingHorizontal: 12, minHeight: 44 },
+  placeChipName: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text },
+  placeChipAction: { fontSize: 13, fontWeight: '800', color: colors.primary },
   pickArea: { height: ITEM * VISIBLE, justifyContent: 'center' },
   band: {
     position: 'absolute',

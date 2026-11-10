@@ -112,6 +112,9 @@ export interface ItineraryPlace {
   emoji: string;
   /** 썸네일 배경색 */
   tint: string;
+  /** 직접 등록한 장소에서 지도로 지정한 위치(선택) */
+  lat?: number;
+  lng?: number;
   /**
    * 방문 시간(HH:mm, 24시간제). 장소 검색에서 막 추가했을 때는 없다(undefined) —
    * "순서 편집"에서 정할 때까지 임의의 시간을 넣지 않고 화면에서 "시간 미정"으로 보여준다.

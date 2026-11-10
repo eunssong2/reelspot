@@ -13,13 +13,15 @@ interface Props {
   saving: boolean;
   onClose: () => void;
   onAdd: () => void;
+  /** 장소 수정 중에는 "이 장소로 바꾸기"처럼 버튼 문구를 바꾼다. */
+  addLabel?: string;
 }
 
 /**
  * 검색 결과(마커·목록)를 선택했을 때 목록 대신 보여주는 장소 상세 패널.
  * "이 날의 장소로 추가"를 누르면 진입할 때 정한 일정·날짜에 저장한다.
  */
-export function PlaceDetailPanel({ place, dateLabel, added, saving, onClose, onAdd }: Props) {
+export function PlaceDetailPanel({ place, dateLabel, added, saving, onClose, onAdd, addLabel }: Props) {
   const styled = toItineraryPlace(place);
 
   return (
@@ -59,7 +61,7 @@ export function PlaceDetailPanel({ place, dateLabel, added, saving, onClose, onA
         ]}
       >
         <Text style={[styles.addButtonText, (added || saving) && styles.addButtonTextDisabled]}>
-          {added ? '✓ 이 날의 장소에 추가됨' : saving ? '추가하는 중…' : '이 날의 장소로 추가'}
+          {added ? '✓ 이 날의 장소에 추가됨' : saving ? '추가하는 중…' : (addLabel ?? '이 날의 장소로 추가')}
         </Text>
       </Pressable>
     </View>

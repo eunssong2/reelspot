@@ -12,7 +12,8 @@ export type Route =
   | { name: 'itinerarySummary'; tripId: string; itineraryId: string }
   | { name: 'itineraryDay'; tripId: string; itineraryId: string; dayId: string; groupId?: string }
   | { name: 'placeOrderEdit'; tripId: string; itineraryId: string; dayId: string }
-  | { name: 'placeSearch'; tripId: string; itineraryId: string; dayId: string }
+  // placeId 가 있으면 그 장소를 고치는 "장소 수정"(이름·주소·위치·방문 시간), 없으면 장소 추가
+  | { name: 'placeSearch'; tripId: string; itineraryId: string; dayId: string; placeId?: string }
   | { name: 'placeRecords'; tripId: string; itineraryId: string; dayId: string; placeId: string }
   // clipSeconds 를 모르는 진입 경로(장소 검색에서 바로 올리기)는 화면에서 기본값을 쓴다.
   | { name: 'mediaUpload'; placeName?: string; clipSeconds?: ClipSeconds }

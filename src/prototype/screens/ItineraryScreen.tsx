@@ -304,6 +304,11 @@ export function ItineraryScreen({ nav, tripId, itinerary: initialItinerary, init
           setTimeTargetId(null);
         }}
         onClose={() => setTimeTargetId(null)}
+        onEditPlace={() => {
+          const placeId = timeTargetId;
+          setTimeTargetId(null);
+          if (day && placeId) nav.push({ name: 'placeSearch', tripId, itineraryId: itinerary.id, dayId: day.id, placeId });
+        }}
       />
     </ScreenFrame>
   );

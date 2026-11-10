@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppHeader } from '../components/AppHeader';
@@ -44,6 +44,11 @@ export function PlaceOrderEditScreen({ nav, itinerary, day, onSave }: Props) {
   const [timeTargetId, setTimeTargetId] = useState<string | null>(null);
   const timeTarget = places.find((p) => p.id === timeTargetId);
 
+  // 장소 수정 화면에서 돌아오면 고친 장소가 보이도록 저장된 장소 목록으로 다시 맞춘다.
+  useEffect(() => {
+    setPlaces(day.places);
+  }, [day.places]);
+
   const subtitle = `${monthDayLabel(day.date)} ${dayOfWeekLabel(day.date)}요일`;
 
   const move = (index: number, dir: -1 | 1) => {
@@ -65,6 +70,12 @@ export function PlaceOrderEditScreen({ nav, itinerary, day, onSave }: Props) {
     setPlaces((prev) =>
       prev.map((p) => (p.id === id && p.visitTime && !TIME_RE.test(p.visitTime) ? { ...p, visitTime: undefined } : p)),
     );
+  };
+
+  /** 장소 수정 화면은 저장된 값을 고치므로, 지금까지 바꾼 순서·시간·제목을 먼저 저장하고 이동한다. */
+  const editPlace = (placeId: string) => {
+    onSave(places, memo.trim(), title.trim());
+    nav.push({ name: 'placeSearch', tripId: itinerary.tripId, itineraryId: itinerary.id, dayId: day.id, placeId });
   };
 
   const save = () => {
@@ -109,9 +120,20 @@ export function PlaceOrderEditScreen({ nav, itinerary, day, onSave }: Props) {
             </View>
 
             <View style={styles.info}>
-              <Text style={styles.name} numberOfLines={1}>
-                {place.name}
-              </Text>
+              <View style={styles.nameRow}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {place.name}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${place.name} 장소 수정`}
+                  onPress={() => editPlace(place.id)}
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.editChip, pressed && styles.pressed]}
+                >
+                  <Text style={styles.editChipText}>장소 수정</Text>
+                </Pressable>
+              </View>
               <Text style={styles.address} numberOfLines={1}>
                 {place.address}
               </Text>
@@ -182,6 +204,9 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: GUTTER, paddingTop: 6, paddingBottom: 24, gap: 10 },
   banner: { backgroundColor: colors.primarySoft, borderRadius: radius.item, padding: 12 },
   bannerText: { fontSize: 13, fontWeight: '700', color: colors.primary, textAlign: 'center' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  editChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: colors.primarySoft },
+  editChipText: { fontSize: 12, fontWeight: '800', color: colors.primary },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -201,7 +226,7 @@ const styles = StyleSheet.create({
   },
   orderBadgeText: { fontSize: 11, fontWeight: '800', color: colors.onPrimary },
   info: { flex: 1, gap: 2 },
-  name: { fontSize: 14, fontWeight: '700', color: colors.text },
+  name: { flexShrink: 1, fontSize: 14, fontWeight: '700', color: colors.text },
   address: { fontSize: 11, color: colors.textSub },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   timeLabel: { fontSize: 11, color: colors.textMuted },
