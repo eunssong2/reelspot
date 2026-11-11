@@ -1,0 +1,90 @@
+{
+  "review_date": "2026-11-11",
+  "scope": "정적 소스 대조·QA 문서 반영, 앱/서버 실행 없음",
+  "prototype_base": "ff5a5d0",
+  "prototype_commit": "27194cd7665dd519ea1d426c5c5dd0c9a5f768af",
+  "docs_commit": "09ea73a",
+  "frontend_commit": "015cfac",
+  "backend_commit": "59aca32",
+  "sources": [
+    {
+      "path": "app/prototype/place-search.tsx",
+      "sha256": "803fef694a8590bd2075c7334804d51a282ed4e43d2ac92da5714576452bfc24"
+    },
+    {
+      "path": "src/prototype/components/PlaceDetailPanel.tsx",
+      "sha256": "f4bcee4ab64afae2a8bb34d03e7aff02a67f6aaa82d27707ac6d885c34081c07"
+    },
+    {
+      "path": "src/prototype/components/TimeEditModal.tsx",
+      "sha256": "70a417b3e417b78e3c7b9ecd4c2c7de8fdbf07fba872fbc4b8b36a8313dac5c5"
+    },
+    {
+      "path": "src/prototype/map/DemoMapView.tsx",
+      "sha256": "82073ba3c5569cbc2a58c5e76c4c3a8479481e4d2e7db1b320d6f88840be7f8e"
+    },
+    {
+      "path": "src/prototype/map/KakaoMapView.tsx",
+      "sha256": "e9f7b0b175b33173f6cbdd9344d22c84cfe6a8077a96ffce795a7f8d04678a30"
+    },
+    {
+      "path": "src/prototype/map/KakaoMapView.web.tsx",
+      "sha256": "c69213104f4b6001727b05b57da977e038838a39847f19b66f75beacbeb0f5e2"
+    },
+    {
+      "path": "src/prototype/map/kakaoMapHtml.ts",
+      "sha256": "f457d20352fee6d6a02277e9d7bcf3c3bb51c4fac2eddcb133b466b943faddd3"
+    },
+    {
+      "path": "src/prototype/map/types.ts",
+      "sha256": "46668ae83226252a7e05c2f4278ce3469c2befe57c0bd399be502bb0f7a60f53"
+    },
+    {
+      "path": "src/prototype/mock/tripData.ts",
+      "sha256": "8ecef49c79f23e47efa132880e1dcaea77f6013aa5e7e51628d869370015d7c5"
+    },
+    {
+      "path": "src/prototype/navigation/routes.ts",
+      "sha256": "f6015e8998f5a3812ce46e7b1a108f972956f903ab719749fcec05b18580adad"
+    },
+    {
+      "path": "src/prototype/screens/ItineraryScreen.tsx",
+      "sha256": "33a2d080757c7e7674d428ab197a0243fd72644db9dade735ec8db415a30c539"
+    },
+    {
+      "path": "src/prototype/screens/PlaceOrderEditScreen.tsx",
+      "sha256": "258587a9d10516375ec74299e1d0c8387af071840d2b25308ef39dd792644bcb"
+    },
+    {
+      "path": "src/prototype/screens/PlaceSearchScreen.tsx",
+      "sha256": "67bed26bf041657da65c7e41d948e54f9f8bc41c2caf8ce4967fe6920b87f598"
+    },
+    {
+      "path": "src/prototype/state/PrototypeProvider.tsx",
+      "sha256": "77795eb14e98ce2a035b964016639084e0c692c812b6191da055af0bfb4998a5"
+    }
+  ],
+  "qa_source_sha256": "0d2b67de0a794b44772ab599afa314ef774d3c7c7091528e5dc7dcb45dd8bd8b",
+  "android15": "미실행",
+  "qa_status": {
+    "QA-01": "문서 반영 · 구현/Android15 재검수 대기",
+    "QA-02": "문서 반영 · 구현/Android15 재검수 대기",
+    "QA-03": "문서 반영 · 선택 방식/권한 Q25 확인 대기",
+    "QA-04": "동작 반영 · 메뉴 위치 Q27 확인 대기",
+    "QA-05": "동작 반영 · 메뉴 위치 Q27 확인 대기",
+    "QA-06": "보고됨 · 재현/원인 조사 대기",
+    "QA-07": "보고됨 · 재현/원인 조사 및 N01·Q28 결정 대기"
+  },
+  "review_corrections": {
+    "date": "2026-11-11",
+    "questions": [
+      "Q25",
+      "Q26",
+      "Q27",
+      "Q28",
+      "Q29"
+    ],
+    "status": "미확정·고객/UI 답변 없음",
+    "scope": "문서 재검토·정적 코드/스크린샷 대조; 앱/서버 미실행"
+  }
+}

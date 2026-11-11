@@ -1,7 +1,7 @@
 """편집 가능한 설계 데이터. 문서와 도형은 build_design.py로 다시 생성한다."""
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-DATE='2026-11-05'
+DATE='2026-11-11'
 # v3(2026-11-03): feature/ui-prototype@870be87을 실행·분석해 화면을 다시 정했다. 프로토타입과 겹치면 프로토타입이 우선,
 # 프로토타입에 없는 기존 기능은 '기존 유지'로 남긴다. 결정 목록은 아래 V3_DECISIONS, 확인 항목은 OPEN_QUESTIONS.
 # rows: 유형, 표시 문자열. 상세 동작은 notes에 번호 순서로 연결한다.
@@ -498,3 +498,7 @@ QA_PENDING_DECISIONS={
 # v3.2: 연결된 브이로그 UI와 제안값·미연결 렌더 경계를 함께 관리한다.
 from vlog_revision import apply_model as apply_vlog_model
 apply_vlog_model(screen, SCREENS, V3_DECISIONS, OPEN_QUESTIONS, QA, QA_PENDING_DECISIONS)
+
+# v3.4: 최신 QA 및 장소 편집 요구. 기존 관찰 이력과 실행 상태는 보존한다.
+from qa_20261110 import apply_model as apply_qa_20261110
+apply_qa_20261110(screen, SCREENS, V3_DECISIONS, OPEN_QUESTIONS, QA, QA_PENDING_DECISIONS)

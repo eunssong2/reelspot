@@ -24,8 +24,11 @@ from api_contract import build_openapi
 from revision_content import prepare_baseline,apply_content,SECTIONS,EXTERNAL,REVISION,CONTRACT_CASES,test_method
 from review_20261103 import REPOSITORIES,FINDINGS,CHANGE_REQUESTS,NOTES
 from vlog_revision import SECTIONS as VLOG_SECTIONS, QA_UI as VLOG_QA_UI, defect_ids_for_test
+from qa_20261110 import QA_ITEMS, SCREEN_ITEMS
 apply_content(ARCH,DECISIONS,SOURCES,WORKFLOWS)
-ARCH.append(('브이로그 제작 UI와 연동 경계 (v0.5.1)', VLOG_SECTIONS[0][1] + VLOG_SECTIONS[3][1][:2]))
+ARCH.append(('브이로그 제작 UI와 연동 경계 (v0.6)', VLOG_SECTIONS[0][1] + VLOG_SECTIONS[3][1][:2]))
+ARCH.insert(0, SECTIONS[0])
+WORKFLOWS.insert(0, SECTIONS[0])
 WORKFLOWS.append(('브이로그 편집·생성·저장 (F30)', VLOG_SECTIONS[4][1]))
 
 E=html.escape
@@ -39,7 +42,7 @@ def label(f):
     return m.group(1) if m else f
 
 class Doc:
-    def __init__(self,filename,title,sub='1차 개발 구현 설계 v0.5.1 · 기준 기능명세서 v3.3(2026-11-05, UI 프로토타입 기준) 우선'):
+    def __init__(self,filename,title,sub='1차 개발 구현 설계 v0.6 · 기준 기능명세서 v3.4(2026-11-11, UI 프로토타입 기준) 우선'):
         self.name=filename;self.doc=Document();self.parts=[]
         sec=self.doc.sections[0];sec.top_margin=DInches(.65);sec.bottom_margin=DInches(.65);sec.left_margin=DInches(.65);sec.right_margin=DInches(.65)
         normal=self.doc.styles['Normal'];normal.font.name=FONT;normal.font.size=DPt(10)
@@ -49,6 +52,7 @@ class Doc:
             self.doc.styles[style].font.name=FONT;self.doc.styles[style]._element.rPr.rFonts.set(qn('w:eastAsia'),FONT)
         self.doc.add_heading(title,0);self.doc.add_paragraph(sub+'\n기준일 '+DATE)
         self.parts=[f'<h1>{E(title)}</h1><p class="subtitle">{E(sub)} · {DATE}</p>']
+        self.p('현행 변경: 12 장소 수정과 QA 반영을 함께 적용한다. 확정된 QA7·N12 변경을 적용하며 고객 의견 간 충돌은 Q25·Q27·Q28, UI 문구는 Q29 확인 대기다. UI28 기존 설정 항목은 유지한다. 장소 수정 서버 계약은 Q23 보완 대기, QA-06/07 원인과 Android15 재검수는 미확인이다.')
         footer=sec.footer.paragraphs[0];footer.text='At that place · 1차 개발 설계 · '+DATE+'  |  '
         fld=OxmlElement('w:fldSimple');fld.set(qn('w:instr'),'PAGE');footer._p.append(fld)
     def h(self,t,level=1):
@@ -110,6 +114,9 @@ def wrap(t,n=22):
     return '\n'.join(lines)
 def screen_elements(s):
     el=[rect(0,0,390,844,'white',r=26),txt(20,12,200,25,'9:41   ·   Android',12,'muted'),txt(20,48,350,50,('‹  ' if s['id']!='UI01' else '')+s['title'],23,'ink',True)]
+    if s.get('header_action'):
+        el[-1]['w']=265
+        el.append(txt(310,54,60,30,s['header_action'],17,'accent',True))
     y=112
     rows=s['rows'];height={'brand':78,'lead':72,'hint':46,'yellow':56,'button':56,'outline':56,'link':38,'field':64,'row':56,'card':82,'banner':64,'calendar':236,'photo':130,'map':190,'camera':310,'nav':50}
     # 대표 프리뷰에 구성요소를 배치한다. 실제 앱은 세로 스크롤을 허용한다.
@@ -195,7 +202,7 @@ def build_docs():
     d.h('9 요구사항과 기술 근거')
     d.table(['ID','자료','반영 범위','우선순위'],SOURCES);d.save()
     d=Doc('02 데이터베이스 설계','At that place 1차 데이터베이스 설계')
-    d.p('PostgreSQL16 물리 설계 v0.5.1(하루 일정 schedule_days·같은 날 일정 하나·방문 15개·사진5/영상2·한 제출 10개·프로필 사진 트리거). 컬럼별 정의의 원천은 도구/physical_model.py이며 부록/DB/001_initial.sql과 이 사전을 함께 생성한다. 초기 스키마와 DB 제약은 임시 DB에서 실행 검증했다. FK는 ON DELETE NO ACTION, 서버 역할은002_service_roles.sql을 따른다. API/worker의 업무 권한·검사·집계·최종 완료는 별도 구현 및 통합 검수가 필요하다.')
+    d.p('PostgreSQL16 물리 설계 v0.6(하루 일정 schedule_days·같은 날 일정 하나·방문 15개·사진5/영상2·한 제출 10개·프로필 사진 트리거). 컬럼별 정의의 원천은 도구/physical_model.py이며 부록/DB/001_initial.sql과 이 사전을 함께 생성한다. 초기 스키마와 DB 제약은 임시 DB에서 실행 검증했다. FK는 ON DELETE NO ACTION, 서버 역할은002_service_roles.sql을 따른다. API/worker의 업무 권한·검사·집계·최종 완료는 별도 구현 및 통합 검수가 필요하다.')
     d.h('1 핵심 관계');d.image(ROOT/'부록/ERD.png');d.table(['부모','자식','관계'],RELATIONS)
     d.h('2 공통 데이터 규칙')
     for p in ['식별자는UUID, 순간은timestamptz(UTC저장), 기록일·방문일·일정의날짜는date, 표시는Asia/Seoul이다. 순수날짜를기기UTC Date 변환으로계산하지않는다.','모든수정대상은version을갖고초기1에서증가한다. 보관고정·소유자·완료시각·최초선택순서는수정가능정보와분리한다.','문자길이는SQL char_length가아닌NFC후grapheme단위애플리케이션검증을기준으로한다. DB의text크기/체크는보조장치다.','집계캐시는가속용이다. 사용자가볼수있는파일조건(완료·기한·삭제·운영·차단)과같은predicate로응답집계를구성한다.','representative cover는별도asset이며일반기록바이트/보관정책과혼동하지않는다. 모임종료후불필요한대표사진·계획은정리한다.']:d.p(p)
@@ -234,7 +241,7 @@ def build_docs():
     d.table(['동작','현재참여자','현재방장','참여종료작성자','운영자'],[
       ['공동조회/계획','가능','가능','불가','운영케이스최소범위'],['장소추가·예정시각·계획(15개/일)','가능','가능','불가','없음'],['업로드(방문당 사진5·영상2)','유효일정','동일','불가','없음'],['초대 조회·발급·공유·복사·개별 취소','가능(같은 모임 전체)','가능(같은 모임 전체)','불가','일반 초대 관리 권한 없음'],['일정추가/변경/취소/삭제·모임정보/역할','불가','가능','불가','복구만별도절차'],['본인정보수정','본인만','본인만','불가','콘텐츠조치별도'],['본인조회/삭제','가능','가능','본인파일만','위반조치예외'],['휴대폰 저장(길게 눌러 다중 선택)','조회가능본인·타인','동일','본인도불가','일반내보내기권한없음'],['개인차단/신고','가능','가능','본인보존문의','케이스처리'],['모임종료','불가','마지막1인만','불가','종료재개불가']])
     d.h('14 수정 가능한 다이어그램');d.p('부록/다이어그램/*.mmd는유스케이스가아닌실행시퀀스·상태도원본이다. Mermaid를지원하는IDE에서편집/렌더링한다. DB관계와구성도는부록/ERD.svg·아키텍처.svg의도형/텍스트를수정할수있다.');d.save()
-    d=Doc('09 구현 계약 보완','At that place 1차 구현 계약 보완','v0.5.1 · 2026-11-03 UI 프로토타입 기준 개정·기준 명세 v3.3·물리 DB·전송·운영·검수')
+    d=Doc('09 구현 계약 보완','At that place 1차 구현 계약 보완','v0.6 · 2026-11-03 UI 프로토타입 기준 개정·기준 명세 v3.4·물리 DB·전송·운영·검수')
     for title,paragraphs in SECTIONS:
         d.h(title)
         for p in paragraphs:d.p(p)
@@ -255,13 +262,13 @@ def build_tracking():
         if f=='F12':
             ops=['로컬 Android Camera API → F14/F15 접수·전송'];tables=['계정별 촬영 임시 파일(로컬)']
         if f=='F30':
-            ops=['기존 조회 API + renderVlog/saveToGallery 로컬 어댑터(미연결)']; tables=['VlogDraft AsyncStorage(계정 격리 추가설계); 서버 DDL 추가 없음(Q20)']
+            ops=['프로토타입 로컬 어댑터 미연결; 실제 서버 vlogCreate/Get/Cancel/Content 관찰 사본은 부록/브이로그서버계약_59aca32.json']; tables=['VlogDraft AsyncStorage; 이 패키지 DDL에 서버 렌더 테이블 미통합(실제 서버와 구분)']
         feature_rows.append([f,label(f),', '.join(uis),', '.join(ops),', '.join(tables),', '.join(f'TC-{f}-{j+1:02}' for j in range(len(QA[f]))),'설계 연결 완료 / 구현·검수 미실행'])
         for j,(scenario,expected) in enumerate(QA[f],1):
             pending=QA_PENDING_DECISIONS.get(f'TC-{f}-{j:02}',[])
             if pending:
                 expected='('+', '.join(('Q21 구현·검증 대기' if q=='Q21' else q+' 임시') for q in pending)+') '+expected+'\n확정 시 명세·API·화면과 이 검수 기대결과를 함께 갱신한다. 확인 항목의 확정·승인 완료를 뜻하지 않는다.'
-            qa_rows.append([f'TC-{f}-{j:02}',f,label(f),'P0' if f in ['F01','F05','F15','F17','F18','F20','F21','F22','F23','F24','F26'] else 'P1',scenario,expected,', '.join(VLOG_QA_UI[j] if f=='F30' else uis),('Android 로컬 UI·예시 데이터; 키보드/TalkBack은 에뮬레이터와 실기기 구분' if f=='F30' and j>=17 else 'staging 실제연동+실기기/서버경쟁 주입'),'미실행','','',defect_ids_for_test(j) if f=='F30' else '',('로컬 화면 조작·키보드/TalkBack 관찰; 서버/API 통합 불필요' if f=='F30' and j>=17 else test_method(f,scenario))])
+            qa_rows.append([f'TC-{f}-{j:02}',f,label(f),'P0' if f in ['F01','F05','F15','F17','F18','F20','F21','F22','F23','F24','F26'] else 'P1',scenario,expected,', '.join(VLOG_QA_UI.get(j, ['UI48','UI49']) if f=='F30' else uis),('Android 로컬 UI·예시 데이터; 키보드/TalkBack은 에뮬레이터와 실기기 구분' if f=='F30' and 17<=j<=20 else 'staging 실제연동+실기기/서버경쟁 주입'),'미실행','','',defect_ids_for_test(j) if f=='F30' else '',('로컬 화면 조작·키보드/TalkBack 관찰; 서버/API 통합 불필요' if f=='F30' and 17<=j<=20 else test_method(f,scenario))])
     sheet(wb,'요구사항추적',['기능ID','기능명','UI','API','DB','테스트','구현·검수상태'],feature_rows,[12,40,48,90,80,65,40])
     sheet(wb,'공통정책추적',['정책ID','정책','기능','핵심 검수'],[
       ['P01','일정별 보관 고정','F21','최초완료·종료날짜+달력3개월·말일·변경불가·만료접근차단'],
@@ -305,12 +312,14 @@ def build_tracking():
         if line.startswith('| U30-'):
             ui_qa.append([v.strip() for v in line.strip('|').split('|')]+['미실행'])
     sheet(wb,'UI통합검수',['ID','조건','기대 결과','실제 앱 검수'],ui_qa,[18,65,100,22])
+    sheet(wb,'11월10일QA',['ID','요청','기능','화면','완료 기준','상태'],QA_ITEMS,[16,35,25,35,100,48])
+    sheet(wb,'미설계화면처리',['ID','화면','처리','범위'],SCREEN_ITEMS,[16,35,35,100])
     wb.save(ROOT/'06 검수 및 추적.xlsx')
     wb=Workbook();wb.remove(wb.active)
     sheet(wb,'읽기안내',['구분','내용','원천·갱신 규칙'],[
-      ['현재 용도','현행 결정·확인 대기·과거 자료 차이를 함께 추적하는 파일. 이력 전용 파일이 아니다.','기능명세 v3.3 / 설계 v0.5.1 / '+DATE],
-      ['프로토타입결정','D01~D28: 프로토타입 기준으로 채택한 변경. 관련 Q의 임시 설계까지 승인된 것은 아니다.','design_model.V3_DECISIONS → 기능명세 0.2절'],
-      ['확인대기','Q1~Q20: 확인 전 적용값과 관련 기능. Q21: 구현 인계·검증 대기(정책 승인 대상 아님). Q22: 복귀/공백 요약 의도 확인. Q15~Q18은 의존 검수 ID도 연결한다.','design_model.OPEN_QUESTIONS·QA_PENDING_DECISIONS → 기능명세 0.4절'],
+      ['현재 용도','현행 결정·확인 대기·과거 자료 차이를 함께 추적하는 파일. 이력 전용 파일이 아니다.','기능명세 v3.4 / 설계 v0.6 / '+DATE],
+      ['프로토타입결정','D01~D35: 프로토타입 기준으로 채택한 변경. 관련 Q의 임시 설계까지 승인된 것은 아니다.','design_model.V3_DECISIONS → 기능명세 0.2절'],
+      ['확인대기','Q1~Q20: 확인 전 적용값과 관련 기능. Q21: 구현 인계·검증 대기(정책 승인 대상 아님). Q22: 복귀/공백 요약 의도 확인. Q23: 장소 수정 계약, Q24: 정보 수정 진입, Q25: 사진 선택 방식/권한, Q26: 설정 구조, Q27: 기록 메뉴 위치, Q28: 촬영 확인 후 흐름, Q29: 장소 수정 라벨. Q15~Q18·Q23~Q29는 의존 검수 ID도 연결한다.','design_model.OPEN_QUESTIONS·QA_PENDING_DECISIONS → 기능명세 0.4절'],
       ['과거자료차이','v1~v2.x 등 이전 자료와 당시 반영값의 이력. 현재 정책으로 재사용하지 않는다.','현행 기능명세·프로토타입결정·확인대기가 우선'],
       ['확정 반영','확인 담당자의 결정·근거를 기능명세에 기록한 뒤 임시값과 검수 기대결과를 함께 갱신한다.','06 기능검수의 통과는 Q 확인·승인을 대신하지 않는다. Office 직접 수정만으로 확정하지 않는다.'],
     ],[25,100,90])
@@ -318,7 +327,7 @@ def build_tracking():
     question_rows=[]
     for qid,topic,temporary,features in OPEN_QUESTIONS:
         linked=', '.join(tc for tc,refs in QA_PENDING_DECISIONS.items() if qid in refs)
-        question_rows.append([qid,topic,temporary,features,linked or '06 기능검수의 관련 기능 참조','PM·백엔드' if qid=='Q17' else 'PM·앱·서버·QA' if qid=='Q21' else 'UI 담당·PM' if qid=='Q22' else 'PM·관련 담당자','구현·검증 대기' if qid=='Q21' else '확인 대기','정책 승인 대상 아님·11번 설계 VB01~04 및 구현 조건' if qid=='Q21' else '미확정·승인 근거 없음'])
+        question_rows.append([qid,topic,temporary,features,linked or '06 기능검수의 관련 기능 참조','PM·백엔드' if qid=='Q17' else 'PM·앱·서버·QA' if qid=='Q21' else 'UI 담당·PM' if qid in ['Q22','Q29'] else 'PM·관련 담당자','구현·검증 대기' if qid=='Q21' else '확인 대기','정책 승인 대상 아님·11번 설계 VB01~04 및 구현 조건' if qid=='Q21' else '미확정·승인 근거 없음'])
     sheet(wb,'확인대기',['ID','확인할 내용','임시 적용값 또는 구현 조건','관련기능','관련 검수','확인 담당','상태','확정일·근거'],question_rows,[12,70,90,25,55,24,20,40])
     current_decisions={d[0] for d in V3_DECISIONS}
     historical=[row for row in CONFLICTS if row[0] not in current_decisions]
@@ -342,9 +351,9 @@ def build_tracking():
 
 def build_review():
     name='10 프로토타입 대조 보완'
-    d=Doc(name,'At that place 프로토타입 대조 보완','설계 v0.5.1 · 기능명세 v3.3 · 2026-11-03 정적 대조')
+    d=Doc(name,'At that place 프로토타입 대조 보완','설계 v0.6 · 기능명세 v3.4 · 2026-11-03 정적 대조')
     d.p('이 문서는 870be87 기준의 이전 대조 기록이다. 현재 ff5a5d0의 브이로그 반영과 C06/C13 상태는 11 브이로그 제작 설계를 함께 따른다.')
-    md=['# '+name,'','> 이전 870be87 대조 이력. 현재 브이로그 변경은 [11 브이로그 제작 설계](11%20브이로그%20제작%20설계.md)를 우선한다.','','기능명세 v3.3 · 설계 v0.5.1 · 개정일 2026-11-05(Asia/Seoul) · 최초 대조 2026-11-03','','생성 원천: `도구/review_20261103.py`. 기존 UI 캡처를 보존한 정적 대조이며 앱 실행 검수 결과가 아니다.','']
+    md=['# '+name,'','> 이전 870be87 대조 이력. 현재 브이로그 변경은 [11 브이로그 제작 설계](11%20브이로그%20제작%20설계.md)를 우선한다.','','기능명세 v3.4 · 설계 v0.6 · 개정일 2026-11-11(Asia/Seoul) · 최초 대조 2026-11-03','','생성 원천: `도구/review_20261103.py`. 기존 UI 캡처를 보존한 정적 대조이며 앱 실행 검수 결과가 아니다.','']
     def table(title,heads,rows):
         d.h(title);d.table(heads,rows)
         if heads[0]=='ID':
@@ -366,7 +375,7 @@ def build_review():
 def build_vlog():
     name='11 브이로그 제작 설계'
     doc=Doc(name,'At that place 브이로그 제작 설계')
-    md=['# '+name,'','기능명세 v3.3 · 설계 v0.5.1 · 2026-11-05 · feature/ui-prototype@ff5a5d0','','생성 원천: `도구/vlog_revision.py`. F30·UI39~UI49·D25~D28·Q19~Q22.','']
+    md=['# '+name,'','기능명세 v3.4 · 설계 v0.6 · 2026-11-11 · feature/ui-prototype@ff5a5d0','','최신 QA-06 생성 실패는 12 장소 수정과 QA 반영 참조. 아래 미연결 설명은 프로토타입 기준이며 실제 앱/서버의 생성 코드는 별도다. backend@59aca32의 4개 HTTP 경로와 참조 스키마는 부록/브이로그서버계약_59aca32.json에 보존했다. 이 패키지의 주 OpenAPI/DDL에는 미통합이며 QA-06 서버 재현은 해당 관찰 계약을 기준으로 한다.', '', '생성 원천: `도구/vlog_revision.py`. F30·UI39~UI49·D25~D28·Q19~Q22.','']
     for title, paragraphs in VLOG_SECTIONS:
         doc.h(title); md.extend(['## '+title,''])
         for paragraph in paragraphs:
@@ -376,15 +385,34 @@ def build_vlog():
     doc.table(['UI','화면','연결'],rows)
     md.extend(['## 7 화면·검수 추적','','| UI | 화면 | 연결 |','| --- | --- | --- |'])
     md.extend('| '+' | '.join(row)+' |' for row in rows)
-    md.extend(['','검수: `06 검수 및 추적.xlsx` TC-F30-01~20. 프로토타입 캡처·실행 관찰은 `UI/브이로그/실행결과.json`, 변경 소스는 `UI/브이로그/출처.json`. 최신 UI45는 `UI/브이로그/편집설정/실행결과.json`, VB01·VB05·Q22 웹 근거는 `UI/브이로그/편집설정/피드백검토/실행결과.json`, Android 관찰은 `UI/브이로그/편집설정/Android15/실행결과.json`을 따른다. 실제 배포 앱·실기기 검수는 미실행.',''])
+    md.extend(['','검수: `06 검수 및 추적.xlsx` TC-F30-01~21(21은 QA-06 재검수). 프로토타입 캡처·실행 관찰은 `UI/브이로그/실행결과.json`, 변경 소스는 `UI/브이로그/출처.json`. 최신 UI45는 `UI/브이로그/편집설정/실행결과.json`, VB01·VB05·Q22 웹 근거는 `UI/브이로그/편집설정/피드백검토/실행결과.json`, Android 관찰은 `UI/브이로그/편집설정/Android15/실행결과.json`을 따른다. 실제 배포 앱·실기기 검수는 미실행.',''])
     doc.save(); (ROOT/(name+'.md')).write_text('\n'.join(md))
 
+def build_latest_qa():
+    """유지 관리하는 최신 Markdown을 Word/HTML로도 제공한다."""
+    name='12 장소 수정과 QA 반영'
+    d=Doc(name, 'At that place 장소 수정과 QA 반영')
+    lines=(ROOT/(name+'.md')).read_text().splitlines()
+    i=0
+    while i<len(lines):
+        line=lines[i]
+        if line.startswith('| '):
+            rows=[]
+            while i<len(lines) and lines[i].startswith('| '):
+                rows.append([x.strip() for x in lines[i].strip('|').split('|')]);i+=1
+            d.table(rows[0],rows[2:]);continue
+        if line.startswith('## '):d.h(line[3:])
+        elif line and not line.startswith('# '):
+            d.p(re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', line).replace('`',''))
+        i+=1
+    d.save()
+
 def build_index():
-    files=[('11 브이로그 제작 설계','ff5a5d0 편집 설정·고정 미리보기 및 제작 흐름·로컬 초안·렌더/저장 경계·Q19~Q22'),('10 프로토타입 대조 보완','8개 발견 사항·11월3일 요청13개·프로토타입 우선 적용·앱/서버 인계'),('09 구현 계약 보완','v0.5.1 변경 요약(UI 프로토타입 기준 D01~D28)·기준선·DayLog 선별 재사용·재개 업로드·개발 순서'),('01 시스템 설계','서비스 구조·확정한 도구·인증·파일접근·운영'),('02 데이터베이스 설계',f'{len(TABLES)}개 테이블의 컬럼별 물리 정의·실행 SQL·DB 제약'),('03 API 연동 설계',f'{len(APIS)}개 operation·typed 업무 결과·HEAD/PATCH 전송'),('04 업무 흐름 상태 설계','업로드·위치 제거·검사·보관·원자 수정·생명주기')]
+    files=[('12 장소 수정과 QA 반영','27194cd 정적 대조·QA7·N12·서버 계약 Q23·Android15 재검수 기준'),('11 브이로그 제작 설계','ff5a5d0 편집 설정·고정 미리보기 및 제작 흐름·로컬 초안·렌더/저장 경계·Q19~Q22'),('10 프로토타입 대조 보완','8개 발견 사항·11월3일 요청13개·프로토타입 우선 적용·앱/서버 인계'),('09 구현 계약 보완','v0.6 변경 요약(UI 프로토타입 기준 D01~D35)·기준선·DayLog 선별 재사용·재개 업로드·개발 순서'),('01 시스템 설계','서비스 구조·확정한 도구·인증·파일접근·운영'),('02 데이터베이스 설계',f'{len(TABLES)}개 테이블의 컬럼별 물리 정의·실행 SQL·DB 제약'),('03 API 연동 설계',f'{len(APIS)}개 operation·typed 업무 결과·HEAD/PATCH 전송'),('04 업무 흐름 상태 설계','업로드·위치 제거·검사·보관·원자 수정·생명주기')]
     rows=''.join(f'<a class="card" href="{n}.docx"><b>{n}</b><span>{desc}</span></a><a class="pdf" href="{n}.pdf">PDF 열기</a>' for n,desc in files)
     index='''<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place 1차 개발 설계서</title><style>
     body{font-family:'Noto Sans CJK KR',sans-serif;color:#191F28;background:#f3f5f7;margin:0}header{padding:55px max(30px,calc((100vw - 1120px)/2));background:#202A35;color:white}header small{color:#F1706B}h1{font-size:42px;line-height:1.35}main{max-width:1120px;margin:35px auto;padding:0 24px}h2{margin-top:45px}p{line-height:1.9}.grid{display:grid;grid-template-columns:1fr 110px;gap:12px}.card,.pdf{display:block;background:white;padding:22px;border:1px solid #DCE1E6;border-radius:14px;text-decoration:none;color:#191F28}.card b{display:block;font-size:20px}.card span{display:block;color:#5F6B78;margin-top:8px}.pdf{color:#B8433F;display:flex;align-items:center}.primary{background:#B8433F;color:white;padding:22px;border-radius:14px;display:inline-block;text-decoration:none;font-size:22px}.info{background:#FDEDEB;padding:25px;border-radius:16px}a{color:#B8433F}li{margin:14px 0;line-height:1.7}code{background:#e9edf0;padding:2px 6px}footer{padding:35px;color:#5F6B78}
-    </style><header><small>AT THAT PLACE · '''+DATE.replace('-','.')+''' · 1차 구현 설계안</small><h1>함께한 순간을 모으는 앱<br>1차 개발 설계서</h1><p>기능명세서 v3.3(2026-11-05, UI 프로토타입 기준) F01~F29와 추가 UI 요구 F30을 시스템·DB·API·화면·검수 항목으로 연결했습니다.<br>Android 12 이상 · Asia/Seoul 고정 · 반복 일정·외부 공유 없음 · 브이로그 UI 반영·실제 렌더/저장 연결 및 출시 단계 확인 대기</p></header><main>
+    </style><header><small>AT THAT PLACE · '''+DATE.replace('-','.')+''' · 1차 구현 설계안</small><h1>함께한 순간을 모으는 앱<br>1차 개발 설계서</h1><p>기능명세서 v3.4(2026-11-11, UI 프로토타입 기준) F01~F29와 추가 UI 요구 F30을 시스템·DB·API·화면·검수 항목으로 연결했습니다.<br>Android 12 이상 · Asia/Seoul 고정 · 반복 일정·외부 공유 없음 · 브이로그 UI 반영·실제 렌더/저장 연결 및 출시 단계 확인 대기</p></header><main>
     <a class="primary" href="UI/05 UI 화면 갤러리.html">UI 화면과 APK 캡처 함께 보기 →</a>
     <h2>개발 설계서</h2><div class="grid">'''+rows+'''</div><h2>편집 가능한 UI 원본</h2><ul>
     <li><a href="UI/05 UI 설계.pptx">UI 설계 PowerPoint</a> — 글자·버튼·필드·배경을 개별 도형으로 수정합니다. 실제 APK 캡처는 별도 근거 이미지입니다.</li>
@@ -397,8 +425,8 @@ def build_index():
     <li><a href="근거/08 APK 실행 검토.docx">APK 실행 검토 Word</a> · <a href="근거/08 APK 실행 검토.pdf">실행 검토 PDF</a> · <a href="근거/APK/실행검토.json">실행 근거 JSON</a></li>
     <li><a href="부록/아키텍처.svg">아키텍처 SVG</a> · <a href="부록/ERD.svg">ERD SVG</a> · 업무 시퀀스/상태 원본은 <code>부록/다이어그램/</code></li>
     </ul><div class="info"><b>적용 기준과 수정 방법</b><p>루트 기능명세서가 정책 기준입니다. 소개 PDF·선행 XLSX·APK는 참고 자료이며 충돌은 최신 명세로 정리했습니다. 클라우드·검사 공급자·키·문서·문의 연락처·SDK 버전은 실제 환경에서 확정해야 합니다.</p><p>Word·Excel·PowerPoint 파일은 직접 편집할 수 있습니다. SVG는 벡터 편집기로 열어 수정합니다. 전체를 재생성하려면 <code>도구/사용법.txt</code>를 참고하세요. 직접 편집한 Office 파일은 재생성 전에 별도 보관하세요.</p></div><footer>설계 검토와 구현 검수를 구분합니다. PDF는 같은 내용의 HTML 인쇄 레이아웃이며 Office 원본과 줄바꿈이 다를 수 있습니다.</footer></main></html>'''
-    index=index.replace('1차 구현 설계안','1차 구현 설계 v0.5.1').replace('루트 기능명세서가 정책 기준입니다.','패키지 내부 기준/기능명세서.md(v3.3, 2026-11-05)가 정책 기준입니다. 정책 원본은 ../기능 명세서/기능명세서.md이며 동일한 SHA256 사본을 포함했습니다. v3에서 바뀐 결정(D01~D28)과 확인 필요 항목(Q1~Q22)은 명세 0절과 09 문서 0절을 보세요.').replace('112개 기능 시나리오·10개 비기능 항목.','112개 기능 시나리오·10개 비기능 항목·12개 계약 통합 시나리오와 실행 방식.').replace('클라우드·검사 공급자·키·문서·문의 연락처·SDK 버전은 실제 환경에서 확정해야 합니다.','서버 도구·전송·물리 스키마·재사용 범위는 v0.2에서 구체화했습니다. 운영 공급자·키·문서·문의 연락처·실기기/빌드 검증은 남아 있습니다.')
-    extra='''<h2>v0.5.1 구현 계약과 기준 자료</h2><ul><li><a href="기준/기능명세서.md">기준 기능명세서 사본</a> · <a href="기준/기준선.json">SHA256 기준선</a> · <a href="기준/재사용후보.json">DayLog 재사용 후보와 버전</a></li><li><a href="부록/DB/001_initial.sql">실행 가능한 초기 DB SQL</a> · <a href="부록/DB/검증결과.json">실제 PostgreSQL 검증 결과</a> · <a href="부록/DB/실제 컬럼 사전.json">실행 DB 컬럼 사전</a> · <a href="부록/DB/컬럼 및 제약.xlsx">컬럼·제약 Excel</a></li><li><a href="부록/계약예제/examples.json">정상·오류 JSON 예제</a> · <a href="부록/계약예제/검증결과.json">계약 검증 결과</a> · <a href="부록/계약예제/업로드.http">HEAD/PATCH 요청 예제</a></li></ul>'''
+    index=index.replace('1차 구현 설계안','1차 구현 설계 v0.6').replace('루트 기능명세서가 정책 기준입니다.','패키지 내부 기준/기능명세서.md(v3.4, 2026-11-11)가 정책 기준입니다. 정책 원본은 ../기능 명세서/기능명세서.md이며 동일한 SHA256 사본을 포함했습니다. v3에서 바뀐 결정(D01~D35)과 확인 필요 항목(Q1~Q29)은 명세 0절과 09 문서 0절을 보세요.').replace('112개 기능 시나리오·10개 비기능 항목.','112개 기능 시나리오·10개 비기능 항목·12개 계약 통합 시나리오와 실행 방식.').replace('클라우드·검사 공급자·키·문서·문의 연락처·SDK 버전은 실제 환경에서 확정해야 합니다.','서버 도구·전송·물리 스키마·재사용 범위는 v0.2에서 구체화했습니다. 운영 공급자·키·문서·문의 연락처·실기기/빌드 검증은 남아 있습니다.')
+    extra='''<h2>v0.6 구현 계약과 기준 자료</h2><ul><li><a href="기준/기능명세서.md">기준 기능명세서 사본</a> · <a href="기준/기준선.json">SHA256 기준선</a> · <a href="기준/재사용후보.json">DayLog 재사용 후보와 버전</a></li><li><a href="부록/DB/001_initial.sql">실행 가능한 초기 DB SQL</a> · <a href="부록/DB/검증결과.json">실제 PostgreSQL 검증 결과</a> · <a href="부록/DB/실제 컬럼 사전.json">실행 DB 컬럼 사전</a> · <a href="부록/DB/컬럼 및 제약.xlsx">컬럼·제약 Excel</a></li><li><a href="부록/계약예제/examples.json">정상·오류 JSON 예제</a> · <a href="부록/계약예제/검증결과.json">계약 검증 결과</a> · <a href="부록/계약예제/업로드.http">HEAD/PATCH 요청 예제</a></li></ul>'''
     index=index.replace('<h2>검수와 구현 결정</h2>',extra+'<h2>검수와 구현 결정</h2>')
     index=index.replace('112개',str(sum(map(len,QA.values())))+'개').replace('12개 계약 통합',str(len(CONTRACT_CASES))+'개 계약 통합')
     (ROOT/'00 설계서 안내.html').write_text(index)
@@ -417,6 +445,6 @@ def main():
     (ROOT/'부록/openapi.json').write_text(json.dumps(build_openapi(),ensure_ascii=False,indent=2))
     (ROOT/'부록/다이어그램').mkdir(exist_ok=True)
     for name,source in SEQUENCES.items():(ROOT/'부록/다이어그램'/(name+'.mmd')).write_text(source)
-    build_ui();build_docs();build_review();build_vlog();build_tracking();build_index()
+    build_ui();build_docs();build_review();build_vlog();build_latest_qa();build_tracking();build_index()
     print(json.dumps({'screens':len(SCREENS),'operations':len(APIS),'tables':len(TABLES),'functional_cases':sum(map(len,QA.values())),'native_ui_pptx':str(ROOT/'UI/05 UI 설계.pptx')},ensure_ascii=False))
 if __name__=='__main__':main()

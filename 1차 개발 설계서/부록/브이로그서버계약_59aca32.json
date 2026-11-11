@@ -1,0 +1,359 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "backend@59aca32 브이로그 API 관찰 사본",
+    "version": "59aca32-observed",
+    "description": "QA-06 정적 조사 기준. 현재 서버 계약에서 4개 경로와 참조 스키마 추출; 제품 정책 승인/서버 실행 검수 아님."
+  },
+  "paths": {
+    "/groups/{groupId}/vlogs": {
+      "post": {
+        "operationId": "vlogCreate",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "timeline": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "title",
+                  "timeline"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "enum": [
+                        "queued",
+                        "rendering",
+                        "complete",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ]
+                    },
+                    "progress": {
+                      "type": "number"
+                    },
+                    "durationSec": {
+                      "type": "number"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "contentUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "state",
+                    "progress",
+                    "durationSec",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vlogs/{jobId}": {
+      "get": {
+        "operationId": "vlogGet",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "enum": [
+                        "queued",
+                        "rendering",
+                        "complete",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ]
+                    },
+                    "progress": {
+                      "type": "number"
+                    },
+                    "durationSec": {
+                      "type": "number"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "contentUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "state",
+                    "progress",
+                    "durationSec",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vlogs/{jobId}/cancellation": {
+      "post": {
+        "operationId": "vlogCancel",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "enum": [
+                        "queued",
+                        "rendering",
+                        "complete",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ]
+                    },
+                    "progress": {
+                      "type": "number"
+                    },
+                    "durationSec": {
+                      "type": "number"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "contentUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "state",
+                    "progress",
+                    "durationSec",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vlogs/{jobId}/content": {
+      "get": {
+        "operationId": "vlogContent",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "video/mp4": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "x-source": {
+    "commit": "59aca32b5d7db01e459137d7fdff22ab0ca41f28",
+    "path": "contracts/openapi.json",
+    "sha256": "c689958d42e18588b79b18349c4612949a34d2b60a8c79423da19aa616a372e1",
+    "reviewed_at": "2026-11-11",
+    "execution": "미실행"
+  }
+}

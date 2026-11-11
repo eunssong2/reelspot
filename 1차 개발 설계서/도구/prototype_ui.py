@@ -9,6 +9,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from design_model import ROOT, SCREENS
 from vlog_revision import DEFECTS, defects_for_ui
+from qa_20261110 import REVISED_UI, COMMIT, QA_ITEMS, SCREEN_ITEMS
 
 E = html.escape
 FONT = 'Noto Sans CJK KR'
@@ -42,6 +43,12 @@ def load_source():
         p=ROOT/'UI/프로토타입'/shot['image']
         if hashlib.sha256(p.read_bytes()).hexdigest()!=shot['sha256']:
             raise ValueError('프로토타입 캡처 SHA256 불일치: '+p.name)
+    for shot in manifest['screens']:
+        if shot['ui'] in REVISED_UI:
+            RELATED[shot['id']]=shot['ui']
+            shot['superseded_by']=shot['ui']
+            shot['ui']=None
+    manifest['requirements_commit']=COMMIT
     return manifest
 
 
@@ -66,6 +73,8 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     for ui,shot in primary.items():
         if shot.get('commit',commit) != commit:
             historical_overview.extend(ov_by_ui.pop(ui,[]))
+    for ui in sorted(REVISED_UI):
+        historical_overview.extend(ov_by_ui.pop(ui,[]))
     replaced=set(primary)|set(ov_by_ui)
     applied_count=len(replaced); extra_count=len(shots)+len(overview['images'])-applied_count; native_count=len(SCREENS)-applied_count
     prs=Presentation();prs.slide_width=Inches(16);prs.slide_height=Inches(9)
@@ -84,26 +93,26 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
         sh=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,0,0,prs.slide_width,Inches(.85))
         sh.fill.solid();sh.fill.fore_color.rgb=RGBColor.from_string('202A35');sh.line.fill.background()
         text(s,.5,.16,15,.5,title,25,'FFFFFF',True)
-        text(s,.5,8.57,15,.3,sub+' · 2026-11-05 · 설계 v0.5.1',10,'5F6B78')
+        text(s,.5,8.57,15,.3,sub+' · 2026-11-11 · 설계 v0.6',10,'5F6B78')
         return s
     ov_img=lambda img:ROOT/'UI/전체화면정리'/img['image']
-    cover=base('At that place · UI 설계 v0.5.1 · UI 프로토타입 기준',f'현재 ff5a5d0 · 과거 PPT {ov_short} · 캡처별 커밋 표시 · 기능명세서 v3.3')
+    cover=base('At that place · UI 설계 v0.6 · UI 프로토타입 기준',f'현재 요구 27194cd · 과거 PPT {ov_short} · 캡처별 커밋 표시 · 기능명세서 v3.4')
     text(cover,.7,1.25,10,1.2,'디자이너·PM의 UI 프로토타입을\n화면 설계 기준으로 반영합니다.',32,bold=True)
     text(cover,.7,3.15,9.3,3.4,
          f'기존 화면 참고: {overview["file"]}\nfeature/ui-prototype @ {overview["commit"]}\n슬라이드 {len(overview["slides"])}장 · 화면 이미지 {len(overview["images"])}개 · 대응 화면 {len(ov_by_ui)}개(새 화면 UI38 포함)\n실행 캡처 {len(shots)}개: 기존 {short} + 브이로그9f64b5e + 편집설정ff5a5d0. UI05·브이로그는 신규 캡처 우선.\n제품 UI ID {len(SCREENS)}개 중 {applied_count}개는 이미지, {native_count}개는 명세 기반 설계안입니다.',19)
-    text(cover,.7,7,9.4,.9,'프로토타입과 겹치는 기능은 프로토타입이 우선합니다(명세 v3.3 D01~D28).\n프로토타입에 없는 화면은 기존 설계안을 유지하고 Q1~Q22로 확인합니다.',17,'B8433F',True)
+    text(cover,.7,7,9.4,.9,'프로토타입과 겹치는 기능은 프로토타입이 우선합니다(명세 v3.4 D01~D35).\n확정된 QA7·N12 변경과 미결 질문을 구분하며 Q1~Q29을 구분합니다.',17,'B8433F',True)
     cover.shapes.add_picture(str(ROOT/'UI/프로토타입'/primary['UI05']['image']),Inches(11.6),Inches(1.1),height=Inches(7.2))
     flow=base('화면 흐름과 원본 위치','UI 담당 전체 화면 정리 2번 슬라이드 기준')
     text(flow,.8,1.35,14.5,2.6,
          '시작: 로그인(UI01) → 가입 동의·표시명(UI02) → 내 모임(UI03) → 모임 만들기(UI04) · 초대 코드 참여(UI24)\n모임 안: 모임 달력·일정 목록(UI05) → 날짜별 장소(UI08) → 장소 기록(UI13·UI09) → 사진·동영상 올리기(UI14)\n모임 달력 → 일정 추가(UI06) · 하루 일정 변경(UI38) · 초대·관리(UI23) · 함께하는 친구(UI26)\n날짜별 장소 → 장소 검색(UI10) · 순서 편집(UI12)\n브이로그: 모임 달력 → UI39~49 (날짜·장소·기록·편집·생성/저장 미연결)',21)
     text(flow,.8,4.35,14.5,2.2,
          '내 정보: 내 모임 아래 탭 마이페이지(UI36) → 설정(UI28) → 프로필 및 계정(UI37)\nUI/전체화면정리/출처.json: PPTX 해시·슬라이드 문구·이미지별 화면 대응·이미지 해시\nUI/프로토타입/출처.json: 이전 실행 캡처의 커밋·소스·경로·해시\n재생성은 저장된 이미지를 사용하며 원격 브랜치·Expo 실행이 필요하지 않습니다.',20)
-    text(flow,.8,7.05,14.3,.9,'프로토타입에 없는 화면(파일 전송·내 기록·본인 수정·신고·계정 삭제·저장 공간·운영 등)은 기존 설계안을 유지합니다.',17,'B8433F',True)
+    text(flow,.8,7.05,14.3,.9,'QA: 업로드·저장은 현재 화면 유지, 기록 메뉴는 삭제 전용. 장소 수정 UI50, 개인 차단 관리 유지.',17,'B8433F',True)
     # v3에서 프로토타입 기준으로 바뀐 결정(D)과 결정 전 적용값(Q). 원천은 design_model.V3_DECISIONS·OPEN_QUESTIONS.
     from design_model import V3_DECISIONS, OPEN_QUESTIONS
     differences=[[d[0],d[2],d[3]] for d in V3_DECISIONS]+[[q[0]+' 확인 필요',q[1],'임시 적용: '+q[2]] for q in OPEN_QUESTIONS]
     for offset in range(0,len(differences),13):
-        diff=base('바뀐 결정과 확인 필요 항목','기능명세서 v3.3 0.2절(D)·0.4절(Q) · 이전(v2.3) → v3')
+        diff=base('바뀐 결정과 확인 필요 항목','기능명세서 v3.4 0.2절(D)·0.4절(Q) · 이전(v2.3) → v3')
         y=1.1
         for name,actual,contract in differences[offset:offset+13]:
             text(diff,.6,y,2.4,.5,name,12,'B8433F',True)
@@ -158,7 +167,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
         id=ui_spec['id'] if ui_spec else img['id']
         title=img['screen'] if ui_spec else img['screen']+' · '+img['state']
         source=f'UI 담당 전체 화면 정리 {img["slide"]}번 슬라이드 · {img["id"]} {img["state"]} @ {ov_short}'
-        priority='이전 참고 · UI05=9f64b5e, UI45=ff5a5d0 우선' if img in historical_overview else '적용 기준'
+        priority='이전 참고 · 현행 명세 도식/개별 최신 캡처 우선' if img in historical_overview else '적용 기준'
         s=base(id+'  '+title,source+' · '+priority)
         s.shapes.add_picture(str(ov_img(img)),Inches(.65),Inches(1.05),height=Inches(7.2))
         text(s,4.3,1.15,10.9,.5,(sl.get('section')+' · ' if sl.get('section') else '')+img['screen']+' — '+img['state'],22,bold=True)
@@ -215,7 +224,7 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             for i,t in enumerate(shot.get('text','').splitlines(),1):components.append([id,f'{id}-P{i:02}','실행 화면 문구',t,shot['actions'],'데모 표시·서비스 권한 별도',shot['id']])
         else:
             path.write_text(svg_for(screen_elements(spec)))
-            title=spec['title'];kind='브이로그 코드 기반 설계안 · 실행 미관찰' if 'F30' in spec['features'] else '명세 기반 설계안 · 기존 화면 유지';image='미리보기/'+path.stem+'.png'
+            title=spec['title'];kind='브이로그 코드 기반 설계안 · 실행 미관찰' if 'F30' in spec['features'] else '명세 기반 설계안 · v3.4 요구 반영 / 실행 미확인';image='미리보기/'+path.stem+'.png'
             s=base(id+'  '+title,kind)
             for e in screen_elements(spec):ppt_shape(s,e,.65,1.05,3.33/390)
             text(s,4.4,1.2,10.7,.5,'대상: '+spec['role'],21,bold=True)
@@ -249,6 +258,8 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     sheet(wb,'구성요소명세',['화면ID','요소ID','유형','표시문구','동작·검증·전환','권한·범위','상태·원본'],components)
     sheet(wb,'화면API연결',['화면ID','operationId','기능','범위'],apis)
     sheet(wb,'브이로그결함',['결함번호','현재 동작','확인 상태','관련 UI','검수 ID','수정 후 기대'],[[x['id'],x['summary'],x['status'],', '.join(x['uis']),', '.join('TC-F30-'+str(n).zfill(2) for n in x['tests']),x['expected']] for x in DEFECTS],[14,75,32,40,35,85])
+    sheet(wb,'11월10일QA',['ID','요청','기능','화면','완료 기준','상태'],QA_ITEMS)
+    sheet(wb,'미설계화면처리',['ID','화면','처리','범위'],SCREEN_ITEMS)
     sheet(wb,'화면상태',['화면ID','화면출처','제품별상태','복구규칙'],states)
     source_rows=[[s['id'],('이전 화면—현재 '+s['superseded_by']+'로 대체됨 · ' if s.get('superseded_by') else '')+s['title'],s['ui'] or RELATED.get(s['id']) or '데모 전용',s['source'],s['route'],s['actions'],s['captured_at'],s['sha256']] for s in shots]
     sheet(wb,'프로토타입대응',['브랜치화면','화면명','설계UI','소스','라우트','실행경로','캡처시각','캡처SHA256'],source_rows)
@@ -269,14 +280,14 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
             qa_rows.append([v.strip() for v in line.strip('|').split('|')]+['미실행'])
     sheet(wb,'UI통합검수',['ID','확인 항목','기대 결과','실제 앱 검수'],qa_rows,[18,65,100,22])
     sheet(wb,'적용기준',['구분','내용'],[
-        ['기준','기능명세서 v3.3(2026-11-05) / 설계 v0.5.1 / 현재ff5a5d0 / 기존 PPT '+ov_short+' / 기존 캡처 '+short+' + 신규 브이로그(개별 commit)'],
+        ['기준','기능명세서 v3.4(2026-11-11) / 설계 v0.6 / 현재 요구27194cd / 기존 PPT '+ov_short+' / 기존 캡처 '+short+' + 신규 브이로그(개별 commit)'],
         ['원칙','프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선. 프로토타입에 없는 기존 기능은 유지(화면은 같은 디자인 체계로 추가 설계). 프로토타입 결함은 Q 항목으로 관리'],
         ['화면 출처','변경된 화면의 최신 실행 캡처(UI05=9f64b5e, UI45=ff5a5d0) 우선, 그 외 PPT 이미지 → 실행 캡처 → 명세 기반 설계안 순서'],
-        ['필수 열람','UI/2026-11-03_UI_v3_적용기준.md — 화면별 출처·바뀐 결정·추가 설계 / 기능명세서 0절 D01~D28·Q1~Q22'],
+        ['필수 열람','UI/2026-11-03_UI_v3_적용기준.md — 화면별 출처·바뀐 결정·추가 설계 / 기능명세서 0절 D01~D35·Q1~Q29'],
         ['이전 자료','UI/2026-11-01_UI_전체화면정리_반영.md(P1~P14는 v3에서 확정) / UI/2026-10-30_UI_통합_설계.md'],
         ['주의','PPT·캡처는 예시 데이터로 동작하는 프로토타입 화면. 기능 완료·권한·출시 적합성 확인 아님']], [28,110])
 
-    flows=[['UI03','UI05','모임 카드','전체 화면 정리'],['UI05','UI05 일정 목록','일정 목록 탭','전체 화면 정리'],['UI05 일정 목록','UI08','하루 일정 카드','전체 화면 정리·날짜별 장소'],['UI05 일정 목록','UI38','⋯ → 일정 변경(방장)','전체 화면 정리·그날만'],['UI05','UI06','+ 일정 추가(방장)','전체 화면 정리'],['UI05','UI23','초대·관리 ›','전체 화면 정리·모임 사진 변경 포함'],['UI05','UI26','위쪽 인원 띠','전체 화면 정리'],['UI08','UI10','장소 추가','전체 화면 정리'],['UI08','UI12','편집','전체 화면 정리'],['UI08','UI13','장소 카드','전체 화면 정리'],['UI13','UI09','사람별 아이콘','전체 화면 정리'],['UI13','UI14','+ 사진·동영상 올리기','전체 화면 정리·최대10개'],['UI03','UI36','하단 마이페이지 탭','전체 화면 정리'],['UI36','UI28','톱니바퀴','전체 화면 정리'],['UI28','UI37','프로필 및 계정','전체 화면 정리'],['UI28','UI24','초대코드 입력','전체 화면 정리'],
+    flows=[['UI08','UI50','방문 시간 팝업→장소 수정','27194cd·QA-01'],['UI12','UI50','현재 편집 저장 성공 후 장소 수정','27194cd·QA-01'],['UI10','UI11','헤더 직접/검색','27194cd'],['UI14','UI13','현재 기록 화면에서 이번 업로드 추적','QA-02'],['UI18','UI18','저장 즉시 실행·삭제 확인(메뉴 위치 Q27 임시)','QA-04/05·Q27'],['UI28','UI31','개인 차단 관리','N11'],['UI03','UI05','모임 카드','전체 화면 정리'],['UI05','UI05 일정 목록','일정 목록 탭','전체 화면 정리'],['UI05 일정 목록','UI08','하루 일정 카드','전체 화면 정리·날짜별 장소'],['UI05 일정 목록','UI38','⋯ → 일정 변경(방장)','전체 화면 정리·그날만'],['UI05','UI06','+ 일정 추가(방장)','전체 화면 정리'],['UI05','UI23','초대·관리 ›','전체 화면 정리·모임 사진 변경 포함'],['UI05','UI26','위쪽 인원 띠','전체 화면 정리'],['UI08','UI10','장소 추가','전체 화면 정리'],['UI08','UI12','편집','전체 화면 정리'],['UI08','UI13','장소 카드','전체 화면 정리'],['UI13','UI09','사람별 아이콘','전체 화면 정리'],['UI13','UI14','+ 사진·동영상 올리기','전체 화면 정리·최대10개'],['UI03','UI36','하단 마이페이지 탭','전체 화면 정리'],['UI36','UI28','톱니바퀴','전체 화면 정리'],['UI28','UI37','프로필 및 계정','전체 화면 정리'],['UI28','UI24','초대코드 입력','전체 화면 정리'],
            ['UI01','UI02','카카오·Google 인증(신규)','제품은 실제 인증 검증'],['UI02','UI03/UI24','가입 완료','필수 2개 동의·보류 초대 분기'],['UI03','UI05','모임 선택','groupId'],['UI05','UI23','초대 관리','모든 현재 참여자'],['UI24','UI05','명시적 참여','정원/초대/현재 권한 재검증'],['UI05','UI08/S01','일정 선택','제품 진입'],['S0','S01','예시 일정 선택','데모 전용'],['S01','S02','날짜 카드 선택','tripId/itineraryId/dayId'],['S01','M4','배경 사진 변경','앨범 선택'],['S02','S03','장소 추가','선택 날짜'],['S03','S02','추가 성공','마지막 순서·제품은 예정 시각 선택·추가됨'],['S02','S05','편집','빈 날짜에도 제공'],['S02/S05','M1','시간 수정','S05에서는 변경 저장 때 반영'],['S05','S02','변경 저장','순서·시각·제목'],['S02','S04','장소 카드','방문별 기록'],['S04','V1','파일 탭','사진 확대·영상 재생'],['S04','M2','올리기','업로드 연결 지점'],['M2','M3','추가 타일','촬영·앨범 선택']]
     # 브랜치 전환과 기존 제품 계약을 구분해 모두 보존한다.
     flows+=json.loads((ROOT/'UI/제품 화면전환.json').read_text())
@@ -292,10 +303,10 @@ def build(screen_elements, svg_for, ppt_shape, sheet):
     pending_html='<ul>'+''.join(f'<li><b>{E(r[0])}</b>: {E(r[1])}</li>' for r in ov_slides[22].get('table',[])[1:])+'</ul>'
     dec_table='<table><tr><th>항목</th><th>이전(v2.3)</th><th>v3 기준</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in (d[0],d[2],d[3]))+'</tr>' for d in V3_DECISIONS)+'</table>'
     q_table='<table><tr><th>ID</th><th>확인할 내용</th><th>결정 전 v3 적용</th></tr>'+''.join('<tr>'+''.join('<td>'+E(c)+'</td>' for c in q[:3])+'</tr>' for q in OPEN_QUESTIONS)+'</table>'
-    intro=f'<section class="intro"><h2>화면 적용 기준 · v0.5.1</h2><p><b>기준: 디자이너·PM의 UI 프로토타입</b> feature/ui-prototype @ <b>ff5a5d0</b>(편집 설정 실행·코드 대조, 기존 PPT/캡처는 {ov_short}) · 기능명세서 v3.3(2026-11-05). 프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선이고, 프로토타입에 없는 기존 기능은 유지합니다. 제품 UI {len(SCREENS)}개 중 {applied_count}개는 UI 담당 정리 이미지·실행 캡처, {native_count}개는 명세 기반 설계안입니다. 실행 캡처 {len(shots)}개는 기존 {short}와 브이로그9f64b5e + 편집설정ff5a5d0의 관찰을 합친 것입니다. 화면마다 커밋을 표시합니다.</p><p><a href="2026-11-03_UI_v3_적용기준.md">v3 적용 기준(화면별 출처·추가 설계)</a> · <a href="../기준/기능명세서.md">기능명세서 v3.3</a> · <a href="전체화면정리/출처.json">PPT 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드%20문구.txt">슬라이드 문구 원문</a> · <a href="프로토타입/출처.json">실행 캡처 출처</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">이전 반영 기준·앱 구현 현황</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a></p><p><a href="../11%20브이로그%20제작%20설계.md">현재 브이로그 설계·미연결 범위·Q19~Q22</a> · <a href="브이로그/편집설정/실행결과.json">ff5a5d0 편집 설정 관찰</a></p><h3>일정 규칙(PPT 21번, 이전 기준)</h3>{rules_html}<h3>이전 PPT의 미연결 목록(22번) · 브이로그 현재 상태는 11번 설계 우선</h3>{pending_html}</section><section class="intro"><h2>v3에서 바뀐 결정(D01~D28)</h2><p>이전 명세(v2.3)와 다른 프로토타입 동작을 기준으로 정했습니다.</p>{dec_table}</section><section class="intro"><h2>확인 필요 항목(Q1~Q22)</h2><p>Q1~Q20은 결정 전 적용값입니다. Q21은 구현 인계·검증 대기이고, Q22는 관찰 동작의 의도 확인 대기입니다.</p>{q_table}</section>'
-    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · UI 프로토타입 기준 v0.5.1</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-11-05 · v0.5.1 · UI 프로토타입(feature/ui-prototype) 기준</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
+    intro=f'<section class="intro"><h2>화면 적용 기준 · v0.6</h2><p><b>기준: 디자이너·PM의 UI 프로토타입</b> feature/ui-prototype @ <b>27194cd</b>(장소 변경 정적 대조·QA7 반영, 기존 PPT/캡처는 {ov_short}) · 기능명세서 v3.4(2026-11-11). 프로토타입과 겹치는 기능은 프로토타입의 화면·동작·문구가 우선이고, 확정된 최신 QA·N01~N12 처리를 반영하며 상충 의견은 Q25·Q27·Q28·Q29 확인 대기입니다. 그 밖의 기존 기능은 유지합니다. 제품 UI {len(SCREENS)}개 중 {applied_count}개는 UI 담당 정리 이미지·실행 캡처, {native_count}개는 명세 기반 설계안입니다. 실행 캡처 {len(shots)}개는 기존 {short}와 브이로그9f64b5e + 편집설정ff5a5d0의 관찰을 합친 것입니다. 화면마다 커밋을 표시합니다.</p><p><a href="2026-11-03_UI_v3_적용기준.md">v3 적용 기준(화면별 출처·추가 설계)</a> · <a href="../기준/기능명세서.md">기능명세서 v3.4</a> · <a href="전체화면정리/출처.json">PPT 해시·슬라이드 문구·이미지 대응</a> · <a href="전체화면정리/슬라이드%20문구.txt">슬라이드 문구 원문</a> · <a href="프로토타입/출처.json">실행 캡처 출처</a> · <a href="2026-11-01_UI_전체화면정리_반영.md">이전 반영 기준·앱 구현 현황</a> · <a href="2026-10-30_UI_통합_설계.md">이전 UI 통합 설계</a></p><p><a href="../11%20브이로그%20제작%20설계.md">현재 브이로그 설계·미연결 범위·Q19~Q22</a> · <a href="브이로그/편집설정/실행결과.json">ff5a5d0 편집 설정 관찰</a></p><h3>일정 규칙(PPT 21번, 이전 기준)</h3>{rules_html}<h3>이전 PPT의 미연결 목록(22번) · 브이로그 현재 상태는 11번 설계 우선</h3>{pending_html}</section><section class="intro"><h2>v3에서 바뀐 결정(D01~D35)</h2><p>이전 명세(v2.3)와 다른 프로토타입 동작을 기준으로 정했습니다.</p>{dec_table}</section><section class="intro"><h2>확인 필요 항목(Q1~Q29)</h2><p>Q1~Q20은 결정 전 적용값입니다. Q21은 구현 인계·검증 대기이고, Q22는 관찰 동작의 의도 확인 대기입니다. Q23~Q29는 계약·진입·선택 방식/권한·설정·기록 메뉴 위치·촬영 흐름·장소 수정 라벨 확인 항목이며 임시안은 승인이 아닙니다.</p>{q_table}</section>'
+    page='<!doctype html><html lang="ko"><meta charset="utf-8"><title>At that place UI 설계 · UI 프로토타입 기준 v0.6</title><style>'+css+'</style><aside><b>UI 설계 · 화면 출처별 표시</b><p><a href="../00 설계서 안내.html">← 설계서 안내</a></p>'+''.join(nav)+'</aside><main><header><h1>At that place · UI 설계</h1><p>2026-11-11 · v0.6 · UI 프로토타입(feature/ui-prototype) 기준</p><a href="05 UI 설계.pptx">PowerPoint</a> · <a href="05 화면 명세.xlsx">화면 명세 Excel</a> · <a href="05 UI 설계.pdf">PDF</a></header>'+intro+''.join(articles)+'</main></html>'
     (ROOT/'UI/05 UI 화면 갤러리.html').write_text(page)
-    result=dict(current_commit=manifest.get('current_commit',commit),source_commit=commit,overview_commit=overview['commit'],overview_sha256=overview['sha256'],
+    result=dict(requirements_commit=COMMIT, requirements_scope='27194cd 정적 대조·QA7/N12; 새 실행 캡처 없음', current_commit=manifest.get('current_commit',commit),source_commit=commit,overview_commit=overview['commit'],overview_sha256=overview['sha256'],
                 overview_images=len(overview['images']),overview_ui=sorted(ov_by_ui),
                 main_screens=len(SCREENS),replaced_ui=sorted(replaced),
                 captures=len(shots),supplemental_screens=len(shots)+len(overview['images'])-len(replaced),
@@ -317,6 +328,6 @@ def update_index():
     s=s.replace('SVG 원본은 각 갤러리 화면에서 엽니다.','화면 출처·제품 적용 기준·회의 안건을 함께 확인합니다.')
     s=s.replace('SVG는 벡터 편집기로 열어 수정합니다.','명세 기반 SVG는 벡터 편집, 캡처 래퍼는 앱 소스 수정 후 재캡처합니다.')
     s=re.sub(r'<div class="info"><b>2026-1[01]-\d+ (?:UI 화면 반영|v0\.[45][^<]*)</b>.*?</div>', '',s,flags=re.S)
-    info=f'<div class="info"><b>2026-11-05 v0.5.1 · 편집 설정·고정 미리보기 반영</b><p>디자이너·PM이 고객 요구를 반영하는 feature/ui-prototype @ ff5a5d0의 편집 설정 변경을 실행·분석해 <b>기능명세서 v3.3</b>과 설계를 다시 작성했습니다. 화면 {applied["main_screens"]}개(UI 담당 정리 이미지 {applied["overview_images"]}개·실행 캡처 {applied["captures"]}개). 바뀐 결정 D01~D28·확인 필요 Q1~Q22는 <a href="기준/기능명세서.md">명세 0절</a>과 <a href="11%20브이로그%20제작%20설계.md">현재 브이로그 설계</a>에 있습니다.</p></div>'
+    info=f'<div class="info"><b>2026-11-11 v0.6 · 장소 수정·QA7·N12 반영</b><p>디자이너·PM이 고객 요구를 반영하는 feature/ui-prototype @ 27194cd의 변경을 정적으로 대조하고 11월 10일 QA를 반영해 <b>기능명세서 v3.4</b>과 설계를 다시 작성했습니다. 화면 {applied["main_screens"]}개(UI 담당 정리 이미지 {applied["overview_images"]}개·실행 캡처 {applied["captures"]}개). 바뀐 결정 D01~D35·확인 필요 Q1~Q29는 <a href="기준/기능명세서.md">명세 0절</a>과 <a href="12%20장소%20수정과%20QA%20반영.md">최신 장소 수정·QA 반영</a>에 있습니다.</p></div>'
     s=s.replace('<h2>개발 설계서</h2>',info+'<h2>개발 설계서</h2>')
     p.write_text(s)

@@ -2,7 +2,7 @@
 from pathlib import Path
 import json,hashlib,shutil
 
-REVISION='0.5.1-design'
+REVISION='0.6-design'
 SECTIONS=[
 ('2026-11-05 — 편집 설정·고정 미리보기(v3.3·v0.5.1)',['feature/ui-prototype@ff5a5d0의 EditStep.tsx 변경을 D28·F30·UI45·TC-F30-17~20에 반영. 단일 열림 아코디언·접힘 요약·상단 미리보기/하단 완료 고정·설정만 스크롤. API·DB·초안 형식과 Q19~Q21은 유지. VB05 입력 공간·Q22 의도 확인, 최신 VB01 근거와 frontend 인계 대기를 추가. 이전 캡처와 결함 근거 보존.']),
 ('2026-11-04 — 브이로그 제작 UI 반영(v3.2·v0.5.0)',['feature/ui-prototype@9f64b5e의 F30·UI39~UI49·D25~D27을 반영. 생성/저장은 미연결, 제안 한도·출시/렌더/보관·접근 복구는 Q19~Q21. 상세는11 브이로그 제작 설계. C06/C13 부분 반영이며 다른 요청은 대기.']),
@@ -17,7 +17,7 @@ SECTIONS=[
 ('2026-11-03 v0.4 — UI 프로토타입 기준 개정(명세 v3.0)',[
 '디자이너·PM이 고객 요구를 화면과 동작으로 만드는 feature/ui-prototype@870be87을 웹으로 실행(44개 화면 상태·12개 규칙 직접 조작)하고 코드 약 150개 파일을 대조해 기능명세서를 v3.0으로 다시 썼다. 프로토타입과 겹치는 기능은 프로토타입이 우선이고, 프로토타입에 없는 기존 기능은 유지한다. 바뀐 결정은 D01~D24, 확인 필요 항목은 Q1~Q14다.',
 '일정: 같은 모임 한 날짜에 활성 일정 하나(schedule_days·schedule_day_guard·SCHEDULE_DATE_TAKEN). 일정은 날짜(일차)의 묶음이며 달력 ⋯ 일정 변경은 그날 하나(dayUpdate·dayCancel·dayDelete, UI38). 모든 날 취소 시 일정 취소, 마지막 날 삭제 시 일정 삭제(기록·진행 업로드가 있으면 거부). 하루 취소 날짜의 방문·업로드는 DAY_CANCELLED.',
-'장소: 서울특별시 결과·키워드 15건·카테고리 반경 2km. 장소는 시간 없이 추가하고 방문 시간은 1분 단위(visits.planned_time). 날짜별 장소는 모임 전체 활성 날짜 탭(UI08).',
+'당시 v3.0 장소: 서울특별시 결과·키워드 15건·카테고리 반경 2km(현행 v3.4는 D29에 따라 카테고리 칩 제거). 장소는 시간 없이 추가하고 방문 시간은 1분 단위(visits.planned_time). 날짜별 장소는 모임 전체 활성 날짜 탭(UI08).',
 '기록: 장소에서 한 번 최대 10개(selection_index 0~9), 같은 지문 중복 거부(DUPLICATE_FILE), 작성자별 장소당 사진5·영상2 유지(uploadLimits로 남은 수). 보기는 사진별(by_photo)·사람별(by_author), 기본 최신순(게시 묶음 완료 시각). 다운로드는 동영상 파일을 저장(포스터 이미지 금지).',
 '계정: 카카오·Google, 가입 동의 4문서 모두 consent(필수 2·선택 2, 선택 미동의 false 기록), 프로필 사진(avatarPrepare·avatarStream·users.avatar_asset_id/avatar_version), 모임 사진 4:3. 초대 코드 8자(0·O·1·I 제외).',
 '서버(backend 브랜치)와 차이: 서버는 이미 참여한 사람의 초대 확인을 50회에서 빼고, 방문 시간 5분·보기 이름 by_time·선택 120·전체 A-Z0-9 코드를 쓴다. 설계(v0.4)가 기준이며 서버 반영은 별도 작업이다.']),
@@ -50,7 +50,7 @@ SECTIONS=[
 '⑨ 사진 5·영상 2 / ⑩ 일차별 장소 15개: upload_tasks.kind 컬럼 추가, media_bucket_count 함수와 guard_media_limit 트리거(작성자×방문, 미지정은 작성자×일정×기록일, advisory lock), guard_visit_limit 트리거(일정 행 잠금). uploadPrepare fileErrors MEDIA_LIMIT·remaining[], visitCreate VISIT_LIMIT, metadataPatch 한도 재검증. UI08·UI10·UI11·UI13·UI16에 남은 개수 표시.',
 '검증: 003_contract_checks.sql에 6번째 사진·3번째 영상·16번째 방문·51번째 초대 확인·share 내보내기 거부와 실패 작업 자리 반환·삭제 방문 자리 복귀 회귀를 추가했다. 계약 통합 시나리오 CT13~CT15와 기능 검수 시나리오(F05·F06~F11·F13·F14·F16·F17·F19)를 갱신했다. 설계 검토 엑셀 1~3번(종료 후 맥락·만료 직전 업로드·차단과 관리 알림)은 미확정으로 두어 설계를 바꾸지 않았다.']),
 ('1 패키지 기준과 변경 통제',[
-'이 패키지의 정책 기준은 기준/기능명세서.md(v3.3, 2026-11-05, UI 프로토타입 기준)다. 프로젝트의 기능 명세서/기능명세서.md 원본과 바이트가 같은 사본이며 SHA256·크기·정책 적용 범위를 기준/기준선.json에 기록한다. 상위 원본이 바뀌면 자동으로 새 정책을 적용하지 않고 차이를 검토해 기준선을 다시 확정한다. v0.3은 2026-10-20 회의 결정에 따라 F05·F07~F11·F13·F14·F16·F17·F19·F20·F21·F23·F28과 P11·P12를 바꾼 명세 v2를 기준으로 삼는다.',
+'이 패키지의 정책 기준은 기준/기능명세서.md(v3.4, 2026-11-11, UI 프로토타입·QA 기준)다. 프로젝트의 기능 명세서/기능명세서.md 원본과 바이트가 같은 사본이며 SHA256·크기·정책 적용 범위를 기준/기준선.json에 기록한다. 상위 원본이 바뀌면 자동으로 새 정책을 적용하지 않고 차이를 검토해 기준선을 다시 확정한다. v0.3은 2026-10-20 회의 결정에 따라 F05·F07~F11·F13·F14·F16·F17·F19·F20·F21·F23·F28과 P11·P12를 바꾼 명세 v2를 기준으로 삼는다.',
 '문서 사이의 우선순위는 기준 기능명세 → OpenAPI 및 DB 물리 정의 → 업무 절차·화면 연결 → 예제다. 문서와 스키마가 다르면 구현자가 임의 선택하지 않고 계약 오류로 기록한다. 이번 변경의 operationId·컬럼명·HTTP 동작은 OpenAPI와 physical_model.py가 각각 원천이다. 실행 SQL은 빈 DB에 적용하는 초기 스키마이며 완성된 서버 구현을 뜻하지 않는다.']),
 ('2 구현 도구와 코드 배치 결정',[
 '서버는 Node.js 24 계열·TypeScript·Fastify 5·node-postgres(pg) 8, PostgreSQL 16을 선택한다. ORM은 사용하지 않고 매개변수화 SQL과 명시적 트랜잭션을 사용한다. 모든 트랜잭션은 pool에서 얻은 동일 client로 BEGIN/COMMIT/ROLLBACK을 실행한다. 프레임워크와 드라이버의 패치 버전은 최초 서버 설치에서 lockfile로 고정하고 빌드·테스트 결과를 기록한다.',
@@ -117,10 +117,10 @@ def prepare_baseline(root):
         record=json.loads(reuse.read_text())
         record.update({'source_available':False,'source_required':False,'source_note':'원본 참고 앱은 2026-10-24 docs 브랜치 정리로 제거했다. 경로·hash·선언 버전은 과거 관찰 이력이며 현재 파일의 존재나 재사용 완료를 뜻하지 않는다.'})
         reuse.write_text(json.dumps(record,ensure_ascii=False,indent=2))
-    (basis/'기준선.json').write_text(json.dumps({'design_version':REVISION,'policy_snapshot':'기능명세서.md','sha256':digest(snapshot),'bytes':snapshot.stat().st_size,'policy_version':'3.3','policy_date':'2026-11-05','scope':'F01~F29 및 추가 UI F30/P01~P12/D01~D28/Q1~Q22/6절 한도/7절 후속·연동 대기','review':'2026-11-05 feature/ui-prototype@ff5a5d0 편집 설정·고정 미리보기 반영; C06/C13 부분 반영; VB05·Q22 추가; Q19~Q22 상태별 추적','upper_source':'../기능 명세서/기능명세서.md (정책 원본, 독립 패키지에서는 내부 기준 사본 사용)','change_rule':'동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신'},ensure_ascii=False,indent=2))
+    (basis/'기준선.json').write_text(json.dumps({'design_version':REVISION,'policy_snapshot':'기능명세서.md','sha256':digest(snapshot),'bytes':snapshot.stat().st_size,'policy_version':'3.4','policy_date':'2026-11-11','scope':'F01~F29 및 추가 UI F30/P01~P12/D01~D35/Q1~Q29/6절 한도/7절 후속·연동 대기','review':'2026-11-11 prototype@27194cd 정적 대조·docs@09ea73a QA7/N12 반영. 앱/Android 실행 없음; 장소 변경 API Q23 보완 대기','upper_source':'../기능 명세서/기능명세서.md (정책 원본, 독립 패키지에서는 내부 기준 사본 사용)','change_rule':'동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신'},ensure_ascii=False,indent=2))
 
 def apply_content(arch,decisions,sources,workflows):
-    arch[0][1][0]='At that place 1차 기준은 패키지 내부 기준/기능명세서.md(v3.3, 2026-11-05)의 F01~F29·P01~P12 및 추가 UI F30(출시 단계 Q20)이며 Android12(API31)+, Asia/Seoul 고정이다. 상위 원본과 동일한 SHA256 사본을 포함한다. v0.3은 2026-10-20 회의 피드백 10건(초대 50회·반복 폐지·일정 시각 제거·수동 일정·UI16/19 통합·보기 방식·길게 눌러 저장·외부 공유 제거·사진5/영상2·장소15)을 반영한 명세 v2를 따른다.'
+    arch[0][1][0]='At that place 1차 기준은 패키지 내부 기준/기능명세서.md(v3.4, 2026-11-11)의 F01~F29·P01~P12 및 추가 UI F30(출시 단계 Q20)이며 Android12(API31)+, Asia/Seoul 고정이다. 상위 원본과 동일한 SHA256 사본을 포함한다. v0.3은 2026-10-20 회의 피드백 10건(초대 50회·반복 폐지·일정 시각 제거·수동 일정·UI16/19 통합·보기 방식·길게 눌러 저장·외부 공유 제거·사진5/영상2·장소15)을 반영한 명세 v2를 따른다.'
     arch[0][1][1]='실행 DB 정의·업로드 프로토콜·업무 결과 형식·선별 재사용 범위(v0.2)에 더해 v0.3에서 일정 모델 단순화·한도 트리거·초대 횟수·보기 방식·공통 선택 화면을 반영했다. 09 구현 계약 보완 0절과 부록/DB/001_initial.sql·부록/openapi.json을 함께 적용한다. 실제 공급자 등록·문서·연락처·실기기 측정은 출시 준비다.'
     arch[0][1].append('v0.3.3 추가 변경: 초대 관리는 방장 전용 기능에서 모든 현재 참여자의 기능으로 이동했다. API는 member 권한, UI23은 모든 현재 참여자 진입이며 발급자 본인 여부로 취소를 제한하지 않는다. 조회·발급·취소마다 현재 참여와 모임/이용 상태를 재검증한다.')
     arch[2][1][0]='Android 앱은 React Native·Expo 신규 앱 셸에 DayLog의 촬영·파일 처리 후보를 선별 이식한다. 기존 로컬 업무 DB·편집·알림·라우팅은 재사용하지 않는다. 기존 코드가 없어도 기준 명세와 UI/API 계약으로 구현할 수 있다. Expo57/RN0.86.3/React19.2.3 선언 조합과 채택 조건은09 문서·기준/재사용후보.json을 따른다.'
@@ -136,7 +136,7 @@ def apply_content(arch,decisions,sources,workflows):
         if row[0] in replacements:
             area,choice,why,status=replacements[row[0]];decisions[i]=(row[0],area,choice,why,status,row[-1])
     decisions.extend([('ADR13','전송','ATP-Upload/1: 인증 HEAD/PATCH·offset·generation·SHA256','불변 청크 저장 후 DB offset 커밋; 응답유실/중복/만료 정의','선택 확정·서버 구현 전','서버/앱 담당'),('ADR14','운영 인증','별도 OIDC client/issuer/audience + MFA·역할 분리','일반 앱 JWT 거부, reviewer/moderator/recovery approver','방식 확정·실계정 설정 필요','운영/백엔드 담당')])
-    sources[0]=('S1','기준/기능명세서.md','원본과 동일한 SHA256 사본·F01~F30·P01~P12·D01~D28·Q1~Q22','패키지 내부 구현 최우선 기준')
+    sources[0]=('S1','기준/기능명세서.md','원본과 동일한 SHA256 사본·F01~F30·P01~P12·D01~D35·Q1~Q29','패키지 내부 구현 최우선 기준')
     sources.extend([
       ('T5','https://fastify.dev/docs/latest/Reference/LTS/','Fastify 지원 정책','도구 선택 근거·2026-10-17 확인'),
       ('T6','https://node-postgres.com/features/transactions','동일 client의 명시적 트랜잭션','pg 선택·2026-10-17 확인'),
@@ -172,3 +172,12 @@ def test_method(f,scenario):
     if f=='F20':return '실파일 fixture + 메타데이터/호환성 검사'
     if f in ['F25','F26','F27']:return 'API 권한 + 운영 시나리오 수동'
     return 'API 통합 + Android 화면 확인'
+
+
+SECTIONS.insert(0, ('2026-11-11 v0.6 — 장소 수정과 QA 반영', [
+    '기능명세 v3.4·prototype@27194cd·QA-01~07·N01~N12는 12 장소 수정과 QA 반영을 우선한다. 이전 날짜의 기술/흐름 설명은 이번 변경과 충돌하는 범위에서 이력이다.',
+    'D29 카테고리 줄 제거·직접 등록, D30 장소 수정과 기록 보존, D31 현재 화면 업로드 안내, D32 사진별 확대/자르기 방식 Q25, D33 즉시 저장, D34 본인 메뉴 삭제 전용·시트 위치 Q27, D35 미설계 화면별 처리.',
+    '기존 파일 전송/휴대폰 저장은 현재 화면 상태로 제공하고 자동 별도 페이지 이동을 제거한다. F17 기록 메뉴 진입은 제거; 다른 진입은 Q24. 재참여 차단 목록 제외와 개인 차단 관리 유지는 별개다.',
+    '장소 이름·주소·위치·교체는 기존 planUpdate 계약 범위 밖이다(Q23). 방문별 수정값·공급자 원본 분리·버전·기록/진행 업로드 경합을 서버가 처리해야 한다. 이번 OpenAPI/DDL을 장소 수정 구현 완료 계약으로 보지 않는다.',
+    'Q25 시스템 선택 후 후보 편집/자체 갤러리와 권한, Q27 기록 메뉴 시트 유지/제외, Q28 촬영 확인 후 흐름, Q29 장소 수정 라벨은 확인 대기다. 사진·영상은 확인→후보 담기→업로드하기를 임시 유지하고 UI28 기존 설정 항목도 유지한다. 새 앱/서버 실행은 하지 않았다. QA-06/07은 원인 미확인·재현 대기다. 문서 검증과 Android15 기능 검수를 구분한다.'
+]))

@@ -32,7 +32,7 @@ def main():
     check('초대 UI와 현재 참여 권한 연결','모든 현재 참여자' in invitation_ui['role'],invitation_ui['role'])
     check('30개 기능의 UI 연결',required<=set(f for s in SCREENS for f in s['features']),len(required))
     api_features=set(f for a in APIS for f in a['features'])
-    check('서버 기능의 API 연결과 로컬 촬영 경계',(required-{'F12','F30'})<=api_features,{'server_features':len(required-{'F12','F30'}),'F30':'기존 조회와 로컬 초안/렌더 어댑터, 서버 API 추가 Q20 대기','F12':'Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결'})
+    check('서버 기능의 API 연결과 로컬 촬영 경계',(required-{'F12','F30'})<=api_features,{'server_features':len(required-{'F12','F30'}),'F30':'주 계약 미통합; backend@59aca32 서버 렌더 4개 경로는 별도 관찰 계약으로 검사','F12':'Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결'})
     check('화면 API 참조',all(set(s['api'])<=set(ops) for s in SCREENS),len(SCREENS))
     basis=json.loads((ROOT/'기준/기준선.json').read_text())
     check('패키지 내부 기능명세 SHA256',hashlib.sha256((ROOT/'기준/기능명세서.md').read_bytes()).hexdigest()==basis['sha256'],basis['sha256'])
@@ -60,6 +60,8 @@ def main():
     for img in overview['images']:ov_primary.setdefault(img['ui'],img)
     for shot in prototype['screens']:
         if shot.get('commit',prototype['commit']) != prototype['commit'] and shot['ui']: ov_primary.pop(shot['ui'],None)
+    from qa_20261110 import REVISED_UI, COMMIT
+    for ui in REVISED_UI:ov_primary.pop(ui,None)
     applied=json.loads((ROOT/'UI/화면 반영.json').read_text())
     replaced=set(applied['replaced_ui'])
     check('프로토타입 출처와 캡처 무결성',len(prototype['screens'])==applied['captures'] and
@@ -82,7 +84,8 @@ def main():
     android=json.loads((edit_root/'Android15/실행결과.json').read_text())
     check('Android15 관찰 근거 무결성과 범위',android['commit']==edit['commit'] and android['keyboard']['reproduced'] and android['talkback']['status']=='미확인' and all(hashlib.sha256((edit_root/'Android15'/e['path']).read_bytes()).hexdigest()==e['sha256'] for e in android['evidence']),'Expo Go 입력 가림 관찰 / TalkBack 미확인 / 실기기 검수 별도')
     check('이전 UI45 캡처 대체 표시',next(x for x in prototype['screens'] if x['id']=='VLOG-EDIT').get('superseded_by')=='UI45','원본 캡처 보존 + 이전 화면 표시')
-    check('브이로그 11단계와 확인항목 추적',len([x for x in SCREENS if x['id']>='UI39'])==11 and len(QA['F30'])==20,'F30 / UI39~49 / TC-F30-01~20')
+    check('브이로그 11단계와 확인항목 추적',len([x for x in SCREENS if 'UI39'<=x['id']<='UI49'])==11 and len(QA['F30'])==21,'F30 / UI39~49 / TC-F30-01~21')
+    check('최신 요구 커밋과 장소 수정 화면',applied['requirements_commit']==COMMIT and any(x['id']=='UI50' for x in SCREENS),COMMIT)
     svg_ok=True
     for p in svg_paths:
         el=ET.parse(p)
@@ -148,7 +151,9 @@ def main():
             pages=list(pdf)[applied['pdf_intro_pages']:]
             check('UI PDF 출처와 적용 기준',prototype['commit'][:7] in pdf[0].get_text() and '화면 적용 기준' in pdf[0].get_text(),prototype['commit'])
             check('UI PDF 화면 순서와 누락',len(pages)==len(applied['gallery_pages']) and all(id+' ·' in page.get_text() for id,page in zip(applied['gallery_pages'],pages)),applied['gallery_pages'])
-    result={'scope':'설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F29 구현 검수는 미실행. PPTX는 구조 검사, 대응 SVG와 PDF는 시각 검토.','passed':not errors,'checks':checks,'errors':errors}
+    from validate_qa_revision import check_review
+    check_review(ROOT, check)
+    result={'scope':'설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F29 구현 검수는 미실행. PPTX·Word·PDF는 구조/텍스트 검사. 수동 시각 검토 범위는 별도 재검토 기록 참조. 알려진 QA 모순의 회귀 검사는 전체 의미 검토를 대체하지 않음.','passed':not errors,'checks':checks,'errors':errors}
     (ROOT/'부록/산출물 검증.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
     manifest=[]
     for p in sorted(ROOT.rglob('*')):

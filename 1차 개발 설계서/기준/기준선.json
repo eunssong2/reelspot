@@ -1,12 +1,12 @@
 {
-  "design_version": "0.5.1-design",
+  "design_version": "0.6-design",
   "policy_snapshot": "기능명세서.md",
-  "sha256": "c2ae020e3ee7024724c4acfa73be5fbd965adcc143efbc052da5d9fb47cc542f",
-  "bytes": 1383034,
-  "policy_version": "3.3",
-  "policy_date": "2026-11-05",
-  "scope": "F01~F29 및 추가 UI F30/P01~P12/D01~D28/Q1~Q22/6절 한도/7절 후속·연동 대기",
-  "review": "2026-11-05 feature/ui-prototype@ff5a5d0 편집 설정·고정 미리보기 반영; C06/C13 부분 반영; VB05·Q22 추가; Q19~Q22 상태별 추적",
+  "sha256": "93c4be48e15184a758bc9b105e98d2d4372481b8b60a82c2d4551dbc11ccbe9f",
+  "bytes": 1395628,
+  "policy_version": "3.4",
+  "policy_date": "2026-11-11",
+  "scope": "F01~F29 및 추가 UI F30/P01~P12/D01~D35/Q1~Q29/6절 한도/7절 후속·연동 대기",
+  "review": "2026-11-11 prototype@27194cd 정적 대조·docs@09ea73a QA7/N12 반영. 앱/Android 실행 없음; 장소 변경 API Q23 보완 대기",
   "upper_source": "../기능 명세서/기능명세서.md (정책 원본, 독립 패키지에서는 내부 기준 사본 사용)",
   "change_rule": "동일 SHA256 사본으로 전달; 원본 변경 시 정책 차이 검토 후 명시 갱신"
 }
