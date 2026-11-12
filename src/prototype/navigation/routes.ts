@@ -21,6 +21,8 @@ export type Route =
   | { name: 'videoMerge' }
   // 마이페이지: 프로필 사진·닉네임 변경, 참여한 모임 수
   | { name: 'myPage' }
+  // 내 달력: 참여 중인 모든 모임의 일정을 한 달력에서 확인한다(하단 탭)
+  | { name: 'myCalendar' }
   // 설정(프로필 및 계정·초대코드·약관·로그아웃)과 프로필 및 계정 상세
   | { name: 'members'; groupId?: string; tripId?: string; itineraryId?: string }
   | { name: 'settings' }

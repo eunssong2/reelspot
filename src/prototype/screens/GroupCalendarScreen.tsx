@@ -1,14 +1,13 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '../components/AppHeader';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ActionButton, Pill } from '../components/FormParts';
-import { MonthGrid } from '../components/MonthGrid';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { Toast, useToast } from '../components/Toast';
-import { MAX_MEMBERS, type Group, type Schedule } from '../mock/groupData';
+import { type Group, type Schedule } from '../mock/groupData';
 import type { Nav } from '../navigation/routes';
 import { commonErrorText, useFlash, useGroups } from '../state/GroupsProvider';
 import { usePrototype } from '../state/PrototypeProvider';
@@ -17,7 +16,6 @@ import {
   addDays,
   isWithin,
   monthDayLabel,
-  monthGrid,
   monthKey,
   monthTitle,
   periodLabel,
@@ -29,8 +27,6 @@ import {
 } from '../utils/calendar';
 import { dayEntriesOf } from '../utils/dayEntries';
 
-const LANES = 3;
-const CELL_HEIGHT = 84;
 
 /**
  * 달력·목록에 그리는 한 줄. 여러 날 일정도 하루씩 풀어서 날짜 하나가 한 줄이 되고,
@@ -51,7 +47,7 @@ interface Props {
  * 일정 카드를 누르면 날짜별 화면을 거치지 않고 일정 요약(UI08)으로 바로 간다.
  */
 export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
-  const { schedulesOf, loadCalendar, ensureItinerary, calendarView, setCalendarView } = useGroups();
+  const { schedulesOf, loadCalendar, ensureItinerary } = useGroups();
   const toast = useToast();
   const { itineraries } = usePrototype();
   useFlash(toast.show);
@@ -112,25 +108,6 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
     }));
   });
 
-  // 달력 카드를 좌우로 밀어 월을 넘긴다.
-  const monthRef = useRef(month);
-  monthRef.current = month;
-  const swipe = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
-        onPanResponderRelease: (_e, g) => {
-          if (g.dx < -50) setMonth(shiftMonth(monthRef.current, 1));
-          else if (g.dx > 50) setMonth(shiftMonth(monthRef.current, -1));
-        },
-      }),
-    [],
-  );
-
-  const grid = useMemo(() => monthGrid(month), [month]);
-  const lanes = useMemo(() => layoutLanes(grid, schedules), [grid, schedules]);
-
-  const dayList = schedules.filter((sc) => isWithin(selected, sc.startDate, sc.endDate)).sort(scheduleOrder);
   const monthList = schedules
     .filter((sc) => rangesOverlap(sc.startDate, sc.endDate, `${month}-01`, `${month}-31`))
     .sort(scheduleOrder);
@@ -152,11 +129,6 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
   const goToday = () => {
     setMonth(monthKey(today));
     setSelected(today);
-  };
-
-  const pickDate = (date: DateStr) => {
-    setSelected(date);
-    if (monthKey(date) !== month) setMonth(monthKey(date));
   };
 
   if (status === 'forbidden') {
@@ -194,7 +166,7 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
           <View style={styles.bannerLeft}>
             <View style={styles.dot} />
             <Text style={styles.bannerName} numberOfLines={1}>
-              {group.members.length}/{MAX_MEMBERS}명
+              {group.members.length === 1 ? '나 혼자' : `${group.members.length}명`}
             </Text>
             <Pill label={`방장 ${group.members[0]}`} tone="coral" />
             {!isOwner ? <Pill label="나는 참여자" /> : null}
@@ -235,20 +207,14 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
         </View>
 
         <View style={styles.toolRow}>
-          <View style={styles.segment} accessibilityRole="tablist">
-            {(['calendar', 'list'] as const).map((v) => (
-              <Pressable
-                key={v}
-                onPress={() => setCalendarView(v)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: calendarView === v }}
-                style={[styles.segmentItem, calendarView === v && styles.segmentOn]}
-              >
-                <Text style={[styles.segmentText, calendarView === v && styles.segmentTextOn]}>
-                  {v === 'calendar' ? '달력' : '일정 목록'}
-                </Text>
-              </Pressable>
-            ))}
+          {/* 모임 안에서는 달력을 쓰지 않는다 — 달력은 하단 탭의 '달력'(내 모든 모임)에서 본다. 여기는 일정 목록만. */}
+          <View style={styles.listOnlyHead}>
+            <Text style={styles.listOnlyLabel}>이 달의 일정</Text>
+            {monthList.length ? (
+              <View style={styles.listOnlyBadge}>
+                <Text style={styles.listOnlyBadgeText}>{monthList.length}</Text>
+              </View>
+            ) : null}
           </View>
           <Pressable
             onPress={() => nav.push({ name: 'invites', groupId: group.id })}
@@ -266,69 +232,7 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
           </Pressable>
         ) : null}
 
-        {calendarView === 'calendar' ? (
-          <>
-            <View style={styles.calendarCard} {...swipe.panHandlers}>
-              {ready && status === 'loading' ? (
-                <ActivityIndicator style={styles.refreshing} size="small" color={colors.primary} />
-              ) : null}
-              <MonthGrid
-                month={month}
-                cellHeight={CELL_HEIGHT}
-                onPressDate={pickDate}
-                labelFor={(d) => {
-                  const n = schedules.filter((sc) => isWithin(d, sc.startDate, sc.endDate)).length;
-                  return `${monthDayLabel(d)} ${weekdayLabel(d)}요일${n ? `, 일정 ${n}개` : ''}`;
-                }}
-                renderCell={(date, { inMonth, column }) => (
-                  <DayCell
-                    date={date}
-                    inMonth={inMonth}
-                    column={column}
-                    isToday={date === today}
-                    isSelected={date === selected}
-                    lanes={lanes.get(date) ?? []}
-                    hidden={
-                      schedules.filter((sc) => isWithin(date, sc.startDate, sc.endDate)).length -
-                      (lanes.get(date)?.filter(Boolean).length ?? 0)
-                    }
-                  />
-                )}
-              />
-            </View>
-
-            <View style={styles.listHead}>
-              <View style={styles.listHeadLeft}>
-                <Text style={styles.listTitle}>{monthDayLabel(selected)} 일정</Text>
-                {dayList.length ? (
-                  <View style={styles.countBadge}>
-                    <Text style={styles.countText}>{dayList.length}</Text>
-                  </View>
-                ) : null}
-              </View>
-              <Text style={styles.weekday}>{weekdayLabel(selected)}요일</Text>
-            </View>
-
-            {statusBlock ? (
-              statusBlock
-            ) : dayList.length === 0 ? (
-              <EmptyCard isOwner={isOwner} groupEmpty={schedules.length === 0} />
-            ) : (
-              dayList.map((sc) => (
-                <ScheduleCard
-                  key={sc.id}
-                  schedule={sc}
-                  places={sc.places}
-                  firstPlace={sc.firstPlace}
-                  isOwner={isOwner}
-                  today={today}
-                  onOpen={() => openSchedule(sc)}
-                  onMenu={() => setMenuFor(sc)}
-                />
-              ))
-            )}
-          </>
-        ) : statusBlock ? (
+        {statusBlock ? (
           statusBlock
         ) : monthList.length === 0 ? (
           <EmptyCard isOwner={isOwner} groupEmpty={schedules.length === 0} monthEmpty />
@@ -401,102 +305,11 @@ function scheduleOrder(a: Schedule, b: Schedule) {
   return a.startDate.localeCompare(b.startDate) || b.endDate.localeCompare(a.endDate) || a.createdAt - b.createdAt;
 }
 
-type LaneSlot = { schedule: Schedule; isStart: boolean; isEnd: boolean; showLabel: boolean } | null;
 
 /**
  * 주마다 일정에 줄(lane)을 나눠 준다. 같은 일정은 한 주 안에서 같은 줄에 이어 그려진다.
  * 3줄을 넘는 일정은 칸의 `+N` 으로만 센다.
  */
-function layoutLanes(grid: DateStr[], schedules: Schedule[]): Map<DateStr, LaneSlot[]> {
-  const out = new Map<DateStr, LaneSlot[]>();
-  for (let w = 0; w < 6; w += 1) {
-    const week = grid.slice(w * 7, w * 7 + 7);
-    const inWeek = schedules.filter((sc) => rangesOverlap(sc.startDate, sc.endDate, week[0], week[6])).sort(scheduleOrder);
-    const laneEnds: number[] = [];
-    week.forEach((d) =>
-      out.set(
-        d,
-        Array.from({ length: LANES }, () => null),
-      ),
-    );
-    for (const sc of inWeek) {
-      const from = Math.max(0, week.indexOf(sc.startDate) === -1 ? 0 : week.indexOf(sc.startDate));
-      const toIdx = week.indexOf(sc.endDate);
-      const to = toIdx === -1 ? 6 : toIdx;
-      let lane = laneEnds.findIndex((endCol) => endCol < from);
-      if (lane === -1) {
-        lane = laneEnds.length;
-        laneEnds.push(to);
-      } else laneEnds[lane] = to;
-      if (lane >= LANES) continue;
-      for (let c = from; c <= to; c += 1) {
-        out.get(week[c])![lane] = {
-          schedule: sc,
-          isStart: week[c] === sc.startDate || c === 0,
-          isEnd: week[c] === sc.endDate || c === 6,
-          showLabel: week[c] === sc.startDate || c === 0,
-        };
-      }
-    }
-  }
-  return out;
-}
-
-function DayCell({
-  date,
-  inMonth,
-  column,
-  isToday,
-  isSelected,
-  lanes,
-  hidden,
-}: {
-  date: DateStr;
-  inMonth: boolean;
-  column: number;
-  isToday: boolean;
-  isSelected: boolean;
-  lanes: LaneSlot[];
-  hidden: number;
-}) {
-  return (
-    <View style={[styles.cell, !inMonth && styles.cellOut]}>
-      <View style={[styles.num, isToday && styles.numToday, isSelected && styles.numSelected]}>
-        <Text style={[styles.numText, isSelected && styles.numTextSelected, isToday && !isSelected && styles.numTextToday]}>
-          {Number(date.slice(8))}
-        </Text>
-      </View>
-      {lanes.map((slot, i) =>
-        slot ? (
-          <View
-            key={i}
-            style={[
-              styles.bar,
-              slot.schedule.status === 'cancelled' ? styles.barCancelled : styles.barActive,
-              slot.isStart && styles.barStart,
-              slot.isEnd && styles.barEnd,
-              column === 0 && !slot.isStart && styles.barStart,
-            ]}
-          >
-            {slot.showLabel ? (
-              <Text
-                style={[styles.barText, slot.schedule.status === 'cancelled' && styles.barTextCancelled]}
-                numberOfLines={1}
-                ellipsizeMode="clip"
-              >
-                {slot.schedule.title}
-              </Text>
-            ) : null}
-          </View>
-        ) : (
-          <View key={i} style={styles.barEmpty} />
-        ),
-      )}
-      {hidden > 0 ? <Text style={styles.more}>+{hidden}</Text> : null}
-    </View>
-  );
-}
-
 function ScheduleCard({
   schedule: sc,
   places,
@@ -619,6 +432,10 @@ const styles = StyleSheet.create({
   },
   todayText: { fontSize: 13, fontWeight: '700', color: colors.text },
   toolRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  listOnlyHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  listOnlyLabel: { fontSize: 16, fontWeight: '800', color: colors.text, letterSpacing: -0.3 },
+  listOnlyBadge: { backgroundColor: colors.primarySoft, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
+  listOnlyBadgeText: { fontSize: 11, fontWeight: '800', color: colors.primary },
   segment: { flexDirection: 'row', padding: 4, backgroundColor: colors.surface, borderRadius: 12 },
   segmentItem: { minHeight: 36, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 9 },
   segmentOn: { backgroundColor: colors.bg },

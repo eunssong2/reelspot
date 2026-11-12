@@ -5,7 +5,7 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View
 import { ActionButton, Pill } from '../components/FormParts';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { Toast, useToast } from '../components/Toast';
-import { MAX_MEMBERS, type Group, type Schedule } from '../mock/groupData';
+import { type Group, type Schedule } from '../mock/groupData';
 import type { Nav } from '../navigation/routes';
 import { commonErrorText, representativeSchedule, useFlash, useGroups } from '../state/GroupsProvider';
 import { colors, GUTTER, MIN_TOUCH, radius } from '../styles/tokens';
@@ -124,7 +124,7 @@ export function GroupsScreen({ nav }: { nav: Nav }) {
 
       <View style={styles.tabBar}>
         <Tab icon="👥" label="모임" active />
-        <Tab icon="📖" label="내 기록" onPress={() => toast.show('내 기록(UI22)은 다른 담당 화면이에요')} />
+        <Tab icon="🗓" label="달력" onPress={() => nav.push({ name: 'myCalendar' })} />
         <Tab icon="👤" label="마이페이지" onPress={() => nav.push({ name: 'myPage' })} />
       </View>
 
@@ -166,8 +166,9 @@ function GroupCard({ group, schedules: list, onOpen }: { group: Group; schedules
             </Text>
           </View>
           <Text style={styles.meta} numberOfLines={1}>
+            {/* 정원(n/10)은 "다 채워야 할 것" 처럼 보여서 참여 인원만 적는다. 남은 자리는 초대 화면에서만 다룬다. */}
             <Text style={styles.metaStrong}>
-              {group.members.length}/{MAX_MEMBERS}명
+              {group.members.length === 1 ? '나 혼자' : `${group.members.length}명`}
             </Text>
             {'  ·  '}
             {rep ? (

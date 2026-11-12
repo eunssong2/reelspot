@@ -333,6 +333,8 @@ const toHref = (route: Route) => {
       return { pathname: '/prototype/video-merge' } as const;
     case 'myPage':
       return { pathname: '/prototype/my-page' } as const;
+    case 'myCalendar':
+      return { pathname: '/prototype/my-calendar' } as const;
     case 'members':
       return {
         pathname: '/prototype/members',
