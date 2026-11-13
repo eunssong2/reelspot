@@ -177,6 +177,11 @@ export async function prepareMedia(t: any): Promise<{
       '0:a?',
       '-vf',
       vf,
+      // Output option: without it the encoder starts threads for every host core.
+      '-threads',
+      '2',
+      '-filter_threads',
+      '1',
       '-c:v',
       'libx264',
       '-preset',

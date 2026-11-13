@@ -142,10 +142,19 @@ export async function groupDto(c: Context, g: any) {
   const warnings = await rows(
     c.db,
     `SELECT id,title,retention_last_date,expires_at,
-       CASE WHEN retention_last_date <= (now() AT TIME ZONE 'Asia/Seoul')::date + 1 THEN 'last_day' ELSE 'week' END urgency
+       CASE WHEN retention_last_date <= (now() AT TIME ZONE 'Asia/Seoul')::date + 1 THEN 'last_day' ELSE 'week' END urgency,
+       (retention_last_date - (now() AT TIME ZONE 'Asia/Seoul')::date)::int days_left
      FROM schedules WHERE group_id=$1 AND status<>'deleted' AND retention_fixed_at IS NOT NULL
        AND expires_at>now() AND retention_last_date<=(now() AT TIME ZONE 'Asia/Seoul')::date+7
      ORDER BY expires_at,id`,
+    [g.id],
+  );
+  // F21: for 30 days after expiry the card still shows that records expired, and until when.
+  const expired = await rows(
+    c.db,
+    `SELECT id,title,retention_last_date FROM schedules WHERE group_id=$1 AND status<>'deleted'
+       AND retention_fixed_at IS NOT NULL AND expires_at<=now() AND expires_at>now()-interval '30 days'
+     ORDER BY expires_at DESC,id`,
     [g.id],
   );
   const n = await one(
@@ -170,7 +179,8 @@ export async function groupDto(c: Context, g: any) {
     ...(s ? { scheduleSummary: scheduleDto(s) } : {}),
     membershipId: g.membership?.id,
     coverAssetId: g.cover_asset_id,
-    retentionWarnings: warnings.map((s) => ({ scheduleId: s.id, title: s.title, lastDate: s.retention_last_date, urgency: s.urgency })),
+    retentionWarnings: warnings.map((s) => ({ scheduleId: s.id, title: s.title, lastDate: s.retention_last_date, urgency: s.urgency, daysLeft: s.days_left })),
+    retentionExpired: expired.map((s) => ({ scheduleId: s.id, title: s.title, lastDate: s.retention_last_date })),
   };
 }
 export async function requireReauth(c: Context, proof: string) {

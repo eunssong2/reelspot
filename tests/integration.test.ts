@@ -141,18 +141,23 @@ test('DB API 통합: 인증·원자 생성·멱등·권한·일정·초대·한�
   const gid = () => created.group.id,
     sid = () => created.firstSchedule.id;
   await t.test('모임 보관 안내: 확정 기한·만료와 비참여자 노출 방지', async () => {
-    for (const days of [8, 5, 0, -2]) {
+    for (const days of [8, 5, 1, 0, -2, -40]) {
       const fixture = (await pool.query(`
         WITH basis AS (SELECT (((now() AT TIME ZONE 'Asia/Seoul')::date + $2::int) - interval '3 months')::date AS d)
         INSERT INTO schedules(group_id,title,start_date,end_date,retention_fixed_at,retention_last_date,expires_at)
         SELECT $1,'보관 안내 검증',d,d,now(),retention_last_day(d),retention_expires(d) FROM basis
         RETURNING id,expires_at`, [gid(), days])).rows[0];
       try {
-        const remaining = new Date(fixture.expires_at).getTime() - Date.now();
-        const expected = remaining <= 0 || remaining > 7 * 86400000 ? null : remaining <= 86400000 ? 'last_day' : 'week';
+        // "last_day" covers the last day itself and the day before it (F03 card wording).
+        const expected = days < 0 || days > 7 ? null : days <= 1 ? 'last_day' : 'week';
         const own = (await ok('GET', '/groups', undefined, a.token)).items.find((g: any) => g.id === gid());
         const warning = own.retentionWarnings.find((w: any) => w.scheduleId === fixture.id);
         assert.equal(warning?.urgency ?? null, expected);
+        // The card tells today from tomorrow, and shows expiry for 30 days afterwards (F21).
+        if (warning) assert.equal(warning.daysLeft, days);
+        const expired = own.retentionExpired.find((w: any) => w.scheduleId === fixture.id);
+        assert.equal(!!expired, days === -2);
+        if (expired) assert.match(expired.lastDate, /^\d{4}-\d{2}-\d{2}$/);
         assert.ok(!(await ok('GET', '/groups', undefined, b.token)).items.some((g: any) => g.id === gid()));
       } finally {
         await pool.query('DELETE FROM schedules WHERE id=$1', [fixture.id]);

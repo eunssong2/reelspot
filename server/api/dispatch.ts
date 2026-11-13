@@ -31,4 +31,5 @@ export const operationKinds: Record<string, string> = {
   groupClose: 'group_close',
   onboard: 'onboarding',
   visitCreate: 'visit_create',
+  visitUpdate: 'visit_update',
 };

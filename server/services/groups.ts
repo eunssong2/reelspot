@@ -44,6 +44,34 @@ async function addSchedule(c: Context, groupId: string, b: any) {
   );
   return s;
 }
+/** Records or unfinished uploads tie a visit to its place (same rule as the empty-visit guard). */
+async function visitHasWork(c: Context, visitId: string) {
+  return !!(await one(
+    c.db,
+    `SELECT 1 WHERE EXISTS(SELECT 1 FROM media WHERE visit_id=$1 AND (purged_at IS NULL OR access_state NOT IN ('deleted','expired')))
+       OR EXISTS(SELECT 1 FROM upload_tasks WHERE visit_id=$1 AND state NOT IN ('complete','cancelled'))`,
+    [visitId],
+  ));
+}
+async function visitDetail(c: Context, visitId: string, editable: boolean) {
+  const v = await one(
+    c.db,
+    'SELECT v.*,p.name,p.address,p.latitude,p.longitude FROM visits v JOIN places p ON p.id=v.place_id WHERE v.id=$1',
+    [visitId],
+  );
+  const plan = await one(
+    c.db,
+    'SELECT version FROM day_plans WHERE schedule_id=$1 AND plan_date=$2',
+    [v.schedule_id, v.visit_date],
+  );
+  return {
+    visit: visitDto(v),
+    // The visible record count is not enough: hidden, reviewed and unfinished files also count.
+    replaceable: !(await visitHasWork(c, v.id)),
+    editable,
+    planVersion: Number(plan?.version ?? 1),
+  };
+}
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 async function newInviteCode(c: Context) {
   for (;;) {
@@ -616,6 +644,114 @@ export const groupHandlers: Record<string, Handler> = {
         )
       ).map(visitDto),
     };
+  },
+  visitGet: async (c) => {
+    const v = await one(c.db, 'SELECT * FROM visits WHERE id=$1', [c.params.visitId]);
+    demand(v, 'NOT_FOUND', 404);
+    const s = await scheduleAccess(c, v.schedule_id);
+    demand(!v.deleted_at, 'DELETED', 410);
+    const day = await one(
+      c.db,
+      'SELECT status FROM schedule_days WHERE schedule_id=$1 AND day_date=$2',
+      [s.id, v.visit_date],
+    );
+    return visitDetail(c, v.id, s.status === 'active' && day?.status === 'active' && !isExpired(s));
+  },
+  // UI50. Keeps the visit id, date, order and record links. Edited values live in a
+  // per-visit manual place so other dates and the provider's original stay untouched.
+  visitUpdate: async (c) => {
+    const found = await one(c.db, 'SELECT schedule_id FROM visits WHERE id=$1', [c.params.visitId]);
+    demand(found, 'NOT_FOUND', 404);
+    const s = await scheduleAccess(c, found.schedule_id, false, true);
+    demand(!isExpired(s), 'EXPIRED', 410);
+    // Uploads take the same group and schedule locks, so the checks below cannot race them.
+    const v = await one(c.db, 'SELECT * FROM visits WHERE id=$1 FOR UPDATE', [c.params.visitId]);
+    demand(!v.deleted_at, 'DELETED', 410);
+    await scheduleDay(c, s, v.visit_date);
+    version(v, c.body.expectedVersion);
+    const b = c.body,
+      replacing = b.providerPlaceId != null;
+    demand(
+      !(replacing && ['name', 'address', 'location'].some((k) => k in b)),
+      'VALIDATION_ERROR',
+    );
+    let place = await one(c.db, 'SELECT * FROM places WHERE id=$1', [v.place_id]),
+      key = v.dedupe_key;
+    if (replacing) {
+      const next = await one(
+        c.db,
+        "SELECT * FROM places WHERE group_id=$1 AND provider='kakao' AND provider_place_id=$2",
+        [s.group_id, b.providerPlaceId],
+      );
+      demand(next, 'PLACE_SEARCH_REQUIRED', 409);
+      if (next.id !== place.id) {
+        demand(!(await visitHasWork(c, v.id)), 'VISIT_HAS_RECORDS', 409);
+        place = next;
+        key = `${next.provider}:${next.provider_place_id}`;
+      }
+    } else {
+      const coordinate = (n: unknown) => (n == null ? null : Number(Number(n).toFixed(6)));
+      const name = 'name' in b ? text(b.name, 100) : place.name,
+        address =
+          'address' in b
+            ? b.address == null
+              ? ''
+              : text(b.address, 200, false)
+            : (place.address ?? ''),
+        lat = coordinate('location' in b ? b.location?.lat : place.latitude),
+        lng = coordinate('location' in b ? b.location?.lng : place.longitude);
+      if (
+        name !== place.name ||
+        address !== (place.address ?? '') ||
+        lat !== coordinate(place.latitude) ||
+        lng !== coordinate(place.longitude)
+      ) {
+        const fingerprint = hash(
+          JSON.stringify([name.replace(/\s+/g, ' '), address.replace(/\s+/g, ' '), lat, lng]),
+        );
+        const shared = await one(c.db, 'SELECT 1 FROM visits WHERE place_id=$1 AND id<>$2 LIMIT 1', [
+          place.id,
+          v.id,
+        ]);
+        place =
+          place.provider === 'manual' && !shared
+            ? await one(
+                c.db,
+                'UPDATE places SET name=$2,address=$3,latitude=$4,longitude=$5,normalized_fingerprint=$6 WHERE id=$1 RETURNING *',
+                [place.id, name, address, lat, lng, fingerprint],
+              )
+            : await one(
+                c.db,
+                "INSERT INTO places(group_id,provider,name,address,latitude,longitude,normalized_fingerprint) VALUES($1,'manual',$2,$3,$4,$5,$6) RETURNING *",
+                [s.group_id, name, address, lat, lng, fingerprint],
+              );
+        key = `manual:${fingerprint}`;
+      }
+    }
+    if (key !== v.dedupe_key)
+      demand(
+        !(await one(
+          c.db,
+          'SELECT 1 FROM visits WHERE schedule_id=$1 AND visit_date=$2 AND dedupe_key=$3 AND deleted_at IS NULL AND id<>$4',
+          [s.id, v.visit_date, key, v.id],
+        )),
+        'DUPLICATE_VISIT',
+        409,
+      );
+    await c.db.query(
+      'UPDATE visits SET place_id=$2,dedupe_key=$3,planned_time=$4,version=version+1 WHERE id=$1',
+      [v.id, place.id, key, 'plannedTime' in b ? plannedTime(b.plannedTime) : v.planned_time],
+    );
+    await c.db.query(
+      'INSERT INTO day_plans(schedule_id,plan_date) VALUES($1,$2) ON CONFLICT DO NOTHING',
+      [s.id, v.visit_date],
+    );
+    await c.db.query(
+      'UPDATE day_plans SET version=version+1 WHERE schedule_id=$1 AND plan_date=$2',
+      [s.id, v.visit_date],
+    );
+    await activity(c, s.group_id);
+    return visitDetail(c, v.id, true);
   },
   visitDelete: async (c) => {
     const v = await one(c.db, 'SELECT * FROM visits WHERE id=$1', [c.params.visitId]);

@@ -10,7 +10,7 @@ export async function renderTimeline(t:Timeline, sources:Record<string,Source>, 
  const run=async(args:string[])=>{
   if(await cancelled()) throw Error('CANCELLED');
   await new Promise<void>((resolve,reject)=>{
-   const p=spawn('ffmpeg',['-hide_banner','-loglevel','error','-y','-threads','2','-filter_complex_threads','1',...args],{cwd:dir,stdio:['ignore','ignore','pipe']});
+   const p=spawn('ffmpeg',['-hide_banner','-loglevel','error','-y','-filter_threads','1','-filter_complex_threads','1',...args],{cwd:dir,stdio:['ignore','ignore','pipe']});
    let error='';p.stderr.on('data',(b)=>{error=(error+b.toString()).slice(-4000);});
    const timeout=setTimeout(()=>p.kill('SIGKILL'),10*60*1000);
    let checking=false;
@@ -36,17 +36,21 @@ export async function renderTimeline(t:Timeline, sources:Record<string,Source>, 
    return `${box?`<rect x="${(w-boxW)/2}" y="${yy}" width="${boxW}" height="${size*1.25}" fill="black" opacity="0.5"/>`:''}<text x="${w/2}" y="${yy+size}" text-anchor="middle" font-family="${family}, Noto Color Emoji" font-size="${size}" fill="${color}">${escape(line)}</text>`;
   }).join('');
  }
- const encoding=['-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p','-r','30','-c:a','aac','-b:a','160k','-ar','48000','-ac','2','-map_metadata','-1','-movflags','+faststart'];
+ // Thread counts are fixed per input and for the encoder: FFmpeg's defaults follow the host's
+ // core count and exceed the worker's process limit on large hosts (QA-06).
+ const input=['-threads','1'];
+ const encoding=['-threads','2','-c:v','libx264','-preset','veryfast','-crf','21','-pix_fmt','yuv420p','-r','30','-c:a','aac','-b:a','160k','-ar','48000','-ac','2','-map_metadata','-1','-movflags','+faststart'];
  async function segment(scene:Scene, clips:Clip[], rects:number[][], seconds:number, caption:string, transition:string) {
   const index=segments.length,file=`segment-${index}.mp4`;
   const args:string[]=[];const filters:string[]=[];
   for(const c of clips) {
+   args.push(...input);
    if(c.kind==='photo')args.push('-loop','1','-framerate','30');
    else args.push('-ss',String(c.startSec));
    args.push('-t',String(seconds),'-i',sources[c.itemId].path);
   }
   const base=clips.length;
-  args.push('-f','lavfi','-i',`color=c=${scene.kind==='title'?'0xFDEDEB':'black'}:s=${w}x${h}:r=30:d=${seconds}`,'-f','lavfi','-i',`anullsrc=r=48000:cl=stereo:d=${seconds}`);
+  args.push(...input,'-f','lavfi','-i',`color=c=${scene.kind==='title'?'0xFDEDEB':'black'}:s=${w}x${h}:r=30:d=${seconds}`,...input,'-f','lavfi','-i',`anullsrc=r=48000:cl=stereo:d=${seconds}`);
   filters.push(`[${base}:v]setsar=1[bg0]`);
   let canvas='bg0';
   for(const [i,c] of clips.entries()) {
@@ -76,7 +80,7 @@ export async function renderTimeline(t:Timeline, sources:Record<string,Source>, 
    const svg=`${dir}/overlay-${index}.svg`,png=`${dir}/overlay-${index}.png`;
    await writeFile(svg,`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${overlay}</svg>`,{mode:0o600});
    await tool('rsvg-convert',['-o',png,svg]);
-   args.push('-i',png);
+   args.push(...input,'-i',png);
    filters.push(`[${canvas}][${base+2}:v]overlay=0:0,format=yuv420p[outv]`);
   } else filters.push(`[${canvas}]format=yuv420p[outv]`);
   // Input videos may be silent. Probe before selecting audio streams; preserve all available original audio.
@@ -97,7 +101,7 @@ export async function renderTimeline(t:Timeline, sources:Record<string,Source>, 
   else for(const [i,c] of scene.clips.entries()) await segment(scene,[c],[[0,0,1,1]],c.seconds,c.caption,i===0?scene.transition:'none');
   done+=scene.seconds;await progress(.85*done/t.totalSec);
  }
- const args=segments.flatMap(s=>['-i',s.file]);
+ const args=segments.flatMap(s=>[...input,'-i',s.file]);
  const filters:string[]=[];
  segments.forEach((s,i)=>{
   // Pad the original segment, whose frame rate is known. Padding an xfade

@@ -28,15 +28,66 @@ design.components.schemas.Group.properties.retentionWarnings = {
   type: 'array', items: { type: 'object', properties: {
     scheduleId: { type: 'string', format: 'uuid' }, title: { type: 'string' },
     lastDate: { type: 'string', format: 'date' }, urgency: { enum: ['week', 'last_day'] },
-  }, required: ['scheduleId', 'title', 'lastDate', 'urgency'] },
+    daysLeft: { type: 'integer', minimum: 0, maximum: 7, description: '보관 마지막 날까지 남은 날. 0=오늘이 마지막 날' },
+  }, required: ['scheduleId', 'title', 'lastDate', 'urgency', 'daysLeft'] },
+};
+design.components.schemas.Group.properties.retentionExpired = {
+  type: 'array', description: '만료 뒤 30일 동안 카드에 표시할 만료 일정(F21)', items: { type: 'object', properties: {
+    scheduleId: { type: 'string', format: 'uuid' }, title: { type: 'string' }, lastDate: { type: 'string', format: 'date' },
+  }, required: ['scheduleId', 'title', 'lastDate'] },
 };
 task.properties.clientFileId = { type: 'string' };
 task.properties.selectionIndex = { type: ['integer', 'null'], minimum: 0, maximum: 119 };
 task.required.push('clientFileId', 'selectionIndex');
-design.components.schemas.Operation.properties.kind.enum.push('onboarding', 'visit_create');
+// UI50 장소 수정(Q23): 방문 식별자·날짜·순서·기록 연결을 유지하는 전용 변경 계약.
+Object.assign(design.components.schemas.Visit.properties, {
+  name: { type: 'string' }, address: { type: ['string', 'null'] },
+  lat: { type: ['number', 'null'] }, lng: { type: ['number', 'null'] },
+});
+design.components.schemas.VisitDetail = {
+  type: 'object',
+  properties: {
+    visit: { $ref: '#/components/schemas/Visit' },
+    replaceable: { type: 'boolean', description: '숨김·검토·보존 기록과 미완료 업로드가 없어 다른 장소로 교체할 수 있음' },
+    editable: { type: 'boolean', description: '취소·만료가 아니어서 수정할 수 있음' },
+    planVersion: { type: 'integer', minimum: 1 },
+  },
+  required: ['visit', 'replaceable', 'editable', 'planVersion'],
+};
+{
+  const base = design.paths['/visits/{visitId}'].delete;
+  const visitId = base.parameters.find((p) => p.name === 'visitId');
+  const errors = Object.fromEntries(Object.entries(base.responses).filter(([status]) => status !== '200'));
+  const ok = { 200: { description: '방문과 교체 가능 여부·날짜 계획 버전', content: { 'application/json': { schema: { $ref: '#/components/schemas/VisitDetail' } } } } };
+  design.paths['/visits/{visitId}'].get = {
+    operationId: 'visitGet', summary: '장소 수정에 쓰는 방문 현재 값', tags: ['F10'],
+    description: '권한: member. 취소·만료 방문은 editable=false로 조회만 한다.',
+    security: [{ bearerAuth: [] }], parameters: [visitId], responses: { ...ok, ...errors },
+  };
+  design.paths['/visits/{visitId}'].patch = {
+    operationId: 'visitUpdate', summary: 'expectedVersion + 이름·주소·위치·방문 시간 또는 providerPlaceId(교체) → VisitDetail', tags: ['F09', 'F10'],
+    description: '권한: member. 생략한 값은 유지하고 null은 주소·위치·시간을 지운다. 정보 수정은 방문별 수기 사본에 저장해 다른 방문과 공급자 원본을 바꾸지 않는다. providerPlaceId는 이름·주소·위치와 함께 보낼 수 없고 기록·미완료 업로드가 있으면 거부한다. 도메인 오류: VERSION_CONFLICT VISIT_HAS_RECORDS DUPLICATE_VISIT PLACE_SEARCH_REQUIRED VALIDATION_ERROR TEXT_REJECTED SCHEDULE_CANCELLED DAY_CANCELLED EXPIRED DELETED.',
+    security: [{ bearerAuth: [] }], parameters: base.parameters,
+    requestBody: { required: true, content: { 'application/json': { schema: {
+      type: 'object', additionalProperties: false,
+      properties: {
+        expectedVersion: { type: 'integer', minimum: 1 },
+        name: { type: 'string', minLength: 1, maxLength: 400 },
+        address: { type: ['string', 'null'], maxLength: 800 },
+        location: { type: ['object', 'null'], additionalProperties: false, properties: { lat: { type: 'number', minimum: -90, maximum: 90 }, lng: { type: 'number', minimum: -180, maximum: 180 } }, required: ['lat', 'lng'] },
+        plannedTime: { type: ['string', 'null'], pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' },
+        providerPlaceId: { type: 'string', minLength: 1, maxLength: 200 },
+      },
+      required: ['expectedVersion'],
+    } } } },
+    responses: { ...ok, ...errors },
+  };
+}
+design.components.schemas.Operation.properties.kind.enum.push('onboarding', 'visit_create', 'visit_update');
 for (const [kind, schema] of [
   ['onboarding', { type: 'object' }],
   ['visit_create', { $ref: '#/components/schemas/Visit' }],
+  ['visit_update', { $ref: '#/components/schemas/VisitDetail' }],
 ])
   design.components.schemas.Operation.properties.result.anyOf[0].anyOf.push(schema);
 design.paths['/me/identities/{identityId}'].delete.parameters.push({

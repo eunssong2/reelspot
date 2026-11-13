@@ -32,6 +32,8 @@ export async function processVlog() {
   if(!completed)await objects.remove(key);
   else for(const name of await readdir(dir))if(name!=='result.mp4')await rm(`${dir}/${name}`,{force:true});
  } catch(e) {
+  // The job row keeps only a code. The reason goes to the worker log so a failed render can be traced by job id.
+  process.stderr.write(`${JSON.stringify({event:'vlog.render_failed',jobId:job.id,code:(e as any).code ?? 'RENDER_FAILED',reason:String((e as Error).message ?? e).slice(0,1000)})}\n`);
   await objects.remove(key);
   await tx(db=>db.query("UPDATE vlog_jobs SET state='failed',error_code=$3,updated_at=now() WHERE id=$1 AND lease=$2 AND state='rendering'",[job.id,job.lease,(e as any).code ?? 'RENDER_FAILED']));
  } finally {clearInterval(heartbeat);}

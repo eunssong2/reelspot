@@ -55,6 +55,7 @@ const consentWriteIds = new Set([
   'scheduleUpdate',
   'planUpdate',
   'visitCreate',
+  'visitUpdate',
   'uploadPrepare',
   'coverPrepare',
   'avatarPrepare',
