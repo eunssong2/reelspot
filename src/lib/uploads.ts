@@ -11,6 +11,8 @@ import { API, api, awaitOperation, currentSession, getGroup } from './api';
 export type Candidate = {
   /** Local queue scope; not sent as a file field in the submission API. */
   scheduleId?: string;
+  /** Files accepted by one press of 업로드하기. Local only. */
+  batchId?: string;
   uri: string;
   name: string;
   mime: string;
@@ -54,12 +56,29 @@ export async function candidate(
   } catch { await FileSystem.deleteAsync(path, { idempotent: true }); throw new Error('선택 파일을 사용할 수 없습니다. 사진 50MB/100메가픽셀, 영상 MP4·MOV H.264/HEVC·AAC 200MB/60초 이내인지 확인해 주세요.'); }
 
 }
+type Queue = Record<string, { file: Candidate; task: any }>;
+const queueWrites = new Map<string, Promise<unknown>>();
+/**
+ * Every change to the local queue is a read-modify-write run one after another per account,
+ * with nothing awaited between the read and the write. Otherwise a cleanup that read the
+ * queue earlier could write it back and drop a task added in the meantime.
+ */
+function updateQueue<T>(userId: string, change: (q: Queue) => T): Promise<T> {
+  const key = `atp.queue:${userId}`;
+  const next = (queueWrites.get(userId) ?? Promise.resolve())
+    .catch(() => {})
+    .then(async () => {
+      const q: Queue = JSON.parse((await AsyncStorage.getItem(key)) ?? '{}');
+      const result = change(q);
+      await AsyncStorage.setItem(key, JSON.stringify(q));
+      return result;
+    });
+  queueWrites.set(userId, next);
+  return next;
+}
 export async function enqueueTask(task: any, file: Candidate) {
   const session = currentSession()!;
-  const key = `atp.queue:${session.userId}`,
-    q = JSON.parse((await AsyncStorage.getItem(key)) ?? '{}');
-  q[task.id] = { file, task };
-  await AsyncStorage.setItem(key, JSON.stringify(q));
+  await updateQueue(session.userId, (q) => { q[task.id] = { file, task }; });
   notifyUploadQueue();
   if (!Transfer) throw new Error('Android 개발 빌드가 필요합니다.');
   if (Platform.OS === 'android' && Number(Platform.Version) >= 33)
@@ -78,9 +97,32 @@ export async function enqueueTask(task: any, file: Candidate) {
   );
 }
 export async function queue() {
+  // Read after pending changes so a just-added task is never missed.
+  await queueWrites.get(currentSession()?.userId ?? '')?.catch(() => {});
   return JSON.parse(
     (await AsyncStorage.getItem(`atp.queue:${currentSession()?.userId}`)) ?? '{}',
   ) as Record<string, { file: Candidate; task: any }>;
+}
+const fresh = new Set<string>();
+/** A submission made while the app is open; its result is announced once. */
+export const markFreshBatch = (id: string) => void fresh.add(id);
+export const takeFreshBatch = (id: string) => fresh.delete(id);
+export const isFreshBatch = (id: string) => fresh.has(id);
+/** Drops finished uploads from the local list so earlier results are not shown again. */
+export async function forgetTasks(ids: string[]) {
+  const session = currentSession();
+  if (!session || !ids.length) return;
+  const removed = await updateQueue(session.userId, (q) => {
+    const uris: string[] = [];
+    for (const id of ids) {
+      if (!q[id]) continue;
+      uris.push(q[id].file.uri);
+      delete q[id];
+    }
+    return uris;
+  });
+  // Private copies are deleted only after the queue no longer refers to them.
+  for (const uri of removed) await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
 }
 export async function resumeTask(id: string) {
   const q = await queue(),
@@ -111,6 +153,8 @@ export async function restorePendingTransfers() {
 export async function clearLocalAccount(userId: string) {
   await flushDraftWrites(userId);
   await flushUploadDrafts(userId);
+  // A queue change still in flight must not write the queue back after it is removed.
+  await queueWrites.get(userId)?.catch(() => {});
   const keys = (await AsyncStorage.getAllKeys()).filter((k) => k === `atp.queue:${userId}` || k.startsWith(`atp.upload-draft:${userId}:`) || k.startsWith(`atp.draft:${userId}:`));
   await AsyncStorage.multiRemove(keys);
   await FileSystem.deleteAsync(`${FileSystem.documentDirectory}uploads/${userId}/`, { idempotent: true });

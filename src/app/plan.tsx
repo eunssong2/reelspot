@@ -1,11 +1,11 @@
-import { useInitialize } from '../lib/effects';
-import React, { useState } from 'react';
+import { useInitialize, useFocusLoad } from '../lib/effects';
+import React, { useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { View, Text, Pressable } from 'react-native';
 import { TimeEditModal } from '../components/time-edit-modal';
 import { dateHeading } from '../lib/day-labels';
 import { api, awaitOperation, ApiError } from '../lib/api';
-import { inputText, validTime } from '../lib/validation';
+import { capTitle, inputText, validTime } from '../lib/validation';
 import { useUnsavedChanges } from '../lib/unsaved';
 import {
   Screen,
@@ -34,18 +34,24 @@ export default function Plan() {
       title,
       visits: visits.map((v) => ({ id: v.id, plannedTime: v.plannedTime })),
     });
+  const [schedule, setSchedule] = useState<any>(null);
   async function load() {
     const r = await api(`/schedules/${id}`);
+    setSchedule(r.schedule);
     return r.plan.find((d: any) => d.date === date);
+  }
+  function show(d: any) {
+    setTitle(d.title);
+    setVisits(d.visits);
+    setVersion(d.version);
+    setBaseline(shape(d.title, d.visits));
+    setLatest(null);
   }
   useInitialize(() => {
     a.run(async () => {
       const d = await load();
       if (!d) throw new Error('이 날짜의 계획이 없습니다. 일정 기간을 확인해 주세요.');
-      setTitle(d.title);
-      setVisits(d.visits);
-      setVersion(d.version);
-      setBaseline(shape(d.title, d.visits));
+      show(d);
       const target = d.visits.find((v: any) => v.id === visit);
       if (target) editTime(target);
     });
@@ -78,7 +84,30 @@ export default function Plan() {
       }
     });
   }
-  const leave = useUnsavedChanges(!!baseline && baseline !== shape(title, visits), save);
+  const dirty = !!baseline && baseline !== shape(title, visits);
+  const leave = useUnsavedChanges(dirty, save);
+  // The place editor changes saved values, so the current order, times and title are saved
+  // first. A failed or conflicting save keeps this screen and everything typed here.
+  const editedPlace = useRef(false);
+  async function editPlace(v: any) {
+    if (a.busy || !schedule) return;
+    if (dirty && !(await save())) return;
+    editedPlace.current = true;
+    router.push({
+      pathname: '/places',
+      params: { id, groupId: schedule.groupId, startDate: schedule.startDate, endDate: schedule.endDate, visitDate: date, visitId: v.id },
+    });
+  }
+  useFocusLoad(() => {
+    if (!editedPlace.current) return;
+    editedPlace.current = false;
+    // Back from the place editor: show the saved name, address, time and versions.
+    void a.run(async () => {
+      const d = await load();
+      if (!d) throw new Error('이 날짜의 계획이 없습니다. 일정 기간을 확인해 주세요.');
+      show(d);
+    });
+  }, [id, date]);
   function move(i: number, delta: number) {
     const next = [...visits];
     if (i + delta < 0 || i + delta >= next.length) return;
@@ -103,9 +132,10 @@ export default function Plan() {
       <Field
         label="날짜 제목"
         limit={30}
-        helper="비워 두면 기본 이름으로 보여요"
+        placeholder="예: 빵 먹고 전시 보고 저녁까지"
+        helper={`비워 두면 "${Number(date.slice(5, 7))}월 ${Number(date.slice(8, 10))}일의 장소"로 보여요`}
         value={title}
-        onChangeText={setTitle}
+        onChangeText={(next) => setTitle(capTitle(title, next))}
       />
       <Text
         style={{
@@ -144,7 +174,19 @@ export default function Plan() {
             <Text style={{ color: 'white', fontSize: 13, fontWeight: '800' }}>{i + 1}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 16, fontWeight: '800', color: colors.ink }}>{v.name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 16, fontWeight: '800', color: colors.ink }}>{v.name}</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${v.name} 장소 수정`}
+                disabled={a.busy}
+                onPress={() => void editPlace(v)}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                style={({ pressed }) => ({ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: colors.sage, opacity: pressed ? 0.7 : 1 })}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '800', color: colors.accent }}>장소 수정</Text>
+              </Pressable>
+            </View>
             {!!v.address && (
               <Text numberOfLines={1} style={{ fontSize: 13, color: colors.muted, marginTop: 3 }}>
                 {v.address}

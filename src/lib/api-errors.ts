@@ -1,5 +1,5 @@
 export class NetworkError extends Error {
-  constructor() { super('서버에 연결할 수 없습니다. 네트워크를 확인하고 다시 시도해 주세요. 입력과 대기 파일은 유지됩니다.'); }
+  constructor() { super('인터넷에 연결되어 있지 않아요. 연결을 확인하고 다시 시도해 주세요.'); }
 }
 export class ApiError extends Error {
   constructor(

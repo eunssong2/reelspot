@@ -74,7 +74,7 @@ test('Google linking is available when configured and sends the returned credent
 
 import { ApiError, NetworkError } from '../../src/lib/api-errors';
 test.each([
-  [new NetworkError(), '네트워크를 확인하고'],
+  [new NetworkError(), '연결을 확인하고'],
   [new ApiError('PROVIDER_UNAVAILABLE'), '카카오 로그인이 잠시 원활하지 않아요'],
   [new ApiError('AUTH_INVALID'), '로그인하지 못했어요. 다시 시도해 주세요.'],
   [new Error('network 네트워크 arbitrary message'), '로그인하지 못했어요. 다시 시도해 주세요.'],
@@ -89,7 +89,7 @@ test.each([
 
 import { OAuthReturn } from '../../src/components/oauth-return';
 test.each([
-  [new NetworkError(), '네트워크를 확인하고'],
+  [new NetworkError(), '연결을 확인하고'],
   [new ApiError('PROVIDER_UNAVAILABLE'), '카카오 로그인이 잠시 원활하지 않아요'],
   [new ApiError('PROVIDER_QUOTA_EXCEEDED'), '카카오 로그인이 잠시 원활하지 않아요'],
   [new ApiError('AUTH_INVALID'), '로그인하지 못했어요. 다시 시도해 주세요.'],

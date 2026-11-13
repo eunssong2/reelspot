@@ -6,6 +6,8 @@ import { authorPhotoIds } from '../lib/author-photos';
 import { Avatar } from './profile-ui';
 import { formatDuration, monthDayTime } from '../lib/day-labels';
 import { Button, CheckCircle, P, Sheet, colors, TextButton, ScreenFooter, useAction } from './ui';
+import { usePhoneSave } from './phone-save';
+import { useImageRetry } from '../vlog/ui/SafeImage';
 type AuthorGroup = {
   authorUserId: string;
   displayName: string;
@@ -20,29 +22,21 @@ const thumb = (m: Media, context: string) => [
   },
 ];
 function RecordImage({ m, context, style }: { m: Media; context: string; style: ImageStyle }) {
-  const [failed, setFailed] = useState(false);
-  return failed ? <View style={[style, { justifyContent: 'center', padding: 10 }]}><Text>🖼️ 이미지를 불러오지 못했어요</Text></View> : <Image accessibilityLabel="기록 미리보기" source={thumb(m, context)} style={style} onError={() => setFailed(true)} />;
+  // An expired access token is renewed once before the picture is reported as failed.
+  const retry = useImageRetry(thumb(m, context)[0].uri);
+  return retry.failed ? <View style={[style, { justifyContent: 'center', padding: 10 }]}><Text>🖼️ 이미지를 불러오지 못했어요</Text></View> : <Image key={retry.attempt} accessibilityLabel="기록 미리보기" source={thumb(m, context)} style={style} onError={retry.onError} />;
 }
-function VideoBadge({ m }: { m: Media }) {
+/** Play mark and length in the middle of a video's picture (the card's caption strip is excluded). */
+function VideoBadge({ m, bottom = 0 }: { m: Media; bottom?: number }) {
   if (m.kind !== 'video') return null;
   return (
-    <View
-      style={{
-        position: 'absolute',
-        top: 10,
-        left: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        backgroundColor: '#191F28B3',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 14,
-      }}
-    >
-      <Text style={{ color: 'white', fontSize: 12, fontWeight: '800' }}>
-        ▶ {formatDuration(m.durationMs) || '영상'}
-      </Text>
+    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ alignItems: 'center', backgroundColor: '#191F28B3', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 22 }}>
+        <Text style={{ color: 'white', fontSize: 18, fontWeight: '800' }}>▶</Text>
+        {!!formatDuration(m.durationMs) && (
+          <Text style={{ color: 'white', fontSize: 12, fontWeight: '800', marginTop: 2 }}>{formatDuration(m.durationMs)}</Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -87,8 +81,11 @@ export function Records({
   avatars = {},
   toolbar,
   recordScope,
+  emptyText = '아직 기록이 없어요.',
 }: {
   items: Media[];
+  /** Shown when there is nothing to list. */
+  emptyText?: string;
   recordScope?: { scheduleId: string; query: Record<string, string> };
   context?: 'shared' | 'mine';
   allowSave?: boolean;
@@ -104,6 +101,11 @@ export function Records({
     [authorMenu, setAuthorMenu] = useState<AuthorGroup | null>(null);
   const own = currentSession()?.userId;
   const batchAction = useAction();
+  // Saving starts at once on this screen; a finished selection download ends selection mode.
+  const saver = usePhoneSave(() => {
+    setMode(false);
+    setSelected([]);
+  });
   const byAuthor = !!groups?.length;
   async function saveBatch(example: Media) {
     await batchAction.run(async () => {
@@ -124,7 +126,7 @@ export function Records({
         throw new Error(
           '이 제출 묶음에 저장 가능한 완료 파일이 없습니다. 현재 권한과 파일 상태를 확인해 주세요.',
         );
-      router.push({ pathname: '/save', params: { ids: ids.slice(0, 120).join(',') } });
+      void saver.start(ids.slice(0, 120));
     });
   }
   const selected = selection.filter((id) => items.some((m) => m.id === id));
@@ -197,9 +199,9 @@ export function Records({
         ) : (
           <RecordImage m={m} context={context} style={{ aspectRatio: 4 / 3 }} />
         )}
-        <VideoBadge m={m} />
+        <VideoBadge m={m} bottom={56} />
         {mode && (
-          <View style={{ position: 'absolute', top: 12, right: 12 }}>
+          <View style={{ position: 'absolute', top: 12, left: 12 }}>
             <CheckCircle checked={on} size={30} />
           </View>
         )}
@@ -402,7 +404,7 @@ export function Records({
         {batchAction.errorView}
         {allowSave && (
           <Button
-            disabled={batchAction.busy || !authorSaveCount}
+            disabled={batchAction.busy || saver.busy || !authorSaveCount}
             onPress={() => batchAction.run(async () => {
               const ids = recordScope ? await authorPhotoIds(authorMenu!.authorUserId, async (cursor) => {
                 const query = new URLSearchParams(recordScope.query);
@@ -411,7 +413,7 @@ export function Records({
               }) : [...new Set(authorMedia.map((m) => m.id))];
               if (!ids.length) throw new Error('지금 저장할 수 있는 사진·동영상이 없어요.');
               setAuthorMenu(null);
-              router.push({ pathname: '/save', params: { ids: ids.join(',') } });
+              void saver.start(ids);
             })}
           >
             {authorSaveCount ? `사진 다운받기 · ${authorSaveCount}개` : '받을 수 있는 사진·동영상이 없어요'}
@@ -467,12 +469,13 @@ export function Records({
               {allowSave ? (
                 <Button
                   disabled={
+                    saver.busy ||
                     !selected.length ||
                     !selected.every((id) => items.find((m) => m.id === id)?.accessState === 'available')
                   }
-                  onPress={() => router.push({ pathname: '/save', params: { ids: selected.join(',') } })}
+                  onPress={() => void saver.start(selected)}
                 >
-                  {selected.length ? `${selected.length}개 다운받기` : '다운받을 기록을 선택해 주세요'}
+                  {selected.length ? `${selected.length}개 다운받기` : '사진을 선택하세요'}
                 </Button>
               ) : (
                 <P>{selected.length}개 선택</P>
@@ -481,7 +484,8 @@ export function Records({
           </ScreenFooter>
         </>
       )}
-      {!items.length && <P>아직 기록이 없어요.</P>}
+      {saver.view}
+      {!items.length && <Text style={{ fontSize: 14, lineHeight: 22, color: colors.muted, textAlign: 'center', marginVertical: 24 }}>{emptyText}</Text>}
     </>
   );
 }

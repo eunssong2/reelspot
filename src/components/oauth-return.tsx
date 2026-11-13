@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { completePendingSignIn, pendingBrowserLogin } from '../lib/social';
+import { claimLoginEntry, completePendingSignIn, pendingBrowserLogin } from '../lib/social';
 import { useInitialize } from '../lib/effects';
 import { Screen, P, Button, useAction } from './ui';
 import { NetworkError } from '../lib/api-errors';
@@ -22,7 +22,11 @@ export function OAuthReturn({ provider }: { provider: 'kakao' | 'google' }) {
         return;
       }
       const result = await completePendingSignIn(state, provider);
-      router.replace(result.onboardingRequired ? '/onboarding' : (await AsyncStorage.getItem('atp.pending-invite')) ? '/invite' : '/');
+      const target = result.onboardingRequired ? '/onboarding' : (await AsyncStorage.getItem('atp.pending-invite')) ? '/invite' : '/';
+      if (!claimLoginEntry(result)) return;
+      // Leave no login screen underneath: back from the next screen must not show it again.
+      if (router.canDismiss()) router.dismissAll();
+      router.replace(target);
     } catch (error) {
       setMessage('');
       const pending = await pendingBrowserLogin();

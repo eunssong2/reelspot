@@ -7,6 +7,7 @@ import { api, ApiError, getGroup, awaitOperation } from '../../lib/api';
 import { todayInSeoul } from '../../lib/preferences';
 import { loadGroupDays } from '../../lib/group-days';
 import { validDate } from '../../lib/validation';
+import { retentionNotice } from '../../lib/retention';
 import { dayLabel, groupDays, periodLabel, scheduleDayList, shortDate, weekday } from '../../lib/day-labels';
 import { useAccount } from '../../lib/state';
 import { UploadProgress } from '../../components/upload-progress';
@@ -165,7 +166,7 @@ export default function Schedule() {
       : (group?.name ?? '');
   const subtitle =
     tab === 'records'
-      ? `${detail?.schedule.title ?? ''}${visitDate ? ` · ${shortDate(visitDate).replace(/^0/, '')} ${weekday(visitDate)}` : ''}`
+      ? `${detail?.schedule.title ?? ''}${visitDate ? ` · ${shortDate(visitDate)} ${weekday(visitDate)}` : ''}`
       : activeTabs.length
         ? periodLabel(activeTabs[0].date, activeTabs[activeTabs.length - 1].date)
         : undefined;
@@ -276,6 +277,13 @@ export default function Schedule() {
       <TimeEditModal visible={!!timeVisit} placeName={plan?.visits.find((v: any) => v.id === timeVisit)?.name ?? ''}
         value={plan?.visits.find((v: any) => v.id === timeVisit)?.plannedTime ?? undefined}
         busy={timeAction.busy} error={timeAction.error} latest={timeLatest} onClose={() => { setTimeVisit(''); timeAction.clear(); }}
+        onEditPlace={dayActive ? () => {
+          // A time that was not confirmed is not saved; the edit screen reads the server's values.
+          const visit = timeVisit;
+          setTimeVisit('');
+          timeAction.clear();
+          router.push({ pathname: '/places', params: { id, groupId: detail.schedule.groupId, startDate: detail.schedule.startDate, endDate: detail.schedule.endDate, visitDate: date, visitId: visit } });
+        } : undefined}
         onSave={(value) => timeAction.run(async () => {
           if (timeNeedsRefresh.current) {
             await refreshTimePlan();
@@ -389,6 +397,14 @@ export default function Schedule() {
       ) : (
         <>
           <UploadProgress unassigned={unassigned} scheduleId={id} visitId={visitId} recordDate={recordDate} onComplete={() => { void a.run(() => load()); }} />
+          {/* F21: in-app notice 7 days before, the day before and on the last retention day. */}
+          {detail?.retention.fixed && !!retentionNotice(detail.retention.lastDate, todayInSeoul()) && (
+            <View accessibilityRole="alert" style={{ backgroundColor: colors.sage, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10 }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#E5534B' }}>
+                ⏱ {retentionNotice(detail.retention.lastDate, todayInSeoul())} · {detail.retention.lastDate.replaceAll('-', '.')}까지
+              </Text>
+            </View>
+          )}
           {dayActive && (
             <Button tone="outline" onPress={() => setAdding(true)}>
               ＋ 사진·동영상 올리기
@@ -461,6 +477,7 @@ export default function Schedule() {
               groups={view === 'by_author' ? groups : undefined}
               avatars={avatars}
               toolbar={{ view, onView: setView, order, onOrder: setOrder }}
+              emptyText={visitId ? '아직 이곳에 남긴 사진·동영상이 없어요.\n스팟원이 올리면 여기에 모여요.' : undefined}
             />
           </View>
           {next && (

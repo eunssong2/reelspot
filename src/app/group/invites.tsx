@@ -68,7 +68,7 @@ export default function Invites() {
     });
   }
   const revoke = (item: any) =>
-    confirm('이 초대를 취소할까요?', `${item.code}\n이 링크와 코드로는 더 이상 참여할 수 없어요. 이미 참여한 사람은 그대로예요.`, () =>
+    confirm('이 초대를 취소할까요?', '이 링크와 코드로는 더 이상 참여할 수 없어요. 이미 참여한 사람은 그대로예요.', () =>
       a.run(async () => {
         try { await api(`/invites/${item.id}/revocation`, { expectedVersion: item.version }); }
         catch (error) {
@@ -78,6 +78,7 @@ export default function Invites() {
         await load();
         toast('초대를 취소했어요');
       }),
+      { confirm: '초대 취소', cancel: '돌아가기', subtitle: item.code },
     );
   const owner = group?.ownerUserId === session?.userId;
   const timedItems = items.map((x) => ({ ...x, state: x.state === 'active' && Date.parse(x.expiresAt) <= now ? 'expired' : x.state }));

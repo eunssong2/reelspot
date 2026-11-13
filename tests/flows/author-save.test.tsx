@@ -6,6 +6,9 @@ import { router } from './router';
 import { Records } from '../../src/components/records';
 vi.mock('../../src/components/records', async (original) => await original());
 vi.mock('../../src/components/profile-ui', () => ({ Avatar: () => null }));
+// QA-04: saving starts on the current screen instead of opening a save page.
+const { startSave } = vi.hoisted(() => ({ startSave: vi.fn() }));
+vi.mock('../../src/components/phone-save', () => ({ usePhoneSave: () => ({ start: startSave, view: null, busy: false }) }));
 const media = (id: string, kind: string, accessState = 'available', authorUserId = 'author') =>
   ({ id, kind, accessState, authorUserId, displayName: '친구', version: 1, scheduleId: 'schedule' }) as any;
 const text = (node: any): string => typeof node === 'string' ? node : (node.children ?? []).map(text).join('');
@@ -22,7 +25,7 @@ test('selection survives record refresh, supports clear-all, and ends on view ch
     await press('선택'); await press('전체 선택');
     await act(async () => tree.update(<Records items={[...items].reverse()} toolbar={toolbar} />));
     expect(JSON.stringify(tree.toJSON())).toContain('2개 다운받기');
-    await press('전체 해제'); expect(JSON.stringify(tree.toJSON())).toContain('다운받을 기록을 선택해 주세요');
+    await press('전체 해제'); expect(JSON.stringify(tree.toJSON())).toContain('사진을 선택하세요');
     await press('전체 선택'); await press('사람별 보기');
     expect(JSON.stringify(tree.toJSON())).not.toContain('2개 다운받기');
     expect(toolbar.onView).toHaveBeenCalledWith('by_author');
@@ -47,7 +50,8 @@ for (const scoped of [false, true]) {
         expect(save.props.disabled).toBe(false);
         expect(text(save)).toBe(`사진 다운받기 · ${available.length}개`);
         await act(async () => save.props.onPress());
-        expect(router.push).toHaveBeenCalledWith({ pathname: '/save', params: { ids: available.map((m) => m.id).join(',') } });
+        expect(startSave).toHaveBeenCalledWith(available.map((m) => m.id));
+        expect(router.push).not.toHaveBeenCalled();
         if (scoped) {
           expect(fixtures.api).toHaveBeenCalledTimes(2);
           expect(fixtures.api.mock.calls[1][0]).toContain('recordDate=2026-12-02');

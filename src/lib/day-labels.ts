@@ -104,10 +104,9 @@ export function formatDuration(ms: number | null | undefined) {
   const total = Math.max(0, Math.round(ms / 1000));
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
-/** "D-61", "D-DAY", "진행 중", "지난 일정" relative to `today` (YYYY-MM-DD). */
+/** "D-61", "진행 중" (from the first day on), "지난 일정" relative to `today` (YYYY-MM-DD). */
 export function dDay(start: string, end: string, today: string) {
   if (today < start) return `D-${Math.round((Date.parse(start) - Date.parse(today)) / 86400000)}`;
-  if (today === start) return 'D-DAY';
   if (!end || today <= end) return '진행 중';
   return '지난 일정';
 }

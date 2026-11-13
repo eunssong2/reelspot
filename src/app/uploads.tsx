@@ -5,7 +5,7 @@ import * as FS from 'expo-file-system/legacy';
 import { router } from 'expo-router';
 import { LegacyDraftLink } from '../components/legacy-draft-link';
 import { api, awaitOperation, getGroup, ApiError, currentSession } from '../lib/api';
-import { queue, resumeTask } from '../lib/uploads';
+import { forgetTasks, isFreshBatch, queue, resumeTask } from '../lib/uploads';
 import { Transfer } from '../../modules/atp-transfer';
 import { Screen, Button, Card, H, P, Badge, useAction, confirm } from '../components/ui';
 export default function Uploads() {
@@ -44,7 +44,12 @@ export default function Uploads() {
     // Cover photos still need an explicit apply step, so keep them above record uploads,
     // newest first (the queue keeps enqueue order).
     const photo = (t: any) => t.coverGroupId || t.avatarUserId;
-    setTasks([...all.filter(photo).reverse(), ...all.filter((t) => !photo(t))]);
+    // Published records leave this list: it shows what still needs attention, not history.
+    // A submission made in this app session stays until its records screen has announced it.
+    const history = all.filter((t) => !photo(t) && t.state === 'complete' && !(t.file.batchId && isFreshBatch(t.file.batchId)));
+    await forgetTasks(history.map((t) => t.id));
+    const shown = all.filter((t) => !history.includes(t));
+    setTasks([...shown.filter(photo).reverse(), ...shown.filter((t) => !photo(t))]);
     setLoaded(true);
     setRefreshError(
       failures.length
@@ -70,13 +75,15 @@ export default function Uploads() {
     return () => clearInterval(id);
   }, []);
   return (
-    <Screen title="파일 전송 상태" subtitle="전송이 끝나면 파일 확인 후 기록에 표시됩니다.">
+    <Screen title="파일 전송 상태" subtitle="올리는 중이거나 확인이 필요한 파일만 보여 드려요.">
       <LegacyDraftLink />
       <H>
         {!loaded
           ? '전송 상태를 확인하고 있어요'
-          : tasks.length && tasks.every((t) => t.state === 'complete')
-            ? '기록을 모두 올렸어요'
+          : !tasks.length
+            ? '모두 정리됐어요'
+            : tasks.every((t) => t.state === 'complete')
+              ? '기록을 모두 올렸어요'
             : tasks.some((t) => ['queued', 'uploading', 'verifying'].includes(t.state))
               ? '순간을 모으는 중이에요'
               : '파일별 결과를 확인해 주세요'}
@@ -219,7 +226,7 @@ export default function Uploads() {
             )}
         </Card>
       ))}
-      {loaded && !refreshError && !tasks.length && <P>진행 중인 전송이 없습니다.</P>}
+      {loaded && !refreshError && !tasks.length && <P>올리는 중이거나 확인이 필요한 파일이 없어요.</P>}
       <Button secondary disabled={a.busy} onPress={() => a.run(refresh)}>
         상태 새로고침
       </Button>

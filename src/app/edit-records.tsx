@@ -140,7 +140,8 @@ export default function Edit() {
       <Button secondary onPress={() => setSelected(targets.slice(0, 120).map((m) => m.id))}>
         불러온 본인 기록 선택 · 최대 120개
       </Button>
-      {[...new Set(targets.map((m) => m.submissionId))].map((submissionId) => (
+      {/* One button per upload batch, told apart by order and size; pointless with a single batch. */}
+      {[...new Set(targets.map((m) => m.submissionId))].filter((_, __, all) => all.length > 1).map((submissionId, index) => (
         <Button
           key={submissionId}
           secondary
@@ -153,7 +154,7 @@ export default function Edit() {
             )
           }
         >
-          같은 제출 묶음 선택
+          {index + 1}번째 묶음 선택 · {targets.filter((m) => m.submissionId === submissionId).length}개
         </Button>
       ))}
       <H>내 기록 {selected.length}개 수정</H>

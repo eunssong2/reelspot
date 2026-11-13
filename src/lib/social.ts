@@ -6,6 +6,14 @@ import { ApiError } from './api-errors';
 import { api, setSession } from './api';
 import { requireHttps } from './https';
 export class LoginCancelled extends Error {}
+let enteredSession = '';
+/** True once per sign-in: the browser flow and the deep-link screen both finish the same login. */
+export function claimLoginEntry(login: { session?: { accessToken?: string } }) {
+  const token = login.session?.accessToken ?? '';
+  if (token && token === enteredSession) return false;
+  enteredSession = token;
+  return true;
+}
 type Provider = 'google' | 'kakao';
 type PendingLogin = {
   provider: Provider; state: string; verifier: string; expiresAt: number;

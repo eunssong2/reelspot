@@ -3,11 +3,12 @@ import { useFocusLoad } from '../../lib/effects';
 import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { inputText } from '../../lib/validation';
-import { Alert, View, Text, Pressable, Image } from 'react-native';
+import { View, Text, Pressable, Image } from 'react-native';
 import { shareGroupInvite } from '../../lib/invite-share';
 import * as Clipboard from 'expo-clipboard';
 import { api, awaitOperation, getGroup, coverSource } from '../../lib/api';
 import { useAccount } from '../../lib/state';
+import { useAppToast } from '../../components/toast-provider';
 import {
   Screen,
   Field,
@@ -28,19 +29,18 @@ export default function Manage() {
     { session } = useAccount(),
     [group, setGroup] = useState<any>(null),
     [members, setMembers] = useState<any[]>([]),
-    [blocks, setBlocks] = useState<any[]>([]),
     [name, setName] = useState(''),
     [latestName, setLatestName] = useState<string | null>(null);
   const [selected, setSelected] = useState(''),
     [menu, setMenu] = useState(false);
   const a = useAction();
+  const toast = useAppToast();
   async function refresh() {
     const g = await getGroup(id);
     setGroup(g);
     setName(g.name);
     const m = await api(`/groups/${id}/members`);
     setMembers(m.members);
-    setBlocks(m.reentryBlocks);
   }
   useFocusLoad(() => {
     a.run(refresh);
@@ -68,9 +68,7 @@ export default function Manage() {
           ? '모임 정보 변경'
           : mode === 'leave'
             ? '모임 나가기와 종료'
-            : mode === 'access'
-              ? '참여 관리'
-              : (group?.name ?? '함께하는 친구')
+            : (group?.name ?? '함께하는 친구')
       }
       subtitle={mode === 'members' ? undefined : group?.name}
       headerRight={
@@ -91,15 +89,6 @@ export default function Manage() {
             onPress={() => {
               setMenu(false);
               router.push(`/group/manage?id=${id}&mode=info`);
-            }}
-          />
-        )}
-        {owner && (
-          <MenuRow
-            label="참여 관리"
-            onPress={() => {
-              setMenu(false);
-              router.push(`/group/manage?id=${id}&mode=access`);
             }}
           />
         )}
@@ -198,25 +187,25 @@ export default function Manage() {
                     <Button
                       tone="danger"
                       onPress={() =>
-                        Alert.alert(
+                        confirm(
                           '모임에서 내보낼까요?',
                           '내보낸 사람은 같은 초대로 다시 참여할 수 없어요.',
-                          [
-                            { text: '취소', style: 'cancel' },
-                            {
-                              text: '내보내기',
-                              style: 'destructive',
-                              onPress: () =>
-                                a.run(async () => {
-                                  setSelected('');
-                                  await api(`/groups/${id}/member-removals`, {
-                                    targetMembershipId: m.id,
-                                    expectedVersion: group.version,
-                                  });
-                                  await refresh();
-                                }),
-                            },
-                          ],
+                          () =>
+                            a.run(async () => {
+                              setSelected('');
+                              try {
+                                await api(`/groups/${id}/member-removals`, {
+                                  targetMembershipId: m.id,
+                                  expectedVersion: group.version,
+                                });
+                              } catch (e) {
+                                await refresh().catch(() => {});
+                                throw new Error(`내보내지 못했어요. 잠시 후 다시 시도해 주세요${(e as any)?.requestId ? `\n문의 번호: ${(e as any).requestId}` : ''}`);
+                              }
+                              toast(`${m.displayName}님을 내보냈어요`);
+                              await refresh();
+                            }),
+                          { confirm: '내보내기', cancel: '취소', subtitle: m.displayName },
                         )
                       }
                     >
@@ -225,7 +214,7 @@ export default function Manage() {
                     <Button
                       secondary
                       onPress={() =>
-                        confirm('방장을 이전할까요?', `${m.displayName}님이 즉시 새 방장이 됩니다.`, () =>
+                        confirm('방장을 넘길까요?', `${m.displayName}님이 바로 새 방장이 돼요.`, () =>
                           a.run(async () => {
                             setSelected('');
                             await api(`/groups/${id}/owner-transfers`, {
@@ -234,10 +223,11 @@ export default function Manage() {
                             });
                             await refresh();
                           }),
+                          { confirm: '방장 넘기기', cancel: '취소', subtitle: m.displayName },
                         )
                       }
                     >
-                      방장 이전
+                      방장 넘기기
                     </Button>
                   </>
                 )}
@@ -311,36 +301,6 @@ export default function Manage() {
         >
           모임 대표 사진 신고
         </Button>
-      )}
-      {mode === 'access' && owner && (
-        <>
-          <H>재참여 차단 목록</H>
-          {!blocks.length && (
-            <Info>
-              재참여가 차단된 사람이 없습니다. 역할 변경은 친구 목록에서 해당 사람을 선택해 주세요.
-            </Info>
-          )}
-          {blocks.map((b) => (
-            <Card key={b.userId}>
-              <P>{b.displayName}</P>
-              <Button
-                secondary
-                onPress={() =>
-                  a.run(async () => {
-                    await api(
-                      `/groups/${id}/reentry-blocks/${b.userId}`,
-                      { expectedVersion: b.version },
-                      'DELETE',
-                    );
-                    await refresh();
-                  })
-                }
-              >
-                재참여 차단 해제
-              </Button>
-            </Card>
-          ))}
-        </>
       )}
       {mode === 'leave' && (
         <>

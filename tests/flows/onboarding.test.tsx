@@ -29,13 +29,14 @@ test.each([false, true])(
       await act(async () => removal.callback({ data: { action: { type: 'GO_BACK' } } }));
       expect(alerts.mock.calls[0].slice(0, 2)).toEqual(['가입을 그만둘까요?', '입력한 내용은 저장되지 않아요.']);
       const buttons = (alerts.mock.calls[0] as any)[2];
-      expect(buttons.map((b: any) => b.text)).toEqual(['계속하기', '그만두기']);
-      await act(async () => buttons[1].onPress());
+      // Section 5: the safe choice is last (and is what an outside tap means).
+      expect(buttons.map((b: any) => b.text)).toEqual(['그만두기', '계속하기']);
+      await act(async () => buttons[0].onPress());
       expect(fixtures.api.mock.calls.some(([path]) => path === '/auth/logout')).toBe(true);
       if (fail) {
         expect(removal.dispatch).not.toHaveBeenCalled();
         expect(fixtures.sessionChange).not.toHaveBeenCalled();
-        expect(alerts).toHaveBeenLastCalledWith('나갈 수 없어요', '연결을 확인해 주세요');
+        expect(alerts.mock.calls.at(-1)!.slice(0, 2)).toEqual(['나갈 수 없어요', '연결을 확인해 주세요']);
       } else {
         expect(fixtures.sessionChange).toHaveBeenCalledWith(null);
         expect(removal.dispatch).toHaveBeenCalledWith({ type: 'GO_BACK' });
@@ -58,9 +59,9 @@ test('onboarding header/hardware back handler confirms at the root and preserves
     const button = tree.root.findAll((n: any) => n.type === 'button' && n.children.join('') === '뒤로')[0];
     await act(async () => { expect(button.props.onPress()).toBe(true); });
     const buttons = (alerts.mock.calls[0] as any)[2];
-    expect(buttons[0].text).toBe('계속하기');
+    expect(buttons[1].text).toBe('계속하기');
     expect(fixtures.api.mock.calls.some(([path]) => path === '/auth/logout')).toBe(false);
-    await act(async () => buttons[1].onPress());
+    await act(async () => buttons[0].onPress());
     expect(router.replace).toHaveBeenCalledWith('/login');
     expect(fixtures.storage.get('atp.pending-invite')).toBe('pending-invite-fixture');
   } finally { if (tree) await act(async () => tree.unmount()); alerts.mockRestore(); }

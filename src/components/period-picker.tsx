@@ -3,8 +3,9 @@ import { Modal, Pressable, Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { monthDays, moveMonth, rangeTap } from '../lib/calendar';
 import { todayInSeoul } from '../lib/preferences';
-import { datesBetween, periodBadge } from '../lib/day-labels';
+import { datesBetween, periodBadge, periodLength } from '../lib/day-labels';
 import { Button, H, P, colors, s } from './ui';
+const addDays = (date: string, days: number) => new Date(Date.parse(date) + days * 86400000).toISOString().slice(0, 10);
 export type DayChip = { text: string; cancelled: boolean };
 export function MonthGrid({
   month,
@@ -14,6 +15,7 @@ export function MonthGrid({
   onSelect,
   labels,
   disabledDates,
+  fadedAfter,
 }: {
   month: string;
   selected?: string;
@@ -24,6 +26,8 @@ export function MonthGrid({
   labels?: Record<string, DayChip>;
   /** Dates that cannot be picked (held by another schedule); shown faded. */
   disabledDates?: Set<string>;
+  /** Dates after this one are shown faded but stay tappable so the limit can be explained. */
+  fadedAfter?: string;
 }) {
   const today = todayInSeoul();
   return (
@@ -44,7 +48,7 @@ export function MonthGrid({
       {monthDays(month).map((date) => {
         const chip = labels?.[date],
           off = disabledDates?.has(date) ?? false,
-          inside = date.startsWith(month);
+          inside = date.startsWith(month) && !(fadedAfter && date > fadedAfter);
         const chosen = date === selected || date === start || date === end,
           between = !!start && !!end && date > start && date < end;
         return (
@@ -272,10 +276,12 @@ export function PeriodPicker({
               <H>일정 기간</H>
               <P>
                 {range.end
-                  ? `${range.start.replaceAll('-', '.')}${range.end === range.start ? '' : ` ~ ${range.end.replaceAll('-', '.')}`} · ${periodBadge(range.start, range.end)}`
+                  ? range.end === range.start
+                    ? `${range.start.replaceAll('-', '.')} · 당일`
+                    : `${range.start.replaceAll('-', '.')} – ${range.end.replaceAll('-', '.')} · ${periodLength(range.start, range.end)}일`
                   : range.start
-                    ? '종료 날짜를 선택해 주세요. 당일이면 같은 날짜를 한 번 더 눌러요.'
-                    : '시작 날짜를 선택해 주세요.'}
+                    ? '종료 날짜를 눌러 주세요. 당일이면 같은 날을 한 번 더 눌러요.'
+                    : '시작 날짜를 눌러 주세요.'}
               </P>
               <MonthHeader spread month={month} onMove={(n) => setMonth(moveMonth(month, n))} />
               <MonthGrid
@@ -283,6 +289,7 @@ export function PeriodPicker({
                 start={range.start}
                 end={range.end}
                 disabledDates={disabledDates}
+                fadedAfter={range.start && !range.end ? addDays(range.start, 365) : undefined}
                 onSelect={(date) => {
                   const next = rangeTap(range.start, range.end, date);
                   if (

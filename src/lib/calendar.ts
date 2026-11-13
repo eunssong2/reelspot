@@ -16,6 +16,6 @@ export function inMonth(item: { startDate: string; endDate: string }, month: str
 export function rangeTap(start: string, end: string, date: string) {
   if (!start || end || date < start) return { start: date, end: '', error: '' };
   if ((Date.parse(date) - Date.parse(start)) / 86400000 > 365)
-    return { start, end, error: '일정은 시작일과 종료일을 포함해 366일까지 선택할 수 있어요.' };
+    return { start, end, error: '일정은 366일까지 만들 수 있어요' };
   return { start, end: date, error: '' };
 }

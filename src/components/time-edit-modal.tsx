@@ -17,6 +17,8 @@ interface Props {
   /** 저장. undefined 이면 "시간 미정"으로 되돌린 것 */
   onSave: (time: string | undefined) => void;
   onClose: () => void;
+  /** Shows "장소 수정" beside the place name. The caller closes the window and navigates. */
+  onEditPlace?: () => void;
 }
 
 const DEFAULT_TIME = '12:00';
@@ -147,7 +149,7 @@ function Wheel({
 export function TimeEditModal(props: Props) {
   return props.visible ? <TimePicker {...props} /> : null;
 }
-function TimePicker({ visible, placeName, value, onSave, onClose, busy, error, latest }: Props) {
+function TimePicker({ visible, placeName, value, onSave, onClose, busy, error, latest, onEditPlace }: Props) {
   const [time, setTime] = useState(parse(value));
 
   return (
@@ -155,9 +157,24 @@ function TimePicker({ visible, placeName, value, onSave, onClose, busy, error, l
       <View style={styles.backdrop}>
         <View style={styles.card} accessibilityViewIsModal>
           <Text style={styles.title}>방문 시간</Text>
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {placeName}
-          </Text>
+          {onEditPlace ? (
+            <Pressable
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel={`${placeName} 장소 수정`}
+              onPress={onEditPlace}
+              style={styles.placeChip}
+            >
+              <Text style={styles.placeChipName} numberOfLines={1}>
+                📍 {placeName}
+              </Text>
+              <Text style={styles.placeChipAction}>장소 수정 ›</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {placeName}
+            </Text>
+          )}
 
           <View style={styles.pickArea} pointerEvents={busy ? 'none' : 'auto'}>
             {/* 가운데 줄(선택 위치)을 표시하는 두 선 */}
@@ -195,6 +212,9 @@ const styles = StyleSheet.create({
   card: { width: '100%', maxWidth: 360, backgroundColor: colors.bg, borderRadius: radius.card, padding: 22, gap: 12 },
   title: { fontSize: 17, fontWeight: '900', color: colors.text },
   subtitle: { fontSize: 13, color: colors.textSub, marginTop: -6 },
+  placeChip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, backgroundColor: colors.surface, borderRadius: 14, paddingHorizontal: 12, minHeight: 48 },
+  placeChipName: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text },
+  placeChipAction: { fontSize: 13, fontWeight: '800', color: colors.primary },
   pickArea: { height: ITEM * VISIBLE, justifyContent: 'center' },
   band: {
     position: 'absolute',

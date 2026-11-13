@@ -153,7 +153,7 @@ export function EditableAvatar({
       onPress={onPress}
       style={({ pressed }) => ({ opacity: pressed || disabled ? 0.7 : 1 })}
     >
-      <Avatar name={name} size={size} userId={userId} avatarVersion={avatarVersion} />
+      <Avatar initial name={name} size={size} userId={userId} avatarVersion={avatarVersion} />
       <View
         style={{
           position: 'absolute',

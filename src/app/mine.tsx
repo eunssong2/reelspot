@@ -3,6 +3,9 @@ import React, { useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { api } from '../lib/api';
+import { useAccount } from '../lib/state';
+import { retentionNotice } from '../lib/retention';
+import { todayInSeoul } from '../lib/preferences';
 import { Records } from '../components/records';
 import { Screen, Button, Card, H, P, useAction, Chip } from '../components/ui';
 export default function Mine() {
@@ -14,6 +17,8 @@ export default function Mine() {
     [order, setOrder] = useState('newest');
   const generation = useRef(0);
   const a = useAction();
+  const { session, profile } = useAccount();
+  const today = todayInSeoul();
   async function load(cursor?: string) {
     const request = ++generation.current;
     const q = new URLSearchParams({ order });
@@ -73,8 +78,12 @@ export default function Mine() {
             {i.membershipState === 'active' ? '참여 중' : '참여 종료'} · {i.media.recordDate} ·{' '}
             {i.media.retentionLastDate}까지
           </P>
+          {!!i.media.retentionLastDate && i.media.accessState === 'available' && !!retentionNotice(i.media.retentionLastDate, today) && (
+            <P>⏱ {retentionNotice(i.media.retentionLastDate, today)}</P>
+          )}
           <Records
-            items={[i.media]}
+            items={[{ ...i.media, displayName: i.media.displayName ?? profile?.displayName }]}
+            avatars={session ? { [session.userId]: profile?.avatarVersion ?? null } : {}}
             context="mine"
             allowSave={
               i.membershipState === 'active' &&

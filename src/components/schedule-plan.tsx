@@ -113,7 +113,8 @@ export function DayTimeline({
       )}
       {!visits.length && (
         <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 20, marginVertical: 8 }}>
-          <Text style={{ color: colors.muted, fontSize: 13 }}>가고 싶은 곳을 담아 하루를 채워보세요.</Text>
+          {/* A cancelled or expired day is read-only: do not invite the user to add places. */}
+          <Text style={{ color: colors.muted, fontSize: 13 }}>{canAdd ? '가고 싶은 곳을 담아 하루를 채워보세요.' : '이 날에 담은 장소가 없어요.'}</Text>
         </View>
       )}
       {visits.map((v: any, i: number) => {

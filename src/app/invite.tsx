@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text, TextInput, View } from 'react-native';
-import { api, API } from '../lib/api';
+import { api, API, ApiError } from '../lib/api';
 import { inviteCodeHint, parseInviteInput } from '../lib/invite-input';
 import { dDay } from '../lib/day-labels';
 import { todayInSeoul } from '../lib/preferences';
@@ -28,6 +28,30 @@ export default function Invite() {
     router.canGoBack() ? router.back() : router.replace(session ? '/' : '/login');
     return true;
   };
+  /** F05 거절 문구. Final refusals only offer 닫기; capacity, limits and network can be retried. */
+  function refusal(e: unknown): never {
+    if (e instanceof ApiError) {
+      const text = (
+        {
+          INVITE_INVALID: '초대 코드가 맞지 않아요. 다시 확인해 주세요.',
+          NOT_FOUND: '초대 코드가 맞지 않아요. 다시 확인해 주세요.',
+          INVITE_EXPIRED: '기한(7일)이 지난 초대예요. 초대한 사람에게 새 초대를 받아 주세요.',
+          INVITE_EXHAUSTED: '확인 횟수(50회)를 모두 쓴 초대예요. 새 초대를 받아 주세요.',
+          INVITE_REVOKED: '취소된 초대예요. 새 초대를 받아 주세요.',
+          GROUP_CLOSED: '종료된 모임이에요.',
+          CAPACITY_FULL: '모임 정원(15명)이 다 찼어요.',
+          REENTRY_BLOCKED: '이 모임에는 다시 참여할 수 없어요.',
+          GROUP_LIMIT: '참여 중인 모임이 100개라 더 참여할 수 없어요.',
+        } as Record<string, string>
+      )[e.code];
+      if (text) {
+        e.message = text;
+        e.requestId = undefined;
+      } else if (!['ACCESS_REVOKED', 'CONSENT_REQUIRED', 'VALIDATION_ERROR', 'AUTH_EXPIRED', 'RATE_LIMITED'].includes(e.code))
+        e.message = '초대를 확인하지 못했어요. 다시 시도해 주세요.';
+    }
+    throw e;
+  }
   async function check(input = token, preserveToken = opaqueToken) {
     const request = ++generation.current;
     setToken(input);
@@ -36,7 +60,7 @@ export default function Invite() {
     await a.run(async () => {
       await AsyncStorage.removeItem('atp.pending-invite');
       const value = parseInviteInput(input, API, preserveToken);
-      const result = await api(`/invite-preview?tokenOrCode=${encodeURIComponent(value)}`);
+      const result = await api(`/invite-preview?tokenOrCode=${encodeURIComponent(value)}`).catch(refusal);
       if (request !== generation.current) return;
       setToken(value);
       setOpaqueToken(preserveToken || !isInviteCode(value));
@@ -69,14 +93,14 @@ export default function Invite() {
       return;
     }
     await a.run(async () => {
-      const result = await api('/invitations/join', { tokenOrCode: token });
+      const result = await api('/invitations/join', { tokenOrCode: token }).catch(refusal);
       await AsyncStorage.removeItem('atp.pending-invite');
       toast(result.alreadyMember ? '이미 참여 중인 모임이에요' : `'${preview?.groupName ?? preview?.group?.name ?? '모임'}'에 참여했어요`);
       router.replace(`/group/${result.groupId}`);
     });
   }
   const hint = inviteCodeHint(opaqueToken ? '' : token),
-    blocked = ['INVITE_REVOKED', 'INVITE_EXPIRED', 'INVITE_EXHAUSTED', 'INVITE_INVALID', 'GROUP_CLOSED', 'CAPACITY_FULL', 'REENTRY_BLOCKED'].includes(a.errorCode),
+    blocked = ['INVITE_REVOKED', 'INVITE_EXPIRED', 'INVITE_EXHAUSTED', 'INVITE_INVALID', 'GROUP_CLOSED', 'REENTRY_BLOCKED'].includes(a.errorCode),
     x = preview?.scheduleSummary;
   const chip = (label: string, on: boolean) => (
     <Text
@@ -146,7 +170,7 @@ export default function Invite() {
         <Text style={{ fontSize: 18 }}>🔑</Text>
         <TextInput
           accessibilityLabel="초대 코드 또는 링크"
-          placeholder="받은 코드 8자리"
+          placeholder="8자리 코드"
           placeholderTextColor={colors.muted}
           value={opaqueToken && token.length > 16 ? '초대 링크' : token}
           editable={!a.busy}

@@ -1,3 +1,6 @@
+// Field counts characters with Intl.Segmenter, which Hermes lacks. Load the polyfill here so a
+// screen that shows a Field first (without the validation helpers) cannot crash.
+import '@formatjs/intl-segmenter/polyfill.js';
 import React, { useState, useRef, useEffect, useContext, createContext, useCallback } from 'react';
 import {
   ActivityIndicator,
@@ -5,7 +8,6 @@ import {
   Modal,
   Platform,
   KeyboardAvoidingView,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,6 +21,7 @@ import {
 import { router, usePathname, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { currentSession, PendingOperationError } from '../lib/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { dialog } from './confirm-host';
 const FooterContext = createContext<((content: React.ReactNode) => void) | null>(null);
 export function ScreenFooter({ children }: { children: React.ReactNode }) {
   const setFooter = useContext(FooterContext);
@@ -628,11 +631,22 @@ export function resetTo(path: '/' | '/mine' | '/login') {
   if (router.canDismiss()) router.dismissAll();
   router.replace(path);
 }
-export function confirm(title: string, message: string, action: () => void) {
-  Alert.alert(title, message, [
-    { text: '취소', style: 'cancel' },
-    { text: '확인', style: 'destructive', onPress: action },
-  ]);
+/** Bottom-card confirmation. The safe choice is last and is what an outside tap means. */
+export function confirm(
+  title: string,
+  message: string,
+  action: () => void,
+  wording: { confirm?: string; cancel?: string; subtitle?: string; danger?: boolean } = {},
+) {
+  dialog({
+    title,
+    subtitle: wording.subtitle,
+    body: message || undefined,
+    buttons: [
+      { label: wording.confirm ?? '확인', tone: wording.danger === false ? 'primary' : 'danger', onPress: action },
+      { label: wording.cancel ?? '취소', tone: 'plain' },
+    ],
+  });
 }
 export const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },

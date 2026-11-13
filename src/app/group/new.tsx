@@ -7,6 +7,9 @@ import { inputText, validPeriod } from '../../lib/validation';
 import { useDraft } from '../../lib/state';
 import { useFormExit } from '../../lib/unsaved';
 import { PeriodPicker } from '../../components/period-picker';
+import { retentionPassed } from '../../lib/retention';
+import { todayInSeoul } from '../../lib/preferences';
+import { Text } from 'react-native';
 import { Screen, Field, Button, Info, P, useAction } from '../../components/ui';
 export default function NewGroup() {
   const [v, set, clear, draft] = useDraft('group-new', {
@@ -24,7 +27,14 @@ export default function NewGroup() {
       !!v.name || !!v.title || !!v.startDate || !!v.endDate || pending,
       clear,
       pending,
+      { title: '만들기를 그만둘까요?', body: '입력한 내용은 저장되지 않아요.', cancel: '계속 작성', discard: '나가기' },
     );
+  const count = (text: string) => [...new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(text.normalize('NFC').trim())].length;
+  const notice = (text: string) => (
+    <Text accessibilityRole="alert" style={{ color: '#B8433F', fontSize: 13, marginTop: -16, marginBottom: 16 }}>
+      {text}
+    </Text>
+  );
   let valid = true;
   try {
     inputText(v.name, '모임 이름', 50);
@@ -96,6 +106,7 @@ export default function NewGroup() {
         editable={!a.busy && !pending}
         onChangeText={(t) => { set('name', t); set('requestKey', ''); }}
       />
+      {count(v.name) > 50 && notice('모임 이름은 50자까지 쓸 수 있어요')}
       <Field
         label="첫 일정 제목"
         required
@@ -106,6 +117,7 @@ export default function NewGroup() {
         editable={!a.busy && !pending}
         onChangeText={(t) => { set('title', t); set('requestKey', ''); }}
       />
+      {count(v.title) > 100 && notice('일정 제목은 100자까지 쓸 수 있어요')}
       <PeriodPicker
         start={v.startDate}
         end={v.endDate}
@@ -116,6 +128,7 @@ export default function NewGroup() {
           set('endDate', end);
         }}
       />
+      {retentionPassed(v.endDate, todayInSeoul()) && <P>이 기간은 보관 기한이 지나 사진·영상을 올릴 수 없어요.</P>}
       <Info icon="">
         ℹ️ 시간은 장소를 추가할 때 입력해요. 반복 설정은 없어요. 필요하면 일정을 더 추가해요.
         {'\n\n'}👥 한국 시간 기준 · 최대 15명 고정 · 정원 변경 없음

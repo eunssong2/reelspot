@@ -6,6 +6,8 @@ import { ActivityIndicator, Image, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useAccount } from '../lib/state';
 import { api, coverSource } from '../lib/api';
+import { daysUntil, noticeForDaysLeft } from '../lib/retention';
+import { todayInSeoul } from '../lib/preferences';
 import { Screen, Button, Card, H, P, TextButton, colors, useAction } from '../components/ui';
 export default function Home() {
   const { session, profile, ready } = useAccount(),
@@ -169,7 +171,7 @@ export default function Home() {
                 }}
               >
                 <Text style={{ flex: 1, fontSize: 12, fontWeight: '700', color: '#E5534B' }}>
-                  ⏱ 보관 안내 · 만료 {w.urgency === 'last_day' ? '하루' : '7일'} 전 기록이 있어요
+                  ⏱ {noticeForDaysLeft(w.daysLeft ?? daysUntil(w.lastDate, todayInSeoul())) || '보관 안내 · 만료 7일 전 기록이 있어요'}
                 </Text>
                 <TextButton
                   color="#E5534B"
@@ -177,6 +179,14 @@ export default function Home() {
                 >
                   확인
                 </TextButton>
+              </View>
+            ))}
+            {/* After expiry the card only states that records expired, and until when (30 days). */}
+            {g.retentionExpired?.map((w: any) => (
+              <View key={w.scheduleId} style={{ backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, marginTop: 12 }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: colors.sub }}>
+                  보관 기한이 지난 기록이 있어요 · {w.lastDate.replaceAll('-', '.')}까지 보관
+                </Text>
               </View>
             ))}
           </Card>

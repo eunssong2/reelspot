@@ -7,7 +7,9 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useFocusLoad } from '../../lib/effects';
 import { formatMoment } from '../../lib/preferences';
 import { API, currentSession, api } from '../../lib/api';
-import { Button, P, Sheet, useAction } from '../../components/ui';
+import { Button, P, Sheet, useAction, confirm } from '../../components/ui';
+import { usePhoneSave } from '../../components/phone-save';
+import { useAppToast } from '../../components/toast-provider';
 function Video({ uri }: { uri: string }) {
   const player = useVideoPlayer(
     {
@@ -153,7 +155,6 @@ export default function Record() {
   const {
     id,
     context = 'shared',
-    authorUserId,
     metadata,
     allowSave = 'true',
   } = useLocalSearchParams<{
@@ -167,7 +168,20 @@ export default function Record() {
   const focused = useIsFocused();
   const [actual, setActual] = useState<any>(null),
     [menu, setMenu] = useState(false),
-    a = useAction();
+    a = useAction(),
+    removal = useAction({ inlineRetry: false }),
+    saver = usePhoneSave(),
+    toast = useAppToast();
+  /** QA-05: delete only. The list and counts are read again when the previous screen regains focus. */
+  async function remove() {
+    await removal.run(async () => {
+      const r = await api('/media/deletions', { mediaIds: [id] });
+      // A failed delete must not look like success; the record stays as it is.
+      if (r.results?.some((x: any) => x.status === 'failed')) throw new Error('삭제하지 못했어요. 다시 시도해 주세요.');
+      toast('삭제했습니다.');
+      router.back();
+    });
+  }
   useFocusLoad(() => {
     let live = true;
     setActual(null);
@@ -229,23 +243,26 @@ export default function Record() {
         {!!info.retentionLastDate && <P>{info.retentionLastDate}까지 보관</P>}
         {allowSave === 'true' && actual?.canSave && (
           <Button
+            disabled={saver.busy}
             onPress={() => {
               setMenu(false);
-              router.push({ pathname: '/save', params: { ids: id } });
+              void saver.start([id]);
             }}
           >
             휴대폰에 저장
           </Button>
         )}
-        {actual?.canEdit && (!authorUserId || authorUserId === currentSession()?.userId) && (
+        {/* Own records only; the server checks the author again. Works after leaving the group too. */}
+        {!!actual && actual.media.authorUserId === currentSession()?.userId && (
           <Button
-            secondary
+            tone="danger"
+            disabled={removal.busy}
             onPress={() => {
               setMenu(false);
-              router.push({ pathname: '/edit-records', params: { ids: id, context } });
+              confirm('삭제하시겠습니까?', '휴대폰에 저장한 사진·동영상은 지워지지 않아요.', () => void remove(), { confirm: '예', cancel: '취소' });
             }}
           >
-            본인 기록 수정·삭제
+            삭제
           </Button>
         )}
         {actual?.media.authorUserId !== currentSession()?.userId && (
@@ -264,6 +281,12 @@ export default function Record() {
         )}
         {a.errorView}
       </Sheet>
+      {saver.view}
+      {!!removal.error && (
+        <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>
+          <Text accessibilityRole="alert" style={{ color: '#FFB4AE', fontSize: 14 }}>{removal.error}</Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

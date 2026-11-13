@@ -3,7 +3,7 @@ import { useInitialize } from '../lib/effects';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { LoginCancelled, signInWithProvider } from '../lib/social';
+import { LoginCancelled, claimLoginEntry, signInWithProvider } from '../lib/social';
 import { loginFailure } from '../lib/login-error';
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
@@ -53,13 +53,15 @@ export default function Login() {
           throw failure;
         } finally { setSigning(null); }
       }
-      router.replace(
-        r.onboardingRequired
-          ? '/onboarding'
-          : (await AsyncStorage.getItem('atp.pending-invite'))
-            ? '/invite'
-            : '/',
-      );
+      const target = r.onboardingRequired
+        ? '/onboarding'
+        : (await AsyncStorage.getItem('atp.pending-invite'))
+          ? '/invite'
+          : '/';
+      if (!claimLoginEntry(r)) return;
+      // Leave no login screen underneath: back from the next screen must not show it again.
+      if (router.canDismiss()) router.dismissAll();
+      router.replace(target);
     });
   }
   return (

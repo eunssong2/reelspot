@@ -10,14 +10,15 @@ import { useFormExit } from '../../lib/unsaved';
 import { PeriodPicker } from '../../components/period-picker';
 import { todayInSeoul } from '../../lib/preferences';
 import { datesBetween, shortDate } from '../../lib/day-labels';
-import { Screen, Field, Button, P, useAction } from '../../components/ui';
+import { Text, View } from 'react-native';
+import { Screen, Field, Button, P, useAction, colors } from '../../components/ui';
 export default function ScheduleForm() {
   const { id, groupId, date } = useLocalSearchParams<{ id?: string; groupId?: string; date?: string }>();
   if (id) return <Screen title="하루 일정 변경"><P>모임 달력에서 변경할 날짜를 선택해 주세요.</P><Button onPress={() => router.replace({ pathname: '/schedule/[id]', params: { id, ...(date ? { date } : {}) } })}>날짜별 장소 열기</Button></Screen>;
   return <CreateSchedule groupId={groupId} date={date} />;
 }
 function CreateSchedule({ groupId, date }: { groupId?: string; date?: string }) {
-  const { session } = useAccount();
+  const { session, profile } = useAccount();
   const toast = useAppToast();
   const [v, set, clear, draft] = useDraft(`schedule:${groupId ?? 'new'}`, { title: '', startDate: date ?? todayInSeoul(), endDate: date ?? todayInSeoul(), pending: '', pendingBody: '' });
   const a = useAction({ inlineRetry: false });
@@ -25,7 +26,12 @@ function CreateSchedule({ groupId, date }: { groupId?: string; date?: string }) 
   const [allowed, setAllowed] = useState(false);
   const [taken, setTaken] = useState<Awaited<ReturnType<typeof loadGroupDays>>>([]);
   const pending = v.pending === 'yes';
-  const leave = useFormExit(!!v.title || draft.hasDraft || pending, clear, pending);
+  const leave = useFormExit(!!v.title || draft.hasDraft || pending, clear, pending, {
+    title: '저장하지 않은 변경이 있어요',
+    cancel: '계속 편집',
+    discard: '변경 버리기',
+    save: { label: '저장', run: async () => { await save(); return true; } },
+  });
   useInitialize(() => {
     if (!session || !groupId || !draft.ready) return;
     void a.run(async () => {
@@ -59,12 +65,21 @@ function CreateSchedule({ groupId, date }: { groupId?: string; date?: string }) 
     });
   }
   return <Screen title="일정 추가" subtitle={groupName}>
-    <Field label="일정 제목" required limit={100} value={v.title} editable={allowed && !pending && !a.busy} onChangeText={(text) => set('title', text)} />
+    {!!groupName && (
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+        <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 13, fontWeight: '700', color: colors.accent, backgroundColor: colors.sage, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, overflow: 'hidden' }}>👥 {groupName}</Text>
+        {!!profile?.displayName && <Text numberOfLines={1} style={{ flexShrink: 1, fontSize: 13, color: colors.sub }}><Text style={{ color: colors.accent }}>● </Text>방장 {profile.displayName}</Text>}
+      </View>
+    )}
+    <Field label="일정 제목" required limit={100} placeholder="예: 북한산 둘레길" value={v.title} editable={allowed && !pending && !a.busy} onChangeText={(text) => set('title', text)} />
     <PeriodPicker start={v.startDate} end={v.endDate} disabled={!allowed || pending || a.busy} disabledDates={new Set(taken.map((d) => d.date))} onChange={(start, end) => { set('startDate', start); set('endDate', end); }} />
     {!!clashes.length && <P>이미 다른 일정이 있는 날짜가 들어 있어요. 하루에는 일정을 하나만 만들 수 있어요. {clashes.map((x) => shortDate(x.date)).join(', ')}</P>}
-    <P>시간은 각 장소에서 입력해요. 반복 설정은 없어요. 한국 시간 기준이에요.</P>
+    <View style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 16, gap: 12, marginTop: 6, marginBottom: 12 }}>
+      <Text style={{ color: colors.sub, fontSize: 13 }}>🕘　시간은 각 장소에서 입력해요 · 반복 설정 없음</Text>
+      <Text style={{ color: colors.sub, fontSize: 13 }}>🌏　한국 표준시(Asia/Seoul) 기준</Text>
+    </View>
     {pending && <P>저장 결과를 확인 중이에요. 같은 요청으로 결과를 다시 확인해 주세요.</P>}
-    <Button disabled={!allowed || !valid || a.busy || (!pending && clashes.length > 0)} onPress={save}>{pending ? '같은 요청 결과 확인' : '저장하기'}</Button>
+    <Button disabled={!allowed || !valid || a.busy || (!pending && clashes.length > 0)} onPress={save}>{pending ? '같은 요청 결과 확인' : '저장하기 ✓'}</Button>
     {a.errorView}
   </Screen>;
 }

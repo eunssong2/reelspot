@@ -26,3 +26,15 @@ export function validTime(value: string) {
   if (value && !/^([01]\d|2[0-3]):[0-5][0-9]$/.test(value)) throw new Error('예정 시각은 00:00~23:59 사이 1분 단위로 입력해 주세요.');
   return value || null;
 }
+
+const graphemes = (text: string) => [...segments.segment(text)].map((x) => x.segment);
+/**
+ * The field itself stops at 30 characters. A longer title saved elsewhere (Q15) stays as it
+ * is and can be shortened; text typed or pasted past the limit is cut at the end, and an
+ * insertion in the middle that would push other characters out is ignored.
+ */
+export function capTitle(previous: string, next: string, max = 30) {
+  const count = graphemes(next).length;
+  if (count <= max || count <= graphemes(previous).length) return next;
+  return next.startsWith(previous) || !previous ? graphemes(next).slice(0, Math.max(max, graphemes(previous).length)).join('') : previous;
+}

@@ -43,8 +43,8 @@ test('unseen month cannot reuse another month; cached empty month counts as load
   setup((path) => { if (fail) throw Error('503'); return path.includes('from=2026-11-30') ? { schedules: [] } : populated; });
   await mount(); fail = true; await press('다음 달');
   expect(output()).toContain('일정을 불러오지 못했어요'); expect(output()).not.toContain('보존할 일정'); expect(output()).not.toContain('최신 정보를');
-  fail = false; await press('다시 시도'); expect(output()).toContain('이 달에 등록된 일정이 없어요.');
-  fail = true; await refresh(); expect(output()).toContain('최신 정보를 불러오지 못했어요'); expect(output()).toContain('이 달에 등록된 일정이 없어요.');
+  fail = false; await press('다시 시도'); expect(output()).toContain('이 달에는 일정이 없어요');
+  fail = true; await refresh(); expect(output()).toContain('최신 정보를 불러오지 못했어요'); expect(output()).toContain('이 달에는 일정이 없어요');
   await press('이전 달'); expect(output()).toContain('보존할 일정'); expect(output()).toContain('최신 정보를 불러오지 못했어요');
 });
 test.each(['calendar', 'group', 'details'])('access loss in %s hides cached content and actions', async (which) => {
@@ -61,5 +61,5 @@ test('late errors from a previous month cannot replace the current month', async
   let reject!: (e: Error) => void;
   setup((p) => p.includes('from=2026-11-30') ? { schedules: [] } : new Promise((_, no) => { reject = no; }));
   await mount(); await press('다음 달'); await act(async () => reject(new ApiError('FORBIDDEN')));
-  expect(output()).toContain('이 달에 등록된 일정이 없어요.'); expect(output()).not.toContain('이 모임을 확인할 수 없어요.');
+  expect(output()).toContain('이 달에는 일정이 없어요'); expect(output()).not.toContain('이 모임을 확인할 수 없어요.');
 });

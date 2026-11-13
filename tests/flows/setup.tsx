@@ -28,7 +28,7 @@ vi.mock('expo-clipboard', () => ({ setStringAsync: async () => {} }));
 vi.mock('expo-file-system/legacy', () => ({ documentDirectory: 'file:private/', deleteAsync: vi.fn(async () => {}) }));
 vi.mock('../../modules/atp-transfer', () => ({ Transfer: { normalizeCapture: async (uri: string) => uri } }));
 vi.mock('../../src/lib/uploads', () => ({
-  queue: async () => ({}),
+  queue: async () => ({}), markFreshBatch: () => {}, isFreshBatch: () => false, takeFreshBatch: () => false, forgetTasks: async () => {}, resumeTask: async () => {},
   candidate: async (uri: string, name: string, mime: string, recordDate: string, visitId: string | null, selectionIndex: number) => ({ uri, name, mime, recordDate, visitId, selectionIndex, kind: mime.startsWith('video/') ? 'video' : 'photo', clientFileId: `file-${++fixtures.counter}`, fingerprint: uri }),
   submissionFile: (f: any, selectionIndex: number) => ({ ...f, selectionIndex }), enqueueTask: fixtures.queue,
 }));

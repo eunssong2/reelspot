@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { api, ApiError, awaitOperation, getGroup } from '../../lib/api';
 import { useInitialize } from '../../lib/effects';
@@ -225,13 +225,11 @@ export default function DayEdit() {
         {row('🗓', '일정 취소(기록 보존)',
           day?.status === 'cancelled' ? '이미 취소된 날이에요' : '기록은 보관 기한까지 남아요',
           () =>
-          Alert.alert(
+          confirm(
             '이 날 일정을 취소할까요?',
             '기록은 보관 기한까지 남아요. 취소하면 누구도 새 사진·영상을 올릴 수 없고 되돌릴 수 없어요.',
-            [
-              { text: '돌아가기', style: 'cancel' },
-              { text: '일정 취소하기', style: 'destructive', onPress: () => remove('cancellation') },
-            ],
+            () => void remove('cancellation'),
+            { confirm: '일정 취소하기', cancel: '돌아가기', subtitle: original ?? undefined },
           ),
           { danger: true, locked: day?.status === 'cancelled' },
         )}
@@ -241,9 +239,11 @@ export default function DayEdit() {
           '이 날 일정 삭제',
           places ? '장소가 담긴 날은 삭제할 수 없어요' : '장소가 없는 날만 삭제할 수 있어요',
           () =>
-            confirm('이 날 일정을 삭제할까요?', '이 날짜가 일정에서 빠지고 되돌릴 수 없어요.', () =>
-              remove('deletion'),
-            ),
+            confirm('이 날 일정을 삭제할까요?', '되돌릴 수 없어요.', () => void remove('deletion'), {
+              confirm: '삭제',
+              cancel: '돌아가기',
+              subtitle: original ?? undefined,
+            }),
           { locked: places > 0, allowCancelled: true },
         )}
       </View>

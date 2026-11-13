@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, test, expect, afterEach } from 'vitest';
+import { describe, test, expect, afterEach, vi } from 'vitest';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { fixtures } from './setup';
 import { AppState } from './native';
@@ -67,6 +67,35 @@ describe('actual upload sheet interactions (camera/storage/network mocked)', () 
     expect(JSON.stringify(tree.toJSON())).toContain('1개 업로드하기');
     expect(tree.root.findAll((n) => typeof n.type === 'string' && n.props.accessibilityLabel === '사진 삭제')).toHaveLength(0);
     expect(fixtures.api.mock.calls.some(([path]) => path.endsWith('/submissions'))).toBe(false);
+  });
+  // QA-07: a capture or pick that adds nothing must say so, not look like a button that did nothing.
+  test('a failed pick or an unusable capture is reported and keeps earlier candidates', async () => {
+    fixtures.api.mockImplementation(async (path) => {
+      if (path === '/schedules/schedule/media') return { items: [], nextCursor: null };
+      if (path.includes('/upload-limits?')) return { photos: 5, videos: 2 };
+      if (path === '/schedules/schedule') return detail();
+      throw Error(path);
+    });
+    fixtures.album.mockResolvedValueOnce({ canceled: false, assets: [{ uri: 'file:kept', fileName: 'kept.jpg', mimeType: 'image/jpeg' }] });
+    await mount(<UploadSheet {...uploadProps} />);
+    await press('사진·동영상 추가'); await press('🖼️ 사진 보관함에서 선택');
+    expect(JSON.stringify(tree.toJSON())).toContain('1개 업로드하기');
+    fixtures.album.mockRejectedValueOnce(new Error("Call to function 'ExponentImagePicker.launchImageLibraryAsync' has been rejected."));
+    await press('사진·동영상 추가'); await press('🎞️ 동영상 보관함에서 선택');
+    let output = JSON.stringify(tree.toJSON());
+    expect(output).toContain('불러오지 못했어요');
+    expect(output).not.toContain('ExponentImagePicker');
+    expect(output).toContain('1개 업로드하기');
+    // The camera returned a file, but it could not be prepared (normalizeCapture rejects).
+    const { Transfer } = await import('../../modules/atp-transfer');
+    const normalize = vi.spyOn(Transfer as any, 'normalizeCapture').mockRejectedValueOnce(new Error('codec'));
+    fixtures.camera.mockResolvedValueOnce({ canceled: false, assets: [{ uri: 'file:capture', fileName: 'capture.mp4', mimeType: 'video/mp4', type: 'video' }] });
+    await press('사진·동영상 추가'); await press('🎥 동영상 촬영');
+    output = JSON.stringify(tree.toJSON());
+    expect(output).toContain('촬영한 동영상을 담지 못했어요');
+    expect(output).toContain('1개 업로드하기');
+    expect(fixtures.api.mock.calls.some(([path]) => path.endsWith('/submissions'))).toBe(false);
+    normalize.mockRestore();
   });
   test('legacy mixed candidates are discoverable and recover only into their original scope', async () => {
     mockApi();

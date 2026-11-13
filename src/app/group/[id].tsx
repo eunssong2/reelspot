@@ -172,27 +172,32 @@ export default function Group() {
             opacity: pressed ? 0.72 : 1,
           })}
         >
-          <Text style={{ color: colors.accent, fontSize: 12 }}>●</Text>
-          <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>
-            {group.activeCount === 1 ? '혼자 기록 중 · 친구를 초대해 보세요' : `${group.activeCount}명 함께 기록 중`}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={{
-              flexShrink: 1,
-              fontSize: 12,
-              fontWeight: '700',
-              color: colors.accent,
-              backgroundColor: colors.sage,
-              paddingHorizontal: 9,
-              paddingVertical: 4,
-              borderRadius: 12,
-              overflow: 'hidden',
-            }}
-          >
-            방장{ownerMember ? ` ${ownerMember.displayName}` : ''}
-          </Text>
-          <View style={{ flex: 1 }} />
+          {/* Wraps onto a second line instead of squeezing the owner's name into an ellipsis. */}
+          <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8, rowGap: 6, paddingVertical: 10 }}>
+            <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>
+              <Text style={{ color: colors.accent, fontSize: 12 }}>●  </Text>
+              {group.activeCount === 1 ? '혼자 기록 중 · 친구를 초대해 보세요' : `${group.activeCount}명 함께 기록 중`}
+            </Text>
+            {[`방장${ownerMember ? ` ${ownerMember.displayName}` : ''}`, ...(state.loaded && !owner ? ['나는 참여자'] : [])].map((label) => (
+              <Text
+                key={label}
+                numberOfLines={1}
+                style={{
+                  flexShrink: 1,
+                  fontSize: 12,
+                  fontWeight: '700',
+                  color: colors.accent,
+                  backgroundColor: colors.sage,
+                  paddingHorizontal: 9,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                }}
+              >
+                {label}
+              </Text>
+            ))}
+          </View>
           <View style={{ flexDirection: 'row' }}>
             {members.slice(0, 2).map((m, i) => (
               <View key={m.id} style={{ marginLeft: i ? -6 : 0 }}>
@@ -259,7 +264,7 @@ export default function Group() {
             </View>
           ))}
       {state.loaded && !visible.length && (
-        <P>이 달에 등록된 일정이 없어요.</P>
+        <P>이 달에는 일정이 없어요</P>
       )}
 
     </Screen>

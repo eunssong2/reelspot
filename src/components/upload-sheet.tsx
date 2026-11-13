@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { API, api, ApiError, currentSession } from '../lib/api';
-import { candidate, enqueueTask, submissionFile, type Candidate } from '../lib/uploads';
+import { candidate, enqueueTask, markFreshBatch, submissionFile, type Candidate } from '../lib/uploads';
 import { remainingCandidates } from '../lib/upload-acceptance';
 import { useUploadDraft } from '../lib/upload-draft';
 import { uploadDraftKey, assertUploadScope } from '../lib/upload-scope';
@@ -70,7 +70,7 @@ function ScopedUploadSheet({
   async function pick(kind: 'photo' | 'video', camera = false) {
     await draft.whileInUse(() => a.run(async () => {
       const room = UPLOAD_SHEET_MAX - files.length;
-      if (room <= 0) throw new Error(`사진·동영상은 한 번에 ${UPLOAD_SHEET_MAX}개까지 올릴 수 있어요.`);
+      if (room <= 0) throw new Error(`사진과 동영상은 최대 ${UPLOAD_SHEET_MAX}개까지 올릴 수 있어요`);
       setChoosing(false);
       if (camera) {
         const d = await api(`/schedules/${scheduleId}`);
@@ -79,9 +79,14 @@ function ScopedUploadSheet({
         if (!(await ImagePicker.requestCameraPermissionsAsync()).granted) throw new Error('카메라 권한이 필요해요');
       }
       const options = { mediaTypes: [kind === 'photo' ? 'images' as const : 'videos' as const], quality: 1 };
-      const result = camera
-        ? await ImagePicker.launchCameraAsync({ ...options, cameraType: ImagePicker.CameraType.back, videoMaxDuration: 60 })
-        : await ImagePicker.launchImageLibraryAsync({ ...options, allowsMultipleSelection: true, orderedSelection: true, selectionLimit: room });
+      // The picker itself can fail on a file it cannot read; that is reported in plain words
+      // instead of the native error text, and nothing already picked is lost.
+      const result = await (camera
+        ? ImagePicker.launchCameraAsync({ ...options, cameraType: ImagePicker.CameraType.back, videoMaxDuration: 60 })
+        : ImagePicker.launchImageLibraryAsync({ ...options, allowsMultipleSelection: true, orderedSelection: true, selectionLimit: room })
+      ).catch(() => {
+        throw new Error(camera ? '촬영한 결과를 불러오지 못했어요. 다시 촬영해 주세요.' : '불러오지 못했어요. 다른 파일을 고르거나 다시 시도해 주세요.');
+      });
       if (result.canceled) return;
       const added: Candidate[] = [];
       let duplicates = 0,
@@ -107,10 +112,20 @@ function ScopedUploadSheet({
         }
       }
       await draft.replace([...files, ...added]);
+      // Nothing was added: say so as an error. A grey note under the list is easy to miss and
+      // looks as if confirming the capture did nothing (QA-07).
+      if (!added.length && failures) {
+        setNotice('');
+        throw new Error(
+          camera
+            ? `촬영한 ${kind === 'video' ? '동영상' : '사진'}을 담지 못했어요. ${kind === 'video' ? '60초·200MB 이내인지 확인하고 ' : ''}다시 촬영해 주세요.`
+            : `고른 파일 ${failures}개를 담지 못했어요. 형식·용량·길이를 확인해 주세요. (사진 50MB, 영상 200MB·60초 이내)`,
+        );
+      }
       setNotice(
         [
-          result.assets.length > room && `최대 ${UPLOAD_SHEET_MAX}개까지만 담았어요.`,
-          duplicates && `같은 파일 ${duplicates}개는 제외했어요.`,
+          result.assets.length > room && `사진과 동영상은 최대 ${UPLOAD_SHEET_MAX}개까지 올릴 수 있어요`,
+          duplicates && '이미 추가한 파일은 다시 담지 않았어요',
           failures && `${failures}개는 형식·용량·길이를 확인할 수 없어 제외했어요. (사진 50MB, 영상 200MB·60초 이내)`,
         ]
           .filter(Boolean)
@@ -126,11 +141,16 @@ function ScopedUploadSheet({
       });
       const remaining = remainingCandidates(files, r.tasks);
       const enqueueErrors: string[] = [];
+      // Files accepted together are tracked and announced together on this screen (QA-02).
+      const batchId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      if (r.tasks.length) markFreshBatch(batchId);
       for (const t of r.tasks) {
         const f = files.find((f) => f.clientFileId === t.clientFileId);
-        if (f) { try { await enqueueTask(t, { ...f, scheduleId }); } catch { enqueueErrors.push(f.name); } }
+        if (f) { try { await enqueueTask(t, { ...f, scheduleId, batchId }); } catch { enqueueErrors.push(f.name); } }
       }
       await draft.replace(remaining);
+      // Accepted files use up the per-place allowance at once.
+      setReload((n) => n + 1);
       if (enqueueErrors.length) throw new Error('접수된 파일은 전송 상태에서 다시 시도해 주세요: ' + enqueueErrors.join(', '));
       if (remaining.length) {
         throw new Error(
@@ -141,8 +161,8 @@ function ScopedUploadSheet({
       }
       await draft.replace([]);
       setNotice('');
+      // Stay on the records screen; its progress strip follows this submission.
       onClose();
-      router.push('/uploads');
     }));
   }
   return (
@@ -158,14 +178,14 @@ function ScopedUploadSheet({
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 4 }}>
         {files.map((f) => (
-          <View key={f.clientFileId} style={{ width: 80, height: 80 }}>
+          <View key={f.clientFileId} style={{ width: 76, height: 76 }}>
             {f.kind === 'photo' ? (
-              <Image source={{ uri: f.uri }} style={{ width: 80, height: 80, borderRadius: 16 }} />
+              <Image source={{ uri: f.uri }} style={{ width: 76, height: 76, borderRadius: 16 }} />
             ) : (
               <View
                 style={{
-                  width: 80,
-                  height: 80,
+                  width: 76,
+                  height: 76,
                   borderRadius: 16,
                   backgroundColor: '#333D4B',
                   alignItems: 'center',
@@ -186,19 +206,23 @@ function ScopedUploadSheet({
                 await draft.replace(files.filter((x) => x.clientFileId !== f.clientFileId));
                 discard([f]);
               })}
-              style={{
-                position: 'absolute',
-                top: 4,
-                right: 4,
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: '#191F28B3',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              // The touch target stays 48dp; only a small mark covers the thumbnail.
+              style={{ position: 'absolute', top: 0, right: 0, width: 48, height: 48, alignItems: 'flex-end' }}
             >
-              <Text style={{ color: 'white', fontSize: 12 }}>✕</Text>
+              <View
+                style={{
+                  marginTop: 4,
+                  marginRight: 4,
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  backgroundColor: '#191F28B3',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 11 }}>✕</Text>
+              </View>
             </Pressable>
           </View>
         ))}
@@ -209,8 +233,8 @@ function ScopedUploadSheet({
             disabled={a.busy || !draft.ready}
             onPress={() => setChoosing(true)}
             style={{
-              width: 80,
-              height: 80,
+              width: 76,
+              height: 76,
               borderRadius: 16,
               borderWidth: 1.5,
               borderStyle: 'dashed',
@@ -226,12 +250,16 @@ function ScopedUploadSheet({
       </ScrollView>
       <Text style={{ fontSize: 13, color: colors.muted, marginTop: 10 }}>
         사진·동영상 최대 {UPLOAD_SHEET_MAX}개
-        {limits ? ` · 이 장소에 더 올릴 수 있는 사진 ${limits.photos} · 동영상 ${limits.videos}` : ''}
       </Text>
+      {limits && (
+        <Text style={{ fontSize: 13, color: colors.muted, marginTop: 4 }}>
+          {`내가 이 장소에 올릴 수 있는 수 사진 ${limits.photos}/5 · 영상 ${limits.videos}/2`}
+        </Text>
+      )}
       {!!existing.length && <Text style={{ marginTop: 16, fontWeight: '700' }}>이미 올린 내 기록</Text>}
       <ScrollView horizontal contentContainerStyle={{ gap: 12, paddingVertical: 8 }}>
         {existing.map((m) => <View key={m.id} style={{ width: 96 }}>
-          <Image accessibilityLabel="이미 올린 기록" source={[{ uri: `${API}/v1/media/${m.id}/content?variant=thumbnail`, headers: { Authorization: `Bearer ${currentSession()?.accessToken}` } }]} style={{ width: 96, height: 72, borderRadius: 8 }} />
+          <Image accessibilityLabel="이미 올린 기록" source={[{ uri: `${API}/v1/media/${m.id}/content?variant=thumbnail&context=mine`, headers: { Authorization: `Bearer ${currentSession()?.accessToken}` } }]} style={{ width: 96, height: 72, borderRadius: 8 }} />
           <Pressable accessibilityRole="button" accessibilityLabel={`${m.kind === 'video' ? '동영상' : '사진'} 삭제`} disabled={a.busy} style={{ minHeight: 48, minWidth: 48, justifyContent: 'center', alignItems: 'center' }} onPress={() => confirm('올린 기록을 삭제할까요?', `${m.kind === 'video' ? '동영상' : '사진'} 1개가 서버에서 삭제됩니다. 휴대폰 원본은 유지돼요.`, () => a.run(async () => {
             const result = await api('/media/deletions', { mediaIds: [m.id] });
             if (result.results.some((x: any) => x.status === 'failed')) throw new Error('삭제하지 못했어요. 다시 시도해 주세요.');

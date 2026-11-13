@@ -8,6 +8,7 @@ import { setVideoCacheSizeAsync } from 'expo-video';
 import { accessLostEvents } from '../lib/api';
 import { resetTo } from '../components/ui';
 import { ToastProvider } from '../components/toast-provider';
+import { ConfirmHost } from '../components/confirm-host';
 function TransferRecovery() {
   const { ready, session } = useAccount();
   const userId = session?.userId;
@@ -50,6 +51,7 @@ export default function Layout() {
       <StatusBar style="dark" />
       <ToastProvider>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FFFFFF' } }} />
+        <ConfirmHost />
       </ToastProvider>
     </Provider>
   );

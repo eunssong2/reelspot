@@ -1,7 +1,8 @@
 import { installationId } from '../lib/device';
 import React, { useState } from 'react';
 import { useFocusLoad } from '../lib/effects';
-import { Alert, Linking, Text } from 'react-native';
+import { Linking, Text } from 'react-native';
+import { dialog } from '../components/confirm-host';
 import { MenuRow } from '../components/profile-ui';
 import { router } from 'expo-router';
 
@@ -12,7 +13,7 @@ import { POLICY_ROWS, findPolicyDoc } from '../lib/documents';
 import { inviteCodeHint } from '../lib/invite-input';
 import { useAccount } from '../lib/state';
 import { Transfer } from '../../modules/atp-transfer';
-import { Screen, Button, ClearableInput, Sheet, colors, useAction, resetTo } from '../components/ui';
+import { Screen, Button, ClearableInput, Sheet, colors, useAction, resetTo, confirm } from '../components/ui';
 const Section = ({ children }: { children: string }) => (
   <Text style={{ fontSize: 18, fontWeight: '800', color: colors.ink, marginTop: 28, marginBottom: 2 }}>
     {children}
@@ -64,7 +65,7 @@ export default function Settings() {
           onPress={() => {
             const d = findPolicyDoc(docs, row.key);
             if (d) void a.run(() => Linking.openURL(documentUrl(d.url)));
-            else Alert.alert(row.label, '아직 게시되지 않은 문서예요.');
+            else dialog({ title: row.label, body: '아직 게시되지 않은 문서예요.', buttons: [{ label: '확인', tone: 'plain' }] });
           }}
         />
       ))}
@@ -73,10 +74,7 @@ export default function Settings() {
         chevron={false}
         label="로그아웃"
         onPress={() =>
-          Alert.alert('로그아웃할까요?', '미완료 업로드를 취소하고 이 기기의 로그인 정보를 삭제합니다.', [
-            { text: '취소', style: 'cancel' },
-            { text: '로그아웃', style: 'destructive', onPress: () => void logout() },
-          ])
+          confirm('로그아웃할까요?', '미완료 업로드를 취소하고 이 기기의 로그인 정보를 삭제합니다.', () => void logout(), { confirm: '로그아웃', cancel: '취소' })
         }
       />
       <MenuRow strong chevron={false} label="서비스 탈퇴" onPress={() => router.push('/delete-account')} />

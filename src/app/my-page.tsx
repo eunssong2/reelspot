@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Alert, Text, View, Pressable } from 'react-native';
+import { Text, View, Pressable } from 'react-native';
+import { dialog } from '../components/confirm-host';
 import { router } from 'expo-router';
 import { useAccount } from '../lib/state';
 import { useFocusLoad } from '../lib/effects';
@@ -71,7 +72,7 @@ export default function MyPage() {
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => Alert.alert('공지사항', '공지사항은 준비 중이에요.')}
+            onPress={() => dialog({ title: '공지사항', body: '공지사항은 준비 중이에요.', buttons: [{ label: '확인', tone: 'plain' }] })}
             style={{ flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center' }}
           >
             <Text style={{ fontSize: 15, fontWeight: '800', color: colors.ink }}>공지사항</Text>
