@@ -458,6 +458,16 @@ export const PLACE_LABEL_Y: Record<PlaceLabel['pos'], number> = { top: 0.06, bot
 /** 겹쳐 그리는 글자의 좌우 여백(화면 폭에 대한 비율). 서버는 폭의 94% 안에 글자를 넣는다. */
 export const OVERLAY_SIDE = 0.03;
 
+/**
+ * 날짜 제목 화면. 서버 렌더러가 쓰는 값과 같다
+ * (바탕 #FDEDEB · 날짜 48px 를 높이의 40% · 제목 56px 를 52%).
+ * 제목 화면은 서버가 늘 기본 고딕으로 그리므로, 고른 글씨체를 여기에 쓰지 않는다.
+ */
+export const TITLE_DATE_Y = 0.4;
+export const TITLE_NAME_Y = 0.52;
+export const TITLE_DATE_PX = 48;
+export const TITLE_NAME_PX = 56;
+
 export const CAPTION_BGS: { id: CaptionBg; label: string; desc: string }[] = [
   { id: 'none', label: '없음', desc: '글자에 그림자만 넣어 읽히게 해요' },
   { id: 'dim', label: '반투명', desc: '사진이 비치는 어두운 띠' },

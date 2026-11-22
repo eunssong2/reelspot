@@ -265,7 +265,7 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
       </View>
 
       <Text style={styles.time}>
-        {mmss2(t)} / {mmss2(total)}
+        {mmss2(t)} / {mmss2(total)}  ·  {aspectOf(timeline.aspect).output}
       </Text>
       <Pressable
         onPress={(e) => trackW > 0 && seek((e.nativeEvent.locationX / trackW) * total)}
@@ -276,16 +276,27 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
       >
         <View style={[styles.barFill, { width: total > 0 ? `${(t / total) * 100}%` : '0%' }]} />
       </Pressable>
-      <View style={styles.marks}>
-        {marks.map(({ s, day }) => (
-          <Pressable key={s.dayKey} onPress={() => seek(s.startSec)} accessibilityRole="button" hitSlop={8}>
-            <Text style={styles.mark}>
-              {day ? shortDotDateLabel(day.date) : ''} {mmss2(s.startSec).replace(/^00:/, '0:')}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      <Text style={styles.format}>{aspectOf(timeline.aspect).output}</Text>
+      {marks.length > 1 ? (
+        <View style={styles.marks}>
+          {marks.map(({ s, day }) => {
+            const label = day ? shortDotDateLabel(day.date) : '';
+            return (
+              <Pressable
+                key={s.dayKey}
+                onPress={() => seek(s.startSec)}
+                accessibilityRole="button"
+                accessibilityLabel={`${label} 날짜로 이동`}
+                hitSlop={8}
+                style={styles.markChip}
+              >
+                <Text style={styles.mark}>
+                  {label} {mmss2(s.startSec).replace(/^00:/, '0:')}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
       {problem ? <Text style={styles.problem}>{problem}</Text> : null}
       <Pressable onPress={() => ctx.go({ step: 'compose' })} accessibilityRole="button" hitSlop={8}>
         <Text style={[styles.link, styles.centerText]}>자막·장면 수정</Text>
@@ -498,8 +509,10 @@ const styles = StyleSheet.create({
   time: { fontSize: 12, color: colors.textSub, textAlign: 'center' },
   bar: { height: 8, borderRadius: 4, backgroundColor: colors.surface, overflow: 'hidden', justifyContent: 'center' },
   barFill: { height: 8, backgroundColor: colors.primary },
-  marks: { flexDirection: 'row', justifyContent: 'space-between' },
-  mark: { fontSize: 11, color: colors.textSub },
+  // 날짜가 둘 이상일 때만 나오는 이동 버튼. 눌리는 것으로 보이게 칩으로 둔다.
+  marks: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
+  markChip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.item, backgroundColor: colors.surface },
+  mark: { fontSize: 12, fontWeight: '700', color: colors.textSub },
   format: { fontSize: 12, color: colors.textSub, textAlign: 'center' },
   problem: { fontSize: 13, fontWeight: '700', color: colors.danger, textAlign: 'center' },
   genBody: { flex: 1, justifyContent: 'center', gap: 16 },

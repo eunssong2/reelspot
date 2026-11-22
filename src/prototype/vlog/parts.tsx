@@ -17,6 +17,10 @@ import {
   aspectOf,
   CAPTION_Y,
   OVERLAY_SIDE,
+  TITLE_DATE_PX,
+  TITLE_DATE_Y,
+  TITLE_NAME_PX,
+  TITLE_NAME_Y,
   PLACE_LABEL_PX,
   PLACE_LABEL_Y,
   captionBgColor,
@@ -223,16 +227,15 @@ export const sceneClipAt = (scene: TimelineScene, localSec: number): number => {
 export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = false, selectedCell, onSelectCell }: CanvasProps) {
   const height = width / aspectOf(scene.aspect).ratio;
   if (scene.kind === 'title') {
+    // 출력 화면을 이 크기로 줄여 그린다. 글자 크기·높이를 서버 렌더러와 같은 값으로 둔다.
+    // 고른 글씨체를 쓰지 않는 것은 서버가 제목 화면을 늘 기본 고딕으로 그리기 때문이다.
+    const shrink = width / aspectOf(scene.aspect).width;
     return (
       <View style={[styles.canvas, styles.titleCanvas, { width, height }]}>
-        <Text allowFontScaling={false} style={[styles.titleDate, { fontSize: 48 * (width / aspectOf(scene.aspect).width) }]}>
+        <Text allowFontScaling={false} style={[styles.titleDate, { top: height * TITLE_DATE_Y, fontSize: TITLE_DATE_PX * shrink }]}>
           {scene.titleDate}
         </Text>
-        <Text
-          allowFontScaling={false}
-          numberOfLines={3}
-          style={[styles.titleName, fontStyleOf(scene.captionStyle.fontId), { fontSize: 64 * (width / aspectOf(scene.aspect).width) }]}
-        >
+        <Text allowFontScaling={false} numberOfLines={3} style={[styles.titleName, { top: height * TITLE_NAME_Y, fontSize: TITLE_NAME_PX * shrink }]}>
           {scene.titleText}
         </Text>
       </View>
@@ -539,11 +542,13 @@ const styles = StyleSheet.create({
   aspectLabelOn: { color: colors.primary },
   cellSelected: { borderWidth: 2, borderColor: colors.primary },
   canvas: { backgroundColor: colors.surfaceStrong, borderRadius: 10, overflow: 'hidden' },
-  titleCanvas: { backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', padding: 14, gap: 8 },
+  // 바탕색은 서버가 쓰는 #FDEDEB 와 같은 값이다(colors.primarySoft).
+  titleCanvas: { backgroundColor: colors.primarySoft },
   contentTight: { paddingTop: 4, paddingBottom: 4, gap: 4 },
   footerTight: { paddingTop: 4, paddingBottom: 4 },
-  titleDate: { fontSize: 14, fontWeight: '800', color: colors.primary },
-  titleName: { fontSize: 20, fontWeight: '800', color: colors.text, textAlign: 'center' },
+  // 날짜·제목은 서버와 같은 높이에 놓는다(가운데 정렬로 두면 글자 수에 따라 자리가 밀린다).
+  titleDate: { position: 'absolute', left: '5%', right: '5%', fontWeight: '800', color: colors.primary, textAlign: 'center' },
+  titleName: { position: 'absolute', left: '5%', right: '5%', fontWeight: '800', color: '#191F28', textAlign: 'center' },
   videoMark: { position: 'absolute', right: 6, top: 6, fontSize: 10, color: colors.onPrimary, backgroundColor: 'rgba(25,31,40,0.55)', paddingHorizontal: 5, borderRadius: 8, overflow: 'hidden' },
   // 자막 위치: 위 / 화면 가운데 / 아래(날짜 줄 위)
   // 자막·라벨 자리. 세로 위치는 그리는 쪽에서 비율로 넣고, 좌우 여백도 폭에 대한 비율이다.
