@@ -15,6 +15,10 @@ import {
   ASPECTS,
   animAt,
   aspectOf,
+  CAPTION_Y,
+  OVERLAY_SIDE,
+  PLACE_LABEL_PX,
+  PLACE_LABEL_Y,
   captionBgColor,
   captionLayout,
   filterOf,
@@ -251,22 +255,14 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
   const labelAnim: AnimFrame = animate ? animAt(label.anim, localSec / ANIM_SEC) : ANIM_DONE;
   const labelFade = animate ? placeLabelOpacity(label, localSec, scene.seconds) : 1;
 
-  const captionBox = caption ? <CaptionBox key="cap" text={caption} style={cap} width={width} height={height} anim={capAnim} /> : null;
+  // 자막과 라벨은 각자 정해진 높이에 따로 놓는다(서버 렌더러와 같은 방식·같은 값).
+  // 한 칸에 쌓아 올리면 위아래 순서가 서버와 뒤바뀐다.
+  const outWidth = aspectOf(scene.aspect).width;
+  const captionBox = caption ? <CaptionBox text={caption} style={cap} width={width} outWidth={outWidth} anim={capAnim} /> : null;
   const labelBox =
     scene.placeText || scene.dateText ? (
-      <PlaceLabelCard
-        key="label"
-        place={scene.placeText}
-        date={scene.dateText}
-        label={label}
-        width={width}
-        height={height}
-        anim={labelAnim}
-        fade={labelFade}
-      />
+      <PlaceLabelCard place={scene.placeText} date={scene.dateText} label={label} width={width} outWidth={outWidth} anim={labelAnim} fade={labelFade} />
     ) : null;
-  const topItems = [label.pos === 'top' ? labelBox : null, cap.pos === 'top' ? captionBox : null].filter(Boolean);
-  const bottomItems = [cap.pos === 'bottom' ? captionBox : null, label.pos === 'bottom' ? labelBox : null].filter(Boolean);
   return (
     <View style={[styles.canvas, { width, height }]}>
       {scene.mode === 'split' && scene.template ? (
@@ -308,38 +304,38 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
           {clip.kind === 'video' ? <Text style={styles.videoMark}>▶</Text> : null}
         </>
       ) : null}
-      {topItems.length ? (
-        <View style={[styles.capZone, styles.capTop]} pointerEvents="none">
-          {topItems}
+      {labelBox ? (
+        <View style={[styles.capZone, { top: `${PLACE_LABEL_Y[label.pos] * 100}%` }]} pointerEvents="none">
+          {labelBox}
         </View>
       ) : null}
-      {captionBox && cap.pos === 'center' ? (
-        <View style={[styles.capZone, styles.capCenter]} pointerEvents="none">
-          {captionBox}
-        </View>
-      ) : null}
-      {bottomItems.length ? (
-        <View style={[styles.capZone, styles.capBottom]} pointerEvents="none">
-          {bottomItems}
-        </View>
+      {captionBox ? (
+        CAPTION_Y[cap.pos] === 'center' ? (
+          <View style={[styles.capZone, styles.capCenter]} pointerEvents="none">
+            {captionBox}
+          </View>
+        ) : (
+          <View style={[styles.capZone, { top: `${(CAPTION_Y[cap.pos] as number) * 100}%` }]} pointerEvents="none">
+            {captionBox}
+          </View>
+        )
       ) : null}
     </View>
   );
 }
 
 /**
- * 자막 한 덩이. 글자 크기·여백은 화면 크기에 비례해 계산하므로(captionLayout)
- * 작은 미리보기와 1080p 출력에서 같은 비율로 보인다.
+ * 자막 한 덩이. 글자 크기는 출력 화면 폭(outWidth)에 대한 비율로 줄이므로
+ * 작은 미리보기와 1080p 출력에서 같은 크기로 보인다.
  */
-function CaptionBox({ text, style, width, height, anim = ANIM_DONE }: { text: string; style: CaptionStyle; width: number; height: number; anim?: AnimFrame }) {
-  const l = captionLayout(style, width, height);
-  const base = Math.min(width, height);
+function CaptionBox({ text, style, width, outWidth, anim = ANIM_DONE }: { text: string; style: CaptionStyle; width: number; outWidth: number; anim?: AnimFrame }) {
+  const l = captionLayout(style, width, outWidth);
   return (
     <View
       style={[
         { borderRadius: l.radius, paddingVertical: l.padV, paddingHorizontal: l.padH, maxWidth: '100%' },
         l.bgColor ? { backgroundColor: l.bgColor } : null,
-        { opacity: anim.opacity, transform: [{ translateY: anim.ty * base }, { scale: anim.scale }] },
+        { opacity: anim.opacity, transform: [{ translateY: anim.ty * l.fontSize }, { scale: anim.scale }] },
       ]}
     >
       <Text
@@ -365,7 +361,7 @@ function PlaceLabelCard({
   date,
   label,
   width,
-  height,
+  outWidth,
   anim = ANIM_DONE,
   fade = 1,
 }: {
@@ -373,12 +369,11 @@ function PlaceLabelCard({
   date?: string;
   label: PlaceLabel;
   width: number;
-  height: number;
+  outWidth: number;
   anim?: AnimFrame;
   fade?: number;
 }) {
-  const base = Math.min(width, height);
-  const fontSize = Math.max(7, base * 0.034);
+  const fontSize = Math.max(5, PLACE_LABEL_PX * (width / outWidth));
   const bgColor = captionBgColor(label.bg);
   const dark = label.bg === 'white';
   const text = [label.pin && place ? `📍 ${place}` : place, date].filter(Boolean).join('  ');
@@ -392,7 +387,7 @@ function PlaceLabelCard({
           paddingHorizontal: bgColor ? Math.max(4, fontSize * 0.6) : 0,
           maxWidth: '100%',
           opacity: anim.opacity * fade,
-          transform: [{ translateY: anim.ty * base }, { scale: anim.scale }],
+          transform: [{ translateY: anim.ty * fontSize }, { scale: anim.scale }],
         },
         bgColor ? { backgroundColor: bgColor } : null,
       ]}
@@ -551,10 +546,9 @@ const styles = StyleSheet.create({
   titleName: { fontSize: 20, fontWeight: '800', color: colors.text, textAlign: 'center' },
   videoMark: { position: 'absolute', right: 6, top: 6, fontSize: 10, color: colors.onPrimary, backgroundColor: 'rgba(25,31,40,0.55)', paddingHorizontal: 5, borderRadius: 8, overflow: 'hidden' },
   // 자막 위치: 위 / 화면 가운데 / 아래(날짜 줄 위)
-  capZone: { position: 'absolute', left: 8, right: 8, alignItems: 'center' },
-  capTop: { top: '7%', gap: 4 },
+  // 자막·라벨 자리. 세로 위치는 그리는 쪽에서 비율로 넣고, 좌우 여백도 폭에 대한 비율이다.
+  capZone: { position: 'absolute', left: `${OVERLAY_SIDE * 100}%`, right: `${OVERLAY_SIDE * 100}%`, alignItems: 'center' },
   capCenter: { top: 0, bottom: 0, justifyContent: 'center' },
-  capBottom: { bottom: 10, gap: 4 },
   capShadow: { textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
 
 });

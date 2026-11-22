@@ -164,7 +164,7 @@ export const ANIMS: { id: AnimId; label: string; desc: string }[] = [
 /** 등장에 걸리는 시간(초) */
 export const ANIM_SEC = 0.4;
 
-/** 글자 덩이를 어떻게 놓을지. ty 는 화면 짧은 쪽에 대한 비율이다. */
+/** 글자 덩이를 어떻게 놓을지. ty 는 글자 크기에 대한 비율(em)이라 화면 크기와 무관하다. */
 export interface AnimFrame {
   opacity: number;
   ty: number;
@@ -182,7 +182,7 @@ export function animAt(id: AnimId | undefined, p: number): AnimFrame {
     case 'fade':
       return { opacity: e, ty: 0, scale: 1 };
     case 'up':
-      return { opacity: e, ty: (1 - e) * 0.045, scale: 1 };
+      return { opacity: e, ty: (1 - e) * 0.6, scale: 1 };
     case 'pop':
       return { opacity: e, ty: 0, scale: 0.72 + 0.28 * e };
     default:
@@ -436,14 +436,27 @@ export const CAPTION_POSITIONS: { id: CaptionPos; label: string }[] = [
 ];
 
 /**
- * 자막 크기는 pt 가 아니라 화면 짧은 쪽에 대한 비율이다.
- * 미리보기(폭 약 180px)와 실제 출력(1080px)이 같은 비율을 쓰므로 두 곳에서 같은 크기로 보인다.
+ * 자막 크기는 출력 화면(세로 1080px 폭) 기준의 글자 크기다.
+ * 서버 렌더러가 쓰는 숫자와 같은 값이라, 미리보기와 완성 영상의 자막 크기가 어긋나지 않는다.
+ * '보통' 48 은 지금 서버가 고정으로 쓰는 값이다.
  */
-export const CAPTION_SIZES: { id: CaptionSize; label: string; ratio: number }[] = [
-  { id: 'sm', label: '작게', ratio: 0.038 },
-  { id: 'md', label: '보통', ratio: 0.05 },
-  { id: 'lg', label: '크게', ratio: 0.066 },
+export const CAPTION_SIZES: { id: CaptionSize; label: string; px: number }[] = [
+  { id: 'sm', label: '작게', px: 36 },
+  { id: 'md', label: '보통', px: 48 },
+  { id: 'lg', label: '크게', px: 64 },
 ];
+
+/** 날짜·장소 라벨의 글자 크기(출력 px). 서버 렌더러와 같은 값이다. */
+export const PLACE_LABEL_PX = 32;
+
+/**
+ * 자막·라벨을 놓는 세로 위치(화면 높이에 대한 비율, 글자 윗변 기준).
+ * 서버 렌더러가 쓰는 값과 같아야 미리보기에서 정한 위치가 완성 영상에서도 같다.
+ */
+export const CAPTION_Y: Record<CaptionPos, number | 'center'> = { top: 0.1, center: 'center', bottom: 0.86 };
+export const PLACE_LABEL_Y: Record<PlaceLabel['pos'], number> = { top: 0.06, bottom: 0.78 };
+/** 겹쳐 그리는 글자의 좌우 여백(화면 폭에 대한 비율). 서버는 폭의 94% 안에 글자를 넣는다. */
+export const OVERLAY_SIDE = 0.03;
 
 export const CAPTION_BGS: { id: CaptionBg; label: string; desc: string }[] = [
   { id: 'none', label: '없음', desc: '글자에 그림자만 넣어 읽히게 해요' },
@@ -487,11 +500,16 @@ const CAPTION_BG_COLORS: Record<CaptionBg, string | undefined> = {
   white: '#FFFFFF',
 };
 
-/** 화면 크기에 자막 모양을 얹어 실제 글자 크기·여백을 낸다(짧은 쪽 기준이라 세로·가로에서 같게 보인다). */
-export function captionLayout(style: CaptionStyle, width: number, height: number): CaptionLayout {
-  const base = Math.min(width, height);
-  const ratio = CAPTION_SIZES.find((s) => s.id === style.size)?.ratio ?? 0.05;
-  const fontSize = Math.max(7, base * ratio * fontOf(style.fontId).scale);
+/**
+ * 자막 모양을 실제 글자 크기·여백으로 바꾼다.
+ * width 는 지금 그리는 화면의 폭, outWidth 는 출력 화면의 폭(1080 또는 1920)이다.
+ * 둘의 비율로 줄이므로, 작은 미리보기와 완성 영상이 같은 크기로 보인다.
+ */
+export function captionLayout(style: CaptionStyle, width: number, outWidth: number): CaptionLayout {
+  const px = CAPTION_SIZES.find((s) => s.id === style.size)?.px ?? 48;
+  // 하한은 글자가 사라지지 않을 만큼만 둔다. 더 올리면 작은 미리보기에서 '작게'와 '보통'이
+  // 같은 크기로 보여, 미리보기와 완성 영상이 어긋나는 것을 눈치채지 못한다.
+  const fontSize = Math.max(5, px * (width / outWidth) * fontOf(style.fontId).scale);
   const bgColor = CAPTION_BG_COLORS[style.bg];
   return {
     fontSize,
