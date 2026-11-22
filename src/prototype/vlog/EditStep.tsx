@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View, type ViewProps } from 'react-native';
 
 import { SafeImage } from '../../demo/SafeImage';
 import { ActionButton } from '../components/FormParts';
-import { colors, GUTTER, radius, shadow } from '../styles/tokens';
+import { MIN_TOUCH, colors, GUTTER, radius, shadow } from '../styles/tokens';
 import { shortDotDateLabel } from '../utils/date';
 import { locate, selectedPlaces, type StepCtx } from './ctx';
 import {
@@ -58,7 +58,25 @@ const patch = (ctx: StepCtx, placeKey: string, change: Partial<PlaceSetting>) =>
 
 /** 4단계: 장면 순서·자막·날짜/장소명 표시·글씨체를 정하고 장소를 완료한다. */
 export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string }) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  // 자막을 적을 때 키보드가 입력칸을 가리지 않게 한다. 키보드가 올라오면 미리보기를 줄이고
+  // 자막 입력칸이 보이도록 설정 목록을 스크롤한다.
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const settingsScroll = useRef<ScrollView>(null);
+  const captionY = useRef(0);
+  const captionBodyY = useRef(0);
+  const captionFocused = useRef(false);
+  const revealCaption = () => {
+    if (captionFocused.current) settingsScroll.current?.scrollTo({ y: captionY.current + captionBodyY.current, animated: true });
+  };
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   const [clipIndex, setClipIndex] = useState(0);
   // 분할 장면에서 고른 칸(0부터)
   const [cell, setCell] = useState(0);
@@ -229,7 +247,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   };
 
   const maxW = Math.min(width, 430) - GUTTER * 2;
-  const previewW = fitWidth(scene.aspect, Math.min(130, maxW * 0.5), maxW);
+  const previewW = fitWidth(scene.aspect, Math.min(keyboardOpen ? 40 : height < 700 ? 85 : 130, maxW * 0.5), maxW);
   // 전후 비교는 한 줄에 두 장을 나란히 놓는다.
   const compareW = fitWidth(scene.aspect, Math.min(112, (maxW - 10) / 2), (maxW - 10) / 2);
   const modeLabel = split ? `${scene.clips.length}분할 · 칸 배치 편집 ›` : '이어 재생 · 순서 편집 ›';
@@ -246,9 +264,10 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
       toast={ctx.toastMessage}
       // 미리보기는 위에 고정하고 설정만 스크롤한다(아래 설정을 바꾸면서 효과를 바로 보려고).
       scroll={false}
+      compact={keyboardOpen}
       footer={<FooterButtons label="이 장소 완료" onPress={complete} />}
     >
-      <Pressable onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={8} disabled={media.length < 2}>
+      <Pressable onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={8} disabled={media.length < 2} style={styles.touch}>
         <Heading title={media.length < 2 ? '단일 재생' : modeLabel} />
       </Pressable>
 
@@ -298,11 +317,24 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         </View>
       )}
 
-      <ScrollView style={styles.settings} contentContainerStyle={styles.settingsContent}>
+      <ScrollView
+        ref={settingsScroll}
+        onLayout={revealCaption}
+        keyboardShouldPersistTaps="handled"
+        style={styles.settings}
+        contentContainerStyle={styles.settingsContent}
+      >
       <Accordion
         id="caption"
         open={openSec === 'caption'}
         onToggle={toggleSec}
+        onLayout={(event) => {
+          captionY.current = event.nativeEvent.layout.y;
+        }}
+        onBodyLayout={(event) => {
+          captionBodyY.current = event.nativeEvent.layout.y;
+          revealCaption();
+        }}
         title={split ? '자막 (선택) · 분할 화면 전체에 1개' : '자막 (선택)'}
         summary={setting.captions[captionKey] || '없음'}
       >
@@ -314,6 +346,13 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         maxLength={40}
         style={styles.input}
         accessibilityLabel="이 장면 자막"
+        onFocus={() => {
+          captionFocused.current = true;
+          revealCaption();
+        }}
+        onBlur={() => {
+          captionFocused.current = false;
+        }}
       />
       </Accordion>
 
@@ -602,6 +641,8 @@ function Accordion({
   open,
   onToggle,
   children,
+  onLayout,
+  onBodyLayout,
 }: {
   id: string;
   title: string;
@@ -611,9 +652,12 @@ function Accordion({
   open: boolean;
   onToggle: (id: string) => void;
   children: React.ReactNode;
+  /** 설정 목록 안에서의 위치. 키보드가 가릴 때 이만큼 스크롤한다. */
+  onLayout?: ViewProps['onLayout'];
+  onBodyLayout?: ViewProps['onLayout'];
 }) {
   return (
-    <View style={styles.acc}>
+    <View style={styles.acc} onLayout={onLayout}>
       <Pressable onPress={() => onToggle(id)} accessibilityRole="button" accessibilityState={{ expanded: open }} style={styles.accHead}>
         <View style={styles.accTitleBox}>
           <Text style={styles.label}>{title}</Text>
@@ -625,7 +669,11 @@ function Accordion({
         </View>
         <Text style={styles.link}>{open ? '▲' : '▼'}</Text>
       </Pressable>
-      {open ? <View style={styles.accBody}>{children}</View> : null}
+      {open ? (
+        <View style={styles.accBody} onLayout={onBodyLayout}>
+          {children}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -835,6 +883,8 @@ function FontSheet({
 }
 
 const styles = StyleSheet.create({
+  // 손가락으로 누르는 자리는 최소 크기를 보장한다.
+  touch: { minWidth: MIN_TOUCH, minHeight: MIN_TOUCH, justifyContent: 'center' },
   center: { alignItems: 'center' },
   settings: { flex: 1 },
   settingsContent: { gap: 4, paddingBottom: 24 },

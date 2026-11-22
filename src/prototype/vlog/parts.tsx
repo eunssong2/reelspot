@@ -46,10 +46,12 @@ interface FrameProps {
   footer?: ReactNode;
   toast?: string | null;
   scroll?: boolean;
+  /** 키보드가 올라왔을 때처럼 세로가 모자랄 때, 진행 표시를 숨기고 여백을 줄인다. */
+  compact?: boolean;
 }
 
 /** 브이로그 제작 화면 공통 틀: 뒤로가기·제목·닫기 + 단계 표시 + 본문 + 하단 버튼. */
-export function StepFrame({ title, step, stepLabel, context, onBack, onClose, children, footer, toast, scroll = true }: FrameProps) {
+export function StepFrame({ title, step, stepLabel, context, onBack, onClose, children, footer, toast, scroll = true, compact = false }: FrameProps) {
   return (
     <ScreenFrame>
       <AppHeader
@@ -61,23 +63,25 @@ export function StepFrame({ title, step, stepLabel, context, onBack, onClose, ch
           </Pressable>
         }
       />
-      <View style={styles.progressWrap}>
-        <Text style={styles.stepText}>
-          {step} / 5 {stepLabel}
-          {context ? ` · ${context}` : ''}
-        </Text>
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${(step / 5) * 100}%` }]} />
+      {compact ? null : (
+        <View style={styles.progressWrap}>
+          <Text style={styles.stepText}>
+            {step} / 5 {stepLabel}
+            {context ? ` · ${context}` : ''}
+          </Text>
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${(step / 5) * 100}%` }]} />
+          </View>
         </View>
-      </View>
+      )}
       {scroll ? (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.content, styles.fill1]}>{children}</View>
+        <View style={[styles.content, styles.fill1, compact && styles.contentTight]}>{children}</View>
       )}
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
+      {footer ? <View style={[styles.footer, compact && styles.footerTight]}>{footer}</View> : null}
       <Toast message={toast ?? null} bottom={footer ? 110 : 40} />
     </ScreenFrame>
   );
@@ -217,8 +221,14 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
   if (scene.kind === 'title') {
     return (
       <View style={[styles.canvas, styles.titleCanvas, { width, height }]}>
-        <Text style={styles.titleDate}>{scene.titleDate}</Text>
-        <Text style={[styles.titleName, fontStyleOf(scene.captionStyle.fontId)]} numberOfLines={3}>
+        <Text allowFontScaling={false} style={[styles.titleDate, { fontSize: 48 * (width / aspectOf(scene.aspect).width) }]}>
+          {scene.titleDate}
+        </Text>
+        <Text
+          allowFontScaling={false}
+          numberOfLines={3}
+          style={[styles.titleName, fontStyleOf(scene.captionStyle.fontId), { fontSize: 64 * (width / aspectOf(scene.aspect).width) }]}
+        >
           {scene.titleText}
         </Text>
       </View>
@@ -303,8 +313,8 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
           {topItems}
         </View>
       ) : null}
-      {captionBox && cap.pos === 'middle' ? (
-        <View style={[styles.capZone, styles.capMiddle]} pointerEvents="none">
+      {captionBox && cap.pos === 'center' ? (
+        <View style={[styles.capZone, styles.capCenter]} pointerEvents="none">
           {captionBox}
         </View>
       ) : null}
@@ -535,13 +545,15 @@ const styles = StyleSheet.create({
   cellSelected: { borderWidth: 2, borderColor: colors.primary },
   canvas: { backgroundColor: colors.surfaceStrong, borderRadius: 10, overflow: 'hidden' },
   titleCanvas: { backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', padding: 14, gap: 8 },
+  contentTight: { paddingTop: 4, paddingBottom: 4, gap: 4 },
+  footerTight: { paddingTop: 4, paddingBottom: 4 },
   titleDate: { fontSize: 14, fontWeight: '800', color: colors.primary },
   titleName: { fontSize: 20, fontWeight: '800', color: colors.text, textAlign: 'center' },
   videoMark: { position: 'absolute', right: 6, top: 6, fontSize: 10, color: colors.onPrimary, backgroundColor: 'rgba(25,31,40,0.55)', paddingHorizontal: 5, borderRadius: 8, overflow: 'hidden' },
   // 자막 위치: 위 / 화면 가운데 / 아래(날짜 줄 위)
   capZone: { position: 'absolute', left: 8, right: 8, alignItems: 'center' },
   capTop: { top: '7%', gap: 4 },
-  capMiddle: { top: 0, bottom: 0, justifyContent: 'center' },
+  capCenter: { top: 0, bottom: 0, justifyContent: 'center' },
   capBottom: { bottom: 10, gap: 4 },
   capShadow: { textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
 

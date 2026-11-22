@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { ActionButton } from '../components/FormParts';
-import { colors, GUTTER, radius } from '../styles/tokens';
+import { MIN_TOUCH, colors, GUTTER, radius } from '../styles/tokens';
 import { dayOfWeekLabel, shortDotDateLabel } from '../utils/date';
 import { selectedPlaces, type StepCtx } from './ctx';
 import {
@@ -14,7 +14,7 @@ import {
   daySeconds,
   defaultTitle,
   draftSignature,
-  limitProblem,
+  draftProblem,
   mmss2,
   moveItem,
   placeSeconds,
@@ -41,7 +41,7 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
 
   const next = () => {
     if (undone.length > 0) return ctx.toast(`아직 편집하지 않은 장소 ${undone.length}곳이 있어요`);
-    const problem = limitProblem(timeline);
+    const problem = draftProblem(draft, ctx.days);
     if (problem) return ctx.toast(problem);
     ctx.go({ step: 'preview' });
   };
@@ -83,6 +83,7 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
               <View style={styles.dayTitleTop}>
                 <Text style={styles.cardSub}>날짜 제목 화면 {TITLE_CARD_SEC}초</Text>
                 <Switch
+                  style={styles.touch}
                   value={Boolean(draft.dayTitleCard?.[day.key])}
                   onValueChange={(v) => ctx.update((d) => ({ ...d, dayTitleCard: { ...(d.dayTitleCard ?? {}), [day.key]: v } }))}
                   trackColor={{ true: colors.primary }}
@@ -171,7 +172,7 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [trackW, setTrackW] = useState(0);
-  const problem = limitProblem(timeline);
+  const problem = draftProblem(draft, ctx.days);
   const signature = useMemo(() => draftSignature(draft, timeline), [draft, timeline]);
   const hasFinished = draft.render?.signature === signature;
 
@@ -227,18 +228,23 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
         <FooterButtons
           label="영상 생성"
           disabled={Boolean(problem)}
-          onPress={() => ctx.go({ step: 'generate' })}
+          onPress={() => {
+            // 누르는 순간 다시 확인한다(편집 뒤 기록이 지워졌을 수 있다).
+            const error = draftProblem(ctx.draft, ctx.days);
+            if (error) ctx.toast(error);
+            else ctx.go({ step: 'generate' });
+          }}
           secondaryLabel={hasFinished ? '만들어 둔 완성본 보기' : undefined}
           onSecondary={() => ctx.go({ step: 'result' })}
         />
       }
     >
-      <Pressable onPress={ctx.back} accessibilityRole="button" hitSlop={8}>
+      <Pressable onPress={ctx.back} accessibilityRole="button" hitSlop={8} style={styles.touch}>
         <Text style={styles.previewTitle}>{titleOf(ctx)}  <Text style={styles.link}>수정</Text></Text>
       </Pressable>
 
       <View style={styles.center}>
-        <Pressable onPress={play} accessibilityRole="button" accessibilityLabel={playing ? '일시정지' : '재생'}>
+        <Pressable onPress={play} accessibilityRole="button" accessibilityLabel={playing ? '일시정지' : '재생'} style={styles.touch}>
           <TransitionStage
             scene={scene}
             prev={prevScene}
@@ -459,6 +465,8 @@ function Player({ uri, width, aspect }: { uri: string; width: number; aspect: 'p
 }
 
 const styles = StyleSheet.create({
+  // 손가락으로 누르는 자리는 최소 크기를 보장한다.
+  touch: { minWidth: MIN_TOUCH, minHeight: MIN_TOUCH, justifyContent: 'center' },
   titleInput: { backgroundColor: colors.surface, borderRadius: radius.item, paddingHorizontal: 16, minHeight: 56, fontSize: 18, fontWeight: '800', color: colors.text },
   sub: { fontSize: 12, color: colors.textSub },
   group: { gap: 8, marginTop: 4 },

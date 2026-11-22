@@ -409,7 +409,8 @@ export const fontStyleOf = (id?: FontId): TextStyle => {
 
 // ---------- 자막 모양 ----------
 
-export type CaptionPos = 'top' | 'middle' | 'bottom';
+/** 서버 렌더러(server/worker/vlog-render.ts)가 쓰는 이름과 같아야 한다. 'center' 를 'middle' 로 쓰면 조용히 아래로 떨어진다. */
+export type CaptionPos = 'top' | 'center' | 'bottom';
 export type CaptionSize = 'sm' | 'md' | 'lg';
 export type CaptionBg = 'none' | 'dim' | 'solid' | 'white';
 export type CaptionColor = 'white' | 'black' | 'coral';
@@ -430,7 +431,7 @@ export interface CaptionStyle {
 
 export const CAPTION_POSITIONS: { id: CaptionPos; label: string }[] = [
   { id: 'top', label: '위' },
-  { id: 'middle', label: '중앙' },
+  { id: 'center', label: '중앙' },
   { id: 'bottom', label: '아래' },
 ];
 
@@ -761,15 +762,16 @@ export function commonLength(media: VlogMedia[]): number | undefined {
 export function splitLength(media: VlogMedia[], setting: PlaceSetting): number {
   const auto = commonLength(media);
   if (auto === undefined) return clampPhotoSec(setting.lengthSec ?? PHOTO_SPLIT_SEC);
-  return Math.max(1, Math.min(auto, setting.lengthSec ?? auto));
+  // 원본이 1초보다 짧으면 1초로 올리지 않는다(없는 구간을 만들어 내게 된다).
+  return Math.max(Math.min(1, auto), Math.min(auto, setting.lengthSec ?? auto));
 }
 
 /** 이어 재생에서 동영상이 쓰는 길이: 직접 정한 값(원본 길이 이하) 또는 기본(원본, 최대 5초) */
 export function videoLength(m: VlogMedia, setting: PlaceSetting): number {
   const orig = m.seconds || VIDEO_SEQUENCE_MAX_SEC;
   const custom = setting.videoLen?.[m.item.id];
-  if (custom !== undefined) return Math.max(1, Math.min(orig, Math.round(custom)));
-  return Math.max(1, Math.min(orig, VIDEO_SEQUENCE_MAX_SEC));
+  if (custom !== undefined) return Math.max(Math.min(1, orig), Math.min(orig, Math.round(custom)));
+  return Math.min(orig, VIDEO_SEQUENCE_MAX_SEC);
 }
 
 export const clampPhotoSec = (v: number): number => Math.max(MIN_PHOTO_SEC, Math.min(MAX_PHOTO_SEC, Math.round(v)));
@@ -945,6 +947,38 @@ export function limitProblem(timeline: Timeline): string | null {
   if (timeline.itemCount > MAX_ITEMS) return `기록은 ${MAX_ITEMS}개까지 담을 수 있어요. ${timeline.itemCount - MAX_ITEMS}개를 줄여 주세요.`;
   if (timeline.totalSec > MAX_TOTAL_SEC) return `영상은 ${MAX_TOTAL_SEC / 60}분까지 만들 수 있어요. 길이를 줄여 주세요.`;
   return null;
+}
+
+/**
+ * 영상을 만들기 전에 초안 전체를 확인한다. 문제가 없으면 null.
+ * 길이·개수뿐 아니라 사라진 기록·중복 선택·원본을 벗어난 동영상 구간까지 본다
+ * (미리보기는 건너뛰고 지나가지만, 실제로 만들 때는 그대로 깨진다).
+ */
+export function draftProblem(draft: VlogDraft, days: VlogDay[]): string | null {
+  if (!draft.dayKeys.length) return '담을 날짜를 선택해 주세요.';
+  for (const dayKey of draft.dayKeys) {
+    const day = days.find((x) => x.key === dayKey);
+    if (!day) return '선택한 날짜의 기록에 접근할 수 없어요. 날짜를 다시 골라 주세요.';
+    if (!draft.placeKeys[dayKey]?.length) return '담을 장소를 선택해 주세요.';
+    for (const key of draft.placeKeys[dayKey] ?? []) {
+      const place = day.places.find((p) => p.key === key);
+      const setting = draft.settings[key];
+      if (!place || !setting?.done) return '아직 편집을 완료하지 않은 장소가 있어요.';
+      const selected = resolveMedia(draft, place);
+      if (!selected.media.length || selected.missing) return '삭제된 기록이 있어요. 장소를 다시 편집해 주세요.';
+      if (new Set(draft.mediaIds[key]).size !== draft.mediaIds[key].length) return '같은 기록이 중복으로 담겼어요.';
+      if (setting.mode === 'split' && effectiveMode(setting, selected.media.length) !== 'split')
+        return '고른 개수에 맞는 분할 템플릿을 다시 골라 주세요.';
+      if (selected.media.length > MAX_ITEMS_PER_PLACE) return `한 장소에는 ${MAX_ITEMS_PER_PLACE}개까지 담을 수 있어요.`;
+      for (const m of selected.media.filter((x) => x.item.kind === 'video')) {
+        const len = setting.mode === 'split' ? splitLength(selected.media, setting) : videoLength(m, setting);
+        const start = setting.videoStart[m.item.id] ?? 0;
+        if (!Number.isFinite(start) || !Number.isFinite(len) || start < 0 || len <= 0 || start + len - (m.seconds ?? 0) > 1e-9)
+          return '동영상 사용 구간이 원본을 벗어났어요. 구간을 다시 골라 주세요.';
+      }
+    }
+  }
+  return limitProblem(buildTimeline(draft, { days }));
 }
 
 /** 편집 내용이 바뀌었는지 비교하는 서명(제목·선택·장면 구성). 진행 상태(done 등)는 넣지 않는다. */
