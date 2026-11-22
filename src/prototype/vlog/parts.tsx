@@ -29,10 +29,13 @@ import {
   fontStyleOf,
   motionAt,
   placeLabelOpacity,
+  stickerPosition,
+  stickerPx,
   type AnimFrame,
   type CaptionStyle,
   type MotionFrame,
   type PlaceLabel,
+  type Sticker,
   type TimelineClip,
   type TimelineScene,
   type AspectId,
@@ -261,6 +264,8 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
   // 자막과 라벨은 각자 정해진 높이에 따로 놓는다(서버 렌더러와 같은 방식·같은 값).
   // 한 칸에 쌓아 올리면 위아래 순서가 서버와 뒤바뀐다.
   const outWidth = aspectOf(scene.aspect).width;
+  // 스티커: 이어 재생은 지금 보이는 사진의 것, 분할은 장면 전체의 것.
+  const stickers = scene.mode === 'split' ? scene.stickers : (clip?.stickers ?? []);
   const captionBox = caption ? <CaptionBox text={caption} style={cap} width={width} outWidth={outWidth} anim={capAnim} /> : null;
   const labelBox =
     scene.placeText || scene.dateText ? (
@@ -307,6 +312,9 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
           {clip.kind === 'video' ? <Text style={styles.videoMark}>▶</Text> : null}
         </>
       ) : null}
+      {stickers.map((st, i) => (
+        <StickerMark key={`${st.emoji}-${st.spot}-${i}`} sticker={st} width={width} height={height} outWidth={outWidth} />
+      ))}
       {labelBox ? (
         <View style={[styles.capZone, { top: `${PLACE_LABEL_Y[label.pos] * 100}%` }]} pointerEvents="none">
           {labelBox}
@@ -405,6 +413,33 @@ function PlaceLabelCard({
         {text}
       </Text>
     </View>
+  );
+}
+
+/**
+ * 장면 위에 얹는 그림 문자 하나.
+ * 자리는 비율 좌표, 크기는 출력 화면 기준 px 를 줄여 쓴다(자막과 같은 방식).
+ */
+function StickerMark({ sticker, width, height, outWidth }: { sticker: Sticker; width: number; height: number; outWidth: number }) {
+  const { x, y } = stickerPosition(sticker.spot);
+  const size = Math.max(10, stickerPx(sticker.size) * (width / outWidth));
+  return (
+    <Text
+      allowFontScaling={false}
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: x * width - size / 2,
+        top: y * height - size / 2,
+        width: size,
+        height: size,
+        fontSize: size * 0.82,
+        lineHeight: size,
+        textAlign: 'center',
+      }}
+    >
+      {sticker.emoji}
+    </Text>
   );
 }
 

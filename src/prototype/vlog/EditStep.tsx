@@ -29,7 +29,11 @@ import {
   MIN_PHOTO_SEC,
   PHOTO_SEQUENCE_SEC,
   PHOTO_SPLIT_SEC,
+  MAX_STICKERS,
   SPEEDS,
+  STICKERS,
+  STICKER_SIZES,
+  STICKER_SPOTS,
   captionStyleOf,
   captionWarning,
   clampPhotoSec,
@@ -50,9 +54,15 @@ import {
   type FontId,
   type MotionId,
   type PlaceLabel,
+  type Sticker,
+  type StickerSize,
+  type StickerSpot,
   type PlaceSetting,
 } from './model';
 import { FooterButtons, Heading, SceneCanvas, StateCard, StepFrame, TransitionStage } from './parts';
+
+/** 스티커를 새로 붙일 때 자리를 고르는 차례. 서로 멀리 떨어진 모서리부터 쓴다. */
+const STICKER_SPOT_ORDER: StickerSpot[] = ['tr', 'bl', 'tl', 'br', 'tc', 'bc', 'mr', 'ml', 'mc'];
 
 /** 한 장소의 설정을 고친다. 고치면 "이 장소 완료"는 풀린다. */
 const patch = (ctx: StepCtx, placeKey: string, change: Partial<PlaceSetting>) =>
@@ -206,6 +216,19 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
     ctx.update((d) => ({ ...d, placeLabel: { ...placeLabelOf(d.placeLabel), ...change } }));
     if (scene) playAnim(scene.seconds);
   };
+
+  // 스티커: 이어 재생은 지금 보고 있는 사진에, 분할은 장면 전체에 붙는다.
+  const stickerKey = split ? 'all' : (scene?.clips[idx]?.itemId ?? 'all');
+  const stickers = setting.stickers?.[stickerKey] ?? [];
+  const setStickers = (next: Sticker[]) => patch(ctx, key, { stickers: { ...(setting.stickers ?? {}), [stickerKey]: next } });
+  const addSticker = (emoji: string) => {
+    if (stickers.length >= MAX_STICKERS) return ctx.toast(`스티커는 ${MAX_STICKERS}개까지 붙일 수 있어요.`);
+    // 이미 쓰고 있는 자리를 피해 붙인다. 같은 자리에 겹쳐 놓으면 가려서 안 보인다.
+    const spot = STICKER_SPOT_ORDER.find((x) => !stickers.some((st) => st.spot === x)) ?? 'tr';
+    setStickers([...stickers, { emoji, spot, size: 'md' }]);
+  };
+  const editSticker = (i: number, change: Partial<Sticker>) => setStickers(stickers.map((s, j) => (j === i ? { ...s, ...change } : s)));
+  const removeSticker = (i: number) => setStickers(stickers.filter((_, j) => j !== i));
 
   const capChanged = beforeCap !== null && JSON.stringify(beforeCap) !== JSON.stringify(cap);
   const capWarning = captionWarning(cap);
@@ -554,6 +577,52 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
           ) : null}
         </Accordion>
       ) : null}
+
+      <Accordion
+        id="sticker"
+        open={openSec === 'sticker'}
+        onToggle={toggleSec}
+        title="스티커"
+        sub={split ? '분할 화면 전체에 붙어요.' : '지금 보고 있는 사진·동영상에 붙어요. 장면마다 따로 고를 수 있어요.'}
+        summary={stickers.length ? stickers.map((s) => s.emoji).join(' ') : '없음'}
+      >
+        <View style={styles.emojiGrid}>
+          {STICKERS.map((e) => (
+            <Pressable
+              key={e}
+              onPress={() => addSticker(e)}
+              accessibilityRole="button"
+              accessibilityLabel={`${e} 붙이기`}
+              style={styles.emojiBtn}
+            >
+              <Text style={styles.emoji}>{e}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <Text style={styles.value}>
+          {stickers.length}/{MAX_STICKERS}개 · 눌러서 붙이고 아래에서 자리·크기를 고르세요.
+        </Text>
+
+        {stickers.map((st, i) => (
+          <View key={`${st.emoji}-${i}`} style={styles.stickerRow}>
+            <View style={styles.stickerHead}>
+              <Text style={styles.emoji}>{st.emoji}</Text>
+              <Pressable onPress={() => removeSticker(i)} accessibilityRole="button" accessibilityLabel={`${st.emoji} 떼기`} hitSlop={8}>
+                <Text style={styles.link}>떼기</Text>
+              </Pressable>
+            </View>
+            <ChipRow
+              label="자리"
+              options={STICKER_SPOTS.slice(0, 3)}
+              current={st.spot}
+              onPick={(spot: StickerSpot) => editSticker(i, { spot })}
+            />
+            <ChipRow label="" options={STICKER_SPOTS.slice(3, 6)} current={st.spot} onPick={(spot: StickerSpot) => editSticker(i, { spot })} />
+            <ChipRow label="" options={STICKER_SPOTS.slice(6)} current={st.spot} onPick={(spot: StickerSpot) => editSticker(i, { spot })} />
+            <ChipRow label="크기" options={STICKER_SIZES} current={st.size} onPick={(size: StickerSize) => editSticker(i, { size })} />
+          </View>
+        ))}
+      </Accordion>
 
       <Accordion
         id="motion"
@@ -944,6 +1013,11 @@ const styles = StyleSheet.create({
   fontRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
   // 자막 모양 고르기
   speedBox: { gap: 6, paddingBottom: 6 },
+  emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  emojiBtn: { width: 48, height: 48, borderRadius: radius.item, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  emoji: { fontSize: 22, lineHeight: 28 },
+  stickerRow: { gap: 4, paddingTop: 10, marginTop: 6, borderTopWidth: 1, borderTopColor: colors.surface },
+  stickerHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
   chipRow: { gap: 6, paddingTop: 4 },
   chipLabel: { fontSize: 13, fontWeight: '700', color: colors.textSub },
   chips: { flexDirection: 'row', gap: 6 },

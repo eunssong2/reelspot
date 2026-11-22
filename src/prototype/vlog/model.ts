@@ -205,6 +205,57 @@ export function animAt(id: AnimId | undefined, p: number): AnimFrame {
   }
 }
 
+// ---------- 스티커 ----------
+
+/**
+ * 장면 위에 얹는 그림 문자. 서버 렌더러가 글자를 그릴 때 이미 색 이모지 글꼴을
+ * 함께 쓰므로(Noto Color Emoji), 이모지를 글자처럼 얹으면 그대로 나온다.
+ */
+export const STICKERS = ['📍', '❤️', '✨', '🌊', '🌸', '🍀', '☀️', '🌙', '🔥', '🎉', '📸', '🍜', '☕', '🍺', '🚗', '✈️', '🐾', '😊', '😂', '👍'];
+
+/** 스티커를 놓는 자리(가로·세로 3칸). 화면 크기와 무관한 비율 좌표로 바꿔 쓴다. */
+export type StickerSpot = 'tl' | 'tc' | 'tr' | 'ml' | 'mc' | 'mr' | 'bl' | 'bc' | 'br';
+
+export const STICKER_SPOTS: { id: StickerSpot; label: string }[] = [
+  { id: 'tl', label: '왼쪽 위' },
+  { id: 'tc', label: '가운데 위' },
+  { id: 'tr', label: '오른쪽 위' },
+  { id: 'ml', label: '왼쪽' },
+  { id: 'mc', label: '가운데' },
+  { id: 'mr', label: '오른쪽' },
+  { id: 'bl', label: '왼쪽 아래' },
+  { id: 'bc', label: '가운데 아래' },
+  { id: 'br', label: '오른쪽 아래' },
+];
+
+export type StickerSize = 'sm' | 'md' | 'lg';
+/** 스티커 크기(출력 화면 기준 px). 자막과 같은 방식으로 줄여 그린다. */
+export const STICKER_SIZES: { id: StickerSize; label: string; px: number }[] = [
+  { id: 'sm', label: '작게', px: 72 },
+  { id: 'md', label: '보통', px: 120 },
+  { id: 'lg', label: '크게', px: 180 },
+];
+
+export interface Sticker {
+  emoji: string;
+  spot: StickerSpot;
+  size: StickerSize;
+}
+
+/** 한 장면에 붙일 수 있는 스티커 수 */
+export const MAX_STICKERS = 3;
+
+/** 자리 이름을 비율 좌표로 바꾼다(0~1). 가장자리는 조금 안쪽으로 들인다. */
+export function stickerPosition(spot: StickerSpot): { x: number; y: number } {
+  const col = { l: 0.18, c: 0.5, r: 0.82 };
+  const row = { t: 0.16, m: 0.5, b: 0.84 };
+  const r = spot[0] as 't' | 'm' | 'b';
+  const c = spot[1] as 'l' | 'c' | 'r';
+  return { x: col[c], y: row[r] };
+}
+
+export const stickerPx = (size: StickerSize): number => STICKER_SIZES.find((s) => s.id === size)?.px ?? 120;
+
 // ---------- 장소 라벨 ----------
 
 /**
@@ -667,6 +718,8 @@ export interface PlaceSetting {
   motion?: MotionId;
   /** 동영상 재생 속도. 기록 id → 배속. 없으면 1배(보통) */
   speed?: Record<string, number>;
+  /** 장면에 얹는 스티커. 이어 재생은 기록 id, 분할은 'all' 이 키다. */
+  stickers?: Record<string, Sticker[]>;
   /** 색감 효과. 이어 재생은 기록 id, 분할은 'all' 이 키다. 없으면 원본 */
   filters?: Record<string, FilterId>;
   /** 화면 맞춤·자르기(이어 재생). 기록 id → 설정. 없으면 채우기 */
@@ -869,6 +922,8 @@ export interface TimelineClip {
   seconds: number;
   /** 재생 속도(배). 렌더러는 원본을 이 속도로 돌려 seconds 안에 담는다. */
   speed: number;
+  /** 이 사진·동영상 위에 얹는 스티커 */
+  stickers: Sticker[];
   caption: string;
   filter: FilterId;
   frame: FrameAdjust;
@@ -899,6 +954,8 @@ export interface TimelineScene {
   captionStyle: CaptionStyle;
   /** 이 장면 사진의 움직임 */
   motion: MotionId;
+  /** 지금 보이는 화면에 얹는 스티커 */
+  stickers: Sticker[];
   /** 장소 라벨을 어떻게 그릴지 */
   placeLabel: PlaceLabel;
 }
@@ -955,11 +1012,13 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
           seconds: mode === 'split' ? common : clipSeconds(m, setting, isPhotoOnly(media)),
           // 분할 장면은 칸이 동시에 재생되므로 속도를 쓰지 않는다.
           speed: mode === 'split' || m.item.kind !== 'video' ? 1 : videoSpeed(m, setting),
+          stickers: setting.stickers?.[mode === 'split' ? 'all' : m.item.id] ?? [],
           caption: setting.captions[m.item.id] ?? '',
           filter: setting.filters?.[mode === 'split' ? 'all' : m.item.id] ?? 'none',
           frame: clampFrame({ ...defaultFrame(), ...(setting.frames?.[m.item.id] ?? {}) }),
         })),
         caption: setting.captions.all ?? '',
+        stickers: mode === 'split' ? (setting.stickers?.all ?? []) : [],
         dateText: setting.showDate ? day.date.replace(/-/g, '.') : undefined,
         placeText: setting.showPlace ? place.place.name : undefined,
         captionStyle: caption,
@@ -984,6 +1043,7 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
         captionStyle: caption,
         motion: 'none',
         placeLabel: label,
+        stickers: [],
       });
       t += TITLE_CARD_SEC;
     }
@@ -1010,6 +1070,7 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
       captionStyle: caption,
       motion: 'none',
       placeLabel: label,
+      stickers: [],
     });
     t += END_CARD_SEC;
   }
@@ -1077,7 +1138,7 @@ export function draftSignature(draft: VlogDraft, timeline: Timeline): string {
     x: timeline.transition,
     c: captionStyleOf(draft.captionStyle),
     l: placeLabelOf(draft.placeLabel),
-    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.motion, s.dateText, s.placeText, s.caption, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.speed, c.caption, c.filter, c.frame])]),
+    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.motion, s.dateText, s.placeText, s.caption, s.stickers, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.speed, c.caption, c.filter, c.frame, c.stickers])]),
   });
 }
 
