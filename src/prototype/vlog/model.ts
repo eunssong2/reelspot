@@ -205,6 +205,42 @@ export function animAt(id: AnimId | undefined, p: number): AnimFrame {
   }
 }
 
+// ---------- 자막 줄 ----------
+
+/** 자막 한 줄과 그 줄이 보이는 구간(장면 안에서 흐른 초). */
+export interface CaptionLine {
+  text: string;
+  /** 나타나는 시각(초) */
+  from: number;
+  /** 사라지는 시각(초) */
+  to: number;
+}
+
+/** 한 사진·장면에 넣을 수 있는 자막 줄 수 */
+export const MAX_CAPTION_LINES = 3;
+/** 자막 한 줄의 가장 짧은 구간(초) */
+export const MIN_CAPTION_SPAN = 1;
+
+/**
+ * 저장된 자막을 줄 목록으로 읽는다.
+ * 줄 목록을 한 번도 손대지 않았으면 옛 저장본(한 줄짜리 captions)을 장면 전체를 채우는
+ * 한 줄로 본다. 한 번 손댄 뒤에는 빈 목록도 그대로 빈 것으로 본다.
+ */
+export function captionLinesOf(setting: PlaceSetting, key: string, seconds: number): CaptionLine[] {
+  const lines = setting.captionLines?.[key];
+  if (lines !== undefined) {
+    return lines
+      .map((l) => ({ text: l.text, from: Math.max(0, Math.min(seconds, l.from)), to: Math.max(0, Math.min(seconds, l.to)) }))
+      .filter((l) => l.text.trim().length > 0 && l.to > l.from);
+  }
+  const legacy = setting.captions?.[key];
+  return legacy?.trim() ? [{ text: legacy, from: 0, to: seconds }] : [];
+}
+
+/** 흐른 시각에 보여야 할 자막. 없으면 빈 문자열 */
+export const captionAt = (lines: CaptionLine[], sec: number): string =>
+  lines.find((l) => sec >= l.from && sec < l.to)?.text ?? '';
+
 // ---------- 스티커 ----------
 
 /**
@@ -704,8 +740,10 @@ export interface PlaceSetting {
    * 저장된 초안을 읽을 때 글씨체를 되살리는 데만 쓴다.
    */
   fontId?: FontId;
-  /** 자막. 이어 재생은 기록 id, 분할은 'all' 이 키다. */
+  /** (이전 버전) 한 줄짜리 자막. 줄 목록을 손대기 전까지만 읽는다. */
   captions: Record<string, string>;
+  /** 자막 줄 목록. 이어 재생은 기록 id, 분할은 'all' 이 키다. */
+  captionLines?: Record<string, CaptionLine[]>;
   /** 분할 장면의 공통 길이를 직접 줄였을 때(초). 없으면 자동 맞춤 */
   lengthSec?: number;
   /** 사진만 고른 이어 재생에서 사진 한 장을 보여 주는 시간(초). 없으면 기본값 */
@@ -922,9 +960,10 @@ export interface TimelineClip {
   seconds: number;
   /** 재생 속도(배). 렌더러는 원본을 이 속도로 돌려 seconds 안에 담는다. */
   speed: number;
+  /** 이 사진·동영상에 붙는 자막 줄들(구간 포함) */
+  captions: CaptionLine[];
   /** 이 사진·동영상 위에 얹는 스티커 */
   stickers: Sticker[];
-  caption: string;
   filter: FilterId;
   frame: FrameAdjust;
 }
@@ -946,8 +985,8 @@ export interface TimelineScene {
   mode?: PlayMode;
   template?: Template;
   clips: TimelineClip[];
-  /** 분할 장면 전체에 붙는 자막 */
-  caption: string;
+  /** 분할 장면 전체에 붙는 자막 줄들(구간 포함) */
+  captions: CaptionLine[];
   dateText?: string;
   placeText?: string;
   /** 자막을 어떻게 그릴지. 영상 전체가 같은 값을 받는다(렌더러도 이 값대로 그린다). */
@@ -1013,11 +1052,11 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
           // 분할 장면은 칸이 동시에 재생되므로 속도를 쓰지 않는다.
           speed: mode === 'split' || m.item.kind !== 'video' ? 1 : videoSpeed(m, setting),
           stickers: setting.stickers?.[mode === 'split' ? 'all' : m.item.id] ?? [],
-          caption: setting.captions[m.item.id] ?? '',
+          captions: captionLinesOf(setting, m.item.id, mode === 'split' ? common : clipSeconds(m, setting, isPhotoOnly(media))),
           filter: setting.filters?.[mode === 'split' ? 'all' : m.item.id] ?? 'none',
           frame: clampFrame({ ...defaultFrame(), ...(setting.frames?.[m.item.id] ?? {}) }),
         })),
-        caption: setting.captions.all ?? '',
+        captions: mode === 'split' ? captionLinesOf(setting, 'all', seconds) : [],
         stickers: mode === 'split' ? (setting.stickers?.all ?? []) : [],
         dateText: setting.showDate ? day.date.replace(/-/g, '.') : undefined,
         placeText: setting.showPlace ? place.place.name : undefined,
@@ -1039,7 +1078,7 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
         titleDate: day.date.replace(/-/g, '.'),
         titleText: draft.dayTitles?.[dayKey]?.trim() || day.title,
         clips: [],
-        caption: '',
+        captions: [],
         captionStyle: caption,
         motion: 'none',
         placeLabel: label,
@@ -1066,7 +1105,7 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
       transition: draft.transition ?? 'none',
       titleText: draft.endText?.trim() || END_TEXT_DEFAULT,
       clips: [],
-      caption: '',
+      captions: [],
       captionStyle: caption,
       motion: 'none',
       placeLabel: label,
@@ -1138,7 +1177,7 @@ export function draftSignature(draft: VlogDraft, timeline: Timeline): string {
     x: timeline.transition,
     c: captionStyleOf(draft.captionStyle),
     l: placeLabelOf(draft.placeLabel),
-    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.motion, s.dateText, s.placeText, s.caption, s.stickers, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.speed, c.caption, c.filter, c.frame, c.stickers])]),
+    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.motion, s.dateText, s.placeText, s.captions, s.stickers, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.speed, c.captions, c.filter, c.frame, c.stickers])]),
   });
 }
 

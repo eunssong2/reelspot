@@ -23,6 +23,7 @@ import {
   TITLE_NAME_Y,
   PLACE_LABEL_PX,
   PLACE_LABEL_Y,
+  captionAt,
   captionBgColor,
   captionLayout,
   filterOf,
@@ -246,7 +247,9 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
   }
   const index = clipIndex ?? sceneClipAt(scene, localSec);
   const clip: TimelineClip | undefined = scene.clips[index];
-  const caption = scene.mode === 'split' ? scene.caption : (clip?.caption ?? '');
+  // 자막은 여러 줄이 각자 구간을 갖는다. 재생 중이면 그 시각의 줄을, 멈춘 그림에서는 첫 줄을 보여 준다.
+  const captionLines = scene.mode === 'split' ? scene.captions : (clip?.captions ?? []);
+  const caption = animate ? captionAt(captionLines, scene.mode === 'split' ? localSec : localSec - clipSpan(scene, index).start) : (captionLines[0]?.text ?? '');
   const cap = scene.captionStyle;
   const label = scene.placeLabel;
 

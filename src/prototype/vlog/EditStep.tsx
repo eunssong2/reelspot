@@ -29,11 +29,14 @@ import {
   MIN_PHOTO_SEC,
   PHOTO_SEQUENCE_SEC,
   PHOTO_SPLIT_SEC,
+  MAX_CAPTION_LINES,
   MAX_STICKERS,
+  MIN_CAPTION_SPAN,
   SPEEDS,
   STICKERS,
   STICKER_SIZES,
   STICKER_SPOTS,
+  captionLinesOf,
   captionStyleOf,
   captionWarning,
   clampPhotoSec,
@@ -48,6 +51,7 @@ import {
   videoSpeed,
   moveItem,
   resolveMedia,
+  type CaptionLine,
   type CaptionStyle,
   type FilterId,
   type FontGroup,
@@ -176,7 +180,51 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
     if (!curClip) return;
     patch(ctx, key, { frames: { ...(setting.frames ?? {}), [curClip.itemId]: clampFrame({ ...curClip.frame, ...change }) } });
   };
-  const setCaption = (text: string) => patch(ctx, key, { captions: { ...setting.captions, [captionKey]: text } });
+  /** 지금 보고 있는 사진·장면이 화면에 머무는 시간(초). 자막 구간의 끝이 된다. */
+  const clipSec = split ? (scene?.seconds ?? 0) : (scene?.clips[idx]?.seconds ?? 0);
+  /**
+   * 고치는 동안에는 글자가 빈 줄도 남겨 둬야 하므로 저장된 값을 그대로 읽는다.
+   * (captionLinesOf 는 빈 줄을 걸러 내므로 미리보기·타임라인에서만 쓴다.)
+   */
+  const lines: CaptionLine[] =
+    setting.captionLines?.[captionKey] ??
+    (setting.captions[captionKey]?.trim() ? [{ text: setting.captions[captionKey], from: 0, to: clipSec }] : []);
+  const setLines = (next: CaptionLine[]) => patch(ctx, key, { captionLines: { ...(setting.captionLines ?? {}), [captionKey]: next } });
+  const editLine = (i: number, change: Partial<CaptionLine>) => setLines(lines.map((l, j) => (j === i ? { ...l, ...change } : l)));
+  const addLine = () => {
+    if (lines.length >= MAX_CAPTION_LINES) return ctx.toast(`자막은 ${MAX_CAPTION_LINES}줄까지 넣을 수 있어요.`);
+    // 앞 줄이 끝난 시각부터 장면 끝까지를 새 줄로 잡는다.
+    const from = lines.length ? Math.max(...lines.map((l) => l.to)) : 0;
+    if (clipSec - from >= MIN_CAPTION_SPAN) return setLines([...lines, { text: '', from, to: clipSec }]);
+    // 뒤에 자리가 없으면 가장 긴 줄을 반으로 나눠 뒤쪽을 새 줄로 쓴다.
+    // (한 줄이 장면을 다 차지한 상태에서 줄을 더 넣으려는 흔한 경우다.)
+    let longest = 0;
+    lines.forEach((l, i) => {
+      if (l.to - l.from > lines[longest].to - lines[longest].from) longest = i;
+    });
+    const target = lines[longest];
+    if (target.to - target.from < MIN_CAPTION_SPAN * 2) return ctx.toast('장면이 짧아 자막을 더 넣을 수 없어요.');
+    const mid = Math.round(((target.from + target.to) / 2) * 2) / 2;
+    setLines([
+      ...lines.map((l, i) => (i === longest ? { ...l, to: mid } : l)),
+      { text: '', from: mid, to: target.to },
+    ]);
+  };
+  const removeLine = (i: number) => setLines(lines.filter((_, j) => j !== i));
+  /** 이 자막을 뒤쪽 장면에도 그대로 넣는다. 장면마다 길이가 달라 끝 시각은 그 장면에 맞춰 줄인다. */
+  const copyToRest = () => {
+    const rest = scene ? scene.clips.slice(idx + 1) : [];
+    if (!rest.length) return ctx.toast('뒤에 넣을 장면이 없어요.');
+    const next = { ...(setting.captionLines ?? {}) };
+    for (const c of rest) {
+      next[c.itemId] = lines
+        .filter((l) => l.text.trim())
+        .map((l) => ({ text: l.text, from: Math.min(l.from, Math.max(0, c.seconds - MIN_CAPTION_SPAN)), to: Math.min(l.to, c.seconds) }))
+        .filter((l) => l.to > l.from);
+    }
+    patch(ctx, key, { captionLines: next });
+    ctx.toast(`뒤 장면 ${rest.length}개에 같은 자막을 넣었어요.`);
+  };
 
   // 자막 모양은 장면별이 아니라 영상 전체에 하나다(한 영상에 글씨체가 섞이지 않게).
   const cap = captionStyleOf(ctx.draft.captionStyle);
@@ -371,24 +419,63 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
           revealCaption();
         }}
         title={split ? '자막 (선택) · 분할 화면 전체에 1개' : '자막 (선택)'}
-        summary={setting.captions[captionKey] || '없음'}
+        summary={lines.filter((l) => l.text.trim()).map((l) => l.text).join(' · ') || '없음'}
       >
-      <TextInput
-        value={setting.captions[captionKey] ?? ''}
-        onChangeText={setCaption}
-        placeholder="자막을 입력하세요"
-        placeholderTextColor={colors.textMuted}
-        maxLength={40}
-        style={styles.input}
-        accessibilityLabel="이 장면 자막"
-        onFocus={() => {
-          captionFocused.current = true;
-          revealCaption();
-        }}
-        onBlur={() => {
-          captionFocused.current = false;
-        }}
-      />
+      {lines.length === 0 ? (
+        <Text style={styles.value}>아직 자막이 없어요. 아래에서 한 줄 넣어 보세요.</Text>
+      ) : null}
+
+      {lines.map((line, i) => (
+        <View key={i} style={i === 0 ? undefined : styles.lineRow}>
+          <TextInput
+            value={line.text}
+            onChangeText={(text) => editLine(i, { text })}
+            placeholder={`자막 ${i + 1}`}
+            placeholderTextColor={colors.textMuted}
+            maxLength={40}
+            style={styles.input}
+            accessibilityLabel={`자막 ${i + 1}`}
+            onFocus={() => {
+              captionFocused.current = true;
+              revealCaption();
+            }}
+            onBlur={() => {
+              captionFocused.current = false;
+            }}
+          />
+          <View style={styles.spanRow}>
+            <SecStepper
+              label="시작"
+              value={line.from}
+              min={0}
+              max={line.to - MIN_CAPTION_SPAN}
+              onChange={(from) => editLine(i, { from })}
+            />
+            <SecStepper
+              label="끝"
+              value={line.to}
+              min={line.from + MIN_CAPTION_SPAN}
+              max={clipSec}
+              onChange={(to) => editLine(i, { to })}
+            />
+            <Pressable onPress={() => removeLine(i)} accessibilityRole="button" accessibilityLabel={`자막 ${i + 1} 떼기`} hitSlop={8}>
+              <Text style={styles.link}>떼기</Text>
+            </Pressable>
+          </View>
+        </View>
+      ))}
+
+      <View style={styles.spanRow}>
+        <Pressable onPress={addLine} accessibilityRole="button" hitSlop={8}>
+          <Text style={styles.link}>+ 자막 줄 추가 ({lines.length}/{MAX_CAPTION_LINES})</Text>
+        </Pressable>
+        {!split && lines.some((l) => l.text.trim()) && scene && idx < scene.clips.length - 1 ? (
+          <Pressable onPress={copyToRest} accessibilityRole="button" hitSlop={8}>
+            <Text style={styles.link}>뒤 장면에도 넣기</Text>
+          </Pressable>
+        ) : null}
+      </View>
+      <Text style={styles.value}>이 장면은 {Math.round(clipSec * 10) / 10}초예요. 줄마다 보이는 구간을 정할 수 있어요.</Text>
       </Accordion>
 
       <Accordion
@@ -422,7 +509,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         </Pressable>
 
         {capWarning ? <Text style={styles.warn}>{capWarning}</Text> : null}
-        {!setting.captions[captionKey] ? (
+        {!lines.some((l) => l.text.trim()) ? (
           <Text style={styles.value}>자막을 적으면 위 미리보기에서 바로 확인할 수 있어요.</Text>
         ) : null}
 
@@ -821,6 +908,38 @@ function ChipRow<T extends string>({
   );
 }
 
+/** 자막이 보이는 구간을 0.5초씩 옮기는 단추. 앞뒤 줄과 장면 길이를 넘지 못한다. */
+function SecStepper({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
+  const step = 0.5;
+  const show = Math.round(value * 10) / 10;
+  const canDown = value - step >= min - 1e-9;
+  const canUp = value + step <= max + 1e-9;
+  return (
+    <View style={styles.spanBox}>
+      <Text style={styles.spanLabel}>{label}</Text>
+      <Pressable
+        onPress={() => onChange(Math.max(min, value - step))}
+        disabled={!canDown}
+        accessibilityRole="button"
+        accessibilityLabel={`${label} 당기기`}
+        style={[styles.spanBtn, !canDown && styles.off]}
+      >
+        <Text style={styles.miniText}>−</Text>
+      </Pressable>
+      <Text style={styles.spanValue}>{show}초</Text>
+      <Pressable
+        onPress={() => onChange(Math.min(max, value + step))}
+        disabled={!canUp}
+        accessibilityRole="button"
+        accessibilityLabel={`${label} 미루기`}
+        style={[styles.spanBtn, !canUp && styles.off]}
+      >
+        <Text style={styles.miniText}>+</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function Row({ label, value, children }: { label: string; value: string; children: React.ReactNode }) {
   return (
     <View style={styles.toggleRow}>
@@ -1013,6 +1132,12 @@ const styles = StyleSheet.create({
   fontRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
   // 자막 모양 고르기
   speedBox: { gap: 6, paddingBottom: 6 },
+  lineRow: { paddingTop: 10, marginTop: 6, borderTopWidth: 1, borderTopColor: colors.surface },
+  spanRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', paddingTop: 6 },
+  spanBox: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  spanLabel: { fontSize: 12, fontWeight: '700', color: colors.textSub },
+  spanBtn: { width: 32, height: 32, borderRadius: 10, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  spanValue: { minWidth: 34, textAlign: 'center', fontSize: 13, fontWeight: '800', color: colors.text },
   emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   emojiBtn: { width: 48, height: 48, borderRadius: radius.item, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   emoji: { fontSize: 22, lineHeight: 28 },
