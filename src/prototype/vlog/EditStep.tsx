@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View, type ViewProps } from 'react-native';
+import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View, type ViewProps } from 'react-native';
 
 import { SafeImage } from '../../demo/SafeImage';
 import { ActionButton } from '../components/FormParts';
+import { Toggle } from '../components/Toggle';
 import { MIN_TOUCH, colors, GUTTER, radius, shadow } from '../styles/tokens';
 import { shortDotDateLabel } from '../utils/date';
 import { ro } from '../utils/korean';
@@ -553,16 +554,16 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         summary={`${setting.showPlace ? '장소명 켬' : '장소명 끔'} · ${setting.showDate ? '날짜 켬' : '날짜 끔'} · ${PLACE_LABEL_POSITIONS.find((x) => x.id === plabel.pos)?.label}`}
       >
       <Row label="장소명 표시" value={found.place.place.name}>
-        <Switch value={setting.showPlace} onValueChange={(v) => patch(ctx, key, { showPlace: v })} trackColor={{ true: colors.primary }} thumbColor={colors.bg} accessibilityLabel="장소명 표시" />
+        <Toggle value={setting.showPlace} onValueChange={(v) => patch(ctx, key, { showPlace: v })} accessibilityLabel="장소명 표시" />
       </Row>
       <Row label="날짜 표시" value={dateStr}>
-        <Switch value={setting.showDate} onValueChange={(v) => patch(ctx, key, { showDate: v })} trackColor={{ true: colors.primary }} thumbColor={colors.bg} accessibilityLabel="날짜 표시" />
+        <Toggle value={setting.showDate} onValueChange={(v) => patch(ctx, key, { showDate: v })} accessibilityLabel="날짜 표시" />
       </Row>
       <Row label="핀 붙이기" value={plabel.pin ? '📍 장소명' : '장소명만'}>
-        <Switch value={plabel.pin} onValueChange={(v) => setLabel({ pin: v })} trackColor={{ true: colors.primary }} thumbColor={colors.bg} accessibilityLabel="핀 붙이기" />
+        <Toggle value={plabel.pin} onValueChange={(v) => setLabel({ pin: v })} accessibilityLabel="핀 붙이기" />
       </Row>
       <Row label="잠깐만 보이기" value={plabel.onlyAtStart ? '장면 시작에 2.5초' : '장면 내내'}>
-        <Switch value={plabel.onlyAtStart} onValueChange={(v) => setLabel({ onlyAtStart: v })} trackColor={{ true: colors.primary }} thumbColor={colors.bg} accessibilityLabel="잠깐만 보이기" />
+        <Toggle value={plabel.onlyAtStart} onValueChange={(v) => setLabel({ onlyAtStart: v })} accessibilityLabel="잠깐만 보이기" />
       </Row>
       <ChipRow label="위치" options={PLACE_LABEL_POSITIONS} current={plabel.pos} onPick={(pos) => setLabel({ pos })} />
       <ChipRow label="배경" options={CAPTION_BGS} current={plabel.bg} onPick={(bg) => setLabel({ bg })} />

@@ -31,6 +31,10 @@ export const MIN_PHOTO_SEC = 1;
 export const MAX_PHOTO_SEC = 10;
 /** 날짜가 바뀔 때 넣는 제목 화면 길이(초) */
 export const TITLE_CARD_SEC = 2;
+/** 마지막 끝 화면 길이(초) */
+export const END_CARD_SEC = 2;
+/** 끝 화면에 아무것도 적지 않았을 때 쓰는 문구 */
+export const END_TEXT_DEFAULT = '함께한 날들';
 /** 프로젝트 전체 기록 수·길이 제한 */
 export const MAX_ITEMS = 50;
 export const MAX_TOTAL_SEC = 180;
@@ -698,6 +702,10 @@ export interface VlogDraft {
   dayTitles?: Record<string, string>;
   /** 장면 전환 효과. 없으면 'none' */
   transition?: TransitionId;
+  /** 마지막에 끝 화면을 넣을지. 없으면 끔 */
+  endCard?: boolean;
+  /** 끝 화면에 적는 문구. 비어 있으면 기본 문구를 쓴다. */
+  endText?: string;
   /** 자막 모양(글씨체·위치·크기·배경·글자색·등장). 영상 전체에 하나. 없으면 기본값 */
   captionStyle?: CaptionStyle;
   /** 사진 움직임의 기본값. 장면별로 다르게 둘 수 있다. 없으면 'none' */
@@ -952,6 +960,27 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
       scenes.push({ ...s, startSec: t });
       t += s.seconds;
     }
+  }
+  // 끝 화면. 날짜 제목 화면과 같은 모양(kind: 'title')으로 내보낸다.
+  // 렌더러가 제목 화면을 그리는 길을 그대로 타므로, 서버를 고치지 않아도 지금 바로 나온다.
+  // 날짜(titleDate)를 비우면 문구 한 줄만 그려진다.
+  if (draft.endCard && scenes.length > 0) {
+    scenes.push({
+      id: 'end',
+      aspect: aspectOf(draft.aspect).id,
+      kind: 'title',
+      dayKey: scenes[scenes.length - 1].dayKey,
+      startSec: t,
+      seconds: END_CARD_SEC,
+      transition: draft.transition ?? 'none',
+      titleText: draft.endText?.trim() || END_TEXT_DEFAULT,
+      clips: [],
+      caption: '',
+      captionStyle: caption,
+      motion: 'none',
+      placeLabel: label,
+    });
+    t += END_CARD_SEC;
   }
   return { scenes, totalSec: t, itemCount, aspect: aspectOf(draft.aspect).id, transition: draft.transition ?? 'none' };
 }

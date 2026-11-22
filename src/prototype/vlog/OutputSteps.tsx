@@ -1,14 +1,17 @@
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { ActionButton } from '../components/FormParts';
+import { Toggle } from '../components/Toggle';
 import { MIN_TOUCH, colors, GUTTER, radius } from '../styles/tokens';
 import { dayOfWeekLabel, shortDotDateLabel } from '../utils/date';
 import { selectedPlaces, type StepCtx } from './ctx';
 import {
   aspectOf,
   fitWidth,
+  END_CARD_SEC,
+  END_TEXT_DEFAULT,
   TITLE_CARD_SEC,
   TRANSITION_SEC,
   daySeconds,
@@ -82,12 +85,10 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
             <View style={styles.dayTitleBox}>
               <View style={styles.dayTitleTop}>
                 <Text style={styles.cardSub}>날짜 제목 화면 {TITLE_CARD_SEC}초</Text>
-                <Switch
+                <Toggle
                   style={styles.touch}
                   value={Boolean(draft.dayTitleCard?.[day.key])}
                   onValueChange={(v) => ctx.update((d) => ({ ...d, dayTitleCard: { ...(d.dayTitleCard ?? {}), [day.key]: v } }))}
-                  trackColor={{ true: colors.primary }}
-                  thumbColor={colors.bg}
                   accessibilityLabel={`${weekday(day.date)} 제목 화면 넣기`}
                 />
               </View>
@@ -145,6 +146,34 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
           </View>
         );
       })}
+
+      <View style={styles.card}>
+        <View style={styles.cardMain}>
+          <Text style={styles.cardTitle}>끝 화면</Text>
+          <Text style={styles.cardSub}>
+            마지막에 문구 한 장을 {END_CARD_SEC}초 넣어요. 영상이 뚝 끊기지 않아요.
+          </Text>
+        </View>
+        <Toggle
+          value={Boolean(draft.endCard)}
+          onValueChange={(v) => ctx.update((d) => ({ ...d, endCard: v }))}
+          accessibilityLabel="끝 화면"
+        />
+      </View>
+      {draft.endCard ? (
+        <View style={styles.dayTitleBox}>
+          <TextInput
+            value={draft.endText ?? ''}
+            onChangeText={(v) => ctx.update((d) => ({ ...d, endText: v }))}
+            placeholder={END_TEXT_DEFAULT}
+            placeholderTextColor={colors.textMuted}
+            maxLength={30}
+            accessibilityLabel="끝 화면 문구"
+            style={styles.dayTitleInput}
+          />
+          <Text style={styles.hint}>비워 두면 &apos;{END_TEXT_DEFAULT}&apos;이 들어가요.</Text>
+        </View>
+      ) : null}
     </StepFrame>
   );
 }
