@@ -69,7 +69,7 @@ export const fitWidth = (id: AspectId | undefined, portraitW: number, maxW: numb
 
 // ---------- 장면 전환 ----------
 
-export type TransitionId = 'none' | 'fade' | 'slide' | 'zoom';
+export type TransitionId = 'none' | 'fade' | 'slide' | 'slideUp' | 'zoom' | 'zoomOut' | 'flash' | 'dip';
 
 export interface TransitionPreset {
   id: TransitionId;
@@ -81,11 +81,151 @@ export interface TransitionPreset {
 export const TRANSITIONS: TransitionPreset[] = [
   { id: 'none', label: '없음', desc: '바로 다음 장면으로' },
   { id: 'fade', label: '페이드', desc: '서서히 겹치며 바뀜' },
-  { id: 'slide', label: '슬라이드', desc: '옆으로 밀며 바뀜' },
+  { id: 'slide', label: '옆으로', desc: '옆에서 밀며 바뀜' },
+  { id: 'slideUp', label: '위로', desc: '아래에서 올라오며 바뀜' },
   { id: 'zoom', label: '확대', desc: '커지며 나타남' },
+  { id: 'zoomOut', label: '축소', desc: '작아지며 나타남' },
+  { id: 'flash', label: '흰 번쩍', desc: '흰 화면을 거쳐 바뀜' },
+  { id: 'dip', label: '검게', desc: '검은 화면을 거쳐 바뀜' },
 ];
 /** 전환이 진행되는 시간(초). 다음 장면의 처음 구간 안에서 일어나며 전체 길이는 늘지 않는다. */
 export const TRANSITION_SEC = 0.5;
+
+// ---------- 사진 움직임(사진이 멈춰 있지 않게) ----------
+
+export type MotionId = 'none' | 'zoomIn' | 'zoomOut' | 'panLeft' | 'panRight' | 'panUp' | 'panDown';
+
+export interface MotionPreset {
+  id: MotionId;
+  label: string;
+  desc: string;
+}
+
+/**
+ * 사진이 보이는 동안 아주 천천히 움직이게 한다(정지 사진을 영상처럼 보이게 하는 연출).
+ * 동영상은 이미 움직이므로 사진에만 적용한다.
+ */
+export const MOTIONS: MotionPreset[] = [
+  { id: 'none', label: '없음', desc: '사진이 그대로 멈춰 있어요' },
+  { id: 'zoomIn', label: '천천히 확대', desc: '사진이 서서히 커져요' },
+  { id: 'zoomOut', label: '천천히 축소', desc: '사진이 서서히 작아져요' },
+  { id: 'panLeft', label: '왼쪽으로', desc: '사진이 왼쪽으로 밀려요' },
+  { id: 'panRight', label: '오른쪽으로', desc: '사진이 오른쪽으로 밀려요' },
+  { id: 'panUp', label: '위로', desc: '사진이 위로 밀려요' },
+  { id: 'panDown', label: '아래로', desc: '사진이 아래로 밀려요' },
+];
+export const motionOf = (id?: MotionId): MotionPreset => MOTIONS.find((m) => m.id === id) ?? MOTIONS[0];
+
+/** 움직임을 넣을 때 사진을 미리 키워 두는 정도. 밀거나 작아져도 빈 곳이 보이지 않게 한다. */
+export const MOTION_ZOOM = 0.14;
+
+/** 사진을 어떻게 놓을지. tx·ty 는 화면 폭·높이에 대한 비율이라 미리보기와 출력에서 같게 보인다. */
+export interface MotionFrame {
+  scale: number;
+  tx: number;
+  ty: number;
+}
+
+/** 사진이 보이는 동안 흐른 비율(0~1)에서의 사진 크기·위치. */
+export function motionAt(id: MotionId | undefined, p: number): MotionFrame {
+  const t = Math.max(0, Math.min(1, p));
+  const z = MOTION_ZOOM;
+  // 밀기는 미리 키워 둔 만큼(양옆 z/2)을 한쪽 끝에서 다른 끝까지 지나간다.
+  const half = z / 2;
+  switch (id) {
+    case 'zoomIn':
+      return { scale: 1 + z * t, tx: 0, ty: 0 };
+    case 'zoomOut':
+      return { scale: 1 + z * (1 - t), tx: 0, ty: 0 };
+    case 'panLeft':
+      return { scale: 1 + z, tx: half * (1 - 2 * t), ty: 0 };
+    case 'panRight':
+      return { scale: 1 + z, tx: half * (2 * t - 1), ty: 0 };
+    case 'panUp':
+      return { scale: 1 + z, tx: 0, ty: half * (1 - 2 * t) };
+    case 'panDown':
+      return { scale: 1 + z, tx: 0, ty: half * (2 * t - 1) };
+    default:
+      return { scale: 1, tx: 0, ty: 0 };
+  }
+}
+
+// ---------- 자막·장소 라벨 등장 ----------
+
+export type AnimId = 'none' | 'fade' | 'up' | 'pop';
+
+export const ANIMS: { id: AnimId; label: string; desc: string }[] = [
+  { id: 'none', label: '없음', desc: '처음부터 그냥 있어요' },
+  { id: 'fade', label: '서서히', desc: '서서히 나타나요' },
+  { id: 'up', label: '올라오며', desc: '아래에서 살짝 올라와요' },
+  { id: 'pop', label: '톡 튀며', desc: '작게 있다 톡 커져요' },
+];
+
+/** 등장에 걸리는 시간(초) */
+export const ANIM_SEC = 0.4;
+
+/** 글자 덩이를 어떻게 놓을지. ty 는 화면 짧은 쪽에 대한 비율이다. */
+export interface AnimFrame {
+  opacity: number;
+  ty: number;
+  scale: number;
+}
+
+/** 등장이 끝난(다 보이는) 상태. 움직임을 쓰지 않는 미리보기가 이 값을 쓴다. */
+export const ANIM_DONE: AnimFrame = { opacity: 1, ty: 0, scale: 1 };
+
+/** 등장이 시작된 뒤 흐른 비율(0~1)에서의 모습. 끝에서 천천히 멈춘다. */
+export function animAt(id: AnimId | undefined, p: number): AnimFrame {
+  const t = Math.max(0, Math.min(1, p));
+  const e = 1 - (1 - t) * (1 - t);
+  switch (id) {
+    case 'fade':
+      return { opacity: e, ty: 0, scale: 1 };
+    case 'up':
+      return { opacity: e, ty: (1 - e) * 0.045, scale: 1 };
+    case 'pop':
+      return { opacity: e, ty: 0, scale: 0.72 + 0.28 * e };
+    default:
+      return ANIM_DONE;
+  }
+}
+
+// ---------- 장소 라벨 ----------
+
+/**
+ * 장면에 붙는 장소(와 날짜) 라벨. 자막과 섞이지 않게 따로 그린다.
+ * 켜고 끄기는 장면별(PlaceSetting.showPlace·showDate)이고, 모양은 영상 하나에 한 벌이다.
+ */
+export interface PlaceLabel {
+  pos: 'top' | 'bottom';
+  bg: CaptionBg;
+  /** 장소 이름 앞에 핀을 붙일지 */
+  pin: boolean;
+  anim: AnimId;
+  /** 장면이 시작될 때 잠깐만 보여 줄지. 끄면 장면 내내 보인다. */
+  onlyAtStart: boolean;
+}
+
+/** onlyAtStart 일 때 라벨이 보이는 시간(초) */
+export const PLACE_LABEL_SEC = 2.5;
+/** 라벨이 사라지는 데 걸리는 시간(초) */
+export const PLACE_LABEL_FADE = 0.4;
+
+export const PLACE_LABEL_POSITIONS: { id: PlaceLabel['pos']; label: string }[] = [
+  { id: 'top', label: '위' },
+  { id: 'bottom', label: '아래' },
+];
+
+export const defaultPlaceLabel = (): PlaceLabel => ({ pos: 'bottom', bg: 'dim', pin: true, anim: 'up', onlyAtStart: false });
+export const placeLabelOf = (label?: Partial<PlaceLabel>): PlaceLabel => ({ ...defaultPlaceLabel(), ...label });
+
+/** 장면 안에서 흐른 시간에 따른 라벨의 투명도. 잠깐만 보여 주는 설정이면 끝에서 사라진다. */
+export function placeLabelOpacity(label: PlaceLabel, localSec: number, sceneSec: number): number {
+  if (!label.onlyAtStart) return 1;
+  const hold = Math.min(PLACE_LABEL_SEC, Math.max(PLACE_LABEL_FADE, sceneSec - PLACE_LABEL_FADE));
+  if (localSec <= hold) return 1;
+  return Math.max(0, 1 - (localSec - hold) / PLACE_LABEL_FADE);
+}
 
 // ---------- 색감 효과 ----------
 
@@ -284,6 +424,8 @@ export interface CaptionStyle {
   size: CaptionSize;
   bg: CaptionBg;
   color: CaptionColor;
+  /** 장면이 시작될 때 자막이 어떻게 나타날지 */
+  anim: AnimId;
 }
 
 export const CAPTION_POSITIONS: { id: CaptionPos; label: string }[] = [
@@ -315,7 +457,7 @@ export const CAPTION_COLORS: { id: CaptionColor; label: string; hex: string }[] 
   { id: 'coral', label: '코랄', hex: '#F1706B' },
 ];
 
-export const defaultCaptionStyle = (): CaptionStyle => ({ fontId: 'gothic', pos: 'bottom', size: 'md', bg: 'dim', color: 'white' });
+export const defaultCaptionStyle = (): CaptionStyle => ({ fontId: 'gothic', pos: 'bottom', size: 'md', bg: 'dim', color: 'white', anim: 'up' });
 
 /** 저장된 초안에 자막 모양이 없을 수도 있어(이전 버전) 기본값을 깔고 읽는다. */
 export const captionStyleOf = (style?: Partial<CaptionStyle>): CaptionStyle => ({ ...defaultCaptionStyle(), ...style });
@@ -333,6 +475,9 @@ export interface CaptionLayout {
   /** 배경이 없을 때 글자가 묻히지 않게 넣는 그림자 */
   shadow: boolean;
 }
+
+/** 자막·장소 라벨 배경색. '없음'이면 undefined */
+export const captionBgColor = (bg: CaptionBg): string | undefined => CAPTION_BG_COLORS[bg];
 
 const CAPTION_BG_COLORS: Record<CaptionBg, string | undefined> = {
   none: undefined,
@@ -474,6 +619,8 @@ export interface PlaceSetting {
   videoLen?: Record<string, number>;
   /** 이 장면이 시작될 때의 전환 효과. 없으면 프로젝트 기본 전환을 따른다. */
   transition?: TransitionId;
+  /** 이 장면 사진의 움직임. 없으면 프로젝트 기본 움직임을 따른다. */
+  motion?: MotionId;
   /** 색감 효과. 이어 재생은 기록 id, 분할은 'all' 이 키다. 없으면 원본 */
   filters?: Record<string, FilterId>;
   /** 화면 맞춤·자르기(이어 재생). 기록 id → 설정. 없으면 채우기 */
@@ -522,8 +669,12 @@ export interface VlogDraft {
   dayTitles?: Record<string, string>;
   /** 장면 전환 효과. 없으면 'none' */
   transition?: TransitionId;
-  /** 자막 모양(글씨체·위치·크기·배경·글자색). 영상 전체에 하나. 없으면 기본값 */
+  /** 자막 모양(글씨체·위치·크기·배경·글자색·등장). 영상 전체에 하나. 없으면 기본값 */
   captionStyle?: CaptionStyle;
+  /** 사진 움직임의 기본값. 장면별로 다르게 둘 수 있다. 없으면 'none' */
+  motion?: MotionId;
+  /** 장소 라벨 모양. 영상 전체에 하나. 없으면 기본값 */
+  placeLabel?: PlaceLabel;
   render?: RenderMark;
   updatedAt: number;
 }
@@ -679,6 +830,10 @@ export interface TimelineScene {
   placeText?: string;
   /** 자막을 어떻게 그릴지. 영상 전체가 같은 값을 받는다(렌더러도 이 값대로 그린다). */
   captionStyle: CaptionStyle;
+  /** 이 장면 사진의 움직임 */
+  motion: MotionId;
+  /** 장소 라벨을 어떻게 그릴지 */
+  placeLabel: PlaceLabel;
 }
 
 export interface Timeline {
@@ -696,6 +851,7 @@ export interface BuildContext {
 /** 초안을 순서대로 펼친 타임라인. 선택이 비어 있는 날짜·장소는 건너뛴다. */
 export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
   const caption = captionStyleOf(draft.captionStyle);
+  const label = placeLabelOf(draft.placeLabel);
   const scenes: TimelineScene[] = [];
   let t = 0;
   let itemCount = 0;
@@ -738,6 +894,8 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
         dateText: setting.showDate ? day.date.replace(/-/g, '.') : undefined,
         placeText: setting.showPlace ? place.place.name : undefined,
         captionStyle: caption,
+        motion: setting.motion ?? draft.motion ?? 'none',
+        placeLabel: label,
       });
     }
     if (placeScenes.length === 0) continue;
@@ -755,6 +913,8 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
         clips: [],
         caption: '',
         captionStyle: caption,
+        motion: 'none',
+        placeLabel: label,
       });
       t += TITLE_CARD_SEC;
     }
@@ -794,7 +954,8 @@ export function draftSignature(draft: VlogDraft, timeline: Timeline): string {
     a: timeline.aspect,
     x: timeline.transition,
     c: captionStyleOf(draft.captionStyle),
-    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.dateText, s.placeText, s.caption, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.caption, c.filter, c.frame])]),
+    l: placeLabelOf(draft.placeLabel),
+    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.motion, s.dateText, s.placeText, s.caption, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.caption, c.filter, c.frame])]),
   });
 }
 

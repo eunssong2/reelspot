@@ -10,12 +10,21 @@ import { Toast } from '../components/Toast';
 import type { Rect } from '../mock/tripData';
 import { colors, GUTTER, radius } from '../styles/tokens';
 import {
+  ANIM_DONE,
+  ANIM_SEC,
   ASPECTS,
+  animAt,
   aspectOf,
+  captionBgColor,
   captionLayout,
   filterOf,
   fontStyleOf,
+  motionAt,
+  placeLabelOpacity,
+  type AnimFrame,
   type CaptionStyle,
+  type MotionFrame,
+  type PlaceLabel,
   type TimelineClip,
   type TimelineScene,
   type AspectId,
@@ -127,6 +136,11 @@ interface CanvasProps {
   localSec?: number;
   /** 이어 재생에서 보여 줄 기록 번호를 직접 지정(편집 화면) */
   clipIndex?: number;
+  /**
+   * 사진 움직임·자막 등장을 localSec 에 맞춰 보여 줄지.
+   * 끄면(기본) 멈춘 그림을 보여 준다 — 편집 화면·완성본 카드가 그렇다.
+   */
+  animate?: boolean;
   /** 분할 장면에서 고른 칸(편집 화면). 테두리로 표시한다. */
   selectedCell?: number;
   /** 분할 장면의 칸을 눌렀을 때(편집 화면) */
@@ -137,7 +151,7 @@ interface CanvasProps {
  * 한 칸(또는 이어 재생 장면)의 사진·동영상 커버를 화면 틀에 놓는다: 직접 자른 영역, 채우기/맞춤, 여백, 색감 효과.
  * 장면 미리보기와 편집 화면이 같은 그림을 쓴다.
  */
-export function ClipLayer({ clip, width, height }: { clip: TimelineClip; width: number; height: number }) {
+export function ClipLayer({ clip, width, height, motion }: { clip: TimelineClip; width: number; height: number; motion?: MotionFrame }) {
   const f = clip.frame;
   const css = filterOf(clip.filter).css;
   const contain = f.fit === 'contain';
@@ -158,6 +172,11 @@ export function ClipLayer({ clip, width, height }: { clip: TimelineClip; width: 
   } else {
     photo = <SafeImage source={clip.image} resizeMode={contain ? 'contain' : 'cover'} style={StyleSheet.absoluteFill} compact />;
   }
+  // 움직임: 먼저 옮기고(원래 크기 기준) 그다음 키운다. 미리 키워 둔 만큼만 움직여 빈 곳이 보이지 않는다.
+  const moving = motion && (motion.scale !== 1 || motion.tx !== 0 || motion.ty !== 0);
+  const move = moving
+    ? { transform: [{ translateX: motion.tx * width }, { translateY: motion.ty * height }, { scale: motion.scale }] }
+    : undefined;
   return (
     <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }, contain && { backgroundColor: f.bg === 'white' ? '#FFFFFF' : '#000000' }]}>
       {contain && f.bg === 'blur' ? (
@@ -165,9 +184,18 @@ export function ClipLayer({ clip, width, height }: { clip: TimelineClip; width: 
           <SafeImage source={clip.image} style={StyleSheet.absoluteFill} compact />
         </View>
       ) : null}
-      <View style={[StyleSheet.absoluteFill, css ? { filter: css } : undefined]}>{photo}</View>
+      <View style={[StyleSheet.absoluteFill, move]}>
+        <View style={[StyleSheet.absoluteFill, css ? { filter: css } : undefined]}>{photo}</View>
+      </View>
     </View>
   );
+}
+
+/** 이어 재생 장면에서 index 번째 사진·동영상이 시작하는 시각과 길이(초) */
+export function clipSpan(scene: TimelineScene, index: number): { start: number; sec: number } {
+  let start = 0;
+  for (let i = 0; i < index; i += 1) start += scene.clips[i]?.seconds ?? 0;
+  return { start, sec: scene.clips[index]?.seconds ?? 0 };
 }
 
 export const sceneClipAt = (scene: TimelineScene, localSec: number): number => {
@@ -184,7 +212,7 @@ export const sceneClipAt = (scene: TimelineScene, localSec: number): number => {
  * 한 장면을 세로 9:16 화면으로 그린다. 미리보기·장면 편집·완성본 카드가 같은 그림을 쓴다.
  * 동영상은 커버 프레임으로 보여 준다(실제 재생은 최종 렌더링의 몫).
  */
-export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCell, onSelectCell }: CanvasProps) {
+export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = false, selectedCell, onSelectCell }: CanvasProps) {
   const height = width / aspectOf(scene.aspect).ratio;
   if (scene.kind === 'title') {
     return (
@@ -200,9 +228,35 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCel
   const clip: TimelineClip | undefined = scene.clips[index];
   const caption = scene.mode === 'split' ? scene.caption : (clip?.caption ?? '');
   const cap = scene.captionStyle;
-  const line = [scene.dateText, scene.placeText].filter(Boolean).join(' · ');
-  // 자막은 고른 위치에, 날짜·장소 줄은 늘 아래에 둔다(자막 배경을 바꿔도 날짜 줄은 그대로다).
-  const captionBox = caption ? <CaptionBox text={caption} style={cap} width={width} height={height} /> : null;
+  const label = scene.placeLabel;
+
+  // 움직임: 멈춘 그림에서는 가운데(0.5)를 보여 준다. 한쪽 끝은 사진이 치우쳐 보여 오해를 준다.
+  const span = scene.mode === 'split' ? { start: 0, sec: scene.seconds } : clipSpan(scene, index);
+  const clipP = animate ? (span.sec > 0 ? (localSec - span.start) / span.sec : 0) : 0.5;
+  // 사진만 움직인다(동영상은 이미 움직인다).
+  const motionFor = (c: TimelineClip | undefined): MotionFrame | undefined =>
+    c && c.kind === 'photo' && scene.motion !== 'none' ? motionAt(scene.motion, clipP) : undefined;
+
+  const capAnim: AnimFrame = animate ? animAt(cap.anim, localSec / ANIM_SEC) : ANIM_DONE;
+  const labelAnim: AnimFrame = animate ? animAt(label.anim, localSec / ANIM_SEC) : ANIM_DONE;
+  const labelFade = animate ? placeLabelOpacity(label, localSec, scene.seconds) : 1;
+
+  const captionBox = caption ? <CaptionBox key="cap" text={caption} style={cap} width={width} height={height} anim={capAnim} /> : null;
+  const labelBox =
+    scene.placeText || scene.dateText ? (
+      <PlaceLabelCard
+        key="label"
+        place={scene.placeText}
+        date={scene.dateText}
+        label={label}
+        width={width}
+        height={height}
+        anim={labelAnim}
+        fade={labelFade}
+      />
+    ) : null;
+  const topItems = [label.pos === 'top' ? labelBox : null, cap.pos === 'top' ? captionBox : null].filter(Boolean);
+  const bottomItems = [cap.pos === 'bottom' ? captionBox : null, label.pos === 'bottom' ? labelBox : null].filter(Boolean);
   return (
     <View style={[styles.canvas, { width, height }]}>
       {scene.mode === 'split' && scene.template ? (
@@ -215,7 +269,7 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCel
           const cellBody = (
             <>
               <View style={[StyleSheet.absoluteFill, { margin: 1, overflow: 'hidden' }, selected && styles.cellSelected]}>
-                {c ? <ClipLayer clip={c} width={cellW - 2} height={cellH - 2} /> : null}
+                {c ? <ClipLayer clip={c} width={cellW - 2} height={cellH - 2} motion={motionFor(c)} /> : null}
               </View>
               {c?.kind === 'video' ? <Text style={styles.videoMark}>▶</Text> : null}
             </>
@@ -240,25 +294,23 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCel
         })
       ) : clip ? (
         <>
-          <ClipLayer clip={clip} width={width} height={height} />
+          <ClipLayer clip={clip} width={width} height={height} motion={motionFor(clip)} />
           {clip.kind === 'video' ? <Text style={styles.videoMark}>▶</Text> : null}
         </>
       ) : null}
-      {captionBox && cap.pos !== 'bottom' ? (
-        <View style={[styles.capZone, cap.pos === 'top' ? styles.capTop : styles.capMiddle]} pointerEvents="none">
+      {topItems.length ? (
+        <View style={[styles.capZone, styles.capTop]} pointerEvents="none">
+          {topItems}
+        </View>
+      ) : null}
+      {captionBox && cap.pos === 'middle' ? (
+        <View style={[styles.capZone, styles.capMiddle]} pointerEvents="none">
           {captionBox}
         </View>
       ) : null}
-      {line || (captionBox && cap.pos === 'bottom') ? (
-        <View style={styles.bottomZone} pointerEvents="none">
-          {cap.pos === 'bottom' ? captionBox : null}
-          {line ? (
-            <View style={styles.infoBox}>
-              <Text style={[styles.infoText, fontStyleOf(cap.fontId)]} numberOfLines={1}>
-                {line}
-              </Text>
-            </View>
-          ) : null}
+      {bottomItems.length ? (
+        <View style={[styles.capZone, styles.capBottom]} pointerEvents="none">
+          {bottomItems}
         </View>
       ) : null}
     </View>
@@ -269,13 +321,15 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCel
  * 자막 한 덩이. 글자 크기·여백은 화면 크기에 비례해 계산하므로(captionLayout)
  * 작은 미리보기와 1080p 출력에서 같은 비율로 보인다.
  */
-function CaptionBox({ text, style, width, height }: { text: string; style: CaptionStyle; width: number; height: number }) {
+function CaptionBox({ text, style, width, height, anim = ANIM_DONE }: { text: string; style: CaptionStyle; width: number; height: number; anim?: AnimFrame }) {
   const l = captionLayout(style, width, height);
+  const base = Math.min(width, height);
   return (
     <View
       style={[
         { borderRadius: l.radius, paddingVertical: l.padV, paddingHorizontal: l.padH, maxWidth: '100%' },
         l.bgColor ? { backgroundColor: l.bgColor } : null,
+        { opacity: anim.opacity, transform: [{ translateY: anim.ty * base }, { scale: anim.scale }] },
       ]}
     >
       <Text
@@ -284,6 +338,60 @@ function CaptionBox({ text, style, width, height }: { text: string; style: Capti
           { fontSize: l.fontSize, lineHeight: l.lineHeight, color: l.color, textAlign: 'center' },
           fontStyleOf(style.fontId),
           l.shadow ? styles.capShadow : null,
+        ]}
+      >
+        {text}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * 장소(와 날짜) 라벨. 자막과 섞이지 않게 따로 그리고, 핀·배경·등장을 따로 고른다.
+ * 크기는 화면 짧은 쪽 기준이라 미리보기와 1080p 출력에서 같은 비율로 보인다.
+ */
+function PlaceLabelCard({
+  place,
+  date,
+  label,
+  width,
+  height,
+  anim = ANIM_DONE,
+  fade = 1,
+}: {
+  place?: string;
+  date?: string;
+  label: PlaceLabel;
+  width: number;
+  height: number;
+  anim?: AnimFrame;
+  fade?: number;
+}) {
+  const base = Math.min(width, height);
+  const fontSize = Math.max(7, base * 0.034);
+  const bgColor = captionBgColor(label.bg);
+  const dark = label.bg === 'white';
+  const text = [label.pin && place ? `📍 ${place}` : place, date].filter(Boolean).join('  ');
+  if (!text) return null;
+  return (
+    <View
+      style={[
+        {
+          borderRadius: Math.max(4, fontSize * 0.7),
+          paddingVertical: bgColor ? Math.max(2, fontSize * 0.28) : 0,
+          paddingHorizontal: bgColor ? Math.max(4, fontSize * 0.6) : 0,
+          maxWidth: '100%',
+          opacity: anim.opacity * fade,
+          transform: [{ translateY: anim.ty * base }, { scale: anim.scale }],
+        },
+        bgColor ? { backgroundColor: bgColor } : null,
+      ]}
+    >
+      <Text
+        numberOfLines={1}
+        style={[
+          { fontSize, lineHeight: fontSize * 1.3, fontWeight: '700', color: dark ? '#191F28' : colors.onPrimary },
+          bgColor ? null : styles.capShadow,
         ]}
       >
         {text}
@@ -302,35 +410,50 @@ interface StageProps {
   transition: TransitionId;
   /** 전환 진행도 0~1. 전환 중이 아니면 undefined */
   progress?: number;
+  /** 재생 중일 때만 사진 움직임·자막 등장을 보여 준다. */
+  animate?: boolean;
 }
 
 /**
  * 미리보기 무대: 장면을 그리고, 장면이 바뀌는 순간에는 전환 효과를 보여 준다.
  * 들어오는 장면이 앞 장면 위에 얹히며 페이드(투명도)·슬라이드(옆에서 밀기)·확대(커지며 나타남)로 바뀐다.
  */
-export function TransitionStage({ scene, prev, width, localSec, transition, progress }: StageProps) {
+export function TransitionStage({ scene, prev, width, localSec, transition, progress, animate = false }: StageProps) {
   const height = width / aspectOf(scene.aspect).ratio;
   // prev 가 없으면(첫 장면 예시) 어두운 바탕 위로 장면이 들어온다.
   const active = transition !== 'none' && progress !== undefined && progress < 1;
-  if (!active || progress === undefined) return <SceneCanvas scene={scene} width={width} localSec={localSec} />;
+  if (!active || progress === undefined) return <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} />;
   const p = progress;
-  const incoming =
-    transition === 'fade'
+  // 흰 번쩍·검게는 가운데에서 화면을 덮는 색이 가장 진하고, 그 순간 앞 장면에서 다음 장면으로 넘어간다.
+  const veil = transition === 'flash' ? '#FFFFFF' : transition === 'dip' ? '#000000' : undefined;
+  const incoming = veil
+    ? { opacity: p < 0.5 ? 0 : 1 }
+    : transition === 'fade'
       ? { opacity: p }
       : transition === 'slide'
         ? { transform: [{ translateX: (1 - p) * width }] }
-        : { opacity: p, transform: [{ scale: 0.7 + 0.3 * p }] };
-  const outgoing = transition === 'slide' ? { transform: [{ translateX: -p * width * 0.3 }] } : undefined;
+        : transition === 'slideUp'
+          ? { transform: [{ translateY: (1 - p) * height }] }
+          : transition === 'zoomOut'
+            ? { opacity: p, transform: [{ scale: 1.35 - 0.35 * p }] }
+            : { opacity: p, transform: [{ scale: 0.7 + 0.3 * p }] };
+  const outgoing =
+    transition === 'slide'
+      ? { transform: [{ translateX: -p * width * 0.3 }] }
+      : transition === 'slideUp'
+        ? { transform: [{ translateY: -p * height * 0.3 }] }
+        : undefined;
   return (
     <View style={{ width, height, overflow: 'hidden', borderRadius: 10, backgroundColor: colors.ink }}>
       {prev ? (
         <View style={[StyleSheet.absoluteFill, outgoing]}>
-          <SceneCanvas scene={prev} width={width} localSec={prev.seconds} />
+          <SceneCanvas scene={prev} width={width} localSec={prev.seconds} animate={animate} />
         </View>
       ) : null}
       <View style={[StyleSheet.absoluteFill, incoming]}>
-        <SceneCanvas scene={scene} width={width} localSec={localSec} />
+        <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} />
       </View>
+      {veil ? <View style={[StyleSheet.absoluteFill, { backgroundColor: veil, opacity: 1 - Math.abs(p - 0.5) * 2 }]} pointerEvents="none" /> : null}
     </View>
   );
 }
@@ -417,10 +540,9 @@ const styles = StyleSheet.create({
   videoMark: { position: 'absolute', right: 6, top: 6, fontSize: 10, color: colors.onPrimary, backgroundColor: 'rgba(25,31,40,0.55)', paddingHorizontal: 5, borderRadius: 8, overflow: 'hidden' },
   // 자막 위치: 위 / 화면 가운데 / 아래(날짜 줄 위)
   capZone: { position: 'absolute', left: 8, right: 8, alignItems: 'center' },
-  capTop: { top: '8%' },
+  capTop: { top: '7%', gap: 4 },
   capMiddle: { top: 0, bottom: 0, justifyContent: 'center' },
+  capBottom: { bottom: 10, gap: 4 },
   capShadow: { textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
-  bottomZone: { position: 'absolute', left: 8, right: 8, bottom: 10, alignItems: 'center', gap: 4 },
-  infoBox: { backgroundColor: 'rgba(25,31,40,0.6)', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 7 },
-  infoText: { fontSize: 9, color: colors.onPrimary },
+
 });

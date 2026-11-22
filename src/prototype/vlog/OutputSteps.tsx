@@ -239,7 +239,15 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
 
       <View style={styles.center}>
         <Pressable onPress={play} accessibilityRole="button" accessibilityLabel={playing ? '일시정지' : '재생'}>
-          <TransitionStage scene={scene} prev={prevScene} width={canvasW} localSec={t - scene.startSec} transition={scene.transition} progress={transProgress} />
+          <TransitionStage
+            scene={scene}
+            prev={prevScene}
+            width={canvasW}
+            localSec={t - scene.startSec}
+            transition={scene.transition}
+            progress={transProgress}
+            animate
+          />
           {!playing ? (
             <View style={styles.playWrap} pointerEvents="none">
               <View style={styles.playBtn}>

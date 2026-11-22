@@ -7,6 +7,7 @@ import { colors, GUTTER, radius, shadow } from '../styles/tokens';
 import { shortDotDateLabel } from '../utils/date';
 import { locate, selectedPlaces, type StepCtx } from './ctx';
 import {
+  ANIMS,
   BG_OPTIONS,
   CAPTION_BGS,
   CAPTION_COLORS,
@@ -16,6 +17,8 @@ import {
   clampFrame,
   FONTS,
   FONT_GROUPS,
+  MOTIONS,
+  PLACE_LABEL_POSITIONS,
   fitWidth,
   FONT_SAMPLE,
   TRANSITIONS,
@@ -31,6 +34,8 @@ import {
   fontOf,
   fontStyleOf,
   isPhotoOnly,
+  motionOf,
+  placeLabelOf,
   videoLength,
   moveItem,
   resolveMedia,
@@ -38,6 +43,8 @@ import {
   type FilterId,
   type FontGroup,
   type FontId,
+  type MotionId,
+  type PlaceLabel,
   type PlaceSetting,
 } from './model';
 import { FooterButtons, Heading, SceneCanvas, StateCard, StepFrame, TransitionStage } from './parts';
@@ -59,6 +66,9 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   const [fontOpen, setFontOpen] = useState(false);
   // 자막 모양을 처음 바꾸기 직전의 모습. 전후 비교와 되돌리기에 쓴다(화면을 나가면 잊는다).
   const [beforeCap, setBeforeCap] = useState<CaptionStyle | null>(null);
+  // 움직임·등장을 보여 주는 동안 흐른 시간(초). null 이면 멈춘 그림이다.
+  const [animSec, setAnimSec] = useState<number | null>(null);
+  const animTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   // 아코디언: 한 번에 하나만 펼친다(null 이면 모두 접힘).
   const [openSec, setOpenSec] = useState<string | null>(null);
   const toggleSec = (id: string) => setOpenSec((cur) => (cur === id ? null : id));
@@ -69,7 +79,16 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
     if (demoTimer.current) clearInterval(demoTimer.current);
     demoTimer.current = null;
   };
-  useEffect(() => stopDemo, []);
+  const stopAnim = () => {
+    if (animTimer.current) clearInterval(animTimer.current);
+    animTimer.current = null;
+  };
+  useEffect(() => {
+    return () => {
+      stopDemo();
+      stopAnim();
+    };
+  }, []);
   const playDemo = (id: TransitionId) => {
     stopDemo();
     if (id === 'none') return setDemo(null);
@@ -85,6 +104,21 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   };
   const found = locate(ctx.days, placeKey);
   const scene = ctx.timeline.scenes.find((s) => s.placeKey === placeKey);
+
+  /** 이 장면을 처음부터 짧게 재생해 사진 움직임·자막 등장·장소 라벨을 보여 준다. */
+  const playAnim = (sceneSec: number) => {
+    stopAnim();
+    const end = Math.max(1.2, Math.min(6, sceneSec));
+    let sec = 0;
+    setAnimSec(0);
+    animTimer.current = setInterval(() => {
+      sec += 0.05;
+      if (sec >= end) {
+        stopAnim();
+        setAnimSec(null);
+      } else setAnimSec(sec);
+    }, 50);
+  };
 
   if (!found || !scene) {
     return (
@@ -123,6 +157,33 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
     if (beforeCap) applyCap(beforeCap);
     setBeforeCap(null);
   };
+  // 사진 움직임: 이 장면 설정이 없으면 영상 기본값을 따른다.
+  const motion = setting.motion ?? ctx.draft.motion ?? 'none';
+  const hasPhoto = scene?.clips.some((c) => c.kind === 'photo') ?? false;
+  const setMotion = (id: MotionId) => {
+    patch(ctx, key, { motion: id });
+    if (scene) playAnim(scene.seconds);
+  };
+  /** 모든 장면에 같은 움직임을 쓰고, 장면별로 따로 정해 둔 값은 지운다. */
+  const motionForAll = () => {
+    ctx.update((d) => {
+      const settings = { ...d.settings };
+      for (const k of Object.keys(settings)) {
+        const { motion: _drop, ...rest } = settings[k];
+        settings[k] = rest;
+      }
+      return { ...d, motion, settings };
+    });
+    ctx.toast('모든 장면에 같은 움직임을 적용했어요.');
+  };
+
+  // 장소 라벨 모양은 영상 전체에 하나다(켜고 끄기는 장면별).
+  const plabel = placeLabelOf(ctx.draft.placeLabel);
+  const setLabel = (change: Partial<PlaceLabel>) => {
+    ctx.update((d) => ({ ...d, placeLabel: { ...placeLabelOf(d.placeLabel), ...change } }));
+    if (scene) playAnim(scene.seconds);
+  };
+
   const capChanged = beforeCap !== null && JSON.stringify(beforeCap) !== JSON.stringify(cap);
   const capWarning = captionWarning(cap);
   const capSummary = `${fontOf(cap.fontId).label} · ${CAPTION_POSITIONS.find((x) => x.id === cap.pos)?.label} · ${CAPTION_SIZES.find((x) => x.id === cap.size)?.label} · 배경 ${CAPTION_BGS.find((x) => x.id === cap.bg)?.label}`;
@@ -202,6 +263,9 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
             transition={demo.id}
             progress={demo.p}
           />
+        ) : animSec !== null ? (
+          // 움직임 보기: 장면을 처음부터 짧게 재생한다(사진 움직임·자막 등장·장소 라벨).
+          <SceneCanvas scene={scene} width={previewW} localSec={animSec} animate />
         ) : (
           <SceneCanvas scene={scene} width={previewW} clipIndex={split ? undefined : idx} selectedCell={split ? cell : undefined} onSelectCell={split ? setCell : undefined} />
         )}
@@ -270,6 +334,18 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         <ChipRow label="크기" options={CAPTION_SIZES} current={cap.size} onPick={(size) => setCap({ size })} />
         <ChipRow label="배경" options={CAPTION_BGS} current={cap.bg} onPick={(bg) => setCap({ bg })} />
         <ChipRow label="글자색" options={CAPTION_COLORS} current={cap.color} onPick={(color) => setCap({ color })} dots />
+        <ChipRow
+          label="등장"
+          options={ANIMS}
+          current={cap.anim}
+          onPick={(anim) => {
+            setCap({ anim });
+            if (scene) playAnim(scene.seconds);
+          }}
+        />
+        <Pressable onPress={() => playAnim(scene.seconds)} accessibilityRole="button" hitSlop={8}>
+          <Text style={styles.link}>▶ 자막이 나타나는 모습 보기</Text>
+        </Pressable>
 
         {capWarning ? <Text style={styles.warn}>{capWarning}</Text> : null}
         {!setting.captions[captionKey] ? (
@@ -410,18 +486,53 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
       ) : null}
 
       <Accordion
+        id="motion"
+        open={openSec === 'motion'}
+        onToggle={toggleSec}
+        title="사진 움직임"
+        sub={hasPhoto ? '사진이 보이는 동안 아주 천천히 움직여요. 동영상은 그대로예요.' : '이 장면에는 사진이 없어 움직임이 보이지 않아요.'}
+        summary={motionOf(motion).label}
+      >
+        <ChipRow label="" options={MOTIONS.slice(0, 3)} current={motion} onPick={setMotion} />
+        <ChipRow label="" options={MOTIONS.slice(3)} current={motion} onPick={setMotion} />
+        <Text style={styles.value}>{motionOf(motion).desc}</Text>
+        <Pressable onPress={() => playAnim(scene.seconds)} disabled={!hasPhoto} accessibilityRole="button" hitSlop={8}>
+          <Text style={[styles.link, !hasPhoto && styles.off]}>▶ 움직이는 모습 보기</Text>
+        </Pressable>
+        <Pressable onPress={motionForAll} accessibilityRole="button" hitSlop={8}>
+          <Text style={styles.link}>모든 장면에 같은 움직임 적용</Text>
+        </Pressable>
+      </Accordion>
+
+      <Accordion
         id="show"
         open={openSec === 'show'}
         onToggle={toggleSec}
-        title="날짜·장소명 표시"
-        summary={`날짜 ${setting.showDate ? '켬' : '끔'} · 장소명 ${setting.showPlace ? '켬' : '끔'}`}
+        title="장소·날짜 라벨"
+        sub="켜고 끄기는 장면마다, 라벨 모양은 영상 전체에 함께 적용돼요."
+        summary={`${setting.showPlace ? '장소명 켬' : '장소명 끔'} · ${setting.showDate ? '날짜 켬' : '날짜 끔'} · ${PLACE_LABEL_POSITIONS.find((x) => x.id === plabel.pos)?.label}`}
       >
-      <Row label="날짜 표시" value={dateStr}>
-        <Switch value={setting.showDate} onValueChange={(v) => patch(ctx, key, { showDate: v })} trackColor={{ true: colors.primary }} accessibilityLabel="날짜 표시" />
-      </Row>
       <Row label="장소명 표시" value={found.place.place.name}>
         <Switch value={setting.showPlace} onValueChange={(v) => patch(ctx, key, { showPlace: v })} trackColor={{ true: colors.primary }} accessibilityLabel="장소명 표시" />
       </Row>
+      <Row label="날짜 표시" value={dateStr}>
+        <Switch value={setting.showDate} onValueChange={(v) => patch(ctx, key, { showDate: v })} trackColor={{ true: colors.primary }} accessibilityLabel="날짜 표시" />
+      </Row>
+      <Row label="핀 붙이기" value={plabel.pin ? '📍 장소명' : '장소명만'}>
+        <Switch value={plabel.pin} onValueChange={(v) => setLabel({ pin: v })} trackColor={{ true: colors.primary }} accessibilityLabel="핀 붙이기" />
+      </Row>
+      <Row label="잠깐만 보이기" value={plabel.onlyAtStart ? '장면 시작에 2.5초' : '장면 내내'}>
+        <Switch value={plabel.onlyAtStart} onValueChange={(v) => setLabel({ onlyAtStart: v })} trackColor={{ true: colors.primary }} accessibilityLabel="잠깐만 보이기" />
+      </Row>
+      <ChipRow label="위치" options={PLACE_LABEL_POSITIONS} current={plabel.pos} onPick={(pos) => setLabel({ pos })} />
+      <ChipRow label="배경" options={CAPTION_BGS} current={plabel.bg} onPick={(bg) => setLabel({ bg })} />
+      <ChipRow label="등장" options={ANIMS} current={plabel.anim} onPick={(anim) => setLabel({ anim })} />
+      <Pressable onPress={() => playAnim(scene.seconds)} accessibilityRole="button" hitSlop={8}>
+        <Text style={styles.link}>▶ 라벨이 나타나는 모습 보기</Text>
+      </Pressable>
+      {plabel.pos === cap.pos ? (
+        <Text style={styles.value}>자막과 같은 쪽에 있어 라벨이 자막 아래에 붙어요.</Text>
+      ) : null}
       </Accordion>
 
       <Accordion
@@ -522,6 +633,7 @@ function Accordion({
 /**
  * 한 줄에 나란히 놓는 선택 칩. 고른 값 하나만 코랄로 켜진다.
  * dots 를 주면 칩에 색 동그라미를 함께 보여 준다(글자색 고르기).
+ * label 을 비우면 제목 없이 칩만 놓는다(여러 줄로 이어 붙일 때).
  */
 function ChipRow<T extends string>({
   label,
@@ -538,7 +650,7 @@ function ChipRow<T extends string>({
 }) {
   return (
     <View style={styles.chipRow}>
-      <Text style={styles.chipLabel}>{label}</Text>
+      {label ? <Text style={styles.chipLabel}>{label}</Text> : null}
       <View style={styles.chips}>
         {options.map((o) => {
           const on = o.id === current;
