@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View, type ViewProps } from 'react-native';
+import { Keyboard, Modal, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View, type ViewProps } from 'react-native';
 
 import { SafeImage } from '../../demo/SafeImage';
 import { ActionButton } from '../components/FormParts';
@@ -16,6 +16,7 @@ import {
   CAPTION_POSITIONS,
   CAPTION_SIZES,
   FILTERS,
+  clampCaptionXY,
   clampFrame,
   FONTS,
   FONT_GROUPS,
@@ -36,6 +37,7 @@ import {
   STICKERS,
   STICKER_SIZES,
   STICKER_SPOTS,
+  aspectOf,
   captionLinesOf,
   captionStyleOf,
   captionWarning,
@@ -45,6 +47,7 @@ import {
   fontStyleOf,
   isPhotoOnly,
   motionOf,
+  nearestCaptionPos,
   placeLabelOf,
   videoLength,
   videoScreenSeconds,
@@ -103,6 +106,8 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   const [fontOpen, setFontOpen] = useState(false);
   // 자막 모양을 처음 바꾸기 직전의 모습. 전후 비교와 되돌리기에 쓴다(화면을 나가면 잊는다).
   const [beforeCap, setBeforeCap] = useState<CaptionStyle | null>(null);
+  // 자막을 손으로 끌어 옮기는 중인지. 켜면 미리보기 위의 손짓을 자막 자리로 받는다.
+  const [dragMode, setDragMode] = useState(false);
   // 움직임·등장을 보여 주는 동안 흐른 시간(초). null 이면 멈춘 그림이다.
   const [animSec, setAnimSec] = useState<number | null>(null);
   const animTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -278,9 +283,36 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   const editSticker = (i: number, change: Partial<Sticker>) => setStickers(stickers.map((s, j) => (j === i ? { ...s, ...change } : s)));
   const removeSticker = (i: number) => setStickers(stickers.filter((_, j) => j !== i));
 
+  /**
+   * 미리보기 위에서 손이 닿은 자리를 자막 자리로 삼는다.
+   * PanResponder 는 한 번만 만들어 두므로, 늘 최신 값을 쓰도록 함수를 ref 에 담아 둔다.
+   */
+  const placeCaption = useRef<(x: number, y: number) => void>(() => {});
+  placeCaption.current = (x, y) => {
+    const xy = clampCaptionXY(x, y);
+    // 서버가 아직 세 자리만 알아서, 가장 가까운 자리도 함께 적어 둔다.
+    setCap({ xy, pos: nearestCaptionPos(xy.y) });
+  };
+  const canvasSize = useRef({ w: 0, h: 0 });
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => {
+        const { w, h } = canvasSize.current;
+        if (w && h) placeCaption.current(e.nativeEvent.locationX / w, e.nativeEvent.locationY / h);
+      },
+      onPanResponderMove: (e) => {
+        const { w, h } = canvasSize.current;
+        if (w && h) placeCaption.current(e.nativeEvent.locationX / w, e.nativeEvent.locationY / h);
+      },
+    }),
+  ).current;
+
   const capChanged = beforeCap !== null && JSON.stringify(beforeCap) !== JSON.stringify(cap);
   const capWarning = captionWarning(cap);
-  const capSummary = `${fontOf(cap.fontId).label} · ${CAPTION_POSITIONS.find((x) => x.id === cap.pos)?.label} · ${CAPTION_SIZES.find((x) => x.id === cap.size)?.label} · 배경 ${CAPTION_BGS.find((x) => x.id === cap.bg)?.label}`;
+  const posLabel = cap.xy ? '직접 옮김' : (CAPTION_POSITIONS.find((x) => x.id === cap.pos)?.label ?? '');
+  const capSummary = `${fontOf(cap.fontId).label} · ${posLabel} · ${CAPTION_SIZES.find((x) => x.id === cap.size)?.label} · 배경 ${CAPTION_BGS.find((x) => x.id === cap.bg)?.label}`;
 
   // 사진만 고른 장면에서만 초를 직접 고른다. 분할은 장면 전체 길이, 이어 재생은 사진 한 장의 길이다.
   const photoSec = split ? clampPhotoSec(setting.lengthSec ?? PHOTO_SPLIT_SEC) : clampPhotoSec(setting.photoSec ?? PHOTO_SEQUENCE_SEC);
@@ -354,7 +386,12 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         <Heading title={media.length < 2 ? '단일 재생' : modeLabel} />
       </Pressable>
 
-      <View style={styles.center}>
+      <View
+        style={styles.center}
+        onLayout={() => {
+          canvasSize.current = { w: previewW, h: previewW / aspectOf(scene.aspect).ratio };
+        }}
+      >
         {demo ? (
           // 전환 예시: 앞 장면(첫 장면이면 어두운 바탕)에서 이 장면으로 넘어오는 모습
           <TransitionStage
@@ -368,6 +405,14 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         ) : animSec !== null ? (
           // 움직임 보기: 장면을 처음부터 짧게 재생한다(사진 움직임·자막 등장·장소 라벨).
           <SceneCanvas scene={scene} width={previewW} localSec={animSec} animate />
+        ) : dragMode ? (
+          // 끌어 옮기는 동안에는 칸 고르기를 끄고 손짓을 자막 자리로만 받는다.
+          <View {...pan.panHandlers}>
+            <SceneCanvas scene={scene} width={previewW} />
+            <View style={styles.dragHint} pointerEvents="none">
+              <Text style={styles.dragHintText}>자막을 끌어 놓으세요</Text>
+            </View>
+          </View>
         ) : (
           <SceneCanvas scene={scene} width={previewW} clipIndex={split ? undefined : idx} selectedCell={split ? cell : undefined} onSelectCell={split ? setCell : undefined} />
         )}
@@ -491,7 +536,38 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
           <Text style={[styles.link, fontStyleOf(cap.fontId)]}>{fontOf(cap.fontId).label} ›</Text>
         </Pressable>
 
-        <ChipRow label="위치" options={CAPTION_POSITIONS} current={cap.pos} onPick={(pos) => setCap({ pos })} />
+        <ChipRow
+          label="위치"
+          options={CAPTION_POSITIONS}
+          current={cap.xy ? ('' as never) : cap.pos}
+          onPick={(pos) => {
+            // 칸을 고르면 직접 옮긴 자리는 지운다(둘 중 하나만 쓴다).
+            setCap({ pos, xy: undefined });
+            setDragMode(false);
+          }}
+        />
+        <View style={styles.spanRow}>
+          <Pressable onPress={() => setDragMode((v) => !v)} accessibilityRole="button" hitSlop={8}>
+            <Text style={styles.link}>{dragMode ? '✓ 옮기기 끝내기' : '✥ 직접 옮기기'}</Text>
+          </Pressable>
+          {cap.xy ? (
+            <>
+              <Text style={styles.value}>
+                가로 {Math.round(cap.xy.x * 100)}% · 세로 {Math.round(cap.xy.y * 100)}%
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setCap({ xy: undefined });
+                  setDragMode(false);
+                }}
+                accessibilityRole="button"
+                hitSlop={8}
+              >
+                <Text style={styles.link}>자리 되돌리기</Text>
+              </Pressable>
+            </>
+          ) : null}
+        </View>
         <ChipRow label="크기" options={CAPTION_SIZES} current={cap.size} onPick={(size) => setCap({ size })} />
         <ChipRow label="배경" options={CAPTION_BGS} current={cap.bg} onPick={(bg) => setCap({ bg })} />
         <ChipRow label="글자색" options={CAPTION_COLORS} current={cap.color} onPick={(color) => setCap({ color })} dots />
@@ -1132,6 +1208,8 @@ const styles = StyleSheet.create({
   fontRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
   // 자막 모양 고르기
   speedBox: { gap: 6, paddingBottom: 6 },
+  dragHint: { position: 'absolute', left: 0, right: 0, top: 6, alignItems: 'center' },
+  dragHintText: { fontSize: 10, fontWeight: '800', color: colors.onPrimary, backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, overflow: 'hidden' },
   lineRow: { paddingTop: 10, marginTop: 6, borderTopWidth: 1, borderTopColor: colors.surface },
   spanRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', paddingTop: 6 },
   spanBox: { flexDirection: 'row', alignItems: 'center', gap: 4 },

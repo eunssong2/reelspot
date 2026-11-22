@@ -523,7 +523,14 @@ export type CaptionColor = 'white' | 'black' | 'coral';
  */
 export interface CaptionStyle {
   fontId: FontId;
+  /**
+   * 위·중앙·아래 중 어디에 두는지.
+   * 직접 옮긴 자리(xy)가 있으면 그 자리가 먼저지만, 이 값도 함께 보낸다 —
+   * 서버 렌더러는 아직 세 자리만 알아서, 가장 가까운 자리로라도 그려야 한다.
+   */
   pos: CaptionPos;
+  /** 직접 끌어 옮긴 자리(화면 폭·높이에 대한 비율, 자막 가운데 기준). 없으면 pos 를 따른다. */
+  xy?: { x: number; y: number };
   size: CaptionSize;
   bg: CaptionBg;
   color: CaptionColor;
@@ -582,6 +589,33 @@ export const CAPTION_COLORS: { id: CaptionColor; label: string; hex: string }[] 
   { id: 'black', label: '검정', hex: '#191F28' },
   { id: 'coral', label: '코랄', hex: '#F1706B' },
 ];
+
+/**
+ * 직접 옮긴 자리를 위·중앙·아래 중 가장 가까운 것으로 바꾼다.
+ * 서버가 아직 세 자리만 알기 때문에, 옮긴 자리와 함께 이 값도 보내 둔다.
+ */
+export function nearestCaptionPos(y: number): CaptionPos {
+  let best: CaptionPos = 'bottom';
+  let gap = Infinity;
+  for (const p of ['top', 'center', 'bottom'] as CaptionPos[]) {
+    const at = CAPTION_Y[p] === 'center' ? 0.5 : (CAPTION_Y[p] as number);
+    const d = Math.abs(at - y);
+    if (d < gap) {
+      gap = d;
+      best = p;
+    }
+  }
+  return best;
+}
+
+/**
+ * 자막을 화면 안에 둔다. y 는 자막 윗변이라(프리셋 위치·서버와 같은 기준)
+ * 아래쪽은 자막 한 줄이 들어갈 만큼 남긴다.
+ */
+export const clampCaptionXY = (x: number, y: number): { x: number; y: number } => ({
+  x: Math.max(0, Math.min(1, x)),
+  y: Math.max(0.03, Math.min(0.88, y)),
+});
 
 export const defaultCaptionStyle = (): CaptionStyle => ({ fontId: 'gothic', pos: 'bottom', size: 'md', bg: 'dim', color: 'white', anim: 'up' });
 

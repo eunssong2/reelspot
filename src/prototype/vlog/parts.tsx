@@ -324,7 +324,16 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
         </View>
       ) : null}
       {captionBox ? (
-        CAPTION_Y[cap.pos] === 'center' ? (
+        cap.xy ? (
+          // 직접 옮긴 자리. 가로도 옮길 수 있으므로 가운데 정렬 대신 좌표로 놓는다.
+          // 양옆 빈칸의 비율로 가로 자리를 잡는다. 글자 크기를 재지 않아도 되고,
+          // 끝으로 밀어도 자막이 화면 밖으로 넘치지 않는다.
+          <View style={[styles.capFreeRow, { top: `${cap.xy.y * 100}%` }]} pointerEvents="none">
+            <View style={{ flex: Math.max(0.0001, cap.xy.x) }} />
+            {captionBox}
+            <View style={{ flex: Math.max(0.0001, 1 - cap.xy.x) }} />
+          </View>
+        ) : CAPTION_Y[cap.pos] === 'center' ? (
           <View style={[styles.capZone, styles.capCenter]} pointerEvents="none">
             {captionBox}
           </View>
@@ -592,6 +601,8 @@ const styles = StyleSheet.create({
   // 자막·라벨 자리. 세로 위치는 그리는 쪽에서 비율로 넣고, 좌우 여백도 폭에 대한 비율이다.
   capZone: { position: 'absolute', left: `${OVERLAY_SIDE * 100}%`, right: `${OVERLAY_SIDE * 100}%`, alignItems: 'center' },
   capCenter: { top: 0, bottom: 0, justifyContent: 'center' },
+  // 직접 옮긴 자막. top 은 자막 윗변이다(프리셋 위치·서버 렌더러와 같은 기준).
+  capFreeRow: { position: 'absolute', left: `${OVERLAY_SIDE * 100}%`, right: `${OVERLAY_SIDE * 100}%`, flexDirection: 'row', alignItems: 'flex-start' },
   capShadow: { textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
 
 });
