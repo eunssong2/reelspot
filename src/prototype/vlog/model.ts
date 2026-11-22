@@ -152,39 +152,220 @@ export const isDefaultFrame = (f: FrameAdjust): boolean => f.fit === 'fill' && !
 
 // ---------- 글씨체 ----------
 
-export type FontId = 'gothic' | 'round' | 'hand';
+/** 글씨체 종류. 저장된 초안이 깨지지 않게 이전 id(gothic·bold·round·hand·pen·serif)는 그대로 둔다. */
+export type FontId =
+  | 'gothic'
+  | 'gothicTitle'
+  | 'bold'
+  | 'boldFat'
+  | 'gothicSharp'
+  | 'gothicNeat'
+  | 'gothicModern'
+  | 'gothicSoft'
+  | 'gothicThin'
+  | 'gothicPlain'
+  | 'gothicIsland'
+  | 'serif'
+  | 'serifSong'
+  | 'serifBatang'
+  | 'serifIsland'
+  | 'serifClassic'
+  | 'hand'
+  | 'pen'
+  | 'brush'
+  | 'brushYeon'
+  | 'brushIsland'
+  | 'handRough'
+  | 'handThin'
+  | 'handMelody'
+  | 'handKirang'
+  | 'handStory'
+  | 'handDay'
+  | 'handFlower'
+  | 'handCute'
+  | 'handDongle'
+  | 'round'
+  | 'quirkBagel'
+  | 'quirkMoirai'
+  | 'quirkGugi'
+  | 'quirkOrbit';
+
+export type FontGroup = '고딕' | '명조' | '손글씨' | '개성';
+
+/** 고를 때 보여 주는 묶음 순서 */
+export const FONT_GROUPS: FontGroup[] = ['고딕', '명조', '손글씨', '개성'];
 
 export interface FontPreset {
   id: FontId;
   label: string;
+  /** 글씨체 느낌을 한 줄로 설명(고를 때 보여 준다) */
+  desc: string;
+  /** 고를 때 묶어 보여 주는 분류 */
+  group: FontGroup;
+  /**
+   * 앱에 넣은 글꼴 이름(assets/fonts, fonts.ts 의 VLOG_FONT_ASSETS 키와 같다).
+   * 없으면 기기 기본 글꼴을 쓴다.
+   */
+  family?: string;
   style: TextStyle;
+  /** 글꼴마다 같은 크기에서 보이는 덩치가 달라, 자막 크기를 눈높이로 맞추는 보정값 */
+  scale: number;
 }
 
 /**
- * 글씨체 종류·명칭은 프리셋 제안이다. 앱에 글꼴 파일을 넣기 전까지는 기기 기본 글꼴 계열로 보여 준다
- * (최종 렌더링 연결 시 같은 id 를 실제 글꼴 파일에 매핑한다).
+ * 자막 글씨체. 기본 고딕만 기기 글꼴이고 나머지는 앱에 넣은 글꼴 파일을 쓴다
+ * (모두 SIL Open Font License, 라이선스 원문은 assets/fonts 에 함께 둔다).
+ * 글꼴을 더 넣을 때는 assets/fonts 에 파일을 두고 fonts.ts 의 VLOG_FONT_ASSETS 에 같은 이름으로 등록한다.
  */
 export const FONTS: FontPreset[] = [
-  { id: 'gothic', label: '기본 고딕', style: { fontWeight: '800' } },
-  {
-    id: 'round',
-    label: '둥근체',
-    style: {
-      fontWeight: '700',
-      fontFamily: Platform.select({ ios: 'Arial Rounded MT Bold', android: 'sans-serif-rounded', default: '"Nunito", "Arial Rounded MT Bold", sans-serif' }),
-    },
-  },
-  {
-    id: 'hand',
-    label: '손글씨체',
-    style: {
-      fontWeight: '600',
-      fontFamily: Platform.select({ ios: 'Noteworthy', android: 'cursive', default: '"Comic Sans MS", cursive' }),
-    },
-  },
+  // 고딕
+  { id: 'gothic', label: '기기 기본', desc: '휴대폰에 들어 있는 기본 글씨', group: '고딕', style: { fontWeight: '800' }, scale: 1.0 },
+  { id: 'gothicTitle', label: '제목 고딕', desc: '또박또박한 제목용', group: '고딕', family: 'DoHyeon', style: {}, scale: 1.11 },
+  { id: 'bold', label: '임팩트', desc: '굵고 꽉 차는 제목 느낌', group: '고딕', family: 'BlackHanSans', style: {}, scale: 1.12 },
+  { id: 'boldFat', label: '초굵은체', desc: '화면을 꽉 채우는 가장 굵은 글씨', group: '고딕', family: 'GasoekOne', style: {}, scale: 0.99 },
+  { id: 'gothicSharp', label: '선명 고딕', desc: '각이 또렷해 잘 읽혀요', group: '고딕', family: 'GothicA1', style: {}, scale: 0.94 },
+  { id: 'gothicNeat', label: '단정 고딕', desc: '군더더기 없이 단정해요', group: '고딕', family: 'GothicKR', style: {}, scale: 0.92 },
+  { id: 'gothicModern', label: '모던 고딕', desc: '깔끔하고 요즘 느낌', group: '고딕', family: 'ModernKR', style: {}, scale: 0.96 },
+  { id: 'gothicSoft', label: '산뜻 고딕', desc: '가볍고 산뜻해요', group: '고딕', family: 'Sunflower', style: {}, scale: 0.89 },
+  { id: 'gothicThin', label: '얇은 고딕', desc: '가늘고 차분해요', group: '고딕', family: 'Stylish', style: {}, scale: 1.01 },
+  { id: 'gothicPlain', label: '담백 고딕', desc: '담백하고 조용한 느낌', group: '고딕', family: 'GowunDodum', style: {}, scale: 0.98 },
+  { id: 'gothicIsland', label: '섬 고딕', desc: '여행지 안내판 같은 글씨', group: '고딕', family: 'IslandGothic', style: {}, scale: 0.94 },
+  // 명조
+  { id: 'serif', label: '명조체', desc: '차분하고 담백한 느낌', group: '명조', family: 'MyeongjoKR', style: {}, scale: 0.92 },
+  { id: 'serifSong', label: '옛 명조', desc: '옛 책에서 본 듯한 글씨', group: '명조', family: 'SongMyung', style: {}, scale: 1.02 },
+  { id: 'serifBatang', label: '고운 바탕', desc: '부드럽고 단정한 바탕체', group: '명조', family: 'GowunBatang', style: {}, scale: 0.94 },
+  { id: 'serifIsland', label: '섬 명조', desc: '여행 기록에 잘 맞는 바탕체', group: '명조', family: 'IslandMyeongjo', style: {}, scale: 0.98 },
+  { id: 'serifClassic', label: '고전체', desc: '장식 있는 고전 느낌', group: '명조', family: 'Diphylleia', style: {}, scale: 0.95 },
+  // 손글씨
+  { id: 'hand', label: '손글씨', desc: '공책에 적은 듯한 손글씨', group: '손글씨', family: 'Gaegu', style: {}, scale: 0.99 },
+  { id: 'pen', label: '펜글씨', desc: '사인펜으로 쓴 여행 일기', group: '손글씨', family: 'PenKR', style: {}, scale: 1.04 },
+  { id: 'brush', label: '붓글씨', desc: '붓으로 쓱 쓴 느낌', group: '손글씨', family: 'BrushKR', style: {}, scale: 1.01 },
+  { id: 'brushYeon', label: '먹붓체', desc: '진한 먹으로 쓴 붓글씨', group: '손글씨', family: 'YeonSung', style: {}, scale: 0.89 },
+  { id: 'brushIsland', label: '섬 붓글씨', desc: '거친 붓 자국이 남는 글씨', group: '손글씨', family: 'IslandBrush', style: {}, scale: 0.96 },
+  { id: 'handRough', label: '거친 손글씨', desc: '빠르게 휘갈긴 손글씨', group: '손글씨', family: 'Dokdo', style: {}, scale: 0.93 },
+  { id: 'handThin', label: '가는 손글씨', desc: '얇은 펜으로 쓴 손글씨', group: '손글씨', family: 'EastSeaDokdo', style: {}, scale: 1.27 },
+  { id: 'handMelody', label: '또박 손글씨', desc: '또박또박 쓴 둥근 손글씨', group: '손글씨', family: 'HiMelody', style: {}, scale: 1.04 },
+  { id: 'handKirang', label: '옛 간판체', desc: '옛 간판에서 본 듯한 글씨', group: '손글씨', family: 'KirangHaerang', style: {}, scale: 1.02 },
+  { id: 'handStory', label: '동화 손글씨', desc: '동화책에 적힌 듯한 글씨', group: '손글씨', family: 'PoorStory', style: {}, scale: 0.98 },
+  { id: 'handDay', label: '하루 손글씨', desc: '일기장에 적은 하루', group: '손글씨', family: 'SingleDay', style: {}, scale: 0.96 },
+  { id: 'handFlower', label: '꽃잎 손글씨', desc: '동글동글 귀여운 손글씨', group: '손글씨', family: 'GamjaFlower', style: {}, scale: 0.99 },
+  { id: 'handCute', label: '아기 손글씨', desc: '아이가 쓴 듯 작고 귀여워요', group: '손글씨', family: 'CuteFont', style: {}, scale: 1.11 },
+  { id: 'handDongle', label: '동글 손글씨', desc: '길쭉하고 동글한 손글씨', group: '손글씨', family: 'Dongle', style: {}, scale: 1.1 },
+  // 개성
+  { id: 'round', label: '둥근체', desc: '동글동글 가볍고 친근해요', group: '개성', family: 'Jua', style: {}, scale: 1.04 },
+  { id: 'quirkBagel', label: '통통체', desc: '통통하고 장난스러워요', group: '개성', family: 'BagelFatOne', style: {}, scale: 1.01 },
+  { id: 'quirkMoirai', label: '또렷체', desc: '굵은 테두리로 또렷해요', group: '개성', family: 'MoiraiOne', style: {}, scale: 0.94 },
+  { id: 'quirkGugi', label: '각진체', desc: '각지고 개성 있어요', group: '개성', family: 'Gugi', style: {}, scale: 0.99 },
+  { id: 'quirkOrbit', label: '미래체', desc: '선으로 그린 미래 느낌', group: '개성', family: 'Orbit', style: {}, scale: 0.97 },
 ];
-export const fontOf = (id: FontId): FontPreset => FONTS.find((f) => f.id === id) ?? FONTS[0];
+export const fontOf = (id?: FontId): FontPreset => FONTS.find((f) => f.id === id) ?? FONTS[0];
 export const FONT_SAMPLE = '오늘도 함께한 순간';
+
+/** 글씨체를 글자에 입히는 스타일. 기기 글꼴이면 fontFamily 를 넣지 않는다. */
+export const fontStyleOf = (id?: FontId): TextStyle => {
+  const f = fontOf(id);
+  return f.family ? { ...f.style, fontFamily: f.family } : f.style;
+};
+
+// ---------- 자막 모양 ----------
+
+export type CaptionPos = 'top' | 'middle' | 'bottom';
+export type CaptionSize = 'sm' | 'md' | 'lg';
+export type CaptionBg = 'none' | 'dim' | 'solid' | 'white';
+export type CaptionColor = 'white' | 'black' | 'coral';
+
+/**
+ * 자막 모양. 장면마다 다르게 두면 한 영상에 글씨체가 섞여 어지러워지므로
+ * 영상 하나에 한 벌만 두고, 자막 글자만 장면별로 적는다.
+ */
+export interface CaptionStyle {
+  fontId: FontId;
+  pos: CaptionPos;
+  size: CaptionSize;
+  bg: CaptionBg;
+  color: CaptionColor;
+}
+
+export const CAPTION_POSITIONS: { id: CaptionPos; label: string }[] = [
+  { id: 'top', label: '위' },
+  { id: 'middle', label: '중앙' },
+  { id: 'bottom', label: '아래' },
+];
+
+/**
+ * 자막 크기는 pt 가 아니라 화면 짧은 쪽에 대한 비율이다.
+ * 미리보기(폭 약 180px)와 실제 출력(1080px)이 같은 비율을 쓰므로 두 곳에서 같은 크기로 보인다.
+ */
+export const CAPTION_SIZES: { id: CaptionSize; label: string; ratio: number }[] = [
+  { id: 'sm', label: '작게', ratio: 0.038 },
+  { id: 'md', label: '보통', ratio: 0.05 },
+  { id: 'lg', label: '크게', ratio: 0.066 },
+];
+
+export const CAPTION_BGS: { id: CaptionBg; label: string; desc: string }[] = [
+  { id: 'none', label: '없음', desc: '글자에 그림자만 넣어 읽히게 해요' },
+  { id: 'dim', label: '반투명', desc: '사진이 비치는 어두운 띠' },
+  { id: 'solid', label: '검정', desc: '꽉 찬 검정 바탕' },
+  { id: 'white', label: '흰색', desc: '꽉 찬 흰 바탕' },
+];
+
+export const CAPTION_COLORS: { id: CaptionColor; label: string; hex: string }[] = [
+  { id: 'white', label: '흰색', hex: '#FFFFFF' },
+  { id: 'black', label: '검정', hex: '#191F28' },
+  { id: 'coral', label: '코랄', hex: '#F1706B' },
+];
+
+export const defaultCaptionStyle = (): CaptionStyle => ({ fontId: 'gothic', pos: 'bottom', size: 'md', bg: 'dim', color: 'white' });
+
+/** 저장된 초안에 자막 모양이 없을 수도 있어(이전 버전) 기본값을 깔고 읽는다. */
+export const captionStyleOf = (style?: Partial<CaptionStyle>): CaptionStyle => ({ ...defaultCaptionStyle(), ...style });
+
+/** 자막을 그리는 데 필요한 실제 값. 미리보기와 최종 출력이 같은 계산을 쓴다. */
+export interface CaptionLayout {
+  fontSize: number;
+  lineHeight: number;
+  padV: number;
+  padH: number;
+  radius: number;
+  /** 배경이 '없음'이면 undefined */
+  bgColor?: string;
+  color: string;
+  /** 배경이 없을 때 글자가 묻히지 않게 넣는 그림자 */
+  shadow: boolean;
+}
+
+const CAPTION_BG_COLORS: Record<CaptionBg, string | undefined> = {
+  none: undefined,
+  dim: 'rgba(25,31,40,0.6)',
+  solid: '#191F28',
+  white: '#FFFFFF',
+};
+
+/** 화면 크기에 자막 모양을 얹어 실제 글자 크기·여백을 낸다(짧은 쪽 기준이라 세로·가로에서 같게 보인다). */
+export function captionLayout(style: CaptionStyle, width: number, height: number): CaptionLayout {
+  const base = Math.min(width, height);
+  const ratio = CAPTION_SIZES.find((s) => s.id === style.size)?.ratio ?? 0.05;
+  const fontSize = Math.max(7, base * ratio * fontOf(style.fontId).scale);
+  const bgColor = CAPTION_BG_COLORS[style.bg];
+  return {
+    fontSize,
+    lineHeight: fontSize * 1.35,
+    padV: bgColor ? Math.max(2, fontSize * 0.3) : 0,
+    padH: bgColor ? Math.max(4, fontSize * 0.55) : 0,
+    radius: Math.max(4, fontSize * 0.35),
+    bgColor,
+    color: CAPTION_COLORS.find((c) => c.id === style.color)?.hex ?? '#FFFFFF',
+    shadow: !bgColor,
+  };
+}
+
+/** 글자색과 배경이 겹쳐 안 보이는 조합을 미리 알려 준다. 문제가 없으면 null */
+export function captionWarning(style: CaptionStyle): string | null {
+  if (style.bg === 'white' && style.color === 'white') return '흰 배경에 흰 글씨는 보이지 않아요. 글자색을 바꿔 주세요.';
+  if ((style.bg === 'solid' || style.bg === 'dim') && style.color === 'black') return '어두운 배경에 검정 글씨는 잘 안 보여요.';
+  if (style.bg === 'none' && style.color === 'black') return '배경이 없으면 검정 글씨는 어두운 사진에서 묻힐 수 있어요.';
+  return null;
+}
 
 // ---------- 제작 가능한 날짜·장소·기록 ----------
 
@@ -278,7 +459,11 @@ export interface PlaceSetting {
   templateId?: string;
   showDate: boolean;
   showPlace: boolean;
-  fontId: FontId;
+  /**
+   * (이전 버전) 장면별 글씨체. 지금은 영상 하나에 한 벌(draft.captionStyle)을 쓴다.
+   * 저장된 초안을 읽을 때 글씨체를 되살리는 데만 쓴다.
+   */
+  fontId?: FontId;
   /** 자막. 이어 재생은 기록 id, 분할은 'all' 이 키다. */
   captions: Record<string, string>;
   /** 분할 장면의 공통 길이를 직접 줄였을 때(초). 없으면 자동 맞춤 */
@@ -303,7 +488,6 @@ export const defaultSetting = (): PlaceSetting => ({
   mode: 'sequence',
   showDate: true,
   showPlace: true,
-  fontId: 'gothic',
   captions: {},
   videoStart: {},
   done: false,
@@ -338,6 +522,8 @@ export interface VlogDraft {
   dayTitles?: Record<string, string>;
   /** 장면 전환 효과. 없으면 'none' */
   transition?: TransitionId;
+  /** 자막 모양(글씨체·위치·크기·배경·글자색). 영상 전체에 하나. 없으면 기본값 */
+  captionStyle?: CaptionStyle;
   render?: RenderMark;
   updatedAt: number;
 }
@@ -491,7 +677,8 @@ export interface TimelineScene {
   caption: string;
   dateText?: string;
   placeText?: string;
-  fontId: FontId;
+  /** 자막을 어떻게 그릴지. 영상 전체가 같은 값을 받는다(렌더러도 이 값대로 그린다). */
+  captionStyle: CaptionStyle;
 }
 
 export interface Timeline {
@@ -508,6 +695,7 @@ export interface BuildContext {
 
 /** 초안을 순서대로 펼친 타임라인. 선택이 비어 있는 날짜·장소는 건너뛴다. */
 export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
+  const caption = captionStyleOf(draft.captionStyle);
   const scenes: TimelineScene[] = [];
   let t = 0;
   let itemCount = 0;
@@ -549,7 +737,7 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
         caption: setting.captions.all ?? '',
         dateText: setting.showDate ? day.date.replace(/-/g, '.') : undefined,
         placeText: setting.showPlace ? place.place.name : undefined,
-        fontId: setting.fontId,
+        captionStyle: caption,
       });
     }
     if (placeScenes.length === 0) continue;
@@ -566,7 +754,7 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
         titleText: draft.dayTitles?.[dayKey]?.trim() || day.title,
         clips: [],
         caption: '',
-        fontId: 'gothic',
+        captionStyle: caption,
       });
       t += TITLE_CARD_SEC;
     }
@@ -605,7 +793,8 @@ export function draftSignature(draft: VlogDraft, timeline: Timeline): string {
     t: draft.title,
     a: timeline.aspect,
     x: timeline.transition,
-    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.dateText, s.placeText, s.caption, s.fontId, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.caption, c.filter, c.frame])]),
+    c: captionStyleOf(draft.captionStyle),
+    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.dateText, s.placeText, s.caption, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.caption, c.filter, c.frame])]),
   });
 }
 

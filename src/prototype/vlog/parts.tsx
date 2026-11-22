@@ -9,7 +9,18 @@ import { ScreenFrame } from '../components/ScreenFrame';
 import { Toast } from '../components/Toast';
 import type { Rect } from '../mock/tripData';
 import { colors, GUTTER, radius } from '../styles/tokens';
-import { ASPECTS, aspectOf, filterOf, fontOf, type TimelineClip, type TimelineScene, type AspectId, type TransitionId } from './model';
+import {
+  ASPECTS,
+  aspectOf,
+  captionLayout,
+  filterOf,
+  fontStyleOf,
+  type CaptionStyle,
+  type TimelineClip,
+  type TimelineScene,
+  type AspectId,
+  type TransitionId,
+} from './model';
 
 
 
@@ -179,7 +190,7 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCel
     return (
       <View style={[styles.canvas, styles.titleCanvas, { width, height }]}>
         <Text style={styles.titleDate}>{scene.titleDate}</Text>
-        <Text style={styles.titleName} numberOfLines={3}>
+        <Text style={[styles.titleName, fontStyleOf(scene.captionStyle.fontId)]} numberOfLines={3}>
           {scene.titleText}
         </Text>
       </View>
@@ -188,8 +199,10 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCel
   const index = clipIndex ?? sceneClipAt(scene, localSec);
   const clip: TimelineClip | undefined = scene.clips[index];
   const caption = scene.mode === 'split' ? scene.caption : (clip?.caption ?? '');
-  const font = fontOf(scene.fontId).style;
+  const cap = scene.captionStyle;
   const line = [scene.dateText, scene.placeText].filter(Boolean).join(' · ');
+  // 자막은 고른 위치에, 날짜·장소 줄은 늘 아래에 둔다(자막 배경을 바꿔도 날짜 줄은 그대로다).
+  const captionBox = caption ? <CaptionBox text={caption} style={cap} width={width} height={height} /> : null;
   return (
     <View style={[styles.canvas, { width, height }]}>
       {scene.mode === 'split' && scene.template ? (
@@ -231,12 +244,50 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, selectedCel
           {clip.kind === 'video' ? <Text style={styles.videoMark}>▶</Text> : null}
         </>
       ) : null}
-      {line || caption ? (
-        <View style={styles.overlay}>
-          {line ? <Text style={[styles.overlayLine, font]}>{line}</Text> : null}
-          {caption ? <Text style={[styles.overlayCaption, font]}>{caption}</Text> : null}
+      {captionBox && cap.pos !== 'bottom' ? (
+        <View style={[styles.capZone, cap.pos === 'top' ? styles.capTop : styles.capMiddle]} pointerEvents="none">
+          {captionBox}
         </View>
       ) : null}
+      {line || (captionBox && cap.pos === 'bottom') ? (
+        <View style={styles.bottomZone} pointerEvents="none">
+          {cap.pos === 'bottom' ? captionBox : null}
+          {line ? (
+            <View style={styles.infoBox}>
+              <Text style={[styles.infoText, fontStyleOf(cap.fontId)]} numberOfLines={1}>
+                {line}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * 자막 한 덩이. 글자 크기·여백은 화면 크기에 비례해 계산하므로(captionLayout)
+ * 작은 미리보기와 1080p 출력에서 같은 비율로 보인다.
+ */
+function CaptionBox({ text, style, width, height }: { text: string; style: CaptionStyle; width: number; height: number }) {
+  const l = captionLayout(style, width, height);
+  return (
+    <View
+      style={[
+        { borderRadius: l.radius, paddingVertical: l.padV, paddingHorizontal: l.padH, maxWidth: '100%' },
+        l.bgColor ? { backgroundColor: l.bgColor } : null,
+      ]}
+    >
+      <Text
+        numberOfLines={3}
+        style={[
+          { fontSize: l.fontSize, lineHeight: l.lineHeight, color: l.color, textAlign: 'center' },
+          fontStyleOf(style.fontId),
+          l.shadow ? styles.capShadow : null,
+        ]}
+      >
+        {text}
+      </Text>
     </View>
   );
 }
@@ -364,7 +415,12 @@ const styles = StyleSheet.create({
   titleDate: { fontSize: 14, fontWeight: '800', color: colors.primary },
   titleName: { fontSize: 20, fontWeight: '800', color: colors.text, textAlign: 'center' },
   videoMark: { position: 'absolute', right: 6, top: 6, fontSize: 10, color: colors.onPrimary, backgroundColor: 'rgba(25,31,40,0.55)', paddingHorizontal: 5, borderRadius: 8, overflow: 'hidden' },
-  overlay: { position: 'absolute', left: 8, right: 8, bottom: 10, backgroundColor: 'rgba(25,31,40,0.75)', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 8, alignItems: 'center', gap: 2 },
-  overlayLine: { fontSize: 9, color: colors.onPrimary, opacity: 0.85 },
-  overlayCaption: { fontSize: 12, color: colors.onPrimary, textAlign: 'center' },
+  // 자막 위치: 위 / 화면 가운데 / 아래(날짜 줄 위)
+  capZone: { position: 'absolute', left: 8, right: 8, alignItems: 'center' },
+  capTop: { top: '8%' },
+  capMiddle: { top: 0, bottom: 0, justifyContent: 'center' },
+  capShadow: { textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
+  bottomZone: { position: 'absolute', left: 8, right: 8, bottom: 10, alignItems: 'center', gap: 4 },
+  infoBox: { backgroundColor: 'rgba(25,31,40,0.6)', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 7 },
+  infoText: { fontSize: 9, color: colors.onPrimary },
 });

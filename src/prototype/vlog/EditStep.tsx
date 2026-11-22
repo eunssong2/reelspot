@@ -8,9 +8,14 @@ import { shortDotDateLabel } from '../utils/date';
 import { locate, selectedPlaces, type StepCtx } from './ctx';
 import {
   BG_OPTIONS,
+  CAPTION_BGS,
+  CAPTION_COLORS,
+  CAPTION_POSITIONS,
+  CAPTION_SIZES,
   FILTERS,
   clampFrame,
   FONTS,
+  FONT_GROUPS,
   fitWidth,
   FONT_SAMPLE,
   TRANSITIONS,
@@ -19,14 +24,19 @@ import {
   MIN_PHOTO_SEC,
   PHOTO_SEQUENCE_SEC,
   PHOTO_SPLIT_SEC,
+  captionStyleOf,
+  captionWarning,
   clampPhotoSec,
   defaultSetting,
   fontOf,
+  fontStyleOf,
   isPhotoOnly,
   videoLength,
   moveItem,
   resolveMedia,
+  type CaptionStyle,
   type FilterId,
+  type FontGroup,
   type FontId,
   type PlaceSetting,
 } from './model';
@@ -47,6 +57,8 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   const [cell, setCell] = useState(0);
   const [orderOpen, setOrderOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
+  // 자막 모양을 처음 바꾸기 직전의 모습. 전후 비교와 되돌리기에 쓴다(화면을 나가면 잊는다).
+  const [beforeCap, setBeforeCap] = useState<CaptionStyle | null>(null);
   // 아코디언: 한 번에 하나만 펼친다(null 이면 모두 접힘).
   const [openSec, setOpenSec] = useState<string | null>(null);
   const toggleSec = (id: string) => setOpenSec((cur) => (cur === id ? null : id));
@@ -99,6 +111,22 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   };
   const setCaption = (text: string) => patch(ctx, key, { captions: { ...setting.captions, [captionKey]: text } });
 
+  // 자막 모양은 장면별이 아니라 영상 전체에 하나다(한 영상에 글씨체가 섞이지 않게).
+  const cap = captionStyleOf(ctx.draft.captionStyle);
+  const applyCap = (next: CaptionStyle) => ctx.update((d) => ({ ...d, captionStyle: next }));
+  const setCap = (change: Partial<CaptionStyle>) => {
+    // 처음 손대는 순간의 모양을 '바꾸기 전'으로 붙잡아 둔다.
+    setBeforeCap((b) => b ?? cap);
+    applyCap({ ...cap, ...change });
+  };
+  const undoCap = () => {
+    if (beforeCap) applyCap(beforeCap);
+    setBeforeCap(null);
+  };
+  const capChanged = beforeCap !== null && JSON.stringify(beforeCap) !== JSON.stringify(cap);
+  const capWarning = captionWarning(cap);
+  const capSummary = `${fontOf(cap.fontId).label} · ${CAPTION_POSITIONS.find((x) => x.id === cap.pos)?.label} · ${CAPTION_SIZES.find((x) => x.id === cap.size)?.label} · 배경 ${CAPTION_BGS.find((x) => x.id === cap.bg)?.label}`;
+
   // 사진만 고른 장면에서만 초를 직접 고른다. 분할은 장면 전체 길이, 이어 재생은 사진 한 장의 길이다.
   const photoSec = split ? clampPhotoSec(setting.lengthSec ?? PHOTO_SPLIT_SEC) : clampPhotoSec(setting.photoSec ?? PHOTO_SEQUENCE_SEC);
   const setPhotoSec = (v: number) => patch(ctx, key, split ? { lengthSec: clampPhotoSec(v) } : { photoSec: clampPhotoSec(v) });
@@ -141,6 +169,8 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
 
   const maxW = Math.min(width, 430) - GUTTER * 2;
   const previewW = fitWidth(scene.aspect, Math.min(130, maxW * 0.5), maxW);
+  // 전후 비교는 한 줄에 두 장을 나란히 놓는다.
+  const compareW = fitWidth(scene.aspect, Math.min(112, (maxW - 10) / 2), (maxW - 10) / 2);
   const modeLabel = split ? `${scene.clips.length}분할 · 칸 배치 편집 ›` : '이어 재생 · 순서 편집 ›';
   const dateStr = found.day.date.replace(/-/g, '.');
 
@@ -204,7 +234,74 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         </View>
       )}
 
-      <ScrollView style={styles.settings} contentContainerStyle={styles.settingsContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.settings} contentContainerStyle={styles.settingsContent}>
+      <Accordion
+        id="caption"
+        open={openSec === 'caption'}
+        onToggle={toggleSec}
+        title={split ? '자막 (선택) · 분할 화면 전체에 1개' : '자막 (선택)'}
+        summary={setting.captions[captionKey] || '없음'}
+      >
+      <TextInput
+        value={setting.captions[captionKey] ?? ''}
+        onChangeText={setCaption}
+        placeholder="자막을 입력하세요"
+        placeholderTextColor={colors.textMuted}
+        maxLength={40}
+        style={styles.input}
+        accessibilityLabel="이 장면 자막"
+      />
+      </Accordion>
+
+      <Accordion
+        id="capStyle"
+        open={openSec === 'capStyle'}
+        onToggle={toggleSec}
+        title="자막 모양"
+        sub="글씨체·위치·크기·배경은 영상 전체에 함께 적용돼요."
+        summary={capSummary}
+      >
+        <Pressable onPress={() => setFontOpen(true)} accessibilityRole="button" style={styles.fontRow}>
+          <Text style={styles.label}>글씨체</Text>
+          <Text style={[styles.link, fontStyleOf(cap.fontId)]}>{fontOf(cap.fontId).label} ›</Text>
+        </Pressable>
+
+        <ChipRow label="위치" options={CAPTION_POSITIONS} current={cap.pos} onPick={(pos) => setCap({ pos })} />
+        <ChipRow label="크기" options={CAPTION_SIZES} current={cap.size} onPick={(size) => setCap({ size })} />
+        <ChipRow label="배경" options={CAPTION_BGS} current={cap.bg} onPick={(bg) => setCap({ bg })} />
+        <ChipRow label="글자색" options={CAPTION_COLORS} current={cap.color} onPick={(color) => setCap({ color })} dots />
+
+        {capWarning ? <Text style={styles.warn}>{capWarning}</Text> : null}
+        {!setting.captions[captionKey] ? (
+          <Text style={styles.value}>자막을 적으면 위 미리보기에서 바로 확인할 수 있어요.</Text>
+        ) : null}
+
+        {capChanged && beforeCap ? (
+          <View style={styles.compareBox}>
+            <Text style={styles.label}>바꾸기 전과 비교</Text>
+            <View style={styles.compareRow}>
+              <View style={styles.compareCol}>
+                <Text style={styles.compareTag}>바꾸기 전</Text>
+                <SceneCanvas scene={{ ...scene, captionStyle: beforeCap }} width={compareW} clipIndex={split ? undefined : idx} />
+                <Text style={styles.compareNote} numberOfLines={2}>
+                  {fontOf(beforeCap.fontId).label} · {CAPTION_POSITIONS.find((x) => x.id === beforeCap.pos)?.label} · {CAPTION_SIZES.find((x) => x.id === beforeCap.size)?.label}
+                </Text>
+              </View>
+              <View style={styles.compareCol}>
+                <Text style={[styles.compareTag, styles.compareTagNow]}>바꾼 뒤</Text>
+                <SceneCanvas scene={scene} width={compareW} clipIndex={split ? undefined : idx} />
+                <Text style={[styles.compareNote, styles.compareNoteNow]} numberOfLines={2}>
+                  {fontOf(cap.fontId).label} · {CAPTION_POSITIONS.find((x) => x.id === cap.pos)?.label} · {CAPTION_SIZES.find((x) => x.id === cap.size)?.label}
+                </Text>
+              </View>
+            </View>
+            <Pressable onPress={undoCap} accessibilityRole="button" hitSlop={8}>
+              <Text style={styles.link}>↩ 바꾸기 전으로 되돌리기</Text>
+            </Pressable>
+          </View>
+        ) : null}
+      </Accordion>
+
       {curVideo ? (
         <View style={styles.toggleRow}>
           <View style={styles.toggleText}>
@@ -328,29 +425,6 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
       </Accordion>
 
       <Accordion
-        id="caption"
-        open={openSec === 'caption'}
-        onToggle={toggleSec}
-        title={split ? '이 장면 자막 (선택) · 분할 화면 전체에 1개' : '이 장면 자막 (선택)'}
-        summary={setting.captions[captionKey] || '없음'}
-      >
-      <TextInput
-        value={setting.captions[captionKey] ?? ''}
-        onChangeText={setCaption}
-        placeholder="자막을 입력하세요"
-        placeholderTextColor={colors.textMuted}
-        maxLength={40}
-        style={styles.input}
-        accessibilityLabel="이 장면 자막"
-      />
-      </Accordion>
-
-      <Pressable onPress={() => setFontOpen(true)} accessibilityRole="button" style={styles.fontRow}>
-        <Text style={styles.label}>글씨체</Text>
-        <Text style={styles.link}>{fontOf(setting.fontId).label} ›</Text>
-      </Pressable>
-
-      <Accordion
         id="transition"
         open={openSec === 'transition'}
         onToggle={toggleSec}
@@ -396,22 +470,12 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
       />
       <FontSheet
         visible={fontOpen}
-        current={setting.fontId}
+        current={cap.fontId}
         sceneText={setting.captions[captionKey] || FONT_SAMPLE}
         onClose={() => setFontOpen(false)}
-        onApply={(fontId, all) => {
+        onApply={(fontId) => {
           setFontOpen(false);
-          if (all) {
-            // 프로젝트의 모든 장소에 같은 글씨체를 적용한다. 자막·표시 여부는 그대로 둔다.
-            ctx.update((d) => {
-              const settings = { ...d.settings };
-              for (const { place } of selectedPlaces(d, ctx.days)) {
-                settings[place.key] = { ...(settings[place.key] ?? defaultSetting()), fontId };
-              }
-              settings[key] = { ...(settings[key] ?? defaultSetting()), fontId, done: false };
-              return { ...d, settings };
-            });
-          } else patch(ctx, key, { fontId });
+          setCap({ fontId });
         }}
       />
     </StepFrame>
@@ -422,6 +486,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
 function Accordion({
   id,
   title,
+  sub,
   summary,
   open,
   onToggle,
@@ -429,6 +494,8 @@ function Accordion({
 }: {
   id: string;
   title: string;
+  /** 펼쳤을 때만 보여 주는 한 줄 설명 */
+  sub?: string;
   summary: string;
   open: boolean;
   onToggle: (id: string) => void;
@@ -439,15 +506,57 @@ function Accordion({
       <Pressable onPress={() => onToggle(id)} accessibilityRole="button" accessibilityState={{ expanded: open }} style={styles.accHead}>
         <View style={styles.accTitleBox}>
           <Text style={styles.label}>{title}</Text>
-          {open ? null : (
-            <Text style={styles.value} numberOfLines={1}>
-              {summary}
+          {open && !sub ? null : (
+            <Text style={styles.value} numberOfLines={open ? 2 : 1}>
+              {open ? sub : summary}
             </Text>
           )}
         </View>
         <Text style={styles.link}>{open ? '▲' : '▼'}</Text>
       </Pressable>
       {open ? <View style={styles.accBody}>{children}</View> : null}
+    </View>
+  );
+}
+
+/**
+ * 한 줄에 나란히 놓는 선택 칩. 고른 값 하나만 코랄로 켜진다.
+ * dots 를 주면 칩에 색 동그라미를 함께 보여 준다(글자색 고르기).
+ */
+function ChipRow<T extends string>({
+  label,
+  options,
+  current,
+  onPick,
+  dots,
+}: {
+  label: string;
+  options: readonly { id: T; label: string; hex?: string }[];
+  current: T;
+  onPick: (id: T) => void;
+  dots?: boolean;
+}) {
+  return (
+    <View style={styles.chipRow}>
+      <Text style={styles.chipLabel}>{label}</Text>
+      <View style={styles.chips}>
+        {options.map((o) => {
+          const on = o.id === current;
+          return (
+            <Pressable
+              key={o.id}
+              onPress={() => onPick(o.id)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={`${label} ${o.label}`}
+              style={[styles.chip, on && styles.chipOn]}
+            >
+              {dots && o.hex ? <View style={[styles.dot, { backgroundColor: o.hex }]} /> : null}
+              <Text style={[styles.chipText, on && styles.chipTextOn]}>{o.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -507,7 +616,10 @@ function OrderSheet({
   );
 }
 
-/** 글씨체를 미리 보고 고르는 하단 시트. 기본 적용 범위는 현재 장면이다. */
+/**
+ * 글씨체를 미리 보고 고르는 하단 시트. 영상 전체 자막에 적용된다.
+ * 고르면 '지금'과 '바꾼 뒤'를 나란히 보여 주어, 적용 전에 바뀌는 모습을 비교할 수 있다.
+ */
 function FontSheet({
   visible,
   current,
@@ -519,39 +631,91 @@ function FontSheet({
   current: FontId;
   sceneText: string;
   onClose: () => void;
-  onApply: (font: FontId, all: boolean) => void;
+  onApply: (font: FontId) => void;
 }) {
   const [picked, setPicked] = useState<FontId>(current);
-  const [all, setAll] = useState(false);
+  // 지금 쓰는 글씨체가 든 묶음부터 보여 준다.
+  const [group, setGroup] = useState<FontGroup>(fontOf(current).group);
+  const changed = picked !== current;
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} onShow={() => setPicked(current)}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} onShow={() => {
+        setPicked(current);
+        setGroup(fontOf(current).group);
+      }}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="닫기" />
       <View style={styles.sheetWrap} pointerEvents="box-none">
         <View style={styles.sheet}>
           <Text style={styles.sheetTitle}>자막 글씨체</Text>
-          <Text style={styles.value}>선택한 글씨체를 영상에서 확인해 보세요.</Text>
-          <View style={styles.sample}>
-            <Text style={[styles.sampleText, fontOf(picked).style]}>{sceneText}</Text>
+          <Text style={styles.value}>
+            글씨체 {FONTS.length}종 · 영상 전체 자막에 적용돼요. 바뀌는 모습을 먼저 비교해 보세요.
+          </Text>
+
+          <View style={styles.sampleRow}>
+            <View style={styles.sampleCol}>
+              <Text style={styles.compareTag}>지금 · {fontOf(current).label}</Text>
+              <View style={styles.sample}>
+                <Text style={[styles.sampleText, fontStyleOf(current)]} numberOfLines={2}>
+                  {sceneText}
+                </Text>
+              </View>
+            </View>
+            {changed ? (
+              <View style={styles.sampleCol}>
+                <Text style={[styles.compareTag, styles.compareTagNow]}>바꾼 뒤 · {fontOf(picked).label}</Text>
+                <View style={[styles.sample, styles.sampleOn]}>
+                  <Text style={[styles.sampleText, fontStyleOf(picked)]} numberOfLines={2}>
+                    {sceneText}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
           </View>
-          {FONTS.map((f) => (
-            <Pressable
-              key={f.id}
-              onPress={() => setPicked(f.id)}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: picked === f.id }}
-              style={[styles.fontOption, picked === f.id && styles.fontOptionOn]}
-            >
-              <Text style={[styles.fontOptionText, picked === f.id && { color: colors.primary }]}>
-                {f.label}   <Text style={f.style}>{FONT_SAMPLE}</Text>
-              </Text>
-              <Text style={styles.fontMark}>{picked === f.id ? '✓' : '○'}</Text>
-            </Pressable>
-          ))}
-          <View style={styles.toggleRow}>
-            <Text style={styles.label}>모든 장면에 적용</Text>
-            <Switch value={all} onValueChange={setAll} trackColor={{ true: colors.primary }} accessibilityLabel="모든 장면에 적용" />
+
+          <View style={styles.groupRow}>
+            {FONT_GROUPS.map((g) => {
+              const on = g === group;
+              const n = FONTS.filter((f) => f.group === g).length;
+              return (
+                <Pressable
+                  key={g}
+                  onPress={() => setGroup(g)}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`${g} ${n}종`}
+                  style={[styles.groupTab, on && styles.groupTabOn]}
+                >
+                  <Text style={[styles.groupText, on && styles.groupTextOn]}>
+                    {g} {n}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-          <ActionButton label={all ? '모든 장면에 적용' : '현재 장면에 적용'} onPress={() => onApply(picked, all)} />
+
+          <ScrollView style={styles.fontList} contentContainerStyle={styles.fontListBody} showsVerticalScrollIndicator={false}>
+            {FONTS.filter((f) => f.group === group).map((f) => (
+              <Pressable
+                key={f.id}
+                onPress={() => setPicked(f.id)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: picked === f.id }}
+                accessibilityLabel={`${f.label} ${f.desc}`}
+                style={[styles.fontOption, picked === f.id && styles.fontOptionOn]}
+              >
+                <View style={styles.fontOptionBody}>
+                  <Text style={[styles.fontOptionSample, fontStyleOf(f.id)]} numberOfLines={1}>
+                    {FONT_SAMPLE}
+                  </Text>
+                  <Text style={[styles.fontOptionName, picked === f.id && { color: colors.primary }]} numberOfLines={1}>
+                    {f.label} · {f.desc}
+                  </Text>
+                </View>
+                <Text style={styles.fontMark}>{picked === f.id ? '✓' : '○'}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          <ActionButton label={changed ? `${fontOf(picked).label}(으)로 바꾸기` : '닫기'} onPress={() => (changed ? onApply(picked) : onClose())} />
         </View>
       </View>
     </Modal>
@@ -585,15 +749,45 @@ const styles = StyleSheet.create({
   value: { fontSize: 12, color: colors.textSub },
   input: { backgroundColor: colors.surface, borderRadius: radius.item, paddingHorizontal: 16, minHeight: 52, fontSize: 15, color: colors.text },
   fontRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
+  // 자막 모양 고르기
+  chipRow: { gap: 6, paddingTop: 4 },
+  chipLabel: { fontSize: 13, fontWeight: '700', color: colors.textSub },
+  chips: { flexDirection: 'row', gap: 6 },
+  chip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, minHeight: 44, borderRadius: radius.item, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: 'transparent' },
+  chipOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  chipText: { fontSize: 13, fontWeight: '700', color: colors.textSub },
+  chipTextOn: { color: colors.primary },
+  dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1, borderColor: colors.line },
+  warn: { fontSize: 12, fontWeight: '700', color: colors.primary },
+  // 바꾸기 전 / 바꾼 뒤 비교
+  compareBox: { gap: 8, marginTop: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.surface },
+  compareRow: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
+  compareCol: { alignItems: 'center', gap: 4 },
+  compareTag: { fontSize: 11, fontWeight: '800', color: colors.textMuted },
+  compareTagNow: { color: colors.primary },
+  compareNote: { fontSize: 10, color: colors.textMuted, textAlign: 'center' },
+  compareNoteNow: { color: colors.textSub },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(25,31,40,0.4)' },
   sheetWrap: { flex: 1, justifyContent: 'flex-end', alignItems: 'center' },
   sheet: { width: '100%', maxWidth: 430, backgroundColor: colors.bg, borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card, padding: 20, gap: 10, boxShadow: shadow.float },
   sheetTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
-  sample: { backgroundColor: colors.ink, borderRadius: radius.item, padding: 16, alignItems: 'center' },
-  sampleText: { fontSize: 16, color: colors.onPrimary },
-  fontOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, borderRadius: radius.item, borderWidth: 1.5, borderColor: 'transparent', paddingHorizontal: 14, minHeight: 48 },
+  sampleRow: { flexDirection: 'row', gap: 8 },
+  sampleCol: { flex: 1, gap: 4 },
+  sample: { backgroundColor: colors.ink, borderRadius: radius.item, paddingVertical: 14, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center', minHeight: 62 },
+  sampleOn: { borderWidth: 1.5, borderColor: colors.primary },
+  sampleText: { fontSize: 15, lineHeight: 21, color: colors.onPrimary, textAlign: 'center' },
+  groupRow: { flexDirection: 'row', gap: 6 },
+  groupTab: { flex: 1, minHeight: 40, borderRadius: radius.item, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  groupTabOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  groupText: { fontSize: 12, fontWeight: '800', color: colors.textSub },
+  groupTextOn: { color: colors.primary },
+  fontList: { maxHeight: 268 },
+  fontListBody: { gap: 6 },
+  fontOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, backgroundColor: colors.surface, borderRadius: radius.item, borderWidth: 1.5, borderColor: 'transparent', paddingHorizontal: 14, paddingVertical: 8, minHeight: 56 },
   fontOptionOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
-  fontOptionText: { fontSize: 13, fontWeight: '700', color: colors.text },
+  fontOptionBody: { flex: 1, gap: 1 },
+  fontOptionSample: { fontSize: 16, color: colors.text },
+  fontOptionName: { fontSize: 11, color: colors.textSub },
   fontMark: { fontSize: 15, color: colors.primary },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   orderNo: { width: 20, fontSize: 14, fontWeight: '800', color: colors.primary, textAlign: 'center' },
