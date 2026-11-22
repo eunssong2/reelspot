@@ -29,6 +29,7 @@ import {
   MIN_PHOTO_SEC,
   PHOTO_SEQUENCE_SEC,
   PHOTO_SPLIT_SEC,
+  SPEEDS,
   captionStyleOf,
   captionWarning,
   clampPhotoSec,
@@ -39,6 +40,8 @@ import {
   motionOf,
   placeLabelOf,
   videoLength,
+  videoScreenSeconds,
+  videoSpeed,
   moveItem,
   resolveMedia,
   type CaptionStyle,
@@ -216,6 +219,13 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   const curMedia = !split ? media[idx] : undefined;
   const curVideo = curMedia && curMedia.item.kind === 'video' && (curMedia.seconds ?? 0) > 0 ? curMedia : undefined;
   const curLen = curVideo ? videoLength(curVideo, setting) : 0;
+  // 재생 속도는 이어 재생 장면에서만 고른다(분할은 칸이 동시에 재생돼 길이가 엇갈린다).
+  const curSpeed = curVideo ? videoSpeed(curVideo, setting) : 1;
+  const curScreenSec = curVideo ? videoScreenSeconds(curVideo, setting) : 0;
+  const setSpeed = (v: number) => {
+    if (!curVideo) return;
+    patch(ctx, key, { speed: { ...(setting.speed ?? {}), [curVideo.item.id]: v } });
+  };
   const setVideoLen = (v: number) => {
     if (!curVideo) return;
     const orig = curVideo.seconds ?? 0;
@@ -426,6 +436,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
             <Text style={styles.value}>
               원본 {curVideo.seconds}초 중 {curLen}초 사용
               {(setting.videoStart[curVideo.item.id] ?? 0) > 0 ? ` · ${setting.videoStart[curVideo.item.id]}초부터` : ''}
+              {curSpeed !== 1 ? ` · 화면에선 ${Math.round(curScreenSec * 10) / 10}초` : ''}
             </Text>
             {(curVideo.seconds ?? 0) > curLen ? (
               <Pressable onPress={() => ctx.go({ step: 'trim', placeKey: key, clipId: curVideo.item.id })} accessibilityRole="button" hitSlop={8}>
@@ -442,6 +453,24 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
               <Text style={styles.miniText}>+</Text>
             </Pressable>
           </View>
+        </View>
+      ) : null}
+
+      {curVideo && !split ? (
+        <View style={styles.speedBox}>
+          <ChipRow
+            label="재생 속도"
+            options={SPEEDS.map((x) => ({ id: String(x.id), label: x.label }))}
+            current={String(curSpeed)}
+            onPick={(v) => setSpeed(Number(v))}
+          />
+          <Text style={styles.value}>
+            {curSpeed === 1
+              ? '원래 속도로 재생해요.'
+              : curSpeed < 1
+                ? `느리게 재생해 ${curLen}초가 화면에서 ${Math.round(curScreenSec * 10) / 10}초로 늘어나요.`
+                : `빠르게 재생해 ${curLen}초가 화면에서 ${Math.round(curScreenSec * 10) / 10}초로 줄어들어요.`}
+          </Text>
         </View>
       ) : null}
 
@@ -914,6 +943,7 @@ const styles = StyleSheet.create({
   input: { backgroundColor: colors.surface, borderRadius: radius.item, paddingHorizontal: 16, minHeight: 52, fontSize: 15, color: colors.text },
   fontRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
   // 자막 모양 고르기
+  speedBox: { gap: 6, paddingBottom: 6 },
   chipRow: { gap: 6, paddingTop: 4 },
   chipLabel: { fontSize: 13, fontWeight: '700', color: colors.textSub },
   chips: { flexDirection: 'row', gap: 6 },

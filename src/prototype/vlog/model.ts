@@ -26,6 +26,17 @@ export const PHOTO_SEQUENCE_SEC = 3;
 export const VIDEO_SEQUENCE_MAX_SEC = 5;
 /** 분할 장면에 사진만 있을 때의 기본 길이(초) */
 export const PHOTO_SPLIT_SEC = 5;
+/**
+ * 동영상 재생 속도. 이어 재생 장면에서만 고른다
+ * (분할 장면은 칸이 동시에 재생되므로 칸마다 속도가 다르면 길이가 엇갈린다).
+ */
+export const SPEEDS: { id: number; label: string }[] = [
+  { id: 0.5, label: '0.5배' },
+  { id: 1, label: '보통' },
+  { id: 1.5, label: '1.5배' },
+  { id: 2, label: '2배' },
+];
+
 /** 사진만 있는 장면에서 직접 고를 수 있는 길이(초) 범위 */
 export const MIN_PHOTO_SEC = 1;
 export const MAX_PHOTO_SEC = 10;
@@ -654,6 +665,8 @@ export interface PlaceSetting {
   transition?: TransitionId;
   /** 이 장면 사진의 움직임. 없으면 프로젝트 기본 움직임을 따른다. */
   motion?: MotionId;
+  /** 동영상 재생 속도. 기록 id → 배속. 없으면 1배(보통) */
+  speed?: Record<string, number>;
   /** 색감 효과. 이어 재생은 기록 id, 분할은 'all' 이 키다. 없으면 원본 */
   filters?: Record<string, FilterId>;
   /** 화면 맞춤·자르기(이어 재생). 기록 id → 설정. 없으면 채우기 */
@@ -812,12 +825,25 @@ export function videoLength(m: VlogMedia, setting: PlaceSetting): number {
 
 export const clampPhotoSec = (v: number): number => Math.max(MIN_PHOTO_SEC, Math.min(MAX_PHOTO_SEC, Math.round(v)));
 
+/** 이 동영상의 재생 속도(배). 고른 적 없으면 1배 */
+export function videoSpeed(m: VlogMedia, setting: PlaceSetting): number {
+  const v = setting.speed?.[m.item.id];
+  return v && SPEEDS.some((s) => s.id === v) ? v : 1;
+}
+
+/**
+ * 동영상이 화면에서 차지하는 시간(초).
+ * 쓰기로 한 원본 구간(videoLength)을 속도로 나눈다 — 2배속이면 절반만에 지나간다.
+ */
+export const videoScreenSeconds = (m: VlogMedia, setting: PlaceSetting): number =>
+  videoLength(m, setting) / videoSpeed(m, setting);
+
 /** 사진만 고른 장면인가(이때만 사진 길이를 직접 고를 수 있다) */
 export const isPhotoOnly = (media: VlogMedia[]): boolean => media.length > 0 && media.every((m) => m.item.kind === 'photo');
 
 export const clipSeconds = (m: VlogMedia, setting: PlaceSetting, photoOnly: boolean): number =>
   m.item.kind === 'video'
-    ? videoLength(m, setting)
+    ? videoScreenSeconds(m, setting)
     : photoOnly
       ? clampPhotoSec(setting.photoSec ?? PHOTO_SEQUENCE_SEC)
       : PHOTO_SEQUENCE_SEC;
@@ -839,7 +865,10 @@ export interface TimelineClip {
   videoSource?: number;
   /** 동영상에서 쓸 구간의 시작(초) */
   startSec: number;
+  /** 화면에서 차지하는 시간(초). 속도를 반영한 값이다. */
   seconds: number;
+  /** 재생 속도(배). 렌더러는 원본을 이 속도로 돌려 seconds 안에 담는다. */
+  speed: number;
   caption: string;
   filter: FilterId;
   frame: FrameAdjust;
@@ -924,6 +953,8 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
           videoSource: m.item.videoSource,
           startSec: m.item.kind === 'video' ? (setting.videoStart[m.item.id] ?? 0) : 0,
           seconds: mode === 'split' ? common : clipSeconds(m, setting, isPhotoOnly(media)),
+          // 분할 장면은 칸이 동시에 재생되므로 속도를 쓰지 않는다.
+          speed: mode === 'split' || m.item.kind !== 'video' ? 1 : videoSpeed(m, setting),
           caption: setting.captions[m.item.id] ?? '',
           filter: setting.filters?.[mode === 'split' ? 'all' : m.item.id] ?? 'none',
           frame: clampFrame({ ...defaultFrame(), ...(setting.frames?.[m.item.id] ?? {}) }),
@@ -1046,7 +1077,7 @@ export function draftSignature(draft: VlogDraft, timeline: Timeline): string {
     x: timeline.transition,
     c: captionStyleOf(draft.captionStyle),
     l: placeLabelOf(draft.placeLabel),
-    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.motion, s.dateText, s.placeText, s.caption, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.caption, c.filter, c.frame])]),
+    s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.motion, s.dateText, s.placeText, s.caption, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.speed, c.caption, c.filter, c.frame])]),
   });
 }
 
