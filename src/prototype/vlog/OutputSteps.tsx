@@ -87,6 +87,7 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
                   value={Boolean(draft.dayTitleCard?.[day.key])}
                   onValueChange={(v) => ctx.update((d) => ({ ...d, dayTitleCard: { ...(d.dayTitleCard ?? {}), [day.key]: v } }))}
                   trackColor={{ true: colors.primary }}
+                  thumbColor={colors.bg}
                   accessibilityLabel={`${weekday(day.date)} 제목 화면 넣기`}
                 />
               </View>
@@ -166,7 +167,7 @@ function Arrows({ onUp, onDown, label }: { onUp?: () => void; onDown?: () => voi
  * 동영상은 커버 프레임으로 보여 주며 실제 움직임·소리는 최종 렌더링에서 만들어진다.
  */
 export function PreviewStep({ ctx }: { ctx: StepCtx }) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { timeline, draft } = ctx;
   const total = timeline.totalSec;
   const [t, setT] = useState(0);
@@ -196,7 +197,9 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
   const prevScene = sceneIdx > 0 ? timeline.scenes[sceneIdx - 1] : undefined;
   const transProgress = scene && prevScene ? (t - scene.startSec) / TRANSITION_SEC : undefined;
   const maxW = Math.min(width, 430) - GUTTER * 2;
-  const canvasW = fitWidth(timeline.aspect, Math.min(200, maxW * 0.55), maxW);
+  // 아래가 비어 보일 만큼 자리가 남는다. 화면이 길면 미리보기를 키운다.
+  // 크게 볼수록 자막 크기(작게·보통·크게) 차이도 눈에 들어온다.
+  const canvasW = fitWidth(timeline.aspect, Math.min(height < 760 ? 200 : 260, maxW * 0.72), maxW);
 
   if (!scene) {
     return (
