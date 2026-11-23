@@ -902,6 +902,18 @@ export const defaultSetting = (): PlaceSetting => ({
   done: false,
 });
 
+// ---------- 배경 음악 ----------
+
+/** 'none' 이면 음악 없음, 아니면 musicTracks 의 곡 id */
+export type MusicId = string;
+export type MusicVolume = 'low' | 'mid' | 'high';
+/** 음악 소리 크기(0~1). 원본 영상 소리 위에 깔리므로 너무 크지 않게 잡는다. */
+export const MUSIC_VOLUMES: { id: MusicVolume; label: string; value: number }[] = [
+  { id: 'low', label: '작게', value: 0.25 },
+  { id: 'mid', label: '보통', value: 0.55 },
+  { id: 'high', label: '크게', value: 0.9 },
+];
+
 export interface RenderMark {
   /** 생성 당시 초안 내용의 서명. 편집이 바뀌면 달라진다. */
   signature: string;
@@ -941,6 +953,10 @@ export interface VlogDraft {
   motion?: MotionId;
   /** 장소 라벨 모양. 영상 전체에 하나. 없으면 기본값 */
   placeLabel?: PlaceLabel;
+  /** 배경 음악. 영상 전체에 하나. 없으면 음악 없음 */
+  music?: { id: MusicId; volume: MusicVolume };
+  /** 동영상 원본 소리를 그대로 둘지 없앨지. 없으면 그대로 둔다 */
+  originalSound?: 'keep' | 'mute';
   render?: RenderMark;
   updatedAt: number;
 }
@@ -1302,6 +1318,8 @@ export function draftSignature(draft: VlogDraft, timeline: Timeline): string {
     x: timeline.transition,
     c: captionStyleOf(draft.captionStyle),
     l: placeLabelOf(draft.placeLabel),
+    m: draft.music ?? null,
+    o: draft.originalSound ?? 'keep',
     s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.motion, s.dateText, s.placeText, s.captions, s.stickers, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.speed, c.captions, c.filter, c.frame, c.stickers])]),
   });
 }

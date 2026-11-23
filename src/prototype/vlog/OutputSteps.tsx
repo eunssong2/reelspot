@@ -1,6 +1,6 @@
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { ActionButton } from '../components/FormParts';
 import { Toggle } from '../components/Toggle';
@@ -12,6 +12,7 @@ import {
   fitWidth,
   END_CARD_SEC,
   END_TEXT_DEFAULT,
+  MUSIC_VOLUMES,
   TITLE_CARD_SEC,
   TRANSITION_SEC,
   daySeconds,
@@ -23,8 +24,11 @@ import {
   placeSeconds,
   resolveMedia,
   splitTemplatesFor,
+  type MusicId,
   type VlogDay,
 } from './model';
+import { useBgm } from './bgm';
+import { MUSIC_MOODS, MUSIC_TRACKS } from './musicTracks';
 import { FooterButtons, Heading, StateCard, StepFrame, TransitionStage } from './parts';
 import { renderVlog, saveToGallery } from './vlogBridge';
 
@@ -160,6 +164,7 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
           accessibilityLabel="끝 화면"
         />
       </View>
+      <MusicPicker ctx={ctx} />
       {draft.endCard ? (
         <View style={styles.dayTitleBox}>
           <TextInput
@@ -175,6 +180,117 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
         </View>
       ) : null}
     </StepFrame>
+  );
+}
+
+/**
+ * 배경 음악 고르기: 곡을 고르고, ▶ 로 들어 본다. 소리 크기는 곡을 고른 뒤에 정한다.
+ * 곡은 영상 전체에 하나이며 영상보다 짧으면 반복된다. 원본 영상의 소리는 그대로 두고 그 위에 깔린다.
+ */
+function MusicPicker({ ctx }: { ctx: StepCtx }) {
+  const music = ctx.draft.music ?? { id: 'none' as MusicId, volume: 'mid' as const };
+  // 듣고 있는 곡(없으면 null). 듣는 소리 크기도 고른 크기를 따른다.
+  const [listening, setListening] = useState<MusicId | null>(null);
+  useBgm(listening ?? 'none', music.volume, listening !== null);
+  const set = (change: Partial<typeof music>) => ctx.update((d) => ({ ...d, music: { ...music, ...change } }));
+  // 분위기 탭: 고른 곡이 있으면 그 곡의 분위기부터 보여 준다.
+  const [mood, setMood] = useState<string>(MUSIC_TRACKS.find((t) => t.id === music.id)?.mood ?? MUSIC_MOODS[0]);
+  const none = music.id === 'none';
+
+  return (
+    <View style={styles.musicBox}>
+      <Text style={styles.cardTitle}>소리</Text>
+      <View style={styles.musicVol}>
+        {([['keep', '원본 소리 그대로'], ['mute', '원본 소리 없애기']] as const).map(([id, label]) => {
+          const on = (ctx.draft.originalSound ?? 'keep') === id;
+          return (
+            <Pressable
+              key={id}
+              onPress={() => ctx.update((d) => ({ ...d, originalSound: id }))}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              style={[styles.musicVolChip, styles.soundChip, on && styles.musicVolChipOn]}
+            >
+              <Text style={[styles.musicVolText, on && styles.musicVolTextOn]}>{label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text style={styles.cardSub}>
+        {(ctx.draft.originalSound ?? 'keep') === 'keep' ? '동영상에 담긴 소리(말소리·주변 소리)를 그대로 두고, 배경 음악이 있으면 그 위에 더해져요.' : '동영상의 원래 소리를 모두 없애요. 배경 음악만 나와요(음악이 없으면 무음).'}
+      </Text>
+      <Text style={[styles.cardTitle, styles.musicTitle]}>배경 음악</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.musicTabs}>
+        <Pressable
+          onPress={() => {
+            set({ id: 'none' });
+            setListening(null);
+          }}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: none }}
+          style={[styles.musicTab, none && styles.musicTabOn]}
+        >
+          <Text style={[styles.musicTabText, none && styles.musicTabTextOn]}>음악 없음</Text>
+        </Pressable>
+        {MUSIC_MOODS.map((m) => {
+          const on = !none && mood === m;
+          return (
+            <Pressable
+              key={m}
+              onPress={() => setMood(m)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: mood === m }}
+              style={[styles.musicTab, mood === m && styles.musicTabSoft, on && styles.musicTabOn]}
+            >
+              <Text style={[styles.musicTabText, on && styles.musicTabTextOn]}>
+                {m} {MUSIC_TRACKS.filter((t) => t.mood === m).length}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      {MUSIC_TRACKS.filter((t) => t.mood === mood).map((t) => {
+        const on = music.id === t.id;
+        const playing = listening === t.id;
+        return (
+          <View key={t.id} style={[styles.musicRow, on && styles.musicRowOn]}>
+            <Pressable onPress={() => set({ id: t.id })} accessibilityRole="radio" accessibilityState={{ selected: on }} style={styles.musicMain}>
+              <Text style={[styles.musicName, on && styles.musicNameOn]}>{t.label}</Text>
+              <Text style={styles.cardSub}>{t.desc}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setListening(playing ? null : t.id)}
+              accessibilityRole="button"
+              accessibilityLabel={playing ? `${t.label} 멈추기` : `${t.label} 들어 보기`}
+              hitSlop={6}
+              style={styles.musicPlay}
+            >
+              <Text style={styles.musicPlayText}>{playing ? '■' : '▶'}</Text>
+            </Pressable>
+          </View>
+        );
+      })}
+      {music.id !== 'none' ? (
+        <View style={styles.musicVol}>
+          <Text style={styles.cardSub}>소리 크기</Text>
+          {MUSIC_VOLUMES.map((v) => {
+            const on = music.volume === v.id;
+            return (
+              <Pressable
+                key={v.id}
+                onPress={() => set({ volume: v.id })}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: on }}
+                style={[styles.musicVolChip, on && styles.musicVolChipOn]}
+              >
+                <Text style={[styles.musicVolText, on && styles.musicVolTextOn]}>{v.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+      <Text style={styles.hint}>예시 곡은 직접 합성한 시연용 음원이에요(저작권 걱정 없음). 영상으로 만들 때 서버가 이 곡을 입혀야 반영돼요.</Text>
+    </View>
   );
 }
 
@@ -205,6 +321,8 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
   const problem = draftProblem(draft, ctx.days);
   const signature = useMemo(() => draftSignature(draft, timeline), [draft, timeline]);
   const hasFinished = draft.render?.signature === signature;
+  // 배경 음악은 미리보기를 재생하는 동안 함께 나온다(소리 크기는 구성 화면에서 정한 값).
+  useBgm(draft.music?.id ?? 'none', draft.music?.volume ?? 'mid', playing);
 
   useEffect(() => {
     if (!playing) return;
@@ -362,6 +480,8 @@ export function GenerateStep({ ctx }: { ctx: StepCtx }) {
       const outcome = await renderVlog({
         title: titleOf(c),
         timeline: c.timeline,
+        originalSound: c.draft.originalSound ?? 'keep',
+        music: c.draft.music && c.draft.music.id !== 'none' ? { id: c.draft.music.id, volume: MUSIC_VOLUMES.find((v) => v.id === c.draft.music?.volume)?.value ?? 0.55 } : undefined,
         onProgress: (r) => setProgress(Math.max(0, Math.min(1, r))),
         isCancelled: () => cancelled.current,
       });
@@ -529,6 +649,27 @@ const styles = StyleSheet.create({
   dayTitleTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   dayTitleInput: { backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 12, minHeight: 44, fontSize: 15, fontWeight: '700', color: colors.text },
   hint: { fontSize: 11, color: colors.textMuted },
+  musicBox: { gap: 8, marginTop: 6 },
+  musicRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.item, borderWidth: 1.5, borderColor: 'transparent' },
+  musicRowOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  musicMain: { flex: 1, paddingVertical: 10, paddingHorizontal: 14, gap: 2 },
+  musicName: { fontSize: 14, fontWeight: '700', color: colors.text },
+  musicNameOn: { color: colors.primary },
+  musicPlay: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  musicPlayText: { fontSize: 16, color: colors.textSub },
+  musicTabs: { gap: 8, paddingVertical: 2 },
+  musicTab: { minHeight: 38, paddingHorizontal: 16, borderRadius: 19, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'transparent' },
+  musicTabSoft: { borderColor: colors.surfaceStrong },
+  musicTabOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  musicTabText: { fontSize: 13, fontWeight: '700', color: colors.textSub },
+  musicTabTextOn: { color: colors.primary },
+  soundChip: { flex: 1 },
+  musicTitle: { marginTop: 8 },
+  musicVol: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  musicVolChip: { minHeight: 36, paddingHorizontal: 16, borderRadius: 18, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'transparent' },
+  musicVolChipOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  musicVolText: { fontSize: 13, fontWeight: '700', color: colors.textSub },
+  musicVolTextOn: { color: colors.primary },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 56, marginTop: 4 },
   toggleText: { flex: 1, gap: 2 },
   center: { alignItems: 'center' },

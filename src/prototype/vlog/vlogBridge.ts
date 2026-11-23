@@ -13,6 +13,10 @@ export interface RenderRequest {
   title: string;
   /** 미리보기와 같은 타임라인. 렌더러는 이 구간·배치 그대로 9:16 1080p MP4 로 만든다. */
   timeline: Timeline;
+  /** 배경 음악(없으면 생략). volume 은 0~1 */
+  music?: { id: string; volume: number };
+  /** 동영상 원본 소리: keep 은 그대로, mute 는 없앤다 */
+  originalSound: 'keep' | 'mute';
   /** 실제 처리 상태가 있을 때만 0~1 로 알린다. */
   onProgress: (ratio: number) => void;
   /** 사용자가 생성 중단을 누르면 true 가 된다. */
