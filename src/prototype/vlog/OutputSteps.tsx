@@ -1,20 +1,23 @@
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { ActionButton } from '../components/FormParts';
-import { colors, GUTTER, radius } from '../styles/tokens';
+import { Toggle } from '../components/Toggle';
+import { MIN_TOUCH, colors, GUTTER, radius } from '../styles/tokens';
 import { dayOfWeekLabel, shortDotDateLabel } from '../utils/date';
 import { selectedPlaces, type StepCtx } from './ctx';
 import {
   aspectOf,
   fitWidth,
+  END_CARD_SEC,
+  END_TEXT_DEFAULT,
   TITLE_CARD_SEC,
   TRANSITION_SEC,
   daySeconds,
   defaultTitle,
   draftSignature,
-  limitProblem,
+  draftProblem,
   mmss2,
   moveItem,
   placeSeconds,
@@ -41,7 +44,7 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
 
   const next = () => {
     if (undone.length > 0) return ctx.toast(`아직 편집하지 않은 장소 ${undone.length}곳이 있어요`);
-    const problem = limitProblem(timeline);
+    const problem = draftProblem(draft, ctx.days);
     if (problem) return ctx.toast(problem);
     ctx.go({ step: 'preview' });
   };
@@ -82,10 +85,10 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
             <View style={styles.dayTitleBox}>
               <View style={styles.dayTitleTop}>
                 <Text style={styles.cardSub}>날짜 제목 화면 {TITLE_CARD_SEC}초</Text>
-                <Switch
+                <Toggle
+                  style={styles.touch}
                   value={Boolean(draft.dayTitleCard?.[day.key])}
                   onValueChange={(v) => ctx.update((d) => ({ ...d, dayTitleCard: { ...(d.dayTitleCard ?? {}), [day.key]: v } }))}
-                  trackColor={{ true: colors.primary }}
                   accessibilityLabel={`${weekday(day.date)} 제목 화면 넣기`}
                 />
               </View>
@@ -143,6 +146,34 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
           </View>
         );
       })}
+
+      <View style={styles.card}>
+        <View style={styles.cardMain}>
+          <Text style={styles.cardTitle}>끝 화면</Text>
+          <Text style={styles.cardSub}>
+            마지막에 문구 한 장을 {END_CARD_SEC}초 넣어요. 영상이 뚝 끊기지 않아요.
+          </Text>
+        </View>
+        <Toggle
+          value={Boolean(draft.endCard)}
+          onValueChange={(v) => ctx.update((d) => ({ ...d, endCard: v }))}
+          accessibilityLabel="끝 화면"
+        />
+      </View>
+      {draft.endCard ? (
+        <View style={styles.dayTitleBox}>
+          <TextInput
+            value={draft.endText ?? ''}
+            onChangeText={(v) => ctx.update((d) => ({ ...d, endText: v }))}
+            placeholder={END_TEXT_DEFAULT}
+            placeholderTextColor={colors.textMuted}
+            maxLength={30}
+            accessibilityLabel="끝 화면 문구"
+            style={styles.dayTitleInput}
+          />
+          <Text style={styles.hint}>비워 두면 &apos;{END_TEXT_DEFAULT}&apos;이 들어가요.</Text>
+        </View>
+      ) : null}
     </StepFrame>
   );
 }
@@ -165,13 +196,13 @@ function Arrows({ onUp, onDown, label }: { onUp?: () => void; onDown?: () => voi
  * 동영상은 커버 프레임으로 보여 주며 실제 움직임·소리는 최종 렌더링에서 만들어진다.
  */
 export function PreviewStep({ ctx }: { ctx: StepCtx }) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { timeline, draft } = ctx;
   const total = timeline.totalSec;
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [trackW, setTrackW] = useState(0);
-  const problem = limitProblem(timeline);
+  const problem = draftProblem(draft, ctx.days);
   const signature = useMemo(() => draftSignature(draft, timeline), [draft, timeline]);
   const hasFinished = draft.render?.signature === signature;
 
@@ -195,7 +226,9 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
   const prevScene = sceneIdx > 0 ? timeline.scenes[sceneIdx - 1] : undefined;
   const transProgress = scene && prevScene ? (t - scene.startSec) / TRANSITION_SEC : undefined;
   const maxW = Math.min(width, 430) - GUTTER * 2;
-  const canvasW = fitWidth(timeline.aspect, Math.min(200, maxW * 0.55), maxW);
+  // 아래가 비어 보일 만큼 자리가 남는다. 화면이 길면 미리보기를 키운다.
+  // 크게 볼수록 자막 크기(작게·보통·크게) 차이도 눈에 들어온다.
+  const canvasW = fitWidth(timeline.aspect, Math.min(height < 760 ? 200 : 260, maxW * 0.72), maxW);
 
   if (!scene) {
     return (
@@ -227,19 +260,32 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
         <FooterButtons
           label="영상 생성"
           disabled={Boolean(problem)}
-          onPress={() => ctx.go({ step: 'generate' })}
+          onPress={() => {
+            // 누르는 순간 다시 확인한다(편집 뒤 기록이 지워졌을 수 있다).
+            const error = draftProblem(ctx.draft, ctx.days);
+            if (error) ctx.toast(error);
+            else ctx.go({ step: 'generate' });
+          }}
           secondaryLabel={hasFinished ? '만들어 둔 완성본 보기' : undefined}
           onSecondary={() => ctx.go({ step: 'result' })}
         />
       }
     >
-      <Pressable onPress={ctx.back} accessibilityRole="button" hitSlop={8}>
+      <Pressable onPress={ctx.back} accessibilityRole="button" hitSlop={8} style={styles.touch}>
         <Text style={styles.previewTitle}>{titleOf(ctx)}  <Text style={styles.link}>수정</Text></Text>
       </Pressable>
 
       <View style={styles.center}>
-        <Pressable onPress={play} accessibilityRole="button" accessibilityLabel={playing ? '일시정지' : '재생'}>
-          <TransitionStage scene={scene} prev={prevScene} width={canvasW} localSec={t - scene.startSec} transition={scene.transition} progress={transProgress} />
+        <Pressable onPress={play} accessibilityRole="button" accessibilityLabel={playing ? '일시정지' : '재생'} style={styles.touch}>
+          <TransitionStage
+            scene={scene}
+            prev={prevScene}
+            width={canvasW}
+            localSec={t - scene.startSec}
+            transition={scene.transition}
+            progress={transProgress}
+            animate
+          />
           {!playing ? (
             <View style={styles.playWrap} pointerEvents="none">
               <View style={styles.playBtn}>
@@ -251,7 +297,7 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
       </View>
 
       <Text style={styles.time}>
-        {mmss2(t)} / {mmss2(total)}
+        {mmss2(t)} / {mmss2(total)}  ·  {aspectOf(timeline.aspect).output}
       </Text>
       <Pressable
         onPress={(e) => trackW > 0 && seek((e.nativeEvent.locationX / trackW) * total)}
@@ -262,16 +308,27 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
       >
         <View style={[styles.barFill, { width: total > 0 ? `${(t / total) * 100}%` : '0%' }]} />
       </Pressable>
-      <View style={styles.marks}>
-        {marks.map(({ s, day }) => (
-          <Pressable key={s.dayKey} onPress={() => seek(s.startSec)} accessibilityRole="button" hitSlop={8}>
-            <Text style={styles.mark}>
-              {day ? shortDotDateLabel(day.date) : ''} {mmss2(s.startSec).replace(/^00:/, '0:')}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      <Text style={styles.format}>{aspectOf(timeline.aspect).output}</Text>
+      {marks.length > 1 ? (
+        <View style={styles.marks}>
+          {marks.map(({ s, day }) => {
+            const label = day ? shortDotDateLabel(day.date) : '';
+            return (
+              <Pressable
+                key={s.dayKey}
+                onPress={() => seek(s.startSec)}
+                accessibilityRole="button"
+                accessibilityLabel={`${label} 날짜로 이동`}
+                hitSlop={8}
+                style={styles.markChip}
+              >
+                <Text style={styles.mark}>
+                  {label} {mmss2(s.startSec).replace(/^00:/, '0:')}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
       {problem ? <Text style={styles.problem}>{problem}</Text> : null}
       <Pressable onPress={() => ctx.go({ step: 'compose' })} accessibilityRole="button" hitSlop={8}>
         <Text style={[styles.link, styles.centerText]}>자막·장면 수정</Text>
@@ -451,6 +508,8 @@ function Player({ uri, width, aspect }: { uri: string; width: number; aspect: 'p
 }
 
 const styles = StyleSheet.create({
+  // 손가락으로 누르는 자리는 최소 크기를 보장한다.
+  touch: { minWidth: MIN_TOUCH, minHeight: MIN_TOUCH, justifyContent: 'center' },
   titleInput: { backgroundColor: colors.surface, borderRadius: radius.item, paddingHorizontal: 16, minHeight: 56, fontSize: 18, fontWeight: '800', color: colors.text },
   sub: { fontSize: 12, color: colors.textSub },
   group: { gap: 8, marginTop: 4 },
@@ -482,8 +541,10 @@ const styles = StyleSheet.create({
   time: { fontSize: 12, color: colors.textSub, textAlign: 'center' },
   bar: { height: 8, borderRadius: 4, backgroundColor: colors.surface, overflow: 'hidden', justifyContent: 'center' },
   barFill: { height: 8, backgroundColor: colors.primary },
-  marks: { flexDirection: 'row', justifyContent: 'space-between' },
-  mark: { fontSize: 11, color: colors.textSub },
+  // 날짜가 둘 이상일 때만 나오는 이동 버튼. 눌리는 것으로 보이게 칩으로 둔다.
+  marks: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
+  markChip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.item, backgroundColor: colors.surface },
+  mark: { fontSize: 12, fontWeight: '700', color: colors.textSub },
   format: { fontSize: 12, color: colors.textSub, textAlign: 'center' },
   problem: { fontSize: 13, fontWeight: '700', color: colors.danger, textAlign: 'center' },
   genBody: { flex: 1, justifyContent: 'center', gap: 16 },

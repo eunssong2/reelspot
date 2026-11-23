@@ -5,6 +5,7 @@ import { ScenarioPanel } from '@/prototype/components/ScenarioPanel';
 import { PhoneFrame } from '@/prototype/components/ScreenFrame';
 import { GroupsProvider } from '@/prototype/state/GroupsProvider';
 import { PrototypeProvider } from '@/prototype/state/PrototypeProvider';
+import { useVlogFonts } from '@/prototype/vlog/fonts';
 import { VlogProvider } from '@/prototype/vlog/VlogProvider';
 import { colors } from '@/prototype/styles/tokens';
 
@@ -14,6 +15,8 @@ import { colors } from '@/prototype/styles/tokens';
  * 팀 화면·테마와 분리된 mock 화면이며, 자체 하늘색 디자인(src/prototype/styles)을 쓴다.
  */
 export default function PrototypeLayout() {
+  // 자막 글꼴을 미리 올린다. 올라오기 전에도 화면은 그대로 열리고 자막만 기기 글꼴로 보인다.
+  useVlogFonts();
   return (
     <PrototypeProvider>
       <GroupsProvider>

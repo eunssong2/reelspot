@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import { emptyDraft, type VlogDraft } from './model';
+import { defaultCaptionStyle, emptyDraft, type VlogDraft } from './model';
 
 /** 저장 형식을 바꾸면 버전을 올려 이전 저장본을 무시한다. */
 const STORAGE_KEY = 'reelspot.vlog.drafts.v1';
@@ -39,7 +39,10 @@ export function VlogProvider({ children }: { children: ReactNode }) {
           const clean: Record<string, VlogDraft> = {};
           for (const [id, d] of Object.entries(parsed as Record<string, VlogDraft>)) {
             // 최소한의 모양만 확인한다. 깨진 저장본은 버린다.
-            if (d && Array.isArray(d.dayKeys) && d.placeKeys && d.mediaIds && d.settings) clean[id] = d;
+            if (!d || !Array.isArray(d.dayKeys) || !d.placeKeys || !d.mediaIds || !d.settings) continue;
+            // 이전 저장본은 글씨체를 장면별로 두었다. 지금은 영상 전체에 한 벌이라, 쓰던 글씨체를 끌어올린다.
+            const legacyFont = !d.captionStyle ? Object.values(d.settings).find((x) => x?.fontId)?.fontId : undefined;
+            clean[id] = legacyFont ? { ...d, captionStyle: { ...defaultCaptionStyle(), fontId: legacyFont } } : d;
           }
           setDrafts(clean);
         }
