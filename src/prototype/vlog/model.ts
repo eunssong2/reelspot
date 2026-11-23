@@ -84,7 +84,20 @@ export const fitWidth = (id: AspectId | undefined, portraitW: number, maxW: numb
 
 // ---------- 장면 전환 ----------
 
-export type TransitionId = 'none' | 'fade' | 'slide' | 'slideUp' | 'zoom' | 'zoomOut' | 'flash' | 'dip';
+export type TransitionId =
+  | 'none'
+  | 'fade'
+  | 'slide'
+  | 'slideUp'
+  | 'zoom'
+  | 'zoomOut'
+  | 'flash'
+  | 'dip'
+  | 'blur'
+  | 'spin'
+  | 'pop'
+  | 'wipe'
+  | 'iris';
 
 export interface TransitionPreset {
   id: TransitionId;
@@ -102,6 +115,12 @@ export const TRANSITIONS: TransitionPreset[] = [
   { id: 'zoomOut', label: '축소', desc: '작아지며 나타남' },
   { id: 'flash', label: '흰 번쩍', desc: '흰 화면을 거쳐 바뀜' },
   { id: 'dip', label: '검게', desc: '검은 화면을 거쳐 바뀜' },
+  // 캡컷 같은 편집 앱에서 많이 쓰는 효과를 참고한 것들
+  { id: 'blur', label: '블러', desc: '흐릿하다가 또렷해지며 바뀜' },
+  { id: 'spin', label: '회전', desc: '돌면서 커지며 나타남' },
+  { id: 'pop', label: '팝', desc: '톡 튀어 오르듯 나타남' },
+  { id: 'wipe', label: '와이프', desc: '왼쪽에서 닦아 내듯 바뀜' },
+  { id: 'iris', label: '원형', desc: '가운데서 동그랗게 퍼지며 바뀜' },
 ];
 /** 전환이 진행되는 시간(초). 다음 장면의 처음 구간 안에서 일어나며 전체 길이는 늘지 않는다. */
 export const TRANSITION_SEC = 0.5;
@@ -229,9 +248,9 @@ export const MIN_CAPTION_SPAN = 1;
 export function captionLinesOf(setting: PlaceSetting, key: string, seconds: number): CaptionLine[] {
   const lines = setting.captionLines?.[key];
   if (lines !== undefined) {
-    return lines
-      .map((l) => ({ text: l.text, from: Math.max(0, Math.min(seconds, l.from)), to: Math.max(0, Math.min(seconds, l.to)) }))
-      .filter((l) => l.text.trim().length > 0 && l.to > l.from);
+    // 구간을 따로 정하지 않는다: 글자가 있는 줄을 순서대로 장면 시간에 똑같이 나눠 보여 준다(한 줄이면 장면 내내).
+    const filled = lines.filter((l) => l.text.trim().length > 0);
+    return filled.map((l, i) => ({ text: l.text, from: (seconds * i) / filled.length, to: (seconds * (i + 1)) / filled.length }));
   }
   const legacy = setting.captions?.[key];
   return legacy?.trim() ? [{ text: legacy, from: 0, to: seconds }] : [];
@@ -274,9 +293,18 @@ export const STICKER_SIZES: { id: StickerSize; label: string; px: number }[] = [
 
 export interface Sticker {
   emoji: string;
+  /** 가장 가까운 자리(직접 옮겼어도 함께 적어 둔다 — 자리 이름만 아는 렌더러용) */
   spot: StickerSpot;
   size: StickerSize;
+  /** 손으로 끌어 놓은 자리(0~1 비율). 있으면 이 자리가 먼저다 */
+  xy?: { x: number; y: number };
+  /** 손가락 두 개로 늘리고 줄인 배율(크기 단계 위에 곱한다). 없으면 1 */
+  scale?: number;
 }
+
+/** 스티커 배율의 한계 */
+export const STICKER_SCALE_MIN = 0.4;
+export const STICKER_SCALE_MAX = 3.5;
 
 /** 한 장면에 붙일 수 있는 스티커 수 */
 export const MAX_STICKERS = 3;
@@ -290,7 +318,17 @@ export function stickerPosition(spot: StickerSpot): { x: number; y: number } {
   return { x: col[c], y: row[r] };
 }
 
-export const stickerPx = (size: StickerSize): number => STICKER_SIZES.find((s) => s.id === size)?.px ?? 120;
+/** 스티커가 놓일 비율 좌표: 직접 옮긴 자리가 있으면 그것, 없으면 자리 이름에서 얻는다. */
+export const stickerXY = (st: Sticker): { x: number; y: number } => st.xy ?? stickerPosition(st.spot);
+
+/** 비율 좌표에서 가장 가까운 3×3 자리 */
+export function nearestStickerSpot(x: number, y: number): StickerSpot {
+  const col = x < 1 / 3 ? 'l' : x < 2 / 3 ? 'c' : 'r';
+  const row = y < 1 / 3 ? 't' : y < 2 / 3 ? 'm' : 'b';
+  return `${row}${col}` as StickerSpot;
+}
+
+export const stickerPx = (size: StickerSize, scale = 1): number => (STICKER_SIZES.find((s) => s.id === size)?.px ?? 120) * scale;
 
 // ---------- 장소 라벨 ----------
 
@@ -331,7 +369,21 @@ export function placeLabelOpacity(label: PlaceLabel, localSec: number, sceneSec:
 
 // ---------- 색감 효과 ----------
 
-export type FilterId = 'none' | 'bright' | 'dark' | 'gray';
+export type FilterId =
+  | 'none'
+  | 'bright'
+  | 'dark'
+  | 'gray'
+  | 'warm'
+  | 'cool'
+  | 'film'
+  | 'vintage'
+  | 'vivid'
+  | 'fade'
+  | 'cinema'
+  | 'noir'
+  | 'dream'
+  | 'sunset';
 
 export interface FilterPreset {
   id: FilterId;
@@ -346,6 +398,17 @@ export const FILTERS: FilterPreset[] = [
   { id: 'bright', label: '밝게', css: 'brightness(1.3)' },
   { id: 'dark', label: '어둡게', css: 'brightness(0.7)' },
   { id: 'gray', label: '흑백', css: 'grayscale(1)' },
+  // 캡컷 같은 편집 앱의 인기 필터 느낌을 CSS 필터 조합으로 낸 것들(미리보기용)
+  { id: 'warm', label: '따뜻하게', css: 'sepia(0.25) saturate(1.2) brightness(1.05)' },
+  { id: 'cool', label: '차갑게', css: 'hue-rotate(185deg) saturate(0.7) brightness(1.05)' },
+  { id: 'film', label: '필름', css: 'sepia(0.3) contrast(1.1) saturate(0.9) brightness(1.02)' },
+  { id: 'vintage', label: '빈티지', css: 'sepia(0.55) contrast(0.9) saturate(0.8) brightness(1.05)' },
+  { id: 'vivid', label: '선명하게', css: 'saturate(1.6) contrast(1.15)' },
+  { id: 'fade', label: '페이드', css: 'contrast(0.82) brightness(1.12) saturate(0.85)' },
+  { id: 'cinema', label: '시네마', css: 'contrast(1.2) saturate(0.85) brightness(0.92) sepia(0.12)' },
+  { id: 'noir', label: '누아르', css: 'grayscale(1) contrast(1.4) brightness(0.9)' },
+  { id: 'dream', label: '몽환', css: 'brightness(1.1) contrast(0.9) saturate(1.3) blur(0.6px)' },
+  { id: 'sunset', label: '노을', css: 'sepia(0.4) saturate(1.5) hue-rotate(-12deg) brightness(1.02)' },
 ];
 export const filterOf = (id?: FilterId): FilterPreset => FILTERS.find((f) => f.id === id) ?? FILTERS[0];
 
@@ -515,7 +578,22 @@ export const fontStyleOf = (id?: FontId): TextStyle => {
 export type CaptionPos = 'top' | 'center' | 'bottom';
 export type CaptionSize = 'sm' | 'md' | 'lg';
 export type CaptionBg = 'none' | 'dim' | 'solid' | 'white';
-export type CaptionColor = 'white' | 'black' | 'coral';
+export type CaptionColor =
+  | 'white'
+  | 'black'
+  | 'coral'
+  | 'yellow'
+  | 'orange'
+  | 'red'
+  | 'pink'
+  | 'purple'
+  | 'sky'
+  | 'navy'
+  | 'mint'
+  | 'lime'
+  | 'gold'
+  | 'cream'
+  | 'gray';
 
 /**
  * 자막 모양. 장면마다 다르게 두면 한 영상에 글씨체가 섞여 어지러워지므로
@@ -588,6 +666,18 @@ export const CAPTION_COLORS: { id: CaptionColor; label: string; hex: string }[] 
   { id: 'white', label: '흰색', hex: '#FFFFFF' },
   { id: 'black', label: '검정', hex: '#191F28' },
   { id: 'coral', label: '코랄', hex: '#F1706B' },
+  { id: 'yellow', label: '노랑', hex: '#FFE14D' },
+  { id: 'orange', label: '주황', hex: '#FF9F43' },
+  { id: 'red', label: '빨강', hex: '#FF4D4D' },
+  { id: 'pink', label: '분홍', hex: '#FF8FB8' },
+  { id: 'purple', label: '보라', hex: '#B28DFF' },
+  { id: 'sky', label: '하늘', hex: '#6EC6FF' },
+  { id: 'navy', label: '남색', hex: '#1E3A8A' },
+  { id: 'mint', label: '민트', hex: '#7FE5C4' },
+  { id: 'lime', label: '연두', hex: '#B6F04F' },
+  { id: 'gold', label: '금색', hex: '#E6B84A' },
+  { id: 'cream', label: '크림', hex: '#FFF3D6' },
+  { id: 'gray', label: '회색', hex: '#9AA3AD' },
 ];
 
 /**
@@ -672,7 +762,8 @@ export function captionLayout(style: CaptionStyle, width: number, outWidth: numb
 /** 글자색과 배경이 겹쳐 안 보이는 조합을 미리 알려 준다. 문제가 없으면 null */
 export function captionWarning(style: CaptionStyle): string | null {
   if (style.bg === 'white' && style.color === 'white') return '흰 배경에 흰 글씨는 보이지 않아요. 글자색을 바꿔 주세요.';
-  if ((style.bg === 'solid' || style.bg === 'dim') && style.color === 'black') return '어두운 배경에 검정 글씨는 잘 안 보여요.';
+  if ((style.bg === 'solid' || style.bg === 'dim') && (style.color === 'black' || style.color === 'navy')) return '어두운 배경에 어두운 글씨는 잘 안 보여요.';
+  if (style.bg === 'white' && (style.color === 'cream' || style.color === 'yellow' || style.color === 'lime' || style.color === 'mint')) return '흰 배경에 밝은 글씨는 잘 안 보여요. 글자색을 바꿔 주세요.';
   if (style.bg === 'none' && style.color === 'black') return '배경이 없으면 검정 글씨는 어두운 사진에서 묻힐 수 있어요.';
   return null;
 }
@@ -902,7 +993,7 @@ export function resolveMedia(draft: VlogDraft, place: VlogPlace): { media: VlogM
 
 /** 이 개수에서 쓸 수 있는 분할 템플릿. 없으면(1개·6개 이상) 이어 재생만 가능하다. */
 /** 가로 화면용 이름: 세로 배치를 가로로 눕히면 방향 낱말이 서로 바뀐다. */
-const LANDSCAPE_WORDS: [string, string][] = [['세로', '가로'], ['좌우', '상하'], ['좌측', '상단'], ['상단', '좌측']];
+const LANDSCAPE_WORDS: [string, string][] = [['세로', '가로'], ['좌우', '상하'], ['위아래', '좌우'], ['좌측', '상단'], ['상단', '좌측'], ['우측', '하단'], ['하단', '우측']];
 const landscapeLabel = (label: string): string => {
   for (const [from, to] of LANDSCAPE_WORDS) if (label.includes(from)) return label.replace(from, to);
   return label.includes('가로') ? label.replace('가로', '세로') : label;

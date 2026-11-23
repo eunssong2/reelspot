@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { LayoutChangeEvent, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { SafeImage } from '../../demo/SafeImage';
 import { CheckCircle } from '../components/FormParts';
 import { colors, GUTTER, radius } from '../styles/tokens';
 import { shortDotDateLabel } from '../utils/date';
+import { TEMPLATE_GROUPS, templateGroup, type Template, type TemplateGroupId } from '../mock/tripData';
 import { locate, type StepCtx } from './ctx';
 import {
   PHOTO_SPLIT_SEC,
@@ -48,6 +49,10 @@ export function TemplateStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: strin
   const templates = splitTemplatesFor(n, aspect.id);
   const current = effectiveMode(setting, n) === 'split' ? (setting.templateId ?? 'seq') : 'seq';
   const [choice, setChoice] = useState<string>(current);
+  // 묶음 탭: 고른 템플릿이 있으면 그 묶음에서, 없으면 폴라로이드(있을 때)부터 보여 준다.
+  const groupsHere = TEMPLATE_GROUPS.filter((g) => templates.some((t) => templateGroup(t) === g.id));
+  const currentTemplate = templates.find((t) => t.id === current);
+  const [group, setGroup] = useState<TemplateGroupId | 'all'>(currentTemplate ? templateGroup(currentTemplate) : 'all');
 
   if (!found || n === 0) {
     return (
@@ -105,18 +110,55 @@ export function TemplateStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: strin
             </View>
           }
         />
-        {templates.map((t) => (
-          <Option
-            key={t.id}
-            width={card}
-            selected={choice === t.id}
-            label={`${n}분할 · ${t.label}`}
-            desc="같은 화면에서 동시 재생"
-            onPress={() => setChoice(t.id)}
-            preview={<LayoutThumb rects={t.rects} images={images} width={thumbW} ratio={aspect.ratio} />}
-          />
-        ))}
       </View>
+
+      {templates.length > 0 ? (
+        <>
+          {groupsHere.length > 1 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+              {[{ id: 'all' as const, label: '전체', count: templates.length }, ...groupsHere.map((g) => ({ id: g.id, label: g.label, count: templates.filter((t) => templateGroup(t) === g.id).length }))].map((g) => {
+                const on = group === g.id;
+                return (
+                  <Pressable
+                    key={g.id}
+                    onPress={() => setGroup(g.id)}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: on }}
+                    style={[styles.tab, on && styles.tabOn]}
+                  >
+                    <Text style={[styles.tabText, on && styles.tabTextOn]}>
+                      {g.label} {g.count}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          ) : null}
+
+          {groupsHere
+            .filter((g) => group === 'all' || group === g.id)
+            .map((g) => (
+              <View key={g.id} style={styles.section}>
+                {group === 'all' && groupsHere.length > 1 ? <Text style={styles.sectionTitle}>{g.label}</Text> : null}
+                <View style={styles.grid}>
+                  {templates
+                    .filter((t) => templateGroup(t) === g.id)
+                    .map((t: Template) => (
+                      <Option
+                        key={t.id}
+                        width={card}
+                        selected={choice === t.id}
+                        label={t.label}
+                        desc={`${n}분할 · 같은 화면에서 동시 재생`}
+                        onPress={() => setChoice(t.id)}
+                        preview={<LayoutThumb rects={t.rects} images={images} width={thumbW} ratio={aspect.ratio} rots={t.rots} look={t.look} bg={t.bg} />}
+                      />
+                    ))}
+                </View>
+              </View>
+            ))}
+        </>
+      ) : null}
     </StepFrame>
   );
 }
@@ -313,6 +355,13 @@ export function TrimStep({ ctx, placeKey, clipId }: { ctx: StepCtx; placeKey?: s
 const styles = StyleSheet.create({
   sub: { fontSize: 13, color: colors.textSub },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  tabs: { gap: 8, paddingVertical: 2 },
+  tab: { minHeight: 40, paddingHorizontal: 16, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  tabOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  tabText: { fontSize: 13, fontWeight: '700', color: colors.textSub },
+  tabTextOn: { color: colors.primary },
+  section: { gap: 10 },
+  sectionTitle: { fontSize: 14, fontWeight: '800', color: colors.text, marginTop: 4 },
   option: { backgroundColor: colors.surface, borderRadius: radius.item, borderWidth: 1.5, borderColor: 'transparent', padding: 14, alignItems: 'center', gap: 6 },
   optionOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   check: { position: 'absolute', right: 8, top: 8, zIndex: 2 },

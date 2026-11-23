@@ -32,11 +32,9 @@ import {
   PHOTO_SPLIT_SEC,
   MAX_CAPTION_LINES,
   MAX_STICKERS,
-  MIN_CAPTION_SPAN,
   SPEEDS,
   STICKERS,
   STICKER_SIZES,
-  STICKER_SPOTS,
   aspectOf,
   captionLinesOf,
   captionStyleOf,
@@ -64,6 +62,9 @@ import {
   type Sticker,
   type StickerSize,
   type StickerSpot,
+  nearestStickerSpot,
+  STICKER_SCALE_MAX,
+  STICKER_SCALE_MIN,
   type PlaceSetting,
 } from './model';
 import { FooterButtons, Heading, SceneCanvas, StateCard, StepFrame, TransitionStage } from './parts';
@@ -108,6 +109,10 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   const [beforeCap, setBeforeCap] = useState<CaptionStyle | null>(null);
   // 자막을 손으로 끌어 옮기는 중인지. 켜면 미리보기 위의 손짓을 자막 자리로 받는다.
   const [dragMode, setDragMode] = useState(false);
+  // 스티커를 손으로 끌어 옮기는 중인 스티커 번호. null 이면 아님(자막 끌기와 함께 쓰지 않는다).
+  const [dragSticker, setDragSticker] = useState<number | null>(null);
+  const dragStickerRef = useRef<number | null>(null);
+  dragStickerRef.current = dragSticker;
   // 움직임·등장을 보여 주는 동안 흐른 시간(초). null 이면 멈춘 그림이다.
   const [animSec, setAnimSec] = useState<number | null>(null);
   const animTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -195,25 +200,13 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
     setting.captionLines?.[captionKey] ??
     (setting.captions[captionKey]?.trim() ? [{ text: setting.captions[captionKey], from: 0, to: clipSec }] : []);
   const setLines = (next: CaptionLine[]) => patch(ctx, key, { captionLines: { ...(setting.captionLines ?? {}), [captionKey]: next } });
-  const editLine = (i: number, change: Partial<CaptionLine>) => setLines(lines.map((l, j) => (j === i ? { ...l, ...change } : l)));
+  const editLine = (i: number, change: Partial<CaptionLine>) =>
+    lines.length === 0 ? setLines([{ text: '', from: 0, to: clipSec, ...change }]) : setLines(lines.map((l, j) => (j === i ? { ...l, ...change } : l)));
   const addLine = () => {
     if (lines.length >= MAX_CAPTION_LINES) return ctx.toast(`자막은 ${MAX_CAPTION_LINES}줄까지 넣을 수 있어요.`);
-    // 앞 줄이 끝난 시각부터 장면 끝까지를 새 줄로 잡는다.
-    const from = lines.length ? Math.max(...lines.map((l) => l.to)) : 0;
-    if (clipSec - from >= MIN_CAPTION_SPAN) return setLines([...lines, { text: '', from, to: clipSec }]);
-    // 뒤에 자리가 없으면 가장 긴 줄을 반으로 나눠 뒤쪽을 새 줄로 쓴다.
-    // (한 줄이 장면을 다 차지한 상태에서 줄을 더 넣으려는 흔한 경우다.)
-    let longest = 0;
-    lines.forEach((l, i) => {
-      if (l.to - l.from > lines[longest].to - lines[longest].from) longest = i;
-    });
-    const target = lines[longest];
-    if (target.to - target.from < MIN_CAPTION_SPAN * 2) return ctx.toast('장면이 짧아 자막을 더 넣을 수 없어요.');
-    const mid = Math.round(((target.from + target.to) / 2) * 2) / 2;
-    setLines([
-      ...lines.map((l, i) => (i === longest ? { ...l, to: mid } : l)),
-      { text: '', from: mid, to: target.to },
-    ]);
+    // 구간은 따로 정하지 않는다. 줄이 여럿이면 순서대로 장면 시간에 나눠 보여 준다(captionLinesOf).
+    // 아직 줄이 없을 때 보이는 빈 입력도 한 줄로 치고 새 줄을 더한다.
+    setLines(lines.length === 0 ? [{ text: '', from: 0, to: clipSec }, { text: '', from: 0, to: clipSec }] : [...lines, { text: '', from: 0, to: clipSec }]);
   };
   const removeLine = (i: number) => setLines(lines.filter((_, j) => j !== i));
   /** 이 자막을 뒤쪽 장면에도 그대로 넣는다. 장면마다 길이가 달라 끝 시각은 그 장면에 맞춰 줄인다. */
@@ -222,10 +215,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
     if (!rest.length) return ctx.toast('뒤에 넣을 장면이 없어요.');
     const next = { ...(setting.captionLines ?? {}) };
     for (const c of rest) {
-      next[c.itemId] = lines
-        .filter((l) => l.text.trim())
-        .map((l) => ({ text: l.text, from: Math.min(l.from, Math.max(0, c.seconds - MIN_CAPTION_SPAN)), to: Math.min(l.to, c.seconds) }))
-        .filter((l) => l.to > l.from);
+      next[c.itemId] = lines.filter((l) => l.text.trim()).map((l) => ({ text: l.text, from: 0, to: c.seconds }));
     }
     patch(ctx, key, { captionLines: next });
     ctx.toast(`뒤 장면 ${rest.length}개에 같은 자막을 넣었어요.`);
@@ -279,9 +269,22 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
     // 이미 쓰고 있는 자리를 피해 붙인다. 같은 자리에 겹쳐 놓으면 가려서 안 보인다.
     const spot = STICKER_SPOT_ORDER.find((x) => !stickers.some((st) => st.spot === x)) ?? 'tr';
     setStickers([...stickers, { emoji, spot, size: 'md' }]);
+    // 붙이자마자 미리보기에서 끌어 놓을 수 있게 한다.
+    setDragMode(false);
+    setDragSticker(stickers.length);
   };
   const editSticker = (i: number, change: Partial<Sticker>) => setStickers(stickers.map((s, j) => (j === i ? { ...s, ...change } : s)));
-  const removeSticker = (i: number) => setStickers(stickers.filter((_, j) => j !== i));
+  const removeSticker = (i: number) => {
+    setDragSticker(null);
+    setStickers(stickers.filter((_, j) => j !== i));
+  };
+  // PanResponder 는 한 번만 만들어서, 늘 최신 editSticker 를 부르도록 ref 에 담는다.
+  const editStickerRef = useRef(editSticker);
+  editStickerRef.current = editSticker;
+  const stickersRef = useRef(stickers);
+  stickersRef.current = stickers;
+  // 두 손가락으로 늘리고 줄이는 중: 처음 두 손가락 사이 거리와 그때의 배율
+  const pinch = useRef<{ dist: number; scale: number } | null>(null);
 
   /**
    * 미리보기 위에서 손이 닿은 자리를 자막 자리로 삼는다.
@@ -289,6 +292,14 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
    */
   const placeCaption = useRef<(x: number, y: number) => void>(() => {});
   placeCaption.current = (x, y) => {
+    const si = dragStickerRef.current;
+    if (si !== null) {
+      // 스티커를 끄는 중이면 손이 닿은 자리에 그 스티커를 놓는다(가장자리에서 잘리지 않게 조금 안쪽까지만).
+      const sx = Math.min(0.94, Math.max(0.06, x));
+      const sy = Math.min(0.94, Math.max(0.06, y));
+      editStickerRef.current(si, { xy: { x: sx, y: sy }, spot: nearestStickerSpot(sx, sy) });
+      return;
+    }
     const xy = clampCaptionXY(x, y);
     // 서버가 아직 세 자리만 알아서, 가장 가까운 자리도 함께 적어 둔다.
     setCap({ xy, pos: nearestCaptionPos(xy.y) });
@@ -303,8 +314,22 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         if (w && h) placeCaption.current(e.nativeEvent.locationX / w, e.nativeEvent.locationY / h);
       },
       onPanResponderMove: (e) => {
+        const touches = e.nativeEvent.touches;
+        const si = dragStickerRef.current;
+        if (si !== null && touches && touches.length >= 2) {
+          // 두 손가락: 위치는 두고 크기만 바꾼다.
+          const dist = Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
+          if (!pinch.current) pinch.current = { dist: Math.max(1, dist), scale: stickersRef.current[si]?.scale ?? 1 };
+          const next = pinch.current.scale * (dist / pinch.current.dist);
+          editStickerRef.current(si, { scale: Math.min(STICKER_SCALE_MAX, Math.max(STICKER_SCALE_MIN, next)) });
+          return;
+        }
+        pinch.current = null;
         const { w, h } = canvasSize.current;
         if (w && h) placeCaption.current(e.nativeEvent.locationX / w, e.nativeEvent.locationY / h);
+      },
+      onPanResponderRelease: () => {
+        pinch.current = null;
       },
     }),
   ).current;
@@ -405,12 +430,12 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         ) : animSec !== null ? (
           // 움직임 보기: 장면을 처음부터 짧게 재생한다(사진 움직임·자막 등장·장소 라벨).
           <SceneCanvas scene={scene} width={previewW} localSec={animSec} animate />
-        ) : dragMode ? (
-          // 끌어 옮기는 동안에는 칸 고르기를 끄고 손짓을 자막 자리로만 받는다.
+        ) : dragMode || dragSticker !== null ? (
+          // 끌어 옮기는 동안에는 칸 고르기를 끄고 손짓을 자막(또는 스티커) 자리로만 받는다.
           <View {...pan.panHandlers}>
             <SceneCanvas scene={scene} width={previewW} />
             <View style={styles.dragHint} pointerEvents="none">
-              <Text style={styles.dragHintText}>자막을 끌어 놓으세요</Text>
+              <Text style={styles.dragHintText}>{dragSticker !== null ? '끌어 옮기고 두 손가락으로 크기 조절' : '자막을 끌어 놓으세요'}</Text>
             </View>
           </View>
         ) : (
@@ -466,19 +491,15 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         title={split ? '자막 (선택) · 분할 화면 전체에 1개' : '자막 (선택)'}
         summary={lines.filter((l) => l.text.trim()).map((l) => l.text).join(' · ') || '없음'}
       >
-      {lines.length === 0 ? (
-        <Text style={styles.value}>아직 자막이 없어요. 아래에서 한 줄 넣어 보세요.</Text>
-      ) : null}
-
-      {lines.map((line, i) => (
-        <View key={i} style={i === 0 ? undefined : styles.lineRow}>
+      {(lines.length ? lines : [{ text: '', from: 0, to: clipSec }]).map((line, i) => (
+        <View key={i} style={styles.lineInputRow}>
           <TextInput
             value={line.text}
             onChangeText={(text) => editLine(i, { text })}
             placeholder={`자막 ${i + 1}`}
             placeholderTextColor={colors.textMuted}
             maxLength={40}
-            style={styles.input}
+            style={[styles.input, styles.lineInput]}
             accessibilityLabel={`자막 ${i + 1}`}
             onFocus={() => {
               captionFocused.current = true;
@@ -488,39 +509,25 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
               captionFocused.current = false;
             }}
           />
-          <View style={styles.spanRow}>
-            <SecStepper
-              label="시작"
-              value={line.from}
-              min={0}
-              max={line.to - MIN_CAPTION_SPAN}
-              onChange={(from) => editLine(i, { from })}
-            />
-            <SecStepper
-              label="끝"
-              value={line.to}
-              min={line.from + MIN_CAPTION_SPAN}
-              max={clipSec}
-              onChange={(to) => editLine(i, { to })}
-            />
-            <Pressable onPress={() => removeLine(i)} accessibilityRole="button" accessibilityLabel={`자막 ${i + 1} 떼기`} hitSlop={8}>
-              <Text style={styles.link}>떼기</Text>
+          {lines.length > 0 ? (
+            <Pressable onPress={() => removeLine(i)} accessibilityRole="button" accessibilityLabel={`자막 ${i + 1} 지우기`} hitSlop={6} style={styles.lineRemove}>
+              <Text style={styles.lineRemoveText}>✕</Text>
             </Pressable>
-          </View>
+          ) : null}
         </View>
       ))}
 
       <View style={styles.spanRow}>
         <Pressable onPress={addLine} accessibilityRole="button" hitSlop={8}>
-          <Text style={styles.link}>+ 자막 줄 추가 ({lines.length}/{MAX_CAPTION_LINES})</Text>
+          <Text style={styles.link}>+ 줄 추가 ({Math.max(lines.length, 1)}/{MAX_CAPTION_LINES})</Text>
         </Pressable>
         {!split && lines.some((l) => l.text.trim()) && scene && idx < scene.clips.length - 1 ? (
           <Pressable onPress={copyToRest} accessibilityRole="button" hitSlop={8}>
             <Text style={styles.link}>뒤 장면에도 넣기</Text>
           </Pressable>
         ) : null}
+        {lines.length > 1 ? <Text style={styles.value}>순서대로 나눠서 보여요</Text> : null}
       </View>
-      <Text style={styles.value}>이 장면은 {Math.round(clipSec * 10) / 10}초예요. 줄마다 보이는 구간을 정할 수 있어요.</Text>
       </Accordion>
 
       <Accordion
@@ -547,7 +554,14 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
           }}
         />
         <View style={styles.spanRow}>
-          <Pressable onPress={() => setDragMode((v) => !v)} accessibilityRole="button" hitSlop={8}>
+          <Pressable
+            onPress={() => {
+              setDragSticker(null);
+              setDragMode((v) => !v);
+            }}
+            accessibilityRole="button"
+            hitSlop={8}
+          >
             <Text style={styles.link}>{dragMode ? '✓ 옮기기 끝내기' : '✥ 직접 옮기기'}</Text>
           </Pressable>
           {cap.xy ? (
@@ -570,7 +584,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         </View>
         <ChipRow label="크기" options={CAPTION_SIZES} current={cap.size} onPick={(size) => setCap({ size })} />
         <ChipRow label="배경" options={CAPTION_BGS} current={cap.bg} onPick={(bg) => setCap({ bg })} />
-        <ChipRow label="글자색" options={CAPTION_COLORS} current={cap.color} onPick={(color) => setCap({ color })} dots />
+        <ColorStrip label="글자색" options={CAPTION_COLORS} current={cap.color} onPick={(color) => setCap({ color })} />
         <ChipRow
           label="등장"
           options={ANIMS}
@@ -685,22 +699,23 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         title={`색감 효과 ${split ? '(분할 장면 전체)' : '(지금 보는 장면)'}`}
         summary={FILTERS.find((f) => f.id === (setting.filters?.[filterKey] ?? 'none'))?.label ?? ''}
       >
-        <View style={styles.transRow}>
-          {FILTERS.map((f) => {
-            const on = (setting.filters?.[filterKey] ?? 'none') === f.id;
-            return (
-              <Pressable
-                key={f.id}
-                onPress={() => setFilter(f.id)}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: on }}
-                style={[styles.transChip, on && styles.transChipOn]}
-              >
-                <Text style={[styles.transLabel, on && styles.transLabelOn]}>{f.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <OptionStrip
+          label="색감 효과"
+          value={setting.filters?.[filterKey] ?? 'none'}
+          onPick={(id) => setFilter(id as FilterId)}
+          items={FILTERS.map((f) => ({
+            id: f.id,
+            label: f.label,
+            // 지금 보는 사진에 효과를 입힌 작은 그림으로 미리 보여 준다(동영상은 표지 한 장).
+            thumb: curClip ? (
+              <View style={[StyleSheet.absoluteFill, f.css ? { filter: f.css } : undefined]}>
+                <SafeImage source={curClip.image} style={StyleSheet.absoluteFill} compact />
+              </View>
+            ) : (
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surfaceStrong }]} />
+            ),
+          }))}
+        />
         <Text style={styles.value}>원본 파일은 바뀌지 않고, 영상으로 만들 때만 적용돼요.</Text>
       </Accordion>
 
@@ -763,7 +778,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
           ))}
         </View>
         <Text style={styles.value}>
-          {stickers.length}/{MAX_STICKERS}개 · 눌러서 붙이고 아래에서 자리·크기를 고르세요.
+          {stickers.length}/{MAX_STICKERS}개 · 눌러서 붙이고 위 미리보기에서 끌어 자리를 정하고, 두 손가락으로 크기를 조절하세요.
         </Text>
 
         {stickers.map((st, i) => (
@@ -774,15 +789,20 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
                 <Text style={styles.link}>떼기</Text>
               </Pressable>
             </View>
-            <ChipRow
-              label="자리"
-              options={STICKER_SPOTS.slice(0, 3)}
-              current={st.spot}
-              onPick={(spot: StickerSpot) => editSticker(i, { spot })}
-            />
-            <ChipRow label="" options={STICKER_SPOTS.slice(3, 6)} current={st.spot} onPick={(spot: StickerSpot) => editSticker(i, { spot })} />
-            <ChipRow label="" options={STICKER_SPOTS.slice(6)} current={st.spot} onPick={(spot: StickerSpot) => editSticker(i, { spot })} />
-            <ChipRow label="크기" options={STICKER_SIZES} current={st.size} onPick={(size: StickerSize) => editSticker(i, { size })} />
+            <Pressable
+              onPress={() => {
+                setDragMode(false);
+                setDragSticker((cur) => (cur === i ? null : i));
+              }}
+              accessibilityRole="button"
+              hitSlop={8}
+              style={[styles.pill, dragSticker === i && styles.pillOn]}
+            >
+              <Text style={[styles.pillText, dragSticker === i && styles.pillTextOn]}>
+                {dragSticker === i ? '✓ 옮기기 끝내기' : '✥ 위 미리보기에서 끌어 옮기기'}
+              </Text>
+            </Pressable>
+            <ChipRow label="크기" options={STICKER_SIZES} current={st.scale ? ('' as StickerSize) : st.size} onPick={(size: StickerSize) => editSticker(i, { size, scale: undefined })} />
           </View>
         ))}
       </Accordion>
@@ -795,8 +815,12 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         sub={hasPhoto ? '사진이 보이는 동안 아주 천천히 움직여요. 동영상은 그대로예요.' : '이 장면에는 사진이 없어 움직임이 보이지 않아요.'}
         summary={motionOf(motion).label}
       >
-        <ChipRow label="" options={MOTIONS.slice(0, 3)} current={motion} onPick={setMotion} />
-        <ChipRow label="" options={MOTIONS.slice(3)} current={motion} onPick={setMotion} />
+        <OptionStrip
+          label="사진 움직임"
+          value={motion}
+          onPick={(id) => setMotion(id as MotionId)}
+          items={MOTIONS.map((m) => ({ id: m.id, label: m.label }))}
+        />
         <Text style={styles.value}>{motionOf(motion).desc}</Text>
         <Pressable onPress={() => playAnim(scene.seconds)} disabled={!hasPhoto} accessibilityRole="button" hitSlop={8}>
           <Text style={[styles.link, !hasPhoto && styles.off]}>▶ 움직이는 모습 보기</Text>
@@ -844,26 +868,18 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         title="장면 전환 (이 장면이 시작될 때)"
         summary={TRANSITIONS.find((x) => x.id === (setting.transition ?? 'none'))?.label ?? ''}
       >
-        <View style={styles.transRow}>
-          {TRANSITIONS.map((tr) => {
-            const on = (setting.transition ?? 'none') === tr.id;
-            return (
-              <Pressable
-                key={tr.id}
-                onPress={() => {
-                  patch(ctx, key, { transition: tr.id });
-                  playDemo(tr.id);
-                }}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: on }}
-                accessibilityLabel={`${tr.label} ${tr.desc}`}
-                style={[styles.transChip, on && styles.transChipOn]}
-              >
-                <Text style={[styles.transLabel, on && styles.transLabelOn]}>{tr.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <OptionStrip
+          label="장면 전환"
+          value={setting.transition ?? 'none'}
+          onPick={(id) => {
+            patch(ctx, key, { transition: id as TransitionId });
+            playDemo(id as TransitionId);
+          }}
+          items={TRANSITIONS.map((tr) => ({
+            id: tr.id,
+            label: tr.label,
+          }))}
+        />
         <Pressable onPress={() => playDemo(setting.transition ?? 'none')} disabled={(setting.transition ?? 'none') === 'none'} accessibilityRole="button" hitSlop={8}>
           <Text style={[styles.link, (setting.transition ?? 'none') === 'none' && styles.off]}>▶ 전환 미리보기 다시 보기</Text>
         </Pressable>
@@ -896,6 +912,71 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
 }
 
 /** 접고 펼치는 설정 묶음. 접힌 상태에서도 지금 고른 값을 요약으로 보여 준다. */
+const STRIP_CARD = 68;
+const STRIP_GAP = 10;
+
+/**
+ * 옆으로 넘기며 고르는 카드 줄(캡컷 방식). 카드마다 그림과 이름이 있고, 고른 카드는 테두리로 표시한다.
+ * 열리면 고른 카드가 보이는 자리까지 미리 넘겨 둔다.
+ */
+function OptionStrip({
+  label,
+  items,
+  value,
+  onPick,
+}: {
+  label: string;
+  /** thumb 이 없으면 글씨만 있는 알약 모양으로 보여 준다. */
+  items: { id: string; label: string; thumb?: React.ReactNode }[];
+  value: string;
+  onPick: (id: string) => void;
+}) {
+  const ref = useRef<ScrollView>(null);
+  useEffect(() => {
+    const i = Math.max(0, items.findIndex((it) => it.id === value));
+    const t = setTimeout(() => ref.current?.scrollTo({ x: Math.max(0, i * (STRIP_CARD + STRIP_GAP) - 60), animated: false }), 0);
+    return () => clearTimeout(t);
+    // 열릴 때 한 번만 맞춘다(고를 때마다 움직이면 어지럽다).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <ScrollView ref={ref} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
+      {items.map((it) => {
+        const on = it.id === value;
+        if (!it.thumb) {
+          return (
+            <Pressable
+              key={it.id}
+              onPress={() => onPick(it.id)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={`${label} ${it.label}`}
+              style={[styles.pill, on && styles.pillOn]}
+            >
+              <Text style={[styles.pillText, on && styles.pillTextOn]}>{it.label}</Text>
+            </Pressable>
+          );
+        }
+        return (
+          <Pressable
+            key={it.id}
+            onPress={() => onPick(it.id)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: on }}
+            accessibilityLabel={`${label} ${it.label}`}
+            style={styles.stripItem}
+          >
+            <View style={[styles.stripThumb, on && styles.stripThumbOn]}>{it.thumb}</View>
+            <Text style={[styles.stripLabel, on && styles.stripLabelOn]} numberOfLines={1}>
+              {it.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
 function Accordion({
   id,
   title,
@@ -984,34 +1065,51 @@ function ChipRow<T extends string>({
   );
 }
 
-/** 자막이 보이는 구간을 0.5초씩 옮기는 단추. 앞뒤 줄과 장면 길이를 넘지 못한다. */
-function SecStepper({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
-  const step = 0.5;
-  const show = Math.round(value * 10) / 10;
-  const canDown = value - step >= min - 1e-9;
-  const canUp = value + step <= max + 1e-9;
+/**
+ * 옆으로 넘기며 고르는 색 동그라미 줄. 이름은 줄 위에 고른 색의 것만 보여 준다.
+ * 색이 많아도 자리를 적게 차지한다.
+ */
+function ColorStrip<T extends string>({
+  label,
+  options,
+  current,
+  onPick,
+}: {
+  label: string;
+  options: readonly { id: T; label: string; hex: string }[];
+  current: T;
+  onPick: (id: T) => void;
+}) {
+  const ref = useRef<ScrollView>(null);
+  useEffect(() => {
+    const i = Math.max(0, options.findIndex((o) => o.id === current));
+    const t = setTimeout(() => ref.current?.scrollTo({ x: Math.max(0, i * 46 - 80), animated: false }), 0);
+    return () => clearTimeout(t);
+    // 열릴 때 한 번만 맞춘다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
-    <View style={styles.spanBox}>
-      <Text style={styles.spanLabel}>{label}</Text>
-      <Pressable
-        onPress={() => onChange(Math.max(min, value - step))}
-        disabled={!canDown}
-        accessibilityRole="button"
-        accessibilityLabel={`${label} 당기기`}
-        style={[styles.spanBtn, !canDown && styles.off]}
-      >
-        <Text style={styles.miniText}>−</Text>
-      </Pressable>
-      <Text style={styles.spanValue}>{show}초</Text>
-      <Pressable
-        onPress={() => onChange(Math.min(max, value + step))}
-        disabled={!canUp}
-        accessibilityRole="button"
-        accessibilityLabel={`${label} 미루기`}
-        style={[styles.spanBtn, !canUp && styles.off]}
-      >
-        <Text style={styles.miniText}>+</Text>
-      </Pressable>
+    <View style={styles.chipRow}>
+      <Text style={styles.chipLabel}>
+        {label} · {options.find((o) => o.id === current)?.label}
+      </Text>
+      <ScrollView ref={ref} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.swatchRow}>
+        {options.map((o) => {
+          const on = o.id === current;
+          return (
+            <Pressable
+              key={o.id}
+              onPress={() => onPick(o.id)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={`${label} ${o.label}`}
+              style={[styles.swatchRing, on && styles.swatchRingOn]}
+            >
+              <View style={[styles.swatch, { backgroundColor: o.hex }]} />
+            </Pressable>
+          );
+        })}
+      </ScrollView>
     </View>
   );
 }
@@ -1193,6 +1291,20 @@ const styles = StyleSheet.create({
   accHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 52 },
   accTitleBox: { flex: 1, gap: 2 },
   accBody: { gap: 8, paddingBottom: 14 },
+  strip: { gap: STRIP_GAP, paddingVertical: 4, paddingRight: 8 },
+  stripItem: { width: STRIP_CARD, alignItems: 'center', gap: 6 },
+  stripThumb: { width: STRIP_CARD, height: STRIP_CARD, borderRadius: 12, overflow: 'hidden', borderWidth: 2.5, borderColor: 'transparent', backgroundColor: colors.surface },
+  stripThumbOn: { borderColor: colors.primary },
+  swatchRow: { gap: 8, paddingVertical: 4, paddingRight: 8 },
+  swatchRing: { width: 38, height: 38, borderRadius: 19, borderWidth: 2.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  swatchRingOn: { borderColor: colors.primary },
+  swatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(0,0,0,0.12)' },
+  pill: { minHeight: 44, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  pillOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  pillText: { fontSize: 14, fontWeight: '700', color: colors.textSub },
+  pillTextOn: { color: colors.primary },
+  stripLabel: { fontSize: 12, fontWeight: '600', color: colors.textSub },
+  stripLabelOn: { fontWeight: '800', color: colors.primary },
   transRow: { flexDirection: 'row', gap: 6 },
   transChip: { flex: 1, minHeight: 44, borderRadius: radius.item, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   transChipOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
@@ -1210,6 +1322,10 @@ const styles = StyleSheet.create({
   speedBox: { gap: 6, paddingBottom: 6 },
   dragHint: { position: 'absolute', left: 0, right: 0, top: 6, alignItems: 'center' },
   dragHintText: { fontSize: 10, fontWeight: '800', color: colors.onPrimary, backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, overflow: 'hidden' },
+  lineInputRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  lineInput: { flex: 1, minHeight: 44 },
+  lineRemove: { width: 36, height: 44, alignItems: 'center', justifyContent: 'center' },
+  lineRemoveText: { fontSize: 15, fontWeight: '800', color: colors.textMuted },
   lineRow: { paddingTop: 10, marginTop: 6, borderTopWidth: 1, borderTopColor: colors.surface },
   spanRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', paddingTop: 6 },
   spanBox: { flexDirection: 'row', alignItems: 'center', gap: 4 },

@@ -341,11 +341,20 @@ export const PLACE_RECORDS: Record<string, PlaceRecord[]> = {
 /** [x, y, 너비, 높이] — 모두 0~1 비율 */
 export type Rect = [number, number, number, number];
 
+/** 칸을 감싸는 테두리 모양: 폴라로이드(아래가 넓은 흰 테두리) · 카드(얇은 흰 테두리) */
+export type CellLook = 'polaroid' | 'card';
+
 export interface Template {
   id: string;
   cuts: number;
   label: string;
   rects: Rect[];
+  /** 칸마다 기울이는 각도(도). 없으면 반듯하게 */
+  rots?: number[];
+  /** 칸 테두리 모양. 없으면 테두리 없이 사진만 */
+  look?: CellLook;
+  /** 장면 바탕색(칸 사이 틈이 이 색으로 보인다). 없으면 기본 회색 */
+  bg?: string;
 }
 
 const cols = (n: number): Rect[] => Array.from({ length: n }, (_, i) => [i / n, 0, 1 / n, 1]);
@@ -357,23 +366,95 @@ export const CUT_OPTIONS = [1, 2, 3, 4, 5];
 export const TEMPLATES: Template[] = [
   { id: 'c1-full', cuts: 1, label: '전체', rects: [[0, 0, 1, 1]] },
   { id: 'c1-frame', cuts: 1, label: '프레임', rects: [[0.12, 0.12, 0.76, 0.76]] },
+  { id: 'c1-cinema', cuts: 1, label: '시네마', rects: [[0, 0.2, 1, 0.6]] },
+  { id: 'c1-small', cuts: 1, label: '작은 프레임', rects: [[0.2, 0.2, 0.6, 0.6]] },
+  { id: 'c1-polaroid', cuts: 1, label: '폴라로이드', rects: [[0.08, 0.08, 0.84, 0.7]] },
+  { id: 'c1-tall', cuts: 1, label: '좁게', rects: [[0.15, 0, 0.7, 1]] },
+  { id: 'p1-card-tilt', cuts: 1, label: '기울인 카드', rects: [[0.1, 0.12, 0.8, 0.7]], rots: [-4], look: 'card', bg: '#111' },
+  { id: 'p1-tilt', cuts: 1, label: '기울인 폴라로이드', rects: [[0.1, 0.1, 0.8, 0.62]], rots: [-3], look: 'polaroid', bg: '#111' },
 
   { id: 'c2-cols', cuts: 2, label: '좌우 2분할', rects: cols(2) },
   { id: 'c2-rows', cuts: 2, label: '상하 2분할', rects: rows(2) },
   { id: 'c2-wide', cuts: 2, label: '좌측 강조', rects: [[0, 0, 0.62, 1], [0.62, 0, 0.38, 1]] },
+  { id: 'c2-top', cuts: 2, label: '상단 강조', rects: [[0, 0, 1, 0.65], [0, 0.65, 1, 0.35]] },
+  { id: 'c2-pip', cuts: 2, label: '작은 창', rects: [[0, 0, 1, 1], [0.54, 0.6, 0.4, 0.34]] },
+  { id: 'c2-pip-top', cuts: 2, label: '작은 창 (위)', rects: [[0, 0, 1, 1], [0.06, 0.06, 0.4, 0.3]] },
+  { id: 'c2-right', cuts: 2, label: '우측 강조', rects: [[0, 0, 0.38, 1], [0.38, 0, 0.62, 1]] },
+  { id: 'c2-bottom', cuts: 2, label: '하단 강조', rects: [[0, 0, 1, 0.35], [0, 0.35, 1, 0.65]] },
+  { id: 'c2-card-cols', cuts: 2, label: '카드 2장', rects: [[0.04, 0.1, 0.44, 0.8], [0.52, 0.1, 0.44, 0.8]], bg: '#111' },
+  { id: 'c2-card-rows', cuts: 2, label: '카드 위아래', rects: [[0.08, 0.04, 0.84, 0.44], [0.08, 0.52, 0.84, 0.44]], bg: '#111' },
+  { id: 'p2-stack', cuts: 2, label: '폴라로이드 2장', rects: [[0.1, 0.05, 0.8, 0.43], [0.1, 0.5, 0.8, 0.43]], rots: [-3, 3], look: 'polaroid', bg: '#111' },
+  { id: 'p2-side', cuts: 2, label: '나란히 폴라로이드', rects: [[0.04, 0.2, 0.46, 0.5], [0.5, 0.28, 0.46, 0.5]], rots: [-5, 5], look: 'polaroid', bg: '#111' },
+  { id: 'p2-diag', cuts: 2, label: '사선 폴라로이드', rects: [[0.06, 0.06, 0.6, 0.42], [0.34, 0.5, 0.6, 0.42]], rots: [-6, 5], look: 'polaroid', bg: '#111' },
+  { id: 'p2-tilt', cuts: 2, label: '기울인 카드', rects: [[0.06, 0.08, 0.6, 0.4], [0.34, 0.5, 0.6, 0.4]], rots: [-5, 5], look: 'card', bg: '#111' },
+  { id: 'c2-overlap', cuts: 2, label: '겹치기', rects: [[0.05, 0.08, 0.62, 0.55], [0.33, 0.4, 0.62, 0.5]] },
 
   { id: 'c3-cols', cuts: 3, label: '세로 3분할', rects: cols(3) },
   { id: 'c3-rows', cuts: 3, label: '가로 3분할', rects: rows(3) },
   { id: 'c3-big', cuts: 3, label: '좌측 크게', rects: [[0, 0, 0.5, 1], [0.5, 0, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]] },
+  { id: 'c3-top', cuts: 3, label: '상단 크게', rects: [[0, 0, 1, 0.5], [0, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]] },
+  { id: 'c3-mosaic', cuts: 3, label: '모자이크', rects: [[0, 0, 0.62, 0.6], [0.62, 0, 0.38, 0.6], [0, 0.6, 1, 0.4]] },
+  { id: 'c3-right', cuts: 3, label: '우측 크게', rects: [[0.5, 0, 0.5, 1], [0, 0, 0.5, 0.5], [0, 0.5, 0.5, 0.5]] },
+  { id: 'c3-bottom', cuts: 3, label: '하단 크게', rects: [[0, 0, 0.5, 0.5], [0.5, 0, 0.5, 0.5], [0, 0.5, 1, 0.5]] },
+  { id: 'c3-card-rows', cuts: 3, label: '카드 3장', rects: [[0.05, 0.05, 0.9, 0.28], [0.05, 0.36, 0.9, 0.28], [0.05, 0.67, 0.9, 0.28]], bg: '#111' },
+  { id: 'p3-scatter', cuts: 3, label: '흩뿌린 폴라로이드', rects: [[0.06, 0.04, 0.56, 0.3], [0.38, 0.32, 0.56, 0.3], [0.06, 0.6, 0.56, 0.3]], rots: [-6, 5, -4], look: 'polaroid', bg: '#111' },
+  { id: 'p3-trio', cuts: 3, label: '삼각 폴라로이드', rects: [[0.04, 0.08, 0.5, 0.34], [0.46, 0.24, 0.5, 0.34], [0.2, 0.58, 0.6, 0.34]], rots: [-5, 6, -3], look: 'polaroid', bg: '#111' },
+  { id: 'p3-fan', cuts: 3, label: '부채꼴 폴라로이드', rects: [[0.1, 0.1, 0.55, 0.5], [0.3, 0.2, 0.55, 0.5], [0.2, 0.4, 0.6, 0.5]], rots: [-12, 8, -2], look: 'polaroid', bg: '#111' },
+  { id: 'p3-card', cuts: 3, label: '흩뿌린 카드', rects: [[0.06, 0.04, 0.56, 0.3], [0.38, 0.32, 0.56, 0.3], [0.06, 0.6, 0.56, 0.3]], rots: [-6, 5, -4], look: 'card', bg: '#111' },
+  { id: 'p3-pile', cuts: 3, label: '쌓아 놓은 사진', rects: [[0.12, 0.08, 0.76, 0.46], [0.1, 0.26, 0.76, 0.46], [0.14, 0.44, 0.76, 0.46]], rots: [-5, 4, -2], look: 'polaroid', bg: '#111' },
+  { id: 'c3-film', cuts: 3, label: '필름 스트립', rects: [[0, 0.1, 1, 0.26], [0, 0.37, 1, 0.26], [0, 0.64, 1, 0.26]], bg: '#000' },
+  { id: 'c3-pip', cuts: 3, label: '작은 창 2개', rects: [[0, 0, 1, 1], [0.05, 0.05, 0.3, 0.22], [0.05, 0.3, 0.3, 0.22]] },
 
   { id: 'c4-grid', cuts: 4, label: '2×2 격자', rects: [[0, 0, 0.5, 0.5], [0.5, 0, 0.5, 0.5], [0, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5]] },
   { id: 'c4-cols', cuts: 4, label: '세로 4분할', rects: cols(4) },
+  { id: 'c4-rows', cuts: 4, label: '가로 4분할', rects: rows(4) },
+  { id: 'c4-left', cuts: 4, label: '좌측 크게', rects: [[0, 0, 0.5, 1], [0.5, 0, 0.5, 1 / 3], [0.5, 1 / 3, 0.5, 1 / 3], [0.5, 2 / 3, 0.5, 1 / 3]] },
+  { id: 'c4-cards', cuts: 4, label: '카드 격자', rects: [[0.05, 0.05, 0.43, 0.43], [0.52, 0.05, 0.43, 0.43], [0.05, 0.52, 0.43, 0.43], [0.52, 0.52, 0.43, 0.43]], bg: '#111' },
+  { id: 'c4-right', cuts: 4, label: '우측 크게', rects: [[0.5, 0, 0.5, 1], [0, 0, 0.5, 1 / 3], [0, 1 / 3, 0.5, 1 / 3], [0, 2 / 3, 0.5, 1 / 3]] },
+  { id: 'c4-bottom', cuts: 4, label: '하단 크게', rects: [[0, 0, 1 / 3, 0.45], [1 / 3, 0, 1 / 3, 0.45], [2 / 3, 0, 1 / 3, 0.45], [0, 0.45, 1, 0.55]] },
+  { id: 'p4-scatter', cuts: 4, label: '흩뿌린 폴라로이드', rects: [[0.04, 0.04, 0.5, 0.26], [0.46, 0.1, 0.5, 0.26], [0.04, 0.42, 0.5, 0.26], [0.46, 0.5, 0.5, 0.26]], rots: [-7, 6, 5, -6], look: 'polaroid', bg: '#111' },
+  { id: 'p4-wall', cuts: 4, label: '폴라로이드 벽', rects: [[0.04, 0.06, 0.46, 0.4], [0.5, 0.04, 0.46, 0.4], [0.04, 0.5, 0.46, 0.4], [0.5, 0.52, 0.46, 0.4]], rots: [-3, 3, 3, -3], look: 'polaroid', bg: '#111' },
+  { id: 'p4-pile', cuts: 4, label: '쌓아 놓은 사진', rects: [[0.1, 0.05, 0.7, 0.3], [0.2, 0.22, 0.7, 0.3], [0.08, 0.4, 0.7, 0.3], [0.2, 0.58, 0.7, 0.3]], rots: [-5, 4, -3, 3], look: 'polaroid', bg: '#111' },
+  { id: 'p4-card', cuts: 4, label: '흩뿌린 카드', rects: [[0.04, 0.04, 0.5, 0.26], [0.46, 0.1, 0.5, 0.26], [0.04, 0.42, 0.5, 0.26], [0.46, 0.5, 0.5, 0.26]], rots: [-7, 6, 5, -6], look: 'card', bg: '#111' },
+  { id: 'c4-stagger', cuts: 4, label: '엇갈림', rects: [[0, 0, 0.5, 0.6], [0.5, 0, 0.5, 0.4], [0, 0.6, 0.5, 0.4], [0.5, 0.4, 0.5, 0.6]] },
   { id: 'c4-top', cuts: 4, label: '상단 크게', rects: [[0, 0, 1, 0.55], [0, 0.55, 1 / 3, 0.45], [1 / 3, 0.55, 1 / 3, 0.45], [2 / 3, 0.55, 1 / 3, 0.45]] },
 
   { id: 'c5-mix', cuts: 5, label: '2+3 배열', rects: [[0, 0, 0.5, 0.5], [0.5, 0, 0.5, 0.5], [0, 0.5, 1 / 3, 0.5], [1 / 3, 0.5, 1 / 3, 0.5], [2 / 3, 0.5, 1 / 3, 0.5]] },
   { id: 'c5-cols', cuts: 5, label: '세로 5분할', rects: cols(5) },
+  { id: 'c5-rows', cuts: 5, label: '가로 5분할', rects: rows(5) },
+  { id: 'c5-cards', cuts: 5, label: '카드 5장', rects: [[0.05, 0.04, 0.9, 0.3], [0.05, 0.36, 0.43, 0.28], [0.52, 0.36, 0.43, 0.28], [0.05, 0.68, 0.43, 0.28], [0.52, 0.68, 0.43, 0.28]], bg: '#111' },
+  { id: 'c5-bottom', cuts: 5, label: '하단 크게', rects: [[0, 0, 0.25, 0.5], [0.25, 0, 0.25, 0.5], [0.5, 0, 0.25, 0.5], [0.75, 0, 0.25, 0.5], [0, 0.5, 1, 0.5]] },
+  { id: 'p5-scatter', cuts: 5, label: '흩뿌린 폴라로이드', rects: [[0.04, 0.03, 0.46, 0.24], [0.52, 0.06, 0.44, 0.24], [0.3, 0.31, 0.42, 0.24], [0.04, 0.58, 0.46, 0.24], [0.5, 0.62, 0.46, 0.24]], rots: [-8, 6, -3, 5, -6], look: 'polaroid', bg: '#111' },
+  { id: 'p5-wall', cuts: 5, label: '폴라로이드 벽', rects: [[0.04, 0.03, 0.46, 0.3], [0.5, 0.03, 0.46, 0.3], [0.04, 0.35, 0.46, 0.3], [0.5, 0.35, 0.46, 0.3], [0.27, 0.67, 0.46, 0.3]], rots: [-3, 3, 3, -3, 0], look: 'polaroid', bg: '#111' },
+  { id: 'p5-card', cuts: 5, label: '흩뿌린 카드', rects: [[0.04, 0.03, 0.46, 0.24], [0.52, 0.06, 0.44, 0.24], [0.3, 0.31, 0.42, 0.24], [0.04, 0.58, 0.46, 0.24], [0.5, 0.62, 0.46, 0.24]], rots: [-8, 6, -3, 5, -6], look: 'card', bg: '#111' },
+  { id: 'p5-pile', cuts: 5, label: '쌓아 놓은 사진', rects: [[0.1, 0.04, 0.7, 0.3], [0.2, 0.16, 0.7, 0.3], [0.08, 0.3, 0.7, 0.3], [0.22, 0.45, 0.7, 0.3], [0.12, 0.6, 0.7, 0.3]], rots: [-6, 5, -4, 4, -2], look: 'polaroid', bg: '#111' },
+  { id: 'c5-cross', cuts: 5, label: 'X 배치', rects: [[0, 0, 0.4, 0.4], [0.6, 0, 0.4, 0.4], [0.35, 0.35, 0.3, 0.3], [0, 0.6, 0.4, 0.4], [0.6, 0.6, 0.4, 0.4]] },
+  { id: 'c5-top', cuts: 5, label: '상단 크게', rects: [[0, 0, 1, 0.4], [0, 0.4, 0.5, 0.3], [0.5, 0.4, 0.5, 0.3], [0, 0.7, 0.5, 0.3], [0.5, 0.7, 0.5, 0.3]] },
   { id: 'c5-big', cuts: 5, label: '좌측 크게', rects: [[0, 0, 0.5, 1], [0.5, 0, 0.25, 0.5], [0.75, 0, 0.25, 0.5], [0.5, 0.5, 0.25, 0.5], [0.75, 0.5, 0.25, 0.5]] },
 ];
+
+/** 템플릿 묶음(선택 화면의 탭). 순서가 화면에 보이는 순서다. */
+export const TEMPLATE_GROUPS = [
+  { id: 'basic', label: '기본 분할' },
+  { id: 'polaroid', label: '폴라로이드' },
+  { id: 'card', label: '카드·여백' },
+  { id: 'focus', label: '강조 배치' },
+  { id: 'overlap', label: '겹치기' },
+] as const;
+export type TemplateGroupId = (typeof TEMPLATE_GROUPS)[number]['id'];
+
+const CARD_IDS = new Set(['c1-frame', 'c1-small', 'c1-polaroid', 'c1-tall', 'c1-cinema', 'c3-film']);
+const OVERLAP_IDS = new Set(['c2-pip', 'c2-pip-top', 'c2-overlap', 'c3-pip', 'c5-cross']);
+const BASIC_IDS = new Set(['c1-full', 'c2-cols', 'c2-rows', 'c3-cols', 'c3-rows', 'c4-grid', 'c4-cols', 'c4-rows', 'c5-cols', 'c5-rows']);
+
+/** 한 템플릿이 속한 묶음: 기울이거나 테두리를 두른 것은 폴라로이드, 나머지는 모양으로 나눈다. */
+export function templateGroup(t: Template): TemplateGroupId {
+  if (t.look === 'polaroid' || t.id.startsWith('p')) return 'polaroid';
+  if (t.id.includes('card') || CARD_IDS.has(t.id)) return 'card';
+  if (OVERLAP_IDS.has(t.id)) return 'overlap';
+  if (BASIC_IDS.has(t.id)) return 'basic';
+  return 'focus';
+}
 
 export const templatesFor = (cuts: number): Template[] => TEMPLATES.filter((t) => t.cuts === cuts);
 export const TEMPLATE_BY_ID: Record<string, Template> = Object.fromEntries(TEMPLATES.map((t) => [t.id, t]));

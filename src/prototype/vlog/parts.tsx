@@ -7,7 +7,7 @@ import { AppHeader } from '../components/AppHeader';
 import { ActionButton } from '../components/FormParts';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { Toast } from '../components/Toast';
-import type { Rect } from '../mock/tripData';
+import type { CellLook, Rect } from '../mock/tripData';
 import { colors, GUTTER, radius } from '../styles/tokens';
 import {
   ANIM_DONE,
@@ -30,7 +30,7 @@ import {
   fontStyleOf,
   motionAt,
   placeLabelOpacity,
-  stickerPosition,
+  stickerXY,
   stickerPx,
   type AnimFrame,
   type CaptionStyle,
@@ -275,18 +275,38 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
       <PlaceLabelCard place={scene.placeText} date={scene.dateText} label={label} width={width} outWidth={outWidth} anim={labelAnim} fade={labelFade} />
     ) : null;
   return (
-    <View style={[styles.canvas, { width, height }]}>
+    <View style={[styles.canvas, { width, height }, scene.mode === 'split' && scene.template?.bg ? { backgroundColor: scene.template.bg } : null]}>
       {scene.mode === 'split' && scene.template ? (
+
         scene.template.rects.map((r: Rect, i) => {
           const c = scene.clips[i];
           const cellW = width * r[2];
           const cellH = height * r[3];
           const selected = selectedCell === i;
-          const cellStyle = { position: 'absolute' as const, left: `${r[0] * 100}%` as const, top: `${r[1] * 100}%` as const, width: `${r[2] * 100}%` as const, height: `${r[3] * 100}%` as const, padding: 1 };
+          const rot = scene.template?.rots?.[i];
+          const look = scene.template?.look;
+          const inset = cellInset(look, cellW);
+          const cellStyle = {
+            position: 'absolute' as const,
+            left: `${r[0] * 100}%` as const,
+            top: `${r[1] * 100}%` as const,
+            width: `${r[2] * 100}%` as const,
+            height: `${r[3] * 100}%` as const,
+            padding: look ? 0 : 1,
+            ...(rot ? { transform: [{ rotate: `${rot}deg` }] } : null),
+          };
           const cellBody = (
             <>
-              <View style={[StyleSheet.absoluteFill, { margin: 1, overflow: 'hidden' }, selected && styles.cellSelected]}>
-                {c ? <ClipLayer clip={c} width={cellW - 2} height={cellH - 2} motion={motionFor(c)} /> : null}
+              {look ? <View style={[StyleSheet.absoluteFill, styles.cellFrame, look === 'card' && styles.cellFrameCard]} /> : null}
+              <View
+                style={[
+                  look ? { position: 'absolute', left: inset.l, top: inset.t, right: inset.r, bottom: inset.b } : StyleSheet.absoluteFill,
+                  look ? null : { margin: 1 },
+                  { overflow: 'hidden' },
+                  selected && styles.cellSelected,
+                ]}
+              >
+                {c ? <ClipLayer clip={c} width={cellW - inset.l - inset.r} height={cellH - inset.t - inset.b} motion={motionFor(c)} /> : null}
               </View>
               {c?.kind === 'video' ? <Text style={styles.videoMark}>▶</Text> : null}
             </>
@@ -433,8 +453,8 @@ function PlaceLabelCard({
  * 자리는 비율 좌표, 크기는 출력 화면 기준 px 를 줄여 쓴다(자막과 같은 방식).
  */
 function StickerMark({ sticker, width, height, outWidth }: { sticker: Sticker; width: number; height: number; outWidth: number }) {
-  const { x, y } = stickerPosition(sticker.spot);
-  const size = Math.max(10, stickerPx(sticker.size) * (width / outWidth));
+  const { x, y } = stickerXY(sticker);
+  const size = Math.max(10, stickerPx(sticker.size, sticker.scale) * (width / outWidth));
   return (
     <Text
       allowFontScaling={false}
@@ -479,6 +499,28 @@ export function TransitionStage({ scene, prev, width, localSec, transition, prog
   const active = transition !== 'none' && progress !== undefined && progress < 1;
   if (!active || progress === undefined) return <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} />;
   const p = progress;
+  // 와이프·원형은 다음 장면을 일부 영역만 보이게 잘라 낸다(안쪽 그림은 제자리에 고정).
+  if ((transition === 'wipe' || transition === 'iris') && p > 0) {
+    const d = p * Math.hypot(width, height);
+    const box =
+      transition === 'wipe'
+        ? { left: 0, top: 0, width: p * width, height, borderRadius: 0 }
+        : { left: (width - d) / 2, top: (height - d) / 2, width: d, height: d, borderRadius: d / 2 };
+    return (
+      <View style={{ width, height, overflow: 'hidden', borderRadius: 10, backgroundColor: colors.ink }}>
+        {prev ? (
+          <View style={StyleSheet.absoluteFill}>
+            <SceneCanvas scene={prev} width={width} localSec={prev.seconds} animate={animate} />
+          </View>
+        ) : null}
+        <View style={[{ position: 'absolute', overflow: 'hidden' }, box]}>
+          <View style={{ position: 'absolute', left: -box.left, top: -box.top, width, height }}>
+            <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} />
+          </View>
+        </View>
+      </View>
+    );
+  }
   // 흰 번쩍·검게는 가운데에서 화면을 덮는 색이 가장 진하고, 그 순간 앞 장면에서 다음 장면으로 넘어간다.
   const veil = transition === 'flash' ? '#FFFFFF' : transition === 'dip' ? '#000000' : undefined;
   const incoming = veil
@@ -491,7 +533,14 @@ export function TransitionStage({ scene, prev, width, localSec, transition, prog
           ? { transform: [{ translateY: (1 - p) * height }] }
           : transition === 'zoomOut'
             ? { opacity: p, transform: [{ scale: 1.35 - 0.35 * p }] }
-            : { opacity: p, transform: [{ scale: 0.7 + 0.3 * p }] };
+            : transition === 'blur'
+              ? { opacity: p, filter: `blur(${Math.round((1 - p) * 18)}px)` }
+              : transition === 'spin'
+                ? { opacity: p, transform: [{ rotate: `${-30 * (1 - p)}deg` }, { scale: 0.5 + 0.5 * p }] }
+                : transition === 'pop'
+                  ? // 살짝 지나쳤다가 돌아오는 튕김(1.08배까지 커졌다 1배로)
+                    { opacity: Math.min(1, p * 2), transform: [{ scale: p < 0.7 ? 0.5 + (p / 0.7) * 0.58 : 1.08 - 0.08 * ((p - 0.7) / 0.3) }] }
+                  : { opacity: p, transform: [{ scale: 0.7 + 0.3 * p }] };
   const outgoing =
     transition === 'slide'
       ? { transform: [{ translateX: -p * width * 0.3 }] }
@@ -541,23 +590,62 @@ export function AspectPicker({ value, onChange, compact }: { value?: AspectId; o
 }
 
 /** 템플릿 모양대로 이미지를 채워 보여 주는 작은 카드 그림(템플릿 선택 화면) */
-export function LayoutThumb({ rects, images, width, ratio = 9 / 16 }: { rects: Rect[]; images: (string | number)[]; width: number; ratio?: number }) {
+export function LayoutThumb({
+  rects,
+  images,
+  width,
+  ratio = 9 / 16,
+  rots,
+  look,
+  bg,
+}: {
+  rects: Rect[];
+  images: (string | number)[];
+  width: number;
+  ratio?: number;
+  rots?: number[];
+  look?: CellLook;
+  bg?: string;
+}) {
   const height = width / ratio;
   return (
-    <View style={[styles.canvas, { width, height }]}>
-      {rects.map((r, i) => (
-        <View
-          key={i}
-          style={{ position: 'absolute', left: `${r[0] * 100}%`, top: `${r[1] * 100}%`, width: `${r[2] * 100}%`, height: `${r[3] * 100}%`, padding: 1 }}
-        >
-          {images[i] !== undefined ? <SafeImage source={images[i]} style={StyleSheet.absoluteFill} compact /> : null}
-        </View>
-      ))}
+    <View style={[styles.canvas, { width, height }, bg ? { backgroundColor: bg } : null]}>
+      {rects.map((r, i) => {
+        const inset = cellInset(look, width * r[2]);
+        return (
+          <View
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${r[0] * 100}%`,
+              top: `${r[1] * 100}%`,
+              width: `${r[2] * 100}%`,
+              height: `${r[3] * 100}%`,
+              padding: look ? 0 : 1,
+              ...(rots?.[i] ? { transform: [{ rotate: `${rots[i]}deg` }] } : null),
+            }}
+          >
+            {look ? <View style={[StyleSheet.absoluteFill, styles.cellFrame, look === 'card' && styles.cellFrameCard]} /> : null}
+            <View style={look ? { position: 'absolute', left: inset.l, top: inset.t, right: inset.r, bottom: inset.b, overflow: 'hidden' } : StyleSheet.absoluteFill}>
+              {images[i] !== undefined ? <SafeImage source={images[i]} style={StyleSheet.absoluteFill} compact /> : null}
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
 }
 
+/** 칸 테두리 모양에 따라 사진이 놓일 안쪽 여백(px). 폴라로이드는 아래가 넓다. */
+function cellInset(look: CellLook | undefined, cellW: number) {
+  if (!look) return { l: 1, t: 1, r: 1, b: 1 };
+  const p = Math.max(2, cellW * 0.05);
+  return look === 'polaroid' ? { l: p, t: p, r: p, b: p * 3.4 } : { l: p * 0.6, t: p * 0.6, r: p * 0.6, b: p * 0.6 };
+}
+
 const styles = StyleSheet.create({
+  cellFrame: { backgroundColor: '#FFFFFF', borderRadius: 2, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' },
+  cellFrameCard: { borderRadius: 6 },
   close: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 },
   closeText: { fontSize: 13, fontWeight: '600', color: colors.textSub },
   progressWrap: { paddingHorizontal: GUTTER, gap: 6, paddingBottom: 6 },
