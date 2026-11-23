@@ -7,6 +7,7 @@ import { colors, radius } from '../styles/tokens';
 import { dayOfWeekLabel, monthDayLabel, shortDotDateLabel } from '../utils/date';
 import { selectedPlaces, type StepCtx } from './ctx';
 import { insertInOrder, placesWithMedia, type VlogDay } from './model';
+import { runQuickBuild } from './quick';
 import { AspectPicker, FooterButtons, Heading, StateCard, StepFrame } from './parts';
 
 const dateLabel = (iso: string) => `${monthDayLabel(iso)} ${dayOfWeekLabel(iso)}요일`;
@@ -168,7 +169,13 @@ export function PlaceStep({ ctx }: { ctx: StepCtx }) {
           <Text style={styles.summary}>
             {picked.length}일 · 장소 {placeTotal}곳 선택
           </Text>
-          <FooterButtons label={placeTotal > 0 ? `${placeTotal}곳의 사진·동영상 선택` : '장소를 선택해 주세요'} disabled={placeTotal === 0} onPress={next} />
+          <FooterButtons
+            label={placeTotal > 0 ? `${placeTotal}곳의 사진·동영상 선택` : '장소를 선택해 주세요'}
+            disabled={placeTotal === 0}
+            onPress={next}
+            secondaryLabel={placeTotal > 0 ? '⚡ 기본 설정으로 바로 만들기' : undefined}
+            onSecondary={() => runQuickBuild(ctx)}
+          />
         </View>
       }
     >

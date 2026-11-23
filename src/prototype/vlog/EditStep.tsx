@@ -67,7 +67,7 @@ import {
   STICKER_SCALE_MIN,
   type PlaceSetting,
 } from './model';
-import { FooterButtons, Heading, SceneCanvas, StateCard, StepFrame, TransitionStage } from './parts';
+import { FooterButtons, SceneCanvas, StateCard, StepFrame, TransitionStage } from './parts';
 
 /** 스티커를 새로 붙일 때 자리를 고르는 차례. 서로 멀리 떨어진 모서리부터 쓴다. */
 const STICKER_SPOT_ORDER: StickerSpot[] = ['tr', 'bl', 'tl', 'br', 'tc', 'bc', 'mr', 'ml', 'mc'];
@@ -81,6 +81,11 @@ const patch = (ctx: StepCtx, placeKey: string, change: Partial<PlaceSetting>) =>
 
 /** 4단계: 장면 순서·자막·날짜/장소명 표시·글씨체를 정하고 장소를 완료한다. */
 export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string }) {
+  // 이 화면에 들어온 뒤의 변경만 되돌리게 한다(이전 단계의 선택까지 되돌려지지 않게).
+  useEffect(() => {
+    ctx.clearHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { width, height } = useWindowDimensions();
   // 자막을 적을 때 키보드가 입력칸을 가리지 않게 한다. 키보드가 올라오면 미리보기를 줄이고
   // 자막 입력칸이 보이도록 설정 목록을 스크롤한다.
@@ -105,8 +110,6 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   const [cell, setCell] = useState(0);
   const [orderOpen, setOrderOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
-  // 자막 모양을 처음 바꾸기 직전의 모습. 전후 비교와 되돌리기에 쓴다(화면을 나가면 잊는다).
-  const [beforeCap, setBeforeCap] = useState<CaptionStyle | null>(null);
   // 자막을 손으로 끌어 옮기는 중인지. 켜면 미리보기 위의 손짓을 자막 자리로 받는다.
   const [dragMode, setDragMode] = useState(false);
   // 스티커를 손으로 끌어 옮기는 중인 스티커 번호. null 이면 아님(자막 끌기와 함께 쓰지 않는다).
@@ -224,15 +227,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   // 자막 모양은 장면별이 아니라 영상 전체에 하나다(한 영상에 글씨체가 섞이지 않게).
   const cap = captionStyleOf(ctx.draft.captionStyle);
   const applyCap = (next: CaptionStyle) => ctx.update((d) => ({ ...d, captionStyle: next }));
-  const setCap = (change: Partial<CaptionStyle>) => {
-    // 처음 손대는 순간의 모양을 '바꾸기 전'으로 붙잡아 둔다.
-    setBeforeCap((b) => b ?? cap);
-    applyCap({ ...cap, ...change });
-  };
-  const undoCap = () => {
-    if (beforeCap) applyCap(beforeCap);
-    setBeforeCap(null);
-  };
+  const setCap = (change: Partial<CaptionStyle>) => applyCap({ ...cap, ...change });
   // 사진 움직임: 이 장면 설정이 없으면 영상 기본값을 따른다.
   const motion = setting.motion ?? ctx.draft.motion ?? 'none';
   const hasPhoto = scene?.clips.some((c) => c.kind === 'photo') ?? false;
@@ -334,7 +329,6 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
     }),
   ).current;
 
-  const capChanged = beforeCap !== null && JSON.stringify(beforeCap) !== JSON.stringify(cap);
   const capWarning = captionWarning(cap);
   const posLabel = cap.xy ? '직접 옮김' : (CAPTION_POSITIONS.find((x) => x.id === cap.pos)?.label ?? '');
   const capSummary = `${fontOf(cap.fontId).label} · ${posLabel} · ${CAPTION_SIZES.find((x) => x.id === cap.size)?.label} · 배경 ${CAPTION_BGS.find((x) => x.id === cap.bg)?.label}`;
@@ -387,9 +381,8 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
   };
 
   const maxW = Math.min(width, 430) - GUTTER * 2;
-  const previewW = fitWidth(scene.aspect, Math.min(keyboardOpen ? 40 : height < 700 ? 85 : 130, maxW * 0.5), maxW);
+  const previewW = fitWidth(scene.aspect, Math.min(keyboardOpen ? 40 : height < 700 ? 90 : 140, maxW * 0.5), maxW);
   // 전후 비교는 한 줄에 두 장을 나란히 놓는다.
-  const compareW = fitWidth(scene.aspect, Math.min(112, (maxW - 10) / 2), (maxW - 10) / 2);
   const modeLabel = split ? `${scene.clips.length}분할 · 칸 배치 편집 ›` : '이어 재생 · 순서 편집 ›';
   const dateStr = found.day.date.replace(/-/g, '.');
 
@@ -405,10 +398,22 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
       // 미리보기는 위에 고정하고 설정만 스크롤한다(아래 설정을 바꾸면서 효과를 바로 보려고).
       scroll={false}
       compact={keyboardOpen}
-      footer={<FooterButtons label="이 장소 완료" onPress={complete} />}
+      footer={
+        !split && scene.clips.length > 1 && idx < scene.clips.length - 1 ? (
+          // 장면이 더 남았으면 큰 버튼이 "다음 장면"이라, 하나 고치고 다음으로 넘어가는 걸 잊지 않는다.
+          <FooterButtons
+            label={`다음 장면으로 (${idx + 2}/${scene.clips.length})`}
+            onPress={() => setClipIndex(idx + 1)}
+            secondaryLabel="여기서 이 장소 완료"
+            onSecondary={complete}
+          />
+        ) : (
+          <FooterButtons label="이 장소 완료" onPress={complete} />
+        )
+      }
     >
-      <Pressable onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={8} disabled={media.length < 2} style={styles.touch}>
-        <Heading title={media.length < 2 ? '단일 재생' : modeLabel} />
+      <Pressable onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={10} disabled={media.length < 2} style={styles.sceneLabelBtn}>
+        <Text style={styles.sceneLabel}>{media.length < 2 ? '단일 재생' : modeLabel}</Text>
       </Pressable>
 
       <View
@@ -434,13 +439,19 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
           // 끌어 옮기는 동안에는 칸 고르기를 끄고 손짓을 자막(또는 스티커) 자리로만 받는다.
           <View {...pan.panHandlers}>
             <SceneCanvas scene={scene} width={previewW} />
-            <View style={styles.dragHint} pointerEvents="none">
-              <Text style={styles.dragHintText}>{dragSticker !== null ? '끌어 옮기고 두 손가락으로 크기 조절' : '자막을 끌어 놓으세요'}</Text>
-            </View>
           </View>
         ) : (
           <SceneCanvas scene={scene} width={previewW} clipIndex={split ? undefined : idx} selectedCell={split ? cell : undefined} onSelectCell={split ? setCell : undefined} />
         )}
+        {/* 되돌리기·다시 적용: 눈에 띄지 않게 오른쪽 아래에 작게 둔다 */}
+        <View style={styles.undoBox}>
+          <Pressable onPress={ctx.undo} disabled={!ctx.canUndo} accessibilityRole="button" accessibilityLabel="한 단계 되돌리기" hitSlop={8} style={[styles.undoBtn, !ctx.canUndo && styles.undoOff]}>
+            <Text style={styles.undoGlyph}>↶</Text>
+          </Pressable>
+          <Pressable onPress={ctx.redo} disabled={!ctx.canRedo} accessibilityRole="button" accessibilityLabel="되돌린 것 다시 적용" hitSlop={8} style={[styles.undoBtn, !ctx.canRedo && styles.undoOff]}>
+            <Text style={styles.undoGlyph}>↷</Text>
+          </Pressable>
+        </View>
       </View>
 
       {split ? (
@@ -453,20 +464,22 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
           ) : null}
         </View>
       ) : (
-        <View style={styles.navRow}>
-          <Pressable onPress={() => setClipIndex(Math.max(0, idx - 1))} disabled={idx === 0} accessibilityRole="button" hitSlop={8} style={idx === 0 && styles.off}>
-            <Text style={styles.link}>‹ 이전</Text>
-          </Pressable>
-          <Text style={styles.navText}>  장면 {idx + 1} / {scene.clips.length}  </Text>
-          <Pressable
-            onPress={() => setClipIndex(Math.min(scene.clips.length - 1, idx + 1))}
-            disabled={idx >= scene.clips.length - 1}
-            accessibilityRole="button"
-            hitSlop={8}
-            style={idx >= scene.clips.length - 1 && styles.off}
-          >
-            <Text style={styles.link}>다음 ›</Text>
-          </Pressable>
+        // 장면(사진·동영상)마다 작은 그림을 늘어놓아 지금 몇 번째인지 보이고, 누르면 그 장면으로 간다.
+        <View style={styles.filmRow}>
+          {scene.clips.map((c, i) => (
+            <Pressable
+              key={`${c.itemId}-${i}`}
+              onPress={() => setClipIndex(i)}
+              accessibilityRole="button"
+              accessibilityLabel={`장면 ${i + 1} 편집`}
+              accessibilityState={{ selected: i === idx }}
+              style={[styles.filmThumb, i === idx && styles.filmThumbOn]}
+            >
+              <SafeImage source={c.image} style={StyleSheet.absoluteFill} compact />
+              {i !== idx ? <View style={styles.filmDim} /> : null}
+              <Text style={styles.filmNo}>{i + 1}</Text>
+            </Pressable>
+          ))}
         </View>
       )}
 
@@ -601,31 +614,6 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         {capWarning ? <Text style={styles.warn}>{capWarning}</Text> : null}
         {!lines.some((l) => l.text.trim()) ? (
           <Text style={styles.value}>자막을 적으면 위 미리보기에서 바로 확인할 수 있어요.</Text>
-        ) : null}
-
-        {capChanged && beforeCap ? (
-          <View style={styles.compareBox}>
-            <Text style={styles.label}>바꾸기 전과 비교</Text>
-            <View style={styles.compareRow}>
-              <View style={styles.compareCol}>
-                <Text style={styles.compareTag}>바꾸기 전</Text>
-                <SceneCanvas scene={{ ...scene, captionStyle: beforeCap }} width={compareW} clipIndex={split ? undefined : idx} />
-                <Text style={styles.compareNote} numberOfLines={2}>
-                  {fontOf(beforeCap.fontId).label} · {CAPTION_POSITIONS.find((x) => x.id === beforeCap.pos)?.label} · {CAPTION_SIZES.find((x) => x.id === beforeCap.size)?.label}
-                </Text>
-              </View>
-              <View style={styles.compareCol}>
-                <Text style={[styles.compareTag, styles.compareTagNow]}>바꾼 뒤</Text>
-                <SceneCanvas scene={scene} width={compareW} clipIndex={split ? undefined : idx} />
-                <Text style={[styles.compareNote, styles.compareNoteNow]} numberOfLines={2}>
-                  {fontOf(cap.fontId).label} · {CAPTION_POSITIONS.find((x) => x.id === cap.pos)?.label} · {CAPTION_SIZES.find((x) => x.id === cap.size)?.label}
-                </Text>
-              </View>
-            </View>
-            <Pressable onPress={undoCap} accessibilityRole="button" hitSlop={8}>
-              <Text style={styles.link}>↩ 바꾸기 전으로 되돌리기</Text>
-            </Pressable>
-          </View>
         ) : null}
       </Accordion>
 
@@ -1277,10 +1265,23 @@ function FontSheet({
 
 const styles = StyleSheet.create({
   // 손가락으로 누르는 자리는 최소 크기를 보장한다.
+  undoBox: { position: 'absolute', right: 0, bottom: 0, flexDirection: 'row' },
+  undoBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  undoOff: { opacity: 0.25 },
+  undoGlyph: { fontSize: 16, color: colors.textMuted },
+  // 제목은 작은 글씨로 두어 사진이 화면의 주인공이 되게 한다.
+  // 제목 줄이 터치 최소 높이(44)만큼 차지하지 않게 줄이고, 누르는 범위는 hitSlop 으로 넓힌다.
+  sceneLabelBtn: { minHeight: 20, justifyContent: 'center', marginBottom: -4 },
+  sceneLabel: { fontSize: 13, fontWeight: '700', color: colors.textSub },
   touch: { minWidth: MIN_TOUCH, minHeight: MIN_TOUCH, justifyContent: 'center' },
   center: { alignItems: 'center' },
   settings: { flex: 1 },
   settingsContent: { gap: 4, paddingBottom: 24 },
+  filmRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
+  filmThumb: { width: 34, height: 48, borderRadius: 6, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent', backgroundColor: colors.surface },
+  filmThumbOn: { borderColor: colors.primary },
+  filmDim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.45)' },
+  filmNo: { position: 'absolute', left: 3, bottom: 2, fontSize: 10, fontWeight: '800', color: '#fff', textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 2 },
   navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   navText: { fontSize: 13, fontWeight: '700', color: colors.primary },
   link: { fontSize: 13, fontWeight: '700', color: colors.primary },
@@ -1320,8 +1321,6 @@ const styles = StyleSheet.create({
   fontRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
   // 자막 모양 고르기
   speedBox: { gap: 6, paddingBottom: 6 },
-  dragHint: { position: 'absolute', left: 0, right: 0, top: 6, alignItems: 'center' },
-  dragHintText: { fontSize: 10, fontWeight: '800', color: colors.onPrimary, backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, overflow: 'hidden' },
   lineInputRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   lineInput: { flex: 1, minHeight: 44 },
   lineRemove: { width: 36, height: 44, alignItems: 'center', justifyContent: 'center' },
@@ -1347,13 +1346,8 @@ const styles = StyleSheet.create({
   dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1, borderColor: colors.line },
   warn: { fontSize: 12, fontWeight: '700', color: colors.primary },
   // 바꾸기 전 / 바꾼 뒤 비교
-  compareBox: { gap: 8, marginTop: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.surface },
-  compareRow: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
-  compareCol: { alignItems: 'center', gap: 4 },
   compareTag: { fontSize: 11, fontWeight: '800', color: colors.textMuted },
   compareTagNow: { color: colors.primary },
-  compareNote: { fontSize: 10, color: colors.textMuted, textAlign: 'center' },
-  compareNoteNow: { color: colors.textSub },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(25,31,40,0.4)' },
   sheetWrap: { flex: 1, justifyContent: 'flex-end', alignItems: 'center' },
   sheet: { width: '100%', maxWidth: 430, backgroundColor: colors.bg, borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card, padding: 20, gap: 10, boxShadow: shadow.float },

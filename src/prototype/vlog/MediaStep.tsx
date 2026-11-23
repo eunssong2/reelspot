@@ -18,6 +18,7 @@ import {
   type VlogMedia,
 } from './model';
 import { CropModal } from './CropModal';
+import { runQuickBuild } from './quick';
 import { FooterButtons, Heading, StateCard, StepFrame } from './parts';
 
 /** 3단계: 장소마다 사진·동영상을 고른다. 선택한 순서가 재생 순서이며 숫자로 보여 준다. */
@@ -118,7 +119,13 @@ export function MediaStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string }
           <Text style={styles.summary}>
             {n > 0 ? `사진 ${photos} · 동영상 ${n - photos} 선택` : '사진이나 동영상을 골라 주세요'}
           </Text>
-          <FooterButtons label={n > 0 ? `${n}개로 템플릿 선택` : '기록을 선택해 주세요'} disabled={n === 0} onPress={next} />
+          <FooterButtons
+            label={n > 0 ? `${n}개로 템플릿 선택` : '기록을 선택해 주세요'}
+            disabled={n === 0}
+            onPress={next}
+            secondaryLabel="⚡ 기본 설정으로 바로 만들기"
+            onSecondary={() => runQuickBuild(ctx)}
+          />
         </View>
       }
     >

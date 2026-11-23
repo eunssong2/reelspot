@@ -40,6 +40,13 @@ export interface StepCtx {
   goAddRecords: () => void;
   toast: (message: string) => void;
   toastMessage: string | null;
+  /** 바로 전 변경으로 되돌리기 / 다시 적용하기 */
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  /** 되돌리기 기록 비우기(편집 화면에 들어올 때) */
+  clearHistory: () => void;
 }
 
 export interface Located {

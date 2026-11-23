@@ -85,6 +85,11 @@ export function VlogFlowScreen({ nav, group }: Props) {
     goAddRecords,
     toast: toast.show,
     toastMessage: toast.message,
+    undo: () => vlog.undo(group.id),
+    redo: () => vlog.redo(group.id),
+    canUndo: vlog.canUndo(group.id),
+    canRedo: vlog.canRedo(group.id),
+    clearHistory: () => vlog.clearHistory(group.id),
   };
 
   if (!vlog.hydrated || resume === 'unknown') {

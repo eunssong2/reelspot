@@ -25,7 +25,7 @@ export const PHOTO_SEQUENCE_SEC = 3;
 /** 이어 재생에서 동영상 한 개가 쓰는 최대 구간(초) */
 export const VIDEO_SEQUENCE_MAX_SEC = 5;
 /** 분할 장면에 사진만 있을 때의 기본 길이(초) */
-export const PHOTO_SPLIT_SEC = 5;
+export const PHOTO_SPLIT_SEC = 3;
 /**
  * 동영상 재생 속도. 이어 재생 장면에서만 고른다
  * (분할 장면은 칸이 동시에 재생되므로 칸마다 속도가 다르면 길이가 엇갈린다).
