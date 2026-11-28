@@ -29,17 +29,17 @@ def run():
     record('서버 역할 템플릿 적용',sql((ROOT/'부록/DB/002_service_roles.sql').read_text()))
     acl=sql("SELECT NOT has_table_privilege('atp_api','atp.operator_audit','UPDATE') AND NOT has_table_privilege('atp_ops','atp.operator_audit','DELETE');")
     results.append({'check':'API/운영 역할에 감사 수정·삭제 권한 없음','passed':acl.returncode==0 and acl.stdout.strip()=='t'})
-    # Capacity race: 9 existing members, two distinct joiners. Exactly one wins.
+    # Capacity race: 14 existing members, two distinct joiners. Exactly one wins.
     setup="""BEGIN; SET LOCAL search_path=atp,pg_catalog;
-INSERT INTO users(id,display_name,status) SELECT ('90000000-0000-0000-0000-'||lpad(i::text,12,'0'))::uuid,'경쟁'||i,'active' FROM generate_series(1,11)i;
+INSERT INTO users(id,display_name,status) SELECT ('90000000-0000-0000-0000-'||lpad(i::text,12,'0'))::uuid,'경쟁'||i,'active' FROM generate_series(1,16)i;
 INSERT INTO groups(id,name,owner_user_id) VALUES('91000000-0000-0000-0000-000000000001','경쟁검증','90000000-0000-0000-0000-000000000001');
-INSERT INTO memberships(group_id,user_id) SELECT '91000000-0000-0000-0000-000000000001',id FROM users WHERE id::text LIKE '90000000%' ORDER BY id LIMIT 9;
+INSERT INTO memberships(group_id,user_id) SELECT '91000000-0000-0000-0000-000000000001',id FROM users WHERE id::text LIKE '90000000%' ORDER BY id LIMIT 14;
 COMMIT;"""
-    record('정원 경쟁 전용 fixture 9명',sql(setup))
+    record('정원 경쟁 전용 fixture 14명',sql(setup))
     def join(i):return sql(f"BEGIN; INSERT INTO atp.memberships(group_id,user_id) VALUES('91000000-0000-0000-0000-000000000001','90000000-0000-0000-0000-{i:012}'); SELECT pg_sleep(0.2); COMMIT;")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:race=list(pool.map(join,[10,11]))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:race=list(pool.map(join,[15,16]))
     count=sql("SELECT count(*) FROM atp.memberships WHERE group_id='91000000-0000-0000-0000-000000000001' AND ended_at IS NULL;")
-    results.append({'check':'9명에서 동시2참여 → 성공1·거부1·최종10명','passed':sum(r.returncode==0 for r in race)==1 and count.stdout.strip()=='10','detail':[r.stderr[-250:] for r in race]})
+    results.append({'check':'14명에서 동시2참여 → 성공1·거부1·최종15명','passed':sum(r.returncode==0 for r in race)==1 and count.stdout.strip()=='15','detail':[r.stderr[-250:] for r in race]})
     query="""SELECT json_agg(row_to_json(c)) FROM (SELECT table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema='atp' ORDER BY table_name,ordinal_position)c;"""
     catalog=sql(query);assert catalog.returncode==0,catalog.stderr
     (ROOT/'부록/DB/실제 컬럼 사전.json').write_text(json.dumps(json.loads(catalog.stdout),ensure_ascii=False,indent=2))

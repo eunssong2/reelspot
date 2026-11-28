@@ -1,0 +1,61 @@
+--- a/src/app/login.tsx
++++ b/src/app/login.tsx
+@@ -22,7 +22,7 @@
+   const a = useAction();
+   async function load() {
+     const config = await api('/app-config');
+-    setDev(__DEV__ && config.authMode === 'development');
++    setDev(config.authMode === 'development');
+     setKakao(config.providers?.kakao === true);
+     setGoogle(config.providers?.google === true);
+     setPending(!!(await AsyncStorage.getItem('atp.pending-invite')));
+@@ -34,7 +34,7 @@
+   async function login(development = false, provider: 'kakao' | 'google' = 'kakao') {
+     await a.run(async () => {
+       let r;
+-      if (development && __DEV__) {
++      if (development) {
+         const credential = `dev:${name}`,
+           attempt = await api('/auth/attempts', {
+             provider: 'kakao',
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -89,7 +89,7 @@
+ 
+     namespace 'kr.atthatplace.app'
+     defaultConfig {
+-        applicationId 'kr.atthatplace.app'
++        applicationId 'kr.atthatplace.app.docsqa'
+         minSdkVersion rootProject.ext.minSdkVersion
+         targetSdkVersion rootProject.ext.targetSdkVersion
+         versionCode 9
+@@ -181,14 +181,3 @@
+     }
+ }
+ 
+-// ATP_RELEASE_SIGNING_START
+-def atpSigning = new Properties()
+-rootProject.file('../.data/release-signing/release.properties').withInputStream { atpSigning.load(new InputStreamReader(it, 'UTF-8')) }
+-android.signingConfigs.create('atpRelease') {
+-    storeFile file(atpSigning['storeFile'])
+-    storePassword atpSigning['storePassword']
+-    keyAlias atpSigning['keyAlias']
+-    keyPassword atpSigning['keyPassword']
+-}
+-android.buildTypes.release.signingConfig = android.signingConfigs.atpRelease
+-// ATP_RELEASE_SIGNING_END
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -20,7 +20,7 @@
+       <data android:scheme="https"/>
+     </intent>
+   </queries>
+-  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="false" android:theme="@style/AppTheme" android:supportsRtl="true" android:enableOnBackInvokedCallback="false" android:usesCleartextTraffic="false" android:fullBackupContent="@xml/secure_store_backup_rules" android:dataExtractionRules="@xml/secure_store_data_extraction_rules">
++  <application android:networkSecurityConfig="@xml/qa_network" android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="false" android:theme="@style/AppTheme" android:supportsRtl="true" android:enableOnBackInvokedCallback="false" android:usesCleartextTraffic="false" android:fullBackupContent="@xml/secure_store_backup_rules" android:dataExtractionRules="@xml/secure_store_data_extraction_rules">
+     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
+     <meta-data android:name="expo.modules.updates.ENABLE_BSDIFF_PATCH_SUPPORT" android:value="true"/>
+     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
+--- /dev/null
++++ b/android/app/src/main/res/xml/qa_network.xml
+@@ -0,0 +1 @@
++<network-security-config><base-config cleartextTrafficPermitted="false"><trust-anchors><certificates src="system"/><certificates src="@raw/qa_ca"/></trust-anchors></base-config></network-security-config>

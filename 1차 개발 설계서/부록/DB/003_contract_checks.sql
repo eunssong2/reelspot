@@ -17,12 +17,12 @@ DO $$ BEGIN
  IF retention_expires('2027-01-31')<>'2027-05-01T00:00:00+09:00'::timestamptz THEN RAISE EXCEPTION 'kst_expiry'; END IF;
 END $$;
 INSERT INTO users(id,display_name,status)
-SELECT ('00000000-0000-0000-0000-'||lpad(i::text,12,'0'))::uuid,'사용자'||i,'active' FROM generate_series(1,12)i;
+SELECT ('00000000-0000-0000-0000-'||lpad(i::text,12,'0'))::uuid,'사용자'||i,'active' FROM generate_series(1,17)i;
 INSERT INTO groups(id,name,owner_user_id) VALUES('10000000-0000-0000-0000-000000000001','검증 모임','00000000-0000-0000-0000-000000000001');
 INSERT INTO memberships(group_id,user_id)
-SELECT '10000000-0000-0000-0000-000000000001',id FROM users ORDER BY id LIMIT 10;
+SELECT '10000000-0000-0000-0000-000000000001',id FROM users ORDER BY id LIMIT 15;
 SET CONSTRAINTS ALL IMMEDIATE;
-SELECT pg_temp.expect_failure($q$INSERT INTO memberships(group_id,user_id) VALUES('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000011')$q$,'23514');
+SELECT pg_temp.expect_failure($q$INSERT INTO memberships(group_id,user_id) VALUES('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000016')$q$,'23514');
 SELECT pg_temp.expect_failure($q$INSERT INTO groups(name,owner_user_id) VALUES('방장 참여 없음','00000000-0000-0000-0000-000000000012')$q$,'23514');
 SELECT pg_temp.expect_failure($q$UPDATE groups SET reserved_bytes=5000000001$q$,'23514');
 SELECT pg_temp.expect_failure($q$INSERT INTO personal_blocks(blocker_user_id,blocked_user_id) VALUES('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001')$q$,'23514');

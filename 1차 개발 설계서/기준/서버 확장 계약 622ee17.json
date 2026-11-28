@@ -1,0 +1,1865 @@
+{
+  "source_commit": "622ee1708d16ed675b15c2f67c5e6fef4a38f962",
+  "source_sha256": "9d4c0910787308f0f634e5ada0a11d29f6e704d94d18b9c9372577b582c96db5",
+  "paths": {
+    "/visits/{visitId}": {
+      "get": {
+        "operationId": "visitGet",
+        "summary": "장소 수정에 쓰는 방문 현재 값",
+        "tags": [
+          "F10"
+        ],
+        "description": "권한: member. 취소·만료 방문은 editable=false로 조회만 한다.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "visitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "방문과 교체 가능 여부·날짜 계획 버전",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력/규격 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 만료/재인증 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한/참여/차단/운영 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전/상태/멱등본문 충돌",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "삭제/만료/종료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "파일 크기 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청률 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공급자/서비스 일시 장애",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "visitUpdate",
+        "summary": "expectedVersion + 이름·주소·위치·방문 시간 또는 providerPlaceId(교체) → VisitDetail",
+        "tags": [
+          "F09",
+          "F10"
+        ],
+        "description": "권한: member. 생략한 값은 유지하고 null은 주소·위치·시간을 지운다. 정보 수정은 방문별 수기 사본에 저장해 다른 방문과 공급자 원본을 바꾸지 않는다. providerPlaceId는 이름·주소·위치와 함께 보낼 수 없고 기록·미완료 업로드가 있으면 거부한다. 도메인 오류: VERSION_CONFLICT VISIT_HAS_RECORDS DUPLICATE_VISIT PLACE_SEARCH_REQUIRED VALIDATION_ERROR TEXT_REJECTED SCHEDULE_CANCELLED DAY_CANCELLED EXPIRED DELETED.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "visitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 400
+                  },
+                  "address": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 800
+                  },
+                  "location": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "lat": {
+                        "type": "number",
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "lng": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      }
+                    },
+                    "required": [
+                      "lat",
+                      "lng"
+                    ]
+                  },
+                  "plannedTime": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                  },
+                  "providerPlaceId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "expectedVersion"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "방문과 교체 가능 여부·날짜 계획 버전",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력/규격 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 만료/재인증 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한/참여/차단/운영 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전/상태/멱등본문 충돌",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "삭제/만료/종료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "파일 크기 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청률 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공급자/서비스 일시 장애",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}/invites/current": {
+      "post": {
+        "operationId": "inviteCurrent",
+        "summary": "현재 유효한 초대 코드 조회 또는 자동 교체",
+        "tags": [
+          "F05"
+        ],
+        "description": "권한: member. 도메인 오류: GROUP_CLOSED FORBIDDEN. 요청/응답의 실제 처리 규칙은 03 API 연동 설계.docx와 04 업무 흐름 상태 설계.docx를 함께 적용한다. F05 v2.1: 방장을 포함한 모든 현재 참여자가 같은 모임의 초대를 관리한다. 다른 참여자가 발급한 초대도 조회·공유·취소할 수 있다. 발급자 ID는 이력용이다. 탈퇴·퇴장·서비스 이용 제한·모임 종료 시 거부하며 멱등 재시도에서도 현재 권한을 재검증한다.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "invite{id,link,code(8자 ABCDEFGHJKLMNPQRSTUVWXYZ23456789),issuedAt,expiresAt(+168h),useCount:0,maxUses:50,state}",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invitation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력/규격 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 만료/재인증 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한/참여/차단/운영 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전/상태/멱등본문 충돌",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "삭제/만료/종료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "파일 크기 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청률 제한",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "공급자/서비스 일시 장애",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-role": "member",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}/vlogs": {
+      "post": {
+        "operationId": "vlogCreate",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "timeline": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "title",
+                  "timeline"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "enum": [
+                        "queued",
+                        "rendering",
+                        "complete",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ]
+                    },
+                    "progress": {
+                      "type": "number"
+                    },
+                    "durationSec": {
+                      "type": "number"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "contentUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "state",
+                    "progress",
+                    "durationSec",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vlogs/{jobId}": {
+      "get": {
+        "operationId": "vlogGet",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "enum": [
+                        "queued",
+                        "rendering",
+                        "complete",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ]
+                    },
+                    "progress": {
+                      "type": "number"
+                    },
+                    "durationSec": {
+                      "type": "number"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "contentUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "state",
+                    "progress",
+                    "durationSec",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vlogs/{jobId}/cancellation": {
+      "post": {
+        "operationId": "vlogCancel",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "state": {
+                      "enum": [
+                        "queued",
+                        "rendering",
+                        "complete",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ]
+                    },
+                    "progress": {
+                      "type": "number"
+                    },
+                    "durationSec": {
+                      "type": "number"
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "contentUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "state",
+                    "progress",
+                    "durationSec",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vlogs/{jobId}/content": {
+      "get": {
+        "operationId": "vlogContent",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "본인 브이로그 작업; 현재 참여·원본 권한 재확인",
+            "content": {
+              "video/mp4": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}/vlog-sources": {
+      "get": {
+        "operationId": "vlogSources",
+        "tags": [
+          "F30"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "현재 참여자만. 취소 일정의 보존 기록도 브이로그에서 조회하기 위한 일정 식별자 목록. 실제 미디어 조회마다 기존 권한·만료·차단을 다시 검사한다.",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "모임의 삭제되지 않은 일정 식별자",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "scheduleIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  },
+                  "required": [
+                    "scheduleIds"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}/cover": {
+      "get": {
+        "operationId": "coverStream",
+        "tags": [
+          "F04",
+          "F20"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "참여자에게 제공하는 위치 제거 대표 사진",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ops/cases/{caseId}/evidence": {
+      "get": {
+        "operationId": "opsEvidence",
+        "tags": [
+          "F25",
+          "F26"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "운영자 전용 접수 시점의 위치 제거 증거",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ops/recovery-requests/{requestId}/notice": {
+      "post": {
+        "operationId": "opsRecoveryNotice",
+        "tags": [
+          "F27"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "기존 방장 계정 알림 전달과 감사 기록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "notified": {
+                      "const": true
+                    },
+                    "auditId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "notified",
+                    "auditId"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{mediaId}": {
+      "get": {
+        "operationId": "mediaGet",
+        "tags": [
+          "F16",
+          "F18"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mediaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "shared",
+                "mine"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "현재 접근 권한을 확인한 기록 상세",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "media": {
+                      "$ref": "#/components/schemas/Media"
+                    },
+                    "canSave": {
+                      "type": "boolean"
+                    },
+                    "canEdit": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "media",
+                    "canSave",
+                    "canEdit"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/upload-tasks": {
+      "get": {
+        "operationId": "uploadTasksList",
+        "tags": [
+          "F15"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4500,
+              "pattern": "^[0-9a-fA-F,-]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "본인 파일 전송 상태 묶음 조회",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UploadTask"
+                      }
+                    }
+                  },
+                  "required": [
+                    "tasks"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "schemas": {
+    "VisitDetail": {
+      "type": "object",
+      "properties": {
+        "visit": {
+          "$ref": "#/components/schemas/Visit"
+        },
+        "replaceable": {
+          "type": "boolean",
+          "description": "숨김·검토·보존 기록과 미완료 업로드가 없어 다른 장소로 교체할 수 있음"
+        },
+        "editable": {
+          "type": "boolean",
+          "description": "취소·만료가 아니어서 수정할 수 있음"
+        },
+        "planVersion": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "visit",
+        "replaceable",
+        "editable",
+        "planVersion"
+      ]
+    },
+    "Visit": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scheduleId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "placeId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "visitDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "plannedTime": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+          "description": "00:00~23:59 1분 단위. null=시간 미정"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lat": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "lng": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "scheduleId",
+        "placeId",
+        "visitDate",
+        "position",
+        "version"
+      ]
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "currentVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "details": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": true,
+          "description": "OUTSIDE_RANGE_CONFIRMATION_REQUIRED: {visits,media}; MEDIA_LIMIT: {photosRemaining,videosRemaining}; VISIT_LIMIT: {limit:15}; SCHEDULE_DATE_TAKEN: {dates:[date],schedules:[{id,title}]}; DAY_CANCELLED: {date}; TARGET_NOT_EMPTY: {date}; DUPLICATE_FILE: {clientFileIds:[...]}"
+        },
+        "itemErrors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "field": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": []
+          }
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "requestId",
+        "retryable"
+      ]
+    },
+    "Invitation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "link": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{8}$|^[0-9A-F]{12}$",
+          "description": "신규: 0/O/1/I 제외 8자. 기존 발급 코드는 만료까지 허용"
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revokedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "useCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50
+        },
+        "maxUses": {
+          "type": "integer",
+          "const": 50
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "active",
+            "exhausted",
+            "expired",
+            "revoked"
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "id",
+        "link",
+        "code",
+        "issuedAt",
+        "expiresAt",
+        "useCount",
+        "maxUses",
+        "state",
+        "version"
+      ]
+    },
+    "Media": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scheduleId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "authorUserId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "submissionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "selectionIndex": {
+          "type": "integer"
+        },
+        "recordDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "visitId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "description": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "photo",
+            "video"
+          ]
+        },
+        "durationMs": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "capturedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "촬영 시각. 표시·필터용으로 보존하며 정렬에 쓰지 않는다"
+        },
+        "submissionCompletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sortAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sortBasis": {
+          "type": "string",
+          "enum": [
+            "submission"
+          ],
+          "description": "v3.1 Q16 추가 설계·PM 확인 대기: 임시 정렬 기준은 게시 묶음(submission)의 첫 완료 시각(submissionCompletedAt=sortAt). 같은 묶음 안에서는 selectionIndex 순서 유지"
+        },
+        "retentionLastDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "accessState": {
+          "type": "string",
+          "enum": [
+            "available",
+            "deleted",
+            "expired",
+            "restricted"
+          ]
+        },
+        "visitName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "scheduleId",
+        "authorUserId",
+        "submissionId",
+        "selectionIndex",
+        "recordDate",
+        "kind",
+        "completedAt",
+        "submissionCompletedAt",
+        "sortAt",
+        "sortBasis",
+        "version",
+        "accessState"
+      ]
+    },
+    "UploadTask": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "targetType": {
+          "type": "string",
+          "enum": [
+            "record",
+            "cover",
+            "avatar"
+          ]
+        },
+        "submissionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "coverGroupId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "avatarUserId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "uploading",
+            "verifying",
+            "review",
+            "complete",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "transferredBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "actualBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mediaId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transport": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/UploadTransport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "clientFileId": {
+          "type": "string"
+        },
+        "coverAssetId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "avatarAssetId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "selectionIndex": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 119
+        }
+      },
+      "required": [
+        "id",
+        "targetType",
+        "state",
+        "transferredBytes",
+        "actualBytes",
+        "retryable",
+        "reason",
+        "version",
+        "mediaId",
+        "transport",
+        "coverAssetId",
+        "clientFileId",
+        "selectionIndex"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "targetType": {
+              "const": "record"
+            }
+          },
+          "required": [
+            "submissionId"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "coverGroupId"
+                ]
+              },
+              {
+                "required": [
+                  "avatarUserId"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "targetType": {
+              "const": "cover"
+            }
+          },
+          "required": [
+            "coverGroupId"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "submissionId"
+                ]
+              },
+              {
+                "required": [
+                  "avatarUserId"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "targetType": {
+              "const": "avatar"
+            }
+          },
+          "required": [
+            "avatarUserId"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "submissionId"
+                ]
+              },
+              {
+                "required": [
+                  "coverGroupId"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "complete",
+                  "cancelled",
+                  "verifying",
+                  "review"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "transport": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "targetType": {
+                "const": "record"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "clientFileId"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "complete"
+              },
+              "targetType": {
+                "const": "record"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "mediaId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "coverAssetId": {
+                "type": "null"
+              },
+              "avatarAssetId": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "complete"
+              },
+              "targetType": {
+                "const": "cover"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "coverAssetId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "mediaId": {
+                "type": "null"
+              },
+              "avatarAssetId": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "complete"
+              },
+              "targetType": {
+                "const": "avatar"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "avatarAssetId"
+            ],
+            "properties": {
+              "avatarAssetId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "mediaId": {
+                "type": "null"
+              },
+              "coverAssetId": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "UploadTransport": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "const": "ATP-Upload/1"
+        },
+        "uploadEndpoint": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "resumeOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200000000
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "alignmentBytes": {
+          "type": "integer",
+          "const": 1048576
+        },
+        "maxChunkBytes": {
+          "type": "integer",
+          "const": 4194304
+        }
+      },
+      "required": [
+        "protocol",
+        "uploadEndpoint",
+        "generation",
+        "resumeOffset",
+        "length",
+        "expiresAt",
+        "alignmentBytes",
+        "maxChunkBytes"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -46,17 +46,27 @@ def check_review(root, check):
     arch=(root/'부록/열람용HTML/01 시스템 설계.html').read_text()
     contract=(root/'부록/열람용HTML/09 구현 계약 보완.html').read_text()
     check('QA 재검토: 현행 기준과 질문 범위',
-          set(questions)=={f'Q{i}' for i in range(1,30)} and 'Q29' in guide and
-          'D01~D35·Q1~Q29' in arch and '기준/기능명세서.md(v3.4, 2026-11-11' in contract and
+          set(questions)=={f'Q{i}' for i in range(1,42)} and 'Q29' in guide and
+          'D01~D43·Q1~Q41' in arch and '기준/기능명세서.md(v3.5, 2026-11-27' in contract and
           '기준/기능명세서.md(v3.3, 2026-11-05' not in contract,
-          '현행 v3.4·D01~35·Q1~29; 날짜가 붙은 이전 개정 이력은 보존')
+          '현행 v3.5·D01~D43·Q1~Q41; 날짜가 붙은 이전 개정 이력은 보존')
     observed=json.loads((root/'부록/브이로그서버계약_59aca32.json').read_text())
     validate(observed)
     operations={v['operationId'] for p in observed['paths'].values() for v in p.values()}
     main=json.loads((root/'부록/openapi.json').read_text())
-    check('QA 재검토: 서버 브이로그 관찰 계약과 설계 미통합 구분',
+    main_ops={op['operationId']:op for methods in main['paths'].values() for op in methods.values()}
+    launch=' '.join(str(c.value or '') for row in decisions['출시준비'] for c in row)
+    check('회의 후속 확인과 지도 비용 정책 추적',
+          all(q in launch for q in ['Q37','Q38','Q39','Q40','Q41']) and 'Q40' in cases['TC-F24-06']
+          and 'Q40' in notes('UI30') and '[ ] 삭제 결과를' not in rows('UI30')
+          and '월 0원' in policy and '월 0원' in notes('UI10')
+          and 'PROVIDER_QUOTA_EXCEEDED' in main_ops['placesSearch']['responses']['429']['description']
+          and any(tc.startswith('TC-F09-') and '무료 한도 소진' in row and '직접 등록' in row for tc,row in cases.items()),
+          '회의 Q37~Q41·F09·UI10·UI30·placesSearch 429')
+    extension_ids=operations | {'vlogSources','visitGet','visitUpdate','inviteCurrent','coverStream','mediaGet','uploadTasksList','opsEvidence','opsRecoveryNotice'}
+    check('현행 서버 확장 계약과 이전 관찰 사본',
           operations=={'vlogCreate','vlogGet','vlogCancel','vlogContent'} and
           observed['x-source']['commit'].startswith('59aca32') and
           observed['x-source']['execution']=='미실행' and
-          '브이로그서버계약_59aca32.json' in main['info']['description'],
-          '관찰 계약 OpenAPI 검증, 4개 operation; 서버 실행 결과 아님')
+          extension_ids<=main_ops.keys() and all(main_ops[i]['x-source-commit'].startswith('622ee17') for i in extension_ids),
+          '이전 계약 4개와 현행 이식 13개 operation의 출처')

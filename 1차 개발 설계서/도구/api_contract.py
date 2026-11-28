@@ -1,5 +1,6 @@
 """OpenAPI 3.1 계약 생성. 배포 서버가 아닌 구현용 설계안이다."""
-from design_model import APIS
+from design_model import APIS, ROOT, DESIGN_VERSION
+import json
 S=lambda **kw:dict(type='string',**kw)
 I=lambda **kw:dict(type='integer',**kw)
 B=lambda **kw:dict(type='boolean',**kw)
@@ -14,7 +15,7 @@ SCHEMAS={
  'Media':O({'id':UUID,'scheduleId':UUID,'authorUserId':UUID,'submissionId':UUID,'selectionIndex':I(),'recordDate':DATE,'visitId':{'type':['string','null'],'format':'uuid'},'description':S(),'kind':S(enum=['photo','video']),'durationMs':{'type':['integer','null'],'minimum':0,'description':'동영상 길이(사진은 null)'},'displayName':S(description='작성자 현재 표시명'),'completedAt':DT,'capturedAt':{'anyOf':[DT,{'type':'null'}],'description':'촬영 시각. 표시·필터용으로 보존하며 정렬에 쓰지 않는다'},'submissionCompletedAt':DT,'sortAt':DT,'sortBasis':S(enum=['submission'],description='v3.1 Q16 추가 설계·PM 확인 대기: 임시 정렬 기준은 게시 묶음(submission)의 첫 완료 시각(submissionCompletedAt=sortAt). 같은 묶음 안에서는 selectionIndex 순서 유지'),'retentionLastDate':DATE,'expiresAt':DT,'version':V,'accessState':S(enum=['available','deleted','expired','restricted'])},['id','scheduleId','authorUserId','submissionId','selectionIndex','recordDate','kind','completedAt','submissionCompletedAt','sortAt','sortBasis','version','accessState']),
  'UploadTask':O({'id':UUID,'submissionId':UUID,'state':S(enum=['queued','uploading','verifying','review','complete','failed','cancelled']),'transferredBytes':I(minimum=0),'actualBytes':I(minimum=0),'retryable':B(),'reason':S(),'version':V,'mediaId':UUID,'uploadEndpoint':S(),'resumeOffset':I(minimum=0)},['id','submissionId','state','retryable','version']),
  'Operation':O({'id':UUID,'state':S(enum=['pending','review','succeeded','failed']),'result':O({}),'itemErrors':A(O({'id':UUID,'code':S(),'message':S()}))},['id','state']),
- 'Group':O({'id':UUID,'name':S(),'ownerUserId':UUID,'status':S(enum=['active','closed']),'activeCount':I(minimum=0,maximum=10),'capacity':I(const=10),'activityAt':DT,'version':V,'scheduleSummary':O({'id':UUID,'title':S(),'startDate':DATE,'endDate':DATE})},['id','name','ownerUserId','status','activeCount','capacity','activityAt','version']),
+ 'Group':O({'id':UUID,'name':S(),'ownerUserId':UUID,'status':S(enum=['active','closed']),'activeCount':I(minimum=0,maximum=15),'capacity':I(const=15),'activityAt':DT,'version':V,'scheduleSummary':O({'id':UUID,'title':S(),'startDate':DATE,'endDate':DATE})},['id','name','ownerUserId','status','activeCount','capacity','activityAt','version']),
  'Schedule':O({'id':UUID,'groupId':UUID,'title':S(),'startDate':DATE,'endDate':DATE,'timezone':S(enum=['Asia/Seoul']),'status':S(enum=['active','cancelled','deleted']),'retentionFixedAt':DT,'retentionLastDate':DATE,'expiresAt':DT,'version':V,'days':A(R('ScheduleDay'),description='달력 응답에서 포함. 일정 상세는 최상위 days[]')},['id','groupId','title','startDate','endDate','timezone','status','version'],additionalProperties=False,description='v3: 일정은 날짜(일차)의 묶음. startDate/endDate는 남은 일차의 최소·최대 날짜(봉투)이며 보관 기한 계산은 endDate 기준을 유지한다. 모든 일차가 취소되면 status=cancelled.'),
  'ScheduleDay':O({'date':DATE,'dayNo':I(minimum=1),'title':{'type':['string','null'],'description':'일차 제목(최대100 graphemes, UI38). 없으면 null. 단일 날짜도 이 값을 우선 표시하고 없으면 일정 제목을 쓴다'},'status':S(enum=['active','cancelled']),'visitCount':I(minimum=0,maximum=15)},['date','dayNo','title','status','visitCount'],additionalProperties=False,description='일정의 하루. dayNo는 날짜순 1부터(취소된 날 포함), 이동·삭제 시 다시 매긴다. 같은 모임에서 활성 일정의 활성 일차는 날짜마다 하나뿐이다. 앱 기본 표시 제목: 여러 날 `{dayNo}일차 · {일정명}`, 하루 `{일정명}`.'),
  'GroupDay':O({'scheduleId':UUID,'scheduleVersion':V,'scheduleTitle':S(),'day':{'allOf':[R('ScheduleDay'),{'properties':{'status':{'const':'active'}}}]},'expiresAt':{'anyOf':[DT,{'type':'null'}]}},['scheduleId','scheduleVersion','scheduleTitle','day','expiresAt'],additionalProperties=False,description='모임 전체 날짜 탭. 활성 일정의 활성 날짜만 반환. day.title 우선, 없으면 기본 제목. 만료 전 기록 없는 일정은 expiresAt=null일 수 있다. 만료 여부는 편집/업로드 접근에서 다시 판정.'),
@@ -78,7 +79,7 @@ QUERIES={
  'placesSearch':{'groupId':UUID,'query':S(description='NFC 정규화 후 grapheme 최대100자. 키워드 검색은 카카오 15건/쪽, 서울특별시 영역 결과만 반환(밖은 제외 수만 응답)'),'category':S(enum=['all','tourism','restaurant','cafe','lodging'],description='all 외 카테고리는 지도 중심(center) 반경 2km, 거리순'),'bounds':S(description='west,south,east,north (`이 지역 다시 검색`)'),'sort':S(enum=['relevance','distance']),'center':S(description='lng,lat 지도 중심. 초기값 서울시청'),'page':I(minimum=1,maximum=45,default=1)},
  'mediaList':{'recordDate':DATE,'visitId':UUID,'unassigned':B(),'outsideRange':B(),'view':S(enum=['by_photo','by_author'],default='by_photo',description='by_photo: 파일 1개=카드 1장(사진별). by_author: 작성자별 묶음(사람별)'),'order':S(enum=['desc','asc'],default='desc',description='v3: 게시 묶음(업로드 완료) 시각 sortAt 기준, 기본 최신순(desc)·오래된순(asc) 선택. 묶음 안 순서는 selectionIndex 유지. by_author는 작성자 구역 순서(구역의 첫 게시 시각) 뒤 구역 내부 정렬'),'cursor':S(),'limit':I(minimum=1,maximum=60,default=60)},
  'mediaStream':{'variant':S(enum=['thumbnail','view']),'context':S(enum=['shared','mine'])},
- 'mineList':{'groupId':UUID,'status':S(enum=['active_membership','ended_membership','expired']),'cursor':S(),'limit':I(minimum=1,maximum=60,default=60)},
+ 'mineList':{'groupId':UUID,'status':S(enum=['active_membership','ended_membership','expired']),'cursor':S(),'limit':I(minimum=1,maximum=60,default=60),'order':S(enum=['newest','expires_first'],default='newest')},
  'invitesList':{'cursor':S()},'invitePreview':{'tokenOrCode':S()},'reportsMine':{'cursor':S()},'opsQueue':{'type':S(),'status':S(),'cursor':S()}}
 def page(items):return O({'items':A(items),'nextCursor':{'type':['string','null']}},['items','nextCursor'])
 RESPONSES={
@@ -104,7 +105,12 @@ RESPONSES={
  'uploadGet':R('UploadTask'),'uploadRetry':R('UploadTask'),'uploadCancel':R('UploadTask'),
  'uploadCommit':O({'task':R('UploadTask'),'operationId':UUID},['task','operationId']),
  'mediaList':O({'items':A(R('Media')),'groups':A(O({'authorUserId':UUID,'displayName':S(),'avatarVersion':{'type':['integer','null'],'minimum':0},'photos':I(minimum=0),'videos':I(minimum=0),'firstCompletedAt':DT,'latestCompletedAt':DT},['authorUserId','displayName','avatarVersion','photos','videos','firstCompletedAt'],additionalProperties=False),description='view=by_author일 때 작성자 카드 머리글(프로필 사진·이름·개수). 차단 작성자 제외. 카드 격자 1·2·3·4+ 와 `+N` 펼치기는 앱 표시'),'visibleCounts':O({'photos':I(),'videos':I()},['photos','videos']),'nextCursor':{'type':['string','null']}},['items','visibleCounts','nextCursor']),
- 'mineList':page(O({'media':R('Media'),'groupName':S(),'scheduleTitle':S(),'membershipState':S(),'groupState':S()},['media','groupName','scheduleTitle','membershipState','groupState'])),
+ 'mineList':O({
+     'items':A(O({'media':R('Media'),'groupName':S(),'scheduleTitle':S(),'membershipState':S(),'groupState':S()},
+                 ['media','groupName','scheduleTitle','membershipState','groupState'])),
+     'nextCursor':{'type':['string','null']},
+     'groups':A(O({'id':UUID,'name':S()},['id','name'])),
+ },['items','nextCursor','groups']),
  'metadataPatch':R('Operation'),'mediaDelete':O({'operationId':UUID,'results':A(O({'id':UUID,'status':S(enum=['deleted','already_deleted','failed']),'reason':S()},['id','status']))},['operationId','results']),
  'exportCreate':O({'exportId':UUID,'state':S(),'results':A(R('ExportResult'))},['exportId','state','results']),
  'exportGet':O({'export':O({'id':UUID,'purpose':S(),'state':S()}),'results':A(R('ExportResult'))},['export','results']),
@@ -174,7 +180,29 @@ def build_openapi():
     from contract_v02 import apply_revision,transport_responses
     apply_revision(globals())
     paths={}
+    extensions=json.loads((ROOT/'기준/서버 확장 계약 622ee17.json').read_text())
+    extension_schemas={}
+    def use_server_refs(value):
+        if isinstance(value,dict):
+            return {key: ('#/components/schemas/Backend_'+item.rsplit('/',1)[-1]
+                          if key=='$ref' and item.startswith('#/components/schemas/')
+                          else use_server_refs(item)) for key,item in value.items()}
+        if isinstance(value,list):
+            return [use_server_refs(item) for item in value]
+        return value
+    for name,schema in extensions['schemas'].items():
+        extension_schemas['Backend_'+name]=use_server_refs(schema)
     for a in APIS:
+        method=a['method'].lower()
+        source_operation=extensions['paths'].get(a['path'],{}).get(method)
+        if source_operation:
+            operation=use_server_refs(source_operation)
+            operation['tags']=a['features']
+            operation['x-required-role']=a['auth']
+            operation['description']='권한: '+a['auth']+'. backend@622ee17 구현 계약. '+operation.get('description','')
+            operation['x-source-commit']=extensions['source_commit']
+            paths.setdefault(a['path'],{})[method]=operation
+            continue
         p=[]
         for key in re.findall(r'\{([^}]+)\}',a['path']):p.append(dict(name=key,**{'in':'path'},required=True,schema=DATE if key=='date' else UUID))
         for key,schema in QUERIES.get(a['id'],{}).items():p.append(dict(name=key,**{'in':'query'},required=(a['id'],key) in {('calendar','from'),('calendar','to'),('placesSearch','groupId'),('uploadLimits','recordDate'),('invitePreview','tokenOrCode'),('mediaStream','variant'),('mediaStream','context')},schema=schema))
@@ -206,6 +234,9 @@ def build_openapi():
                 op['responses']['200']['description']='이미 확정된 동일 멱등 요청 결과. 신규 접수는202.'
         for code,label in [('400','입력/규격 오류'),('401','인증 만료/재인증 필요'),('403','권한/참여/차단/운영 제한'),('404','대상 없음'),('409','버전/상태/멱등본문 충돌'),('410','삭제/만료/종료'),('413','파일 크기 초과'),('429','요청률 제한'),('503','공급자/서비스 일시 장애')]:
             op['responses'][code]={'description':label,'content':{'application/json':{'schema':R('Error')}}}
+        if a['id']=='placesSearch':
+            op['description']+=' F09 월 0원 우선. 무료 쿼터를 확인한 환경에서 외부 검색을 제공하고 소진 시 초기화 확인까지 중단한다. 유료 전환은 제외하고 visitCreate의 직접 등록은 유지한다.'
+            op['responses']['429']['description']='요청률 제한 또는 외부 검색 무료 한도 소진(PROVIDER_QUOTA_EXCEEDED). 한도 소진 시 검색 중단 안내와 직접 등록 진입 제공.'
         if a['id'] in ['uploadHead','uploadChunk']:
             op['responses']['428']={'description':'필수 전송 헤더 누락','content':{'application/json':{'schema':R('Error')}}}
         if a['method']=='HEAD':
@@ -218,4 +249,9 @@ def build_openapi():
             assert a['id'] in REQUESTS,a['id']
             op['requestBody']={'required':True,'content':{'application/json':{'schema':REQUESTS[a['id']]}}}
         paths.setdefault(a['path'],{})[a['method'].lower()]=op
-    return dict(openapi='3.1.0',info={'title':'At that place 1차 개발 API 설계안','version':'0.6-design','description':'기능명세서 v3.4(2026-11-11, 최신 QA·프로토타입 기준)과 09·12 구현계약 보완 기준. 장소 정보 수정/교체 전용 API는 Q23 보완 대기이며 이 계약의 planUpdate로 대체할 수 없다. 카테고리 검색 API는 기존 호환 계약이며 UI 칩은 제거했다. F17 별도 진입은 Q24. 일정=일차 묶음(같은 모임 같은 날짜에 활성 일정 하나), 하루 변경·취소·삭제, 방문 시간 1분 단위, 업로드 1회 10개, 사진별/사람별 최신순, 8자 초대 코드, 가입 동의 4종, 프로필 사진. 반복 일정·외부 공유 없음, 초대 50회·방문 15개·사진5/영상2 한도 포함. F30의 이 주 설계 계약에는 서버 렌더 API가 아직 통합되지 않았다. 실제 backend@59aca32의 vlogCreate/Get/Cancel/Content 4개 HTTP 경로와 참조 스키마는 부록/브이로그서버계약_59aca32.json 관찰 사본에 보존한다. QA-06 서버 재현은 해당 계약을 기준으로 한다. 프로토타입의 로컬 어댑터 미연결과 서버 API 존재를 구분한다. 실제 배포 서버가 아니다. NFC grapheme 검증과 권한/상태/한도 검사는 서버 책임.'},servers=[{'url':'https://api.example.invalid/v1','description':'문서용 가상 주소·실서비스 없음'}],paths=paths,components={'securitySchemes':{'bearerAuth':{'type':'http','scheme':'bearer','bearerFormat':'JWT'}},'schemas':SCHEMAS})
+    return dict(openapi='3.1.0',info={'title':'At that place 1차 개발 API 설계안',
+        'version':DESIGN_VERSION+'-design',
+        'description':'기능명세 v3.5. 초대 자동 발급·장소 변경 구현 제안·브이로그 서버 계약과 기록·전송·운영 보조 경로를 반영했다. 장소 수정은 planUpdate와 구분하고 기존 검색 category enum은 호환용으로 유지한다. 문서용 주소를 사용한다.'},
+        servers=[{'url':'https://api.example.invalid/v1','description':'문서용 가상 주소'}],
+        paths=paths,components={'securitySchemes':{'bearerAuth':{'type':'http','scheme':'bearer','bearerFormat':'JWT'}},
+        'schemas':{**SCHEMAS,**extension_schemas}})

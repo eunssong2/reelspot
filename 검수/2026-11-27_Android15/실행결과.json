@@ -1,0 +1,195 @@
+{
+  "date": "2026-11-27",
+  "device": {
+    "avd": "Android15",
+    "serial": "emulator-5554",
+    "android": "15",
+    "api": 35,
+    "resolution": "720x1560"
+  },
+  "frontend": "2b3aac2410775f6b3310058c70516563360ac8b2",
+  "backend": "622ee1708d16ed675b15c2f67c5e6fef4a38f962",
+  "prototype": "702ba0c",
+  "apk_sha256": "ec8b89767bbc56c2de76cb35b5860184955aa743e015cfa07a800fb527aa6470",
+  "expo_go_sha256": "d72ed2cec15bf029c942d1cb70c933976ec83048e00d130bbfa6bad8cf22331a",
+  "cases": [
+    {
+      "id": "A15-01",
+      "scenario": "C01~C03/C05 내 모임·통합 달력·월별 목록",
+      "status": "확인",
+      "target": "제품·Android 15",
+      "evidence": "같은 날 두 모임 표시 및 모임 필터. app-calendar, app-calendar-filter, app-group-list",
+      "tc": [
+        "TC-F03-03",
+        "TC-F06-01",
+        "TC-F06-03"
+      ]
+    },
+    {
+      "id": "A15-02",
+      "scenario": "C04/C12 초대 교체",
+      "status": "부분 확인",
+      "target": "제품·Android 15/격리 DB",
+      "evidence": "50회 소진 fixture → 워커 새 코드 1개 → 재진입 시 새 코드. 열린 화면 자동 갱신 미검수",
+      "tc": [
+        "TC-F05-10"
+      ]
+    },
+    {
+      "id": "A15-03",
+      "scenario": "C08 한 글자 검색",
+      "status": "부분 확인",
+      "target": "제품·Android 15/API",
+      "evidence": "한 글자 입력 뒤 요청 및 준비 중 응답. 실제 공급자 검색 결과 미확인",
+      "tc": [
+        "TC-F09-06"
+      ]
+    },
+    {
+      "id": "A15-04",
+      "scenario": "C10 기존 기록 X 삭제",
+      "status": "확인",
+      "target": "제품·Android 15",
+      "evidence": "본인 사진 1개 삭제·한도 3/5→4/5. app-existing-delete-after",
+      "tc": [
+        "TC-F14-08"
+      ]
+    },
+    {
+      "id": "A15-05",
+      "scenario": "C11 내가 올린 기록",
+      "status": "부분 확인",
+      "target": "제품·Android 15",
+      "evidence": "달력 진입, 모임/참여 상태 필터, 보관순 전환. 참여 종료 fixture 미검수",
+      "tc": [
+        "TC-F18-06"
+      ]
+    },
+    {
+      "id": "A15-06",
+      "scenario": "Q23/QA-01 기록 있는 장소 수정",
+      "status": "확인",
+      "target": "제품·Android 15/API·격리 DB",
+      "evidence": "이름 저장·방문 ID/순서/연결 기록 4개 유지. app-place-edit, app-place-saved",
+      "tc": [
+        "TC-F10-07"
+      ]
+    },
+    {
+      "id": "A15-07",
+      "scenario": "QA-06 브이로그 생성·재생·저장",
+      "status": "확인",
+      "target": "제품·Android 15/API·MediaStore",
+      "evidence": "1080×1920 MP4·440Hz 시험음·4.021초·갤러리 저장·권한 200/404/410 이 실행은 QA-06 재발 여부의 일부 근거이며 최초 실패 조건 전체를 재현하지 않았다.",
+      "tc": [
+        "TC-F30-21",
+        "TC-F30-22"
+      ]
+    },
+    {
+      "id": "A15-08",
+      "scenario": "QA-07 촬영 확인 후 업로드",
+      "status": "확인",
+      "target": "제품·Android 15/API",
+      "evidence": "Done 후 후보 1개 → 수동 업로드 → 격리 DB complete. 삼성 실기기 제보는 미확인",
+      "tc": [
+        "TC-F12-01",
+        "TC-F14-07"
+      ]
+    },
+    {
+      "id": "A15-09",
+      "scenario": "VB05 자막 키보드",
+      "status": "확인",
+      "target": "제품·Android 15",
+      "evidence": "9:16/이어 재생 입력 표시. TalkBack 및 실기기 미확인",
+      "tc": [
+        "TC-F30-19"
+      ]
+    },
+    {
+      "id": "A15-10",
+      "scenario": "프로토타입 통합 달력·빠른 제작",
+      "status": "확인",
+      "target": "702ba0c·Expo Go",
+      "evidence": "통합 달력, 빠른 제작→24초 미리보기",
+      "tc": []
+    },
+    {
+      "id": "A15-11",
+      "scenario": "프로토타입 소리·BGM·생성",
+      "status": "확인",
+      "target": "702ba0c·Expo Go",
+      "evidence": "음소거·곡 선택/재생 상태, 생성 미연결 안내",
+      "tc": []
+    },
+    {
+      "id": "A15-12",
+      "scenario": "실제 카카오·삼성 단말·TalkBack",
+      "status": "미확인",
+      "target": "외부 인증/실기기",
+      "evidence": "실제 카카오·삼성 단말·TalkBack은 미확인. 격리 환경에서는 Google 공급자 설정이 없어 버튼이 비활성이었다. 현재 앱 코드는 공급자를 활성화하면 버튼도 활성화된다. D36 앱 수정 대기.",
+      "tc": []
+    }
+  ],
+  "evidence_directory": "검수/2026-11-27_Android15",
+  "evidence": {
+    "app-calendar-filter.png": "af2ed627e282939403a678c6e63c47edc0e02e5ea0a8241c1d73ca38527fc1ec",
+    "app-calendar-filter.xml": "a3b847d8e30046fb3e0a29e280f6694cb3c140625fb82414bd237834a166c9b5",
+    "app-calendar.png": "86654143c41e627efaa1bd63b6a139fb779a9c8706e69c01319387b84c5418d3",
+    "app-calendar.xml": "3b6fccc99a850ee8d26c85f140624bd0ec76a894539a33b4aca10a4911a0cf51",
+    "app-camera-candidate.png": "573d1bb41f4179c4f60ffb562caa564f1f3ea917c9db1e76ab3c7a4e516631af",
+    "app-camera-candidate.xml": "e425837193888ab700f95d5d0d4617038980482354d7eee4f83adb9f4dd4be77",
+    "app-camera-confirm.png": "84ef41fc4b573e1f75742673bdafe7fd55c67fb49bb84d96979c8e57696083a8",
+    "app-camera-confirm.xml": "0ef433808988a227083b5441d034efebafed6515340c7165eec991d25f0fbfe7",
+    "app-camera-upload-result.png": "df97b828579d8f3542af7ad7225f13b69eae8efb4dd588313528e6eccf08a262",
+    "app-camera-upload-result.xml": "bd0cad300956807bff4ed4ffa23a62d9a385570306d795e6b3b67340a21662f4",
+    "app-existing-delete-after.png": "67de91ae379da32bfc4250a5e0fd6312741ed2284e08376b5a327ebaaf8de3ba",
+    "app-existing-delete-after.xml": "fc884fa42ad8cf7cd73bf0171afcf5847006f4c9cf9c888d4612dafb9171b2ca",
+    "app-existing-delete-before.png": "7f4fbaa3c264144cb095338d6a7e09ce2088276f81fb9e4e3688b557dfcc8020",
+    "app-existing-delete-before.xml": "4f7bf14053adfc9093addedd1ed39da548e174321279a2c51333254b39841d49",
+    "app-existing-delete-confirm.png": "f33bbd142da3a9fd20e81155afdf967def1f468361cbd1f24766c2465b088083",
+    "app-existing-delete-confirm.xml": "58bc01f1aef43e6e0bf7599b0baf9cf508d0341ad82d3b5c6254eef6c5f29241",
+    "app-group-list.png": "e5080820d1df2c72bf949330dd324da7bb29b77faeb25eab0d9896d3bcdbcee5",
+    "app-group-list.xml": "f3cb6da4e99f2b1855dd8c6cfcb7b5c928d50a6bf4ad2d8d7e07ebb2d7e86869",
+    "app-groups.png": "aced0d95b4244bb4ebc8816c538f9fed90842e86c36dfa0ddd8a8d9c1a218953",
+    "app-groups.xml": "7c1a6d9cc6ffed472eb15c3516aa302a483a136a01e2591207113fcaab057994",
+    "app-invite-rotated.png": "ed45f858d3ec2103d39b519f7ec2204f61d2d3689f8099e6f739e44255359494",
+    "app-invite-rotated.xml": "097e120eabc77f78caea0f6166b0179d325b14581968bba3cda985b6bb0efb03",
+    "app-invite.png": "235b343729955e0ad91d6fa27654ace5ce2ee12b0408ee276b84eed7ba8c1fe5",
+    "app-invite.xml": "080e2f2647b74f62dd33e42eeb5f5a9ba1fd94687b541819e048e044823e2420",
+    "app-one-letter-search.png": "04ecadd8755b408193fb8cb884d1dd91e57351e6ee749de3b2b5f11505c0bd3f",
+    "app-one-letter-search.xml": "0f6def18c17ca447dcd9c963a5ed9a758deeb9ac41a5ac38c6e23af76bad3e02",
+    "app-place-edit.png": "110ce99f94c07193d25ce101865dc97a4955147ef121c24ba2d05382d808a335",
+    "app-place-edit.xml": "cd3f2dc1a94a8b20a06de98af0b693bc2a6f2132c7f8cc7a4d6a07257b1af8c7",
+    "app-place-saved.png": "afb10c4b78becba09865f57e1e096de63244ce8931ca7ca00863610ffddbecb6",
+    "app-place-saved.xml": "fdd27a7fa4d9d9a2fa58f0400bfae36d2b230fee99cba6519ee82fee020df90b",
+    "app-vlog-keyboard.png": "89a17618671a245325e197f0399d61edc4784af852f7c5a75e98aa6b378efaab",
+    "app-vlog-keyboard.xml": "3b555b3fda66ac61493aa6e599d15517ce0f8882de1cdfc5d04c0c674db32346",
+    "app-vlog-playing.png": "ce81f1444128119c33224bea603fd35fd55a4eff31d3e96b56e8212c3c3cde4b",
+    "app-vlog-render.png": "4fcf50b8fc300371096d6a8af8ae0b247053f5a254a679d8e7238747c1a60791",
+    "app-vlog-render.xml": "b6c2a3316a8eb12fd2e8abdc84f598c396b5da073de6b412d84634c017d77a12",
+    "app-vlog-saved.png": "adb275e1429ca5296099905affaef429c43804857f63b2276a0b616c2afd9c17",
+    "proto-calendar.png": "578e75959b04e583cc7d482a7a63b39641d9bcbf8df78776e6a3f04057097301",
+    "proto-calendar.xml": "9ff228a4335a72812beef0c67ef74e5b271da513f143e887833cedc52a8826ad",
+    "proto-compose-initial.png": "e3bfca5b665efc24feb34605baf8353cc5ca49c23adfd579dc3aeea9636c5bb2",
+    "proto-compose-initial.xml": "ea503e476a14d4df5b579d5eab20acf5b9e9afaf6b53d0c286bdbbcfcde8f623",
+    "proto-music-selected.png": "ded1a33b16f824a28cd235ee55218a01ff52ad7493c180fc169aa8d496f6a621",
+    "proto-music-selected.xml": "52c922ebf14b7bef3639f6181cceb3a9ee0a75ada679934d49b8e57a0430fe0e",
+    "proto-places.png": "0b063edb016922979b41cd9692d3d0033c72e794d47b6521595d021fca32fa71",
+    "proto-places.xml": "6db3d4135fe28d3ccc17accb70ce7b05f51107990bc54a23b967b096b023a15b",
+    "proto-quick-preview.png": "c671f994bc5cefb8f70a8029abee4b8d56022986e6b2d5b62e330c9cdbeb4fc4",
+    "proto-quick-preview.xml": "8502412f60bba43573b905c58fbb87511c84f273df8eae199c92da31aec1cb83",
+    "proto-sound.png": "b75046a0d8efb85bb76da838f6ea07d14f3b2ea1c94291d7fd13fad059344ac5",
+    "proto-sound.xml": "9f1ecf05e3984d510f57f7a3782e6ff6739ef13864c4753b002cb253f4c40151",
+    "proto-vlog-not-connected.png": "533d72d24a5d06ddf70537dfbcab0c3b8d82d954261ab9a0bb8a329df01ba1d4",
+    "proto-vlog-not-connected.xml": "116886a3833310543bf6d084be2e140ba6073f68dff5002a27c8745b31b1d591",
+    "브이로그 접근 검증.json": "d5f538b37cb8f0df9f5bc555edd0cb2f05d9055b58f9596fc586f9416688a20d",
+    "app-mine-entry.png": "1e03b92dc5ba38123ed5e1e945e8ba205437e37a58736083efbf556e96662209",
+    "app-mine-entry.xml": "23c833e870ef3291274e1638043aa7773cbe8a52fb42959fa5b8b46f76c67719",
+    "app-mine-ordered.png": "50b8251fb9e6dba010f7599d87391884675325ea66b914c21dbe8094d3e069f0",
+    "app-mine-ordered.xml": "15db81dad5d0795544a73c8637f7b91fe035ce6239938be39b9463a7f90522e9",
+    "app-mine.png": "7b152af71445caa74c8883ed79f3f8445906fafaefac1274fc12b75acd0b223f",
+    "app-mine.xml": "948f757d07f3d3e6e4b0faee9976c3c5e2286674d093761611ca5a3958b3797f"
+  }
+}

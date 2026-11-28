@@ -1,4 +1,5 @@
 @startuml
+!pragma layout smetana
 left to right direction
 skinparam backgroundColor white
 skinparam shadowing false
@@ -44,7 +45,7 @@ rectangle "At that place · 1차 Android 12+ 기록 등록·감상" {
   usecase "남은 개수 확인\n사진 5·영상 2" as Describe
   usecase "기록 전송하기" as Send
   usecase "타인 제공 파일의 위치 제거" as Privacy
-  usecase "공개 전 유해 콘텐츠 검사" as Filter
+  usecase "콘텐츠 검토(자동 판정 일시 중지)" as Filter
   usecase "기록·사용자 신고\n개인 차단/해제" as Safety
   usecase "실패한 파일만 재시도" as Retry
   usecase "미완료 전송 취소" as Cancel
@@ -85,7 +86,7 @@ note right of Prepare
 업로드 단계 설명 입력 없음·자르기·보정 없음
 end note
 note bottom of Send
-위치 제거·유해 콘텐츠 검사 통과 후 완료 공개
+위치 제거·현재 검토 정책 통과 후 완료 공개
 검사 실패·검토 대기는 공개/집계 제외
 첫 완료 시 종료일 + 3개월 고정, 이후 파일도 동일 기한
 업로더 기기 없이도 조회 가능

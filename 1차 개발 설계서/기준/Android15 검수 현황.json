@@ -1,0 +1,136 @@
+{
+  "date": "2026-11-27",
+  "device": {
+    "avd": "Android15",
+    "serial": "emulator-5554",
+    "android": "15",
+    "api": 35,
+    "resolution": "720x1560"
+  },
+  "frontend": "2b3aac2410775f6b3310058c70516563360ac8b2",
+  "backend": "622ee1708d16ed675b15c2f67c5e6fef4a38f962",
+  "prototype": "702ba0c",
+  "apk_sha256": "ec8b89767bbc56c2de76cb35b5860184955aa743e015cfa07a800fb527aa6470",
+  "expo_go_sha256": "d72ed2cec15bf029c942d1cb70c933976ec83048e00d130bbfa6bad8cf22331a",
+  "cases": [
+    {
+      "id": "A15-01",
+      "scenario": "C01~C03/C05 내 모임·통합 달력·월별 목록",
+      "status": "확인",
+      "target": "제품·Android 15",
+      "evidence": "같은 날 두 모임 표시 및 모임 필터. app-calendar, app-calendar-filter, app-group-list",
+      "tc": [
+        "TC-F03-03",
+        "TC-F06-01",
+        "TC-F06-03"
+      ]
+    },
+    {
+      "id": "A15-02",
+      "scenario": "C04/C12 초대 교체",
+      "status": "부분 확인",
+      "target": "제품·Android 15/격리 DB",
+      "evidence": "50회 소진 fixture → 워커 새 코드 1개 → 재진입 시 새 코드. 열린 화면 자동 갱신 미검수",
+      "tc": [
+        "TC-F05-10"
+      ]
+    },
+    {
+      "id": "A15-03",
+      "scenario": "C08 한 글자 검색",
+      "status": "부분 확인",
+      "target": "제품·Android 15/API",
+      "evidence": "한 글자 입력 뒤 요청 및 준비 중 응답. 실제 공급자 검색 결과 미확인",
+      "tc": [
+        "TC-F09-06"
+      ]
+    },
+    {
+      "id": "A15-04",
+      "scenario": "C10 기존 기록 X 삭제",
+      "status": "확인",
+      "target": "제품·Android 15",
+      "evidence": "본인 사진 1개 삭제·한도 3/5→4/5. app-existing-delete-after",
+      "tc": [
+        "TC-F14-08"
+      ]
+    },
+    {
+      "id": "A15-05",
+      "scenario": "C11 내가 올린 기록",
+      "status": "부분 확인",
+      "target": "제품·Android 15",
+      "evidence": "달력 진입, 모임/참여 상태 필터, 보관순 전환. 참여 종료 fixture 미검수",
+      "tc": [
+        "TC-F18-06"
+      ]
+    },
+    {
+      "id": "A15-06",
+      "scenario": "Q23/QA-01 기록 있는 장소 수정",
+      "status": "확인",
+      "target": "제품·Android 15/API·격리 DB",
+      "evidence": "이름 저장·방문 ID/순서/연결 기록 4개 유지. app-place-edit, app-place-saved",
+      "tc": [
+        "TC-F10-07"
+      ]
+    },
+    {
+      "id": "A15-07",
+      "scenario": "QA-06 브이로그 생성·재생·저장",
+      "status": "확인",
+      "target": "제품·Android 15/API·MediaStore",
+      "evidence": "1080×1920 MP4·440Hz 시험음·4.021초·갤러리 저장·권한 200/404/410 이 실행은 QA-06 재발 여부의 일부 근거이며 최초 실패 조건 전체를 재현하지 않았다.",
+      "tc": [
+        "TC-F30-21",
+        "TC-F30-22"
+      ]
+    },
+    {
+      "id": "A15-08",
+      "scenario": "QA-07 촬영 확인 후 업로드",
+      "status": "확인",
+      "target": "제품·Android 15/API",
+      "evidence": "Done 후 후보 1개 → 수동 업로드 → 격리 DB complete. 삼성 실기기 제보는 미확인",
+      "tc": [
+        "TC-F12-01",
+        "TC-F14-07"
+      ]
+    },
+    {
+      "id": "A15-09",
+      "scenario": "VB05 자막 키보드",
+      "status": "확인",
+      "target": "제품·Android 15",
+      "evidence": "9:16/이어 재생 입력 표시. TalkBack 및 실기기 미확인",
+      "tc": [
+        "TC-F30-19"
+      ]
+    },
+    {
+      "id": "A15-10",
+      "scenario": "프로토타입 통합 달력·빠른 제작",
+      "status": "확인",
+      "target": "702ba0c·Expo Go",
+      "evidence": "통합 달력, 빠른 제작→24초 미리보기",
+      "tc": []
+    },
+    {
+      "id": "A15-11",
+      "scenario": "프로토타입 소리·BGM·생성",
+      "status": "확인",
+      "target": "702ba0c·Expo Go",
+      "evidence": "음소거·곡 선택/재생 상태, 생성 미연결 안내",
+      "tc": []
+    },
+    {
+      "id": "A15-12",
+      "scenario": "실제 카카오·삼성 단말·TalkBack",
+      "status": "미확인",
+      "target": "외부 인증/실기기",
+      "evidence": "실제 카카오·삼성 단말·TalkBack은 미확인. 격리 환경에서는 Google 공급자 설정이 없어 버튼이 비활성이었다. 현재 앱 코드는 공급자를 활성화하면 버튼도 활성화된다. D36 앱 수정 대기.",
+      "tc": []
+    }
+  ],
+  "evidence_directory": "검수/2026-11-27_Android15"
+}

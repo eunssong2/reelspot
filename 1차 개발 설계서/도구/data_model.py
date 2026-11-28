@@ -19,7 +19,7 @@ table('consent_events','사용자 동의·변경·철회 이력','F02',[
  ['UNIQUE(operation_id,document_id)','INDEX(user_id,document_id,occurred_at DESC)'],['append-only. 실제 수집/처리와 연결한 문서·항목을 운영 배포 전에 확정한다.'])
 table('groups','모임과 저장량·방장','F03 F04 F22 F23 F28',[
  ('id','uuid','PK','모임ID'),('name','text','NOT NULL','1~50 graphemes'),('owner_user_id','uuid','FK users','단일 방장 원천'),('status','enum','NOT NULL','active/closed'),('cover_asset_id','uuid','NULL, FK assets','검사 통과 대표 사진'),('activity_at','timestamptz','NOT NULL','공동 활동 확정시 갱신'),('completed_bytes,reserved_bytes','bigint','NOT NULL >=0','완료 원본/미완료 예약'),('version','bigint','NOT NULL','모임 역할/상태 변경 버전'),('closed_at','timestamptz','NULL','종료 시각')],
- ['INDEX(activity_at DESC,created_at DESC,id DESC)','CHECK(completed_bytes+reserved_bytes<=5000000000)'],['owner는 활성 membership 사용자여야 함(지연 제약트리거/서비스 트랜잭션). 별도 role 컬럼으로 중복 원천을 만들지 않는다.','모임행 잠금으로 정원10명·종료·초대참여·저장량예약·역할변경을 직렬화한다.','삭제 대기 원본은 실제 정리 전 completed_bytes에 남는다.'])
+ ['INDEX(activity_at DESC,created_at DESC,id DESC)','CHECK(completed_bytes+reserved_bytes<=5000000000)'],['owner는 활성 membership 사용자여야 함(지연 제약트리거/서비스 트랜잭션). 별도 role 컬럼으로 중복 원천을 만들지 않는다.','모임행 잠금으로 정원15명·종료·초대참여·저장량예약·역할변경을 직렬화한다.','삭제 대기 원본은 실제 정리 전 completed_bytes에 남는다.'])
 table('memberships','참여 세대별 이력','F03 F05 F22 F23',[
  ('id,group_id,user_id','uuid','PK, FK','재가입마다 새 id'),('joined_at','timestamptz','NOT NULL','참여시각'),('ended_at','timestamptz','NULL','활성은 NULL'),('end_reason','enum','NULL','left/removed/group_closed/account_deleted'),('version','bigint','NOT NULL','참여세대 보호')],
  ['UNIQUE(group_id,user_id) WHERE ended_at IS NULL','INDEX(user_id,ended_at)'],['강제퇴장은 재참여차단을 같은 트랜잭션에 생성한다.','오래된 퇴장 요청은 target membershipId로 고정하여 새 참여를 종료하지 못한다.'])
@@ -112,3 +112,14 @@ for _t in TABLES:
  _p=PHYSICAL_TABLES[_t['name']]
  _t['fields']=[(name,sql,'DDL 참조',description) for name,sql,description in _p['columns']]
  _t['indexes']=_p['constraints']+_p['indexes']
+
+RELATIONS.extend([('users','vlog_jobs','1:N · 렌더 요청자'),('groups','vlog_jobs','1:N · 사용한 모임')])
+
+
+table('vlog_jobs','서버 브이로그 렌더 작업','F30',[
+    ('user_id,group_id','uuid','FK','요청자와 모임'),
+    ('title,timeline','text,jsonb','NOT NULL','생성 시점 렌더 입력'),
+    ('state,progress','text,float','NOT NULL','상태와 실제 처리 진행률'),
+    ('object_key,expires_at','text,timestamptz','결과 파일','비공개 결과 위치와 만료 시각'),
+], ['INDEX(created_at) WHERE state=queued','INDEX(user_id,created_at)'],
+['사용자당 대기·진행 작업 합계 2개. 결과는 24시간 보관한다.'])

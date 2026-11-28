@@ -8,7 +8,7 @@ from docx import Document
 from pptx import Presentation
 import openpyxl,pymupdf
 from openapi_spec_validator import validate
-from design_model import ROOT,SCREENS,APIS,QA
+from design_model import ROOT,SCREENS,APIS,QA,PROTOTYPE_COMMIT
 from physical_model import TABLES as PHYSICAL_TABLES
 
 class Links(HTMLParser):
@@ -32,7 +32,7 @@ def main():
     check('초대 UI와 현재 참여 권한 연결','모든 현재 참여자' in invitation_ui['role'],invitation_ui['role'])
     check('30개 기능의 UI 연결',required<=set(f for s in SCREENS for f in s['features']),len(required))
     api_features=set(f for a in APIS for f in a['features'])
-    check('서버 기능의 API 연결과 로컬 촬영 경계',(required-{'F12','F30'})<=api_features,{'server_features':len(required-{'F12','F30'}),'F30':'주 계약 미통합; backend@59aca32 서버 렌더 4개 경로는 별도 관찰 계약으로 검사','F12':'Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결'})
+    check('서버 기능의 API 연결과 로컬 촬영 경계',(required-{'F12'})<=api_features,{'server_features':len(required-{'F12'}),'F30':'backend@622ee17 기반 서버 렌더 API 5개','F12':'Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결'})
     check('화면 API 참조',all(set(s['api'])<=set(ops) for s in SCREENS),len(SCREENS))
     basis=json.loads((ROOT/'기준/기준선.json').read_text())
     check('패키지 내부 기능명세 SHA256',hashlib.sha256((ROOT/'기준/기능명세서.md').read_bytes()).hexdigest()==basis['sha256'],basis['sha256'])
@@ -75,7 +75,7 @@ def main():
     edit=json.loads((edit_root/'출처.json').read_text())
     observations=json.loads((edit_root/'실행결과.json').read_text())
     check('편집 설정 변경 소스 SHA256',all(hashlib.sha256((edit_root/'소스'/x['path']).read_bytes()).hexdigest()==x['sha256'] for x in edit['sources']),edit['commit'])
-    check('UI45 최신 캡처와 기준 커밋',applied['current_commit']==edit['commit']==observations['commit'] and next(s for s in prototype['screens'] if s['ui']=='UI45')['commit']==edit['commit'],edit['commit'])
+    check('UI45 최신 캡처와 기준 커밋',applied['current_commit']==edit['commit']==observations['commit'] and any(s.get('superseded_by')=='UI45' and s.get('commit')==edit['commit'] for s in prototype['screens']),edit['commit'])
     check('편집 설정 웹 관찰 기록',bool(observations['checks']) and all(c['passed'] for c in observations['checks']),len(observations['checks']))
     from vlog_revision import DEFECTS, QUESTIONS
     check('VB05와 Q22 추적',any(x['id']=='VB05' and 19 in x['tests'] for x in DEFECTS) and any(x[0]=='Q22' for x in QUESTIONS),'VB05→TC-F30-19 / Q22→18,20')
@@ -84,8 +84,8 @@ def main():
     android=json.loads((edit_root/'Android15/실행결과.json').read_text())
     check('Android15 관찰 근거 무결성과 범위',android['commit']==edit['commit'] and android['keyboard']['reproduced'] and android['talkback']['status']=='미확인' and all(hashlib.sha256((edit_root/'Android15'/e['path']).read_bytes()).hexdigest()==e['sha256'] for e in android['evidence']),'Expo Go 입력 가림 관찰 / TalkBack 미확인 / 실기기 검수 별도')
     check('이전 UI45 캡처 대체 표시',next(x for x in prototype['screens'] if x['id']=='VLOG-EDIT').get('superseded_by')=='UI45','원본 캡처 보존 + 이전 화면 표시')
-    check('브이로그 11단계와 확인항목 추적',len([x for x in SCREENS if 'UI39'<=x['id']<='UI49'])==11 and len(QA['F30'])==21,'F30 / UI39~49 / TC-F30-01~21')
-    check('최신 요구 커밋과 장소 수정 화면',applied['requirements_commit']==COMMIT and any(x['id']=='UI50' for x in SCREENS),COMMIT)
+    check('브이로그 11단계와 확인항목 추적',len([x for x in SCREENS if 'UI39'<=x['id']<='UI49'])==11 and len(QA['F30'])==22,'F30 / UI39~49 / TC-F30-01~22')
+    check('최신 요구 커밋과 장소 수정 화면',applied['requirements_commit']==PROTOTYPE_COMMIT and {'UI50','UI51'}<={x['id'] for x in SCREENS},PROTOTYPE_COMMIT)
     svg_ok=True
     for p in svg_paths:
         el=ET.parse(p)
@@ -126,7 +126,32 @@ def main():
     for p in workbooks:
         w=openpyxl.load_workbook(p,data_only=False);check('Excel 열기 '+p.stem,len(w.sheetnames)>2,w.sheetnames)
     w=openpyxl.load_workbook(ROOT/'06 검수 및 추적.xlsx')
-    check('기능검수 결과 미실행 유지',all(w['기능검수'].cell(r,9).value=='미실행' for r in range(2,qa_count+2)),qa_count)
+    functional={r[0].value:r for r in list(w['기능검수'].rows)[1:]}
+    check('staging 미실행과 정책 결정 대기 구분',
+          set(r[8].value for r in functional.values())=={'미실행','결정 대기'} and
+          functional['TC-F26-01'][8].value=='결정 대기',qa_count)
+    evidence={r[0].value:r for r in list(w['11월27일 Android15'].rows)[1:]}
+    check('제품 Android 근거와 기능검수 상호 참조',
+          all(tc in functional and row[5].hyperlink and row[5].hyperlink.location and
+              evidence_id in (functional[tc][10].value or '') and functional[tc][10].hyperlink and functional[tc][10].hyperlink.location
+              for evidence_id,row in evidence.items() for tc in (row[5].value or '').split(', ') if tc)
+          and 'A15-01' in functional['TC-F06-03'][10].value
+          and 'A15-07' in functional['TC-F30-22'][10].value,
+          {'Android 근거':len(evidence),'기능검수':len(functional)})
+    login_followups=[row for row in w['보완개발순서'].values if row[1] and 'D36' in row[1]]
+    check('D36 앱 수정과 Google 공급자별 검수 추적',
+          len(login_followups)==1 and '앱 수정 대기' in login_followups[0][1]
+          and all(text in login_followups[0][3] for text in ['TC-F01-01','켠 환경','끈 환경','기존 계정 호환'])
+          and functional['TC-F01-01'][8].value=='미실행'
+          and all(text in evidence['A15-12'][4].value for text in ['격리 환경','설정이 없어','활성화하면']),
+          'D36·TC-F01-01·A15-12')
+    requests=list(w['11월3일요청'].values)[1:]
+    vlog=next(r for r in w['요구사항추적'].values if r[0]=='F30')
+    check('C01~C13 현행 상태 및 F03/F30 추적',
+          len(requests)==13 and all('반영 대기' not in r[-1] and '렌더/저장 대기' not in r[-1] for r in requests)
+          and '요약 우선순위' not in functional['TC-F03-03'][5].value
+          and 'vlog_jobs' in vlog[4] and all(op in vlog[3] for op in ['vlogSources','vlogCreate','vlogGet','vlogCancel','vlogContent']),
+          len(requests))
     broken=[]
     for p in ROOT.rglob('*.html'):
         if '.venv' in p.parts or '__pycache__' in p.parts:continue
@@ -153,7 +178,7 @@ def main():
             check('UI PDF 화면 순서와 누락',len(pages)==len(applied['gallery_pages']) and all(id+' ·' in page.get_text() for id,page in zip(applied['gallery_pages'],pages)),applied['gallery_pages'])
     from validate_qa_revision import check_review
     check_review(ROOT, check)
-    result={'scope':'설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F29 구현 검수는 미실행. PPTX·Word·PDF는 구조/텍스트 검사. 수동 시각 검토 범위는 별도 재검토 기록 참조. 알려진 QA 모순의 회귀 검사는 전체 의미 검토를 대체하지 않음.','passed':not errors,'checks':checks,'errors':errors}
+    result={'scope':'설계 산출물 검증. 앱 실행 결과는 06 검수표의 Android 15 시트, staging 검수 상태는 기능검수 시트 참조. PPTX·Word·PDF는 구조/텍스트 검사. 수동 시각 검토 범위는 별도 재검토 기록 참조. 알려진 QA 모순의 회귀 검사는 전체 의미 검토를 대체하지 않음.','passed':not errors,'checks':checks,'errors':errors}
     (ROOT/'부록/산출물 검증.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
     manifest=[]
     for p in sorted(ROOT.rglob('*')):

@@ -12,7 +12,7 @@ sequenceDiagram
  A->>B: commit(checksum)
  B->>D: verifying + outbox
  W->>S: 원본 probe·위치제거·호환본
- W->>W: 제거검증·콘텐츠검사
+ W->>W: 제거 검증·검토 모드 적용(Q30)
  alt 통과
  W->>D: 재권한검사·일정잠금·기한고정·완료단일커밋
  else 장애/판정불가

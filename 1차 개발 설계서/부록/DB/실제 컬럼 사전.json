@@ -456,6 +456,13 @@
   },
   {
     "table_name": "groups",
+    "column_name": "invite_rotation_paused",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
+    "table_name": "groups",
     "column_name": "activity_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "NO",
@@ -1972,5 +1979,110 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "NO",
     "column_default": "now()"
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "group_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "title",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "timeline",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "state",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'queued'::text"
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "progress",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "error_code",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "cleaned_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "object_key",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "duration_sec",
+    "data_type": "double precision",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "lease",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "vlog_jobs",
+    "column_name": "expires_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "(now() + '24:00:00'::interval)"
   }
 ]

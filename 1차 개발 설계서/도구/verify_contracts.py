@@ -100,6 +100,14 @@ def main():
     operation_example('모임 전체 날짜 다음 페이지',gp,'get','response',{'items':[group_day],'nextCursor':'opaque-next'})
     operation_example('날짜 페이지 커서 누락 거부',gp,'get','response',{'items':[group_day]},False)
     operation_example('날짜 페이지61개 거부',gp,'get','response',{'items':[group_day]*61,'nextCursor':None},False)
+    vp='/visits/{visitId}'
+    operation_example('장소 이름·주소 지우기·시각 변경 요청',vp,'patch','request',{'expectedVersion':2,'name':'검수 장소','address':None,'plannedTime':'10:07'})
+    operation_example('장소 수정 버전 누락 거부',vp,'patch','request',{'name':'검수 장소'},False)
+    operation_example('장소 수정 좌표 한쪽만 거부',vp,'patch','request',{'expectedVersion':2,'location':{'lat':37.5}},False)
+    operation_example('현재 초대 요청','/groups/{groupId}/invites/current','post','request',{})
+    operation_example('서버 렌더 제목과 타임라인','/groups/{groupId}/vlogs','post','request',{'title':'검수 브이로그','timeline':{}})
+    operation_example('서버 렌더 타임라인 누락 거부','/groups/{groupId}/vlogs','post','request',{'title':'검수 브이로그'},False)
+    operation_example('본인 기록 모임 필터 목록','/me/media','get','response',{'items':[],'nextCursor':None,'groups':[{'id':U,'name':'검수 모임'}]})
     checks=[]
     for ex in examples:
         if 'component' in ex:

@@ -1,11 +1,11 @@
 {
-  "scope": "설계 산출물 검증. 프로토타입은 웹 실행 캡처이며 실제 앱 F01~F29 구현 검수는 미실행. PPTX·Word·PDF는 구조/텍스트 검사. 수동 시각 검토 범위는 별도 재검토 기록 참조. 알려진 QA 모순의 회귀 검사는 전체 의미 검토를 대체하지 않음.",
+  "scope": "설계 산출물 검증. 앱 실행 결과는 06 검수표의 Android 15 시트, staging 검수 상태는 기능검수 시트 참조. PPTX·Word·PDF는 구조/텍스트 검사. 수동 시각 검토 범위는 별도 재검토 기록 참조. 알려진 QA 모순의 회귀 검사는 전체 의미 검토를 대체하지 않음.",
   "passed": true,
   "checks": [
     {
       "check": "OpenAPI3.1 스키마와 operation 고유성",
       "passed": true,
-      "detail": 80
+      "detail": 93
     },
     {
       "check": "초대 관리 3개 API는 모든 현재 참여자",
@@ -30,20 +30,20 @@
       "check": "서버 기능의 API 연결과 로컬 촬영 경계",
       "passed": true,
       "detail": {
-        "server_features": 28,
-        "F30": "주 계약 미통합; backend@59aca32 서버 렌더 4개 경로는 별도 관찰 계약으로 검사",
+        "server_features": 29,
+        "F30": "backend@622ee17 기반 서버 렌더 API 5개",
         "F12": "Android 카메라 로컬 처리. 후보 사용 뒤 F14/F15 접수·전송 연결"
       }
     },
     {
       "check": "화면 API 참조",
       "passed": true,
-      "detail": 48
+      "detail": 49
     },
     {
       "check": "패키지 내부 기능명세 SHA256",
       "passed": true,
-      "detail": "93c4be48e15184a758bc9b105e98d2d4372481b8b60a82c2d4551dbc11ccbe9f"
+      "detail": "36021df499c0804826796a82460df48bfcbda6a02732dea65dd7bcbec959ff5c"
     },
     {
       "check": "업무 결과 키 operationId 통일",
@@ -67,7 +67,7 @@
     {
       "check": "현재 OpenAPI 예제 검증 결과",
       "passed": true,
-      "detail": 72
+      "detail": 79
     },
     {
       "check": "현재 DDL의 실제 DB 검증 결과",
@@ -81,8 +81,8 @@
       "check": "컬럼 사전과 실제 DB 컬럼 일치",
       "passed": true,
       "detail": {
-        "tables": 28,
-        "columns": 282
+        "tables": 29,
+        "columns": 298
       }
     },
     {
@@ -95,7 +95,7 @@
           {
             "check": "build_design.py 독립 실행",
             "passed": true,
-            "output": " \"MEMBERS-GROUP\", \"MEMBER-REMOVE\", \"MEMBER-REMOVED\", \"MEMBERS-READER\", \"UI27\", \"UI28\", \"SET\", \"SET-invite\", \"UI29\", \"UI30\", \"UI31\", \"UI32\", \"UI33\", \"UI34\", \"UI35\", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"MY-LINK\", \"UI37\", \"ACCOUNT\", \"UI39\", \"VLOG-RESUME\", \"UI40\", \"UI41\", \"UI42\", \"UI43\", \"UI44\", \"UI45\", \"VLOG-EDIT\", \"VLOG-EDIT-TRANSITION\", \"VLOG-EDIT-CAPTION\", \"VLOG-EDIT-SPLIT\", \"UI46\", \"UI47\", \"UI48\", \"UI49\", \"UI50\", \"P07-1\", \"P07-2\", \"P07-3\", \"P08-1\", \"P08-2\", \"P14-1\", \"P14-2\", \"P15-1\", \"P15-2\", \"P16-1\", \"P16-2\", \"P17-3\", \"P13-1\", \"P13-2\", \"P13-3\", \"P19-1\", \"P19-2\", \"P19-3\", \"S0\"], \"pdf_intro_pages\": 3, \"pdf_pages\": 135, \"pptx_slides\": 140}\n{\"screens\": 48, \"operations\": 80, \"tables\": 28, \"functional_cases\": 165, \"native_ui_pptx\": \"/tmp/atp-design-standalone-upg1bato/package/UI/05 UI 설계.pptx\"}\n",
+            "output": ", \"UI36\", \"P18-2\", \"MY\", \"MY-name\", \"MY-LINK\", \"UI37\", \"ACCOUNT\", \"UI39\", \"VLOG-DATES\", \"VLOG-RESUME\", \"UI40\", \"UI41\", \"UI42\", \"UI43\", \"UI44\", \"UI45\", \"VLOG-EDIT\", \"VLOG-EDIT-ACCORDION\", \"VLOG-EDIT-TRANSITION\", \"VLOG-EDIT-CAPTION\", \"VLOG-EDIT-SPLIT\", \"UI46\", \"VLOG-COMPOSE\", \"UI47\", \"VLOG-PREVIEW\", \"UI48\", \"VLOG-NOT-CONNECTED\", \"UI49\", \"UI50\", \"UI51\", \"P03-1\", \"P05-1\", \"P05-2\", \"P06-1\", \"P06-2\", \"P07-1\", \"P07-2\", \"P07-3\", \"P08-1\", \"P08-2\", \"P14-1\", \"P14-2\", \"P15-1\", \"P15-2\", \"P16-1\", \"P16-2\", \"P17-3\", \"P11-1\", \"P11-2\", \"P13-1\", \"P13-2\", \"P13-3\", \"P19-1\", \"P19-2\", \"P19-3\", \"S0\"], \"pdf_intro_pages\": 3, \"pdf_pages\": 146, \"pptx_slides\": 153}\n{\"screens\": 49, \"operations\": 93, \"tables\": 29, \"functional_cases\": 178, \"native_ui_pptx\": \"/tmp/atp-design-standalone-hgn4iyvs/package/UI/05 UI 설계.pptx\"}\n",
             "error": ""
           },
           {
@@ -128,9 +128,9 @@
       }
     },
     {
-      "check": "165개 기능 검수 시나리오",
+      "check": "178개 기능 검수 시나리오",
       "passed": true,
-      "detail": 165
+      "detail": 178
     },
     {
       "check": "프로토타입 출처와 캡처 무결성",
@@ -141,28 +141,18 @@
         "captures": 63,
         "overview_images": 43,
         "replaced": [
-          "UI01",
           "UI02",
-          "UI03",
-          "UI04",
-          "UI05",
           "UI06",
           "UI09",
-          "UI23",
           "UI24",
           "UI36",
           "UI37",
           "UI38",
-          "UI39",
           "UI40",
           "UI41",
           "UI42",
           "UI43",
-          "UI44",
-          "UI45",
-          "UI46",
-          "UI47",
-          "UI48"
+          "UI44"
         ]
       }
     },
@@ -209,19 +199,19 @@
     {
       "check": "브이로그 11단계와 확인항목 추적",
       "passed": true,
-      "detail": "F30 / UI39~49 / TC-F30-01~21"
+      "detail": "F30 / UI39~49 / TC-F30-01~22"
     },
     {
       "check": "최신 요구 커밋과 장소 수정 화면",
       "passed": true,
-      "detail": "27194cd7665dd519ea1d426c5c5dd0c9a5f768af"
+      "detail": "702ba0c"
     },
     {
-      "check": "48개 SVG의 화면 출처별 구조",
+      "check": "49개 SVG의 화면 출처별 구조",
       "passed": true,
       "detail": {
-        "prototype_raster": 22,
-        "editable_vector": 26
+        "prototype_raster": 12,
+        "editable_vector": 37
       }
     },
     {
@@ -234,12 +224,28 @@
       "passed": true,
       "detail": [
         [
+          "UI01",
+          21
+        ],
+        [
+          "UI03",
+          27
+        ],
+        [
+          "UI04",
+          26
+        ],
+        [
+          "UI05",
+          30
+        ],
+        [
           "UI08",
           31
         ],
         [
           "UI10",
-          31
+          33
         ],
         [
           "UI11",
@@ -255,7 +261,7 @@
         ],
         [
           "UI14",
-          29
+          30
         ],
         [
           "UI15",
@@ -283,7 +289,11 @@
         ],
         [
           "UI22",
-          26
+          24
+        ],
+        [
+          "UI23",
+          25
         ],
         [
           "UI25",
@@ -303,11 +313,11 @@
         ],
         [
           "UI29",
-          21
+          18
         ],
         [
           "UI30",
-          21
+          20
         ],
         [
           "UI31",
@@ -330,12 +340,36 @@
           22
         ],
         [
-          "UI49",
+          "UI39",
+          19
+        ],
+        [
+          "UI45",
+          27
+        ],
+        [
+          "UI46",
           22
         ],
         [
+          "UI47",
+          22
+        ],
+        [
+          "UI48",
+          20
+        ],
+        [
+          "UI49",
+          21
+        ],
+        [
           "UI50",
-          33
+          34
+        ],
+        [
+          "UI51",
+          68
         ]
       ]
     },
@@ -344,23 +378,7 @@
       "passed": true,
       "detail": [
         [
-          "UI01",
-          true
-        ],
-        [
           "UI02",
-          true
-        ],
-        [
-          "UI03",
-          true
-        ],
-        [
-          "UI04",
-          true
-        ],
-        [
-          "UI05",
           true
         ],
         [
@@ -376,10 +394,6 @@
           true
         ],
         [
-          "UI23",
-          true
-        ],
-        [
           "UI24",
           true
         ],
@@ -389,10 +403,6 @@
         ],
         [
           "UI37",
-          true
-        ],
-        [
-          "UI39",
           true
         ],
         [
@@ -414,29 +424,13 @@
         [
           "UI44",
           true
-        ],
-        [
-          "UI45",
-          true
-        ],
-        [
-          "UI46",
-          true
-        ],
-        [
-          "UI47",
-          true
-        ],
-        [
-          "UI48",
-          true
         ]
       ]
     },
     {
       "check": "PPTX 기본·상세·상태 화면 수",
       "passed": true,
-      "detail": 140
+      "detail": 153
     },
     {
       "check": "PPTX 캡처 전체의 원본 이미지 포함",
@@ -453,14 +447,14 @@
       "passed": true,
       "detail": {
         "paragraphs": 161,
-        "tables": 30
+        "tables": 31
       }
     },
     {
       "check": "Word 열기 01 시스템 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 57,
+        "paragraphs": 56,
         "tables": 1
       }
     },
@@ -468,7 +462,7 @@
       "check": "Word 열기 11 브이로그 제작 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 49,
+        "paragraphs": 25,
         "tables": 1
       }
     },
@@ -476,8 +470,16 @@
       "check": "Word 열기 03 API 연동 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 94,
-        "tables": 83
+        "paragraphs": 104,
+        "tables": 96
+      }
+    },
+    {
+      "check": "Word 열기 13 브이로그 편집 기능 정리",
+      "passed": true,
+      "detail": {
+        "paragraphs": 68,
+        "tables": 2
       }
     },
     {
@@ -492,15 +494,15 @@
       "check": "Word 열기 12 장소 수정과 QA 반영",
       "passed": true,
       "detail": {
-        "paragraphs": 48,
-        "tables": 7
+        "paragraphs": 47,
+        "tables": 5
       }
     },
     {
       "check": "Word 열기 04 업무 흐름 상태 설계",
       "passed": true,
       "detail": {
-        "paragraphs": 74,
+        "paragraphs": 77,
         "tables": 1
       }
     },
@@ -508,7 +510,7 @@
       "check": "Word 열기 10 프로토타입 대조 보완",
       "passed": true,
       "detail": {
-        "paragraphs": 34,
+        "paragraphs": 20,
         "tables": 3
       }
     },
@@ -536,7 +538,8 @@
         "검증된데모범위",
         "UI통합검수",
         "11월10일QA",
-        "미설계화면처리"
+        "미설계화면처리",
+        "11월27일 Android15"
       ]
     },
     {
@@ -585,9 +588,27 @@
       ]
     },
     {
-      "check": "기능검수 결과 미실행 유지",
+      "check": "staging 미실행과 정책 결정 대기 구분",
       "passed": true,
-      "detail": 165
+      "detail": 178
+    },
+    {
+      "check": "제품 Android 근거와 기능검수 상호 참조",
+      "passed": true,
+      "detail": {
+        "Android 근거": 12,
+        "기능검수": 178
+      }
+    },
+    {
+      "check": "D36 앱 수정과 Google 공급자별 검수 추적",
+      "passed": true,
+      "detail": "D36·TC-F01-01·A15-12"
+    },
+    {
+      "check": "C01~C13 현행 상태 및 F03/F30 추적",
+      "passed": true,
+      "detail": 13
     },
     {
       "check": "로컬 HTML 링크/이미지",
@@ -608,29 +629,34 @@
       "detail": 9
     },
     {
+      "check": "PDF 열기 13 브이로그 편집 기능 정리",
+      "passed": true,
+      "detail": 4
+    },
+    {
       "check": "PDF 열기 03 API 연동 설계",
       "passed": true,
-      "detail": 23
+      "detail": 26
     },
     {
       "check": "PDF 열기 12 장소 수정과 QA 반영",
       "passed": true,
-      "detail": 7
+      "detail": 6
     },
     {
       "check": "PDF 열기 01 시스템 설계",
       "passed": true,
-      "detail": 7
+      "detail": 6
     },
     {
       "check": "PDF 열기 10 프로토타입 대조 보완",
       "passed": true,
-      "detail": 5
+      "detail": 4
     },
     {
       "check": "PDF 열기 11 브이로그 제작 설계",
       "passed": true,
-      "detail": 6
+      "detail": 3
     },
     {
       "check": "PDF 열기 04 업무 흐름 상태 설계",
@@ -645,12 +671,12 @@
     {
       "check": "PDF 열기 05 UI 설계",
       "passed": true,
-      "detail": 135
+      "detail": 146
     },
     {
       "check": "UI PDF 기본·상세·상태 화면수",
       "passed": true,
-      "detail": 135
+      "detail": 146
     },
     {
       "check": "UI PDF 출처와 적용 기준",
@@ -668,15 +694,14 @@
         "P04-3",
         "ONBOARD",
         "UI03",
-        "P05-2",
         "GROUPS",
         "UI04",
-        "P06-2",
         "GROUP-NEW",
         "PERIOD",
         "UI05",
         "CALENDAR",
         "CALENDAR-LIST",
+        "VLOG-ENTRY",
         "UI06",
         "P10-2",
         "SCHEDULE-EDIT",
@@ -725,7 +750,6 @@
         "UI21",
         "UI22",
         "UI23",
-        "P11-2",
         "INVITES",
         "UI24",
         "P12-2",
@@ -758,6 +782,7 @@
         "UI37",
         "ACCOUNT",
         "UI39",
+        "VLOG-DATES",
         "VLOG-RESUME",
         "UI40",
         "UI41",
@@ -766,14 +791,24 @@
         "UI44",
         "UI45",
         "VLOG-EDIT",
+        "VLOG-EDIT-ACCORDION",
         "VLOG-EDIT-TRANSITION",
         "VLOG-EDIT-CAPTION",
         "VLOG-EDIT-SPLIT",
         "UI46",
+        "VLOG-COMPOSE",
         "UI47",
+        "VLOG-PREVIEW",
         "UI48",
+        "VLOG-NOT-CONNECTED",
         "UI49",
         "UI50",
+        "UI51",
+        "P03-1",
+        "P05-1",
+        "P05-2",
+        "P06-1",
+        "P06-2",
         "P07-1",
         "P07-2",
         "P07-3",
@@ -786,6 +821,8 @@
         "P16-1",
         "P16-2",
         "P17-3",
+        "P11-1",
+        "P11-2",
         "P13-1",
         "P13-2",
         "P13-3",
@@ -833,12 +870,17 @@
     {
       "check": "QA 재검토: 현행 기준과 질문 범위",
       "passed": true,
-      "detail": "현행 v3.4·D01~35·Q1~29; 날짜가 붙은 이전 개정 이력은 보존"
+      "detail": "현행 v3.5·D01~D43·Q1~Q41; 날짜가 붙은 이전 개정 이력은 보존"
     },
     {
-      "check": "QA 재검토: 서버 브이로그 관찰 계약과 설계 미통합 구분",
+      "check": "회의 후속 확인과 지도 비용 정책 추적",
       "passed": true,
-      "detail": "관찰 계약 OpenAPI 검증, 4개 operation; 서버 실행 결과 아님"
+      "detail": "회의 Q37~Q41·F09·UI10·UI30·placesSearch 429"
+    },
+    {
+      "check": "현행 서버 확장 계약과 이전 관찰 사본",
+      "passed": true,
+      "detail": "이전 계약 4개와 현행 이식 13개 operation의 출처"
     }
   ],
   "errors": []

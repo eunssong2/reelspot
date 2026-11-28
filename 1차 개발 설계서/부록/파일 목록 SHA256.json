@@ -1,138 +1,153 @@
 [
   {
     "path": "00 설계서 안내.html",
-    "bytes": 7951,
-    "sha256": "ea6bcab67aa256e1b96b354cb8f1c6249fe2bc3d6523bd3ff836bd6c66ab94c2"
+    "bytes": 8576,
+    "sha256": "6d47e0dc626f5bf3b9e13c52acdc2a8fcf267a57a23eeb0a9daa6de8894f168d"
   },
   {
     "path": "01 시스템 설계.docx",
-    "bytes": 164193,
-    "sha256": "cd51bc2c8b582cf5d5b9c735b46a9cc6ee8f93511a6fabe129e2b2127a81e8cb"
+    "bytes": 163350,
+    "sha256": "e7620de234ffd897d224b2e57985928f2c910422ca949f508c6f90695b287b50"
   },
   {
     "path": "01 시스템 설계.pdf",
-    "bytes": 466495,
-    "sha256": "23e994225c15b1968c8e5ae8071c089cad721f23a702ee3a7ef3045f51e6165f"
+    "bytes": 460317,
+    "sha256": "334e7706a2d7efbcdb95ae18d1fa781f0104a2ce973d957ec5edec4fd3e478fb"
   },
   {
     "path": "02 데이터베이스 설계.docx",
-    "bytes": 188349,
-    "sha256": "6e33a293ec0ccb4941ee82c6b0be1f2c5e47fa5c1718a4b4211c3b56b5317f7d"
+    "bytes": 187748,
+    "sha256": "096041dd1ffede44918841c20b5dfca400ae9e7fd25b2b7f50ec8c0c9a71cc21"
   },
   {
     "path": "02 데이터베이스 설계.pdf",
-    "bytes": 642646,
-    "sha256": "ae7b02ca75ac9d3ee6807759b1d373350c58265f2b3a54432ce8782c8e3eeb08"
+    "bytes": 640218,
+    "sha256": "4cad33c6ab62b39f0b90ae2157b763e87c9e9985c1e7b25413584a6f020aa218"
   },
   {
     "path": "03 API 연동 설계.docx",
-    "bytes": 49576,
-    "sha256": "f14bd63d74a84d5d36a5f7d5035f823ec92a00162af986f3f74e6f5f056e83e1"
+    "bytes": 49822,
+    "sha256": "1697b3d4bafafcdc77d6a8a9587046f34d56dd398b21f6125ce9d93ac3d453c4"
   },
   {
     "path": "03 API 연동 설계.pdf",
-    "bytes": 394834,
-    "sha256": "4d4dab35628e39023f7489a7063aa0670cfe1d12a50d287f82db0636c77aa4c6"
+    "bytes": 390897,
+    "sha256": "d969d65d941acb73ac62ba4b714531e58321ec156bce4b726fba2d6ce4b4c7cc"
   },
   {
     "path": "04 업무 흐름 상태 설계.docx",
-    "bytes": 47155,
-    "sha256": "48950c641f6153bfbc83ecad25e0759f4a3341cc1d7585b008c9b454d2dfaa09"
+    "bytes": 46794,
+    "sha256": "5ad0fbd9d509f0149d8f2d82dba6a34dd290fd55e30d3e21a9552998d343d6df"
   },
   {
     "path": "04 업무 흐름 상태 설계.pdf",
-    "bytes": 402093,
-    "sha256": "ccde634d8f92ab37c7e0ca389c558d769f13e6f698ee051f9ce0ddc6edc12b06"
+    "bytes": 396845,
+    "sha256": "0ea1649bc461edc2494d33eb9e5be54b872c3a5d19ff2a42a62f85c3b6d205bb"
   },
   {
     "path": "06 검수 및 추적.xlsx",
-    "bytes": 59423,
-    "sha256": "7fbb47a056bd0fce8a0363f6413485e83baf4343ab5fc004b69ea9057792a2d8"
+    "bytes": 64250,
+    "sha256": "aa1bd4c53a6a46ca0f3ef9e84af90acdf77ec86d1b080e1ba8a264c80978f534"
   },
   {
     "path": "07 결정 및 자료 차이.xlsx",
-    "bytes": 31528,
-    "sha256": "d4fdfeae5f8fb0ebcb2b9e3a2fb6d0517805c9e7a4f33ee33e5eb077720e34ff"
+    "bytes": 34347,
+    "sha256": "1c82f0977a5316a1f2eb250c69292e4c8bdafa09982cb6ad58cf624302525678"
   },
   {
     "path": "09 구현 계약 보완.docx",
-    "bytes": 51694,
-    "sha256": "502aeb23a3cc5bc2f14030f28b0e5eea06f458ae62029c2b152b046c66d1af9c"
+    "bytes": 51708,
+    "sha256": "6c6419adf6baa610f91cee82d6fc95fa2f2e152c1ebcfd187ecf6b207ca9e5f6"
   },
   {
     "path": "09 구현 계약 보완.pdf",
-    "bytes": 463669,
-    "sha256": "4c3b0faecbfc9545b02a3bf831a2130b90b94900fe66a752bf35cd53c2b75c3a"
+    "bytes": 464098,
+    "sha256": "f7b618a4f6966139ebaec5c47307f2d7036c679a436557fca0efd0b2546a798d"
   },
   {
     "path": "10 프로토타입 대조 보완.docx",
-    "bytes": 45912,
-    "sha256": "a3c4bae03edb01ec08a914cb0250973fcc298f6168ac1d321647eaf6ab5766ee"
+    "bytes": 42607,
+    "sha256": "5f5f02f410ae58f66f01cf64a80f2553a357e1333e03d2a147374be4b0c4a4db"
   },
   {
     "path": "10 프로토타입 대조 보완.md",
-    "bytes": 17662,
-    "sha256": "8eb02f2bd3f5e399e3e76288581ca68b44cda3671065adc8ff4297056472ad61"
+    "bytes": 9642,
+    "sha256": "23a9406768b37ce8a77bdd691d1c4e4055e827a0f7187cabf5a5637c9ef955f8"
   },
   {
     "path": "10 프로토타입 대조 보완.pdf",
-    "bytes": 371767,
-    "sha256": "65e6ff6f16563ab8aa6bdd62d856acbde2ae0f6292eb3d6b6c231920dc1c177b"
+    "bytes": 312235,
+    "sha256": "014207a6a248e470d1fa1d3985ddb9ebce6f02475e4fd4dfe1a3514f302f6983"
   },
   {
     "path": "11 브이로그 제작 설계.docx",
-    "bytes": 46307,
-    "sha256": "8292f57cfd6155224c1836bf4c4f32c4d9bd8d1847382def2fb49e8d765050ba"
+    "bytes": 40135,
+    "sha256": "23ddfa7b922c2506e28b2af438951c50e1ef861e3c12cc094056c4759ea115e7"
   },
   {
     "path": "11 브이로그 제작 설계.md",
-    "bytes": 21036,
-    "sha256": "c27ae633f04d3f5aa9df00035149e154dc8aa1065bcab32a0ff87d34d0244252"
+    "bytes": 5499,
+    "sha256": "359f7cce9e7f7c5cfbe6166f5a3c46ecadb8c0cb542eb4bd180966a56324af09"
   },
   {
     "path": "11 브이로그 제작 설계.pdf",
-    "bytes": 371633,
-    "sha256": "acadbbca06595b162e377e36d40f8ba7d95f28bb765b039eadf9c2c32dfb832c"
+    "bytes": 263004,
+    "sha256": "a69831f563cd5ecbaf814a49961ad5ea3f300e82ed3fe07876af40e80a5fdc33"
   },
   {
     "path": "12 장소 수정과 QA 반영.docx",
-    "bytes": 47177,
-    "sha256": "e551edaff336fddfe87237c8bd1b8fc5a1858df964b0bd692cc32a361446c099"
+    "bytes": 46176,
+    "sha256": "b94b5af39270c0dbf14bae2d0bb7cd3fb1ab30c54f5f0adf5a6a64b86f4ca800"
   },
   {
     "path": "12 장소 수정과 QA 반영.md",
-    "bytes": 21240,
-    "sha256": "e8f7f36f6e41093bc0c95db3c773678ec0e765511ae7c4d267d4be89c0e914e7"
+    "bytes": 19638,
+    "sha256": "5fd878221abaa981fd8b67bddcf8dca66fc9de23c711041b2c143cecb9021d58"
   },
   {
     "path": "12 장소 수정과 QA 반영.pdf",
-    "bytes": 383246,
-    "sha256": "79a5d4f668c12104698d4155fa72c289bcc2f915ba0303c2e28117f678720d3a"
+    "bytes": 376148,
+    "sha256": "4cafdb181dcb3789ede1be5db96c15481f4a077aff59f43bae43a2000daf7070"
+  },
+  {
+    "path": "13 브이로그 편집 기능 정리.docx",
+    "bytes": 41749,
+    "sha256": "daa21aee7e4e8e1d741ba39b92e4765f48cfb6fa7d31bd5a70908e629bc5f5a3"
+  },
+  {
+    "path": "13 브이로그 편집 기능 정리.md",
+    "bytes": 8941,
+    "sha256": "018d90e5b87371d4bb0cf8e1615beaf27d674faa3da6317754d6802886f59c40"
+  },
+  {
+    "path": "13 브이로그 편집 기능 정리.pdf",
+    "bytes": 343097,
+    "sha256": "edd3476a62d4d6a618be63436f58240ec7630e12b0cd304ddd556825516ce5a8"
   },
   {
     "path": "README.md",
-    "bytes": 3867,
-    "sha256": "4bd2b8f1986323ba014df88148c977f88732ab4bcbe7c209f1c78ed2b9da44ec"
+    "bytes": 3830,
+    "sha256": "b31237cc152174935df1ab7640006a0e85012319ac313087856cf9e04189f4cd"
   },
   {
     "path": "UI/05 UI 설계.pdf",
-    "bytes": 15112857,
-    "sha256": "29f822a0e3a11146e57016f8e8fb33d670e9fef666ce1e877b9eba42b5fa5748"
+    "bytes": 15388937,
+    "sha256": "fac779c4cb46fcf78bc35f970c58eaddf237550194fb2ebdac4a460aa620e0a7"
   },
   {
     "path": "UI/05 UI 설계.pptx",
-    "bytes": 13707417,
-    "sha256": "41f855e9b5b9157f695fde4637e12b65d6bbceb779576cc5131f98dd7fa136f4"
+    "bytes": 13756136,
+    "sha256": "373442bcc4d6ece36bf147f8236728325fb50b0a290c8a6eb76e038e3593d393"
   },
   {
     "path": "UI/05 UI 화면 갤러리.html",
-    "bytes": 189729,
-    "sha256": "2c0a848d207c9f215995535286774bcf68451937d76a822aeb33d4a18db7f6e5"
+    "bytes": 196481,
+    "sha256": "093b9ab7d8ff4fdb4ed3d54149926c58197cfe5f3b5645abeeb83e54b74f0b86"
   },
   {
     "path": "UI/05 화면 명세.xlsx",
-    "bytes": 112693,
-    "sha256": "818613fe6af13c2869f1aa3e814b82629568a42033c3b73bb857ccd17a9ab685"
+    "bytes": 114844,
+    "sha256": "16910b22e6c2907feeaa9f2663b28a6b61c677259676ef49f5fe0276412300e5"
   },
   {
     "path": "UI/2026-10-30_UI_통합_검토결과.md",
@@ -161,8 +176,8 @@
   },
   {
     "path": "UI/SVG/UI01_시작과_로그인.svg",
-    "bytes": 95852,
-    "sha256": "7f5ac232c51211f72d7c6524cfc61b19c0412c5d0236d6ad962e29956b7deaf6"
+    "bytes": 1667,
+    "sha256": "1d2e11615ba9311a950cbe54b2f96fcc740a5ae8a93e1daaaddc45e9a666caee"
   },
   {
     "path": "UI/SVG/UI02_가입_동의와_표시명.svg",
@@ -171,18 +186,18 @@
   },
   {
     "path": "UI/SVG/UI03_내_모임.svg",
-    "bytes": 331128,
-    "sha256": "77c8b6558ecc268b05c3c526ab2a483861dab1945bcda39cea19cc1bd43be18f"
+    "bytes": 2348,
+    "sha256": "1bff1f7076a93ab1d1beac62e5268ac78b94957d1bf67f8c065c54a8f932776e"
   },
   {
     "path": "UI/SVG/UI04_모임과_첫_일정_생성.svg",
-    "bytes": 130171,
-    "sha256": "3363a372e0ac83c13e3c1d9262e5619f682434bc51344f2c1b8240279d695e5f"
+    "bytes": 2791,
+    "sha256": "bb6988ee8674095c80f4e37f59b707f4f4b1cf3a28ca9d34d46b6bbe1e2205df"
   },
   {
     "path": "UI/SVG/UI05_모임_달력.svg",
-    "bytes": 93922,
-    "sha256": "18f9a9be46101a0926dd24586340f4ad4e96e7755a3aa90255fc8756f4a80e10"
+    "bytes": 2510,
+    "sha256": "ad333134f97f845a9d1d0252f8c47741c9463e31f8daefe117549c92050e7028"
   },
   {
     "path": "UI/SVG/UI06_일정_추가.svg",
@@ -256,13 +271,13 @@
   },
   {
     "path": "UI/SVG/UI22_내가_올린_기록.svg",
-    "bytes": 2306,
-    "sha256": "0002c381bd9969963819260a36255b9022f14f72c65bb649ababbc71c23a4d3e"
+    "bytes": 2061,
+    "sha256": "c5c2c898e4e2bf63662c5039a85278955bf7d7c266e0602f90485b90696fd427"
   },
   {
     "path": "UI/SVG/UI23_초대·관리.svg",
-    "bytes": 154405,
-    "sha256": "477e110c7e1f295e8f4e16502820f7ef8044e54707531f4b25db9f872624ae76"
+    "bytes": 2076,
+    "sha256": "0cd76581aea7f4296f22c110c28ab053e367dc240c9a10111b29a6e249166966"
   },
   {
     "path": "UI/SVG/UI24_초대_확인과_참여.svg",
@@ -277,7 +292,7 @@
   {
     "path": "UI/SVG/UI26_함께하는_친구.svg",
     "bytes": 2717,
-    "sha256": "2c0af92da150ef0e8cfa7c113fa34b605e08e93a639e52db5b23c7bdb40f8e42"
+    "sha256": "a973981783fc31e57b1a80ddab9ac921800b9b57933f7270687d97f30c950bca"
   },
   {
     "path": "UI/SVG/UI27_모임_나가기와_종료.svg",
@@ -291,13 +306,13 @@
   },
   {
     "path": "UI/SVG/UI29_로그인_수단_관리.svg",
-    "bytes": 1740,
-    "sha256": "6a67ddf800129730c0f5e7957069687fe1096a9b1f43fa10bafedb01c1547e8d"
+    "bytes": 1377,
+    "sha256": "11619a33c474c5f4bfdf4806147c0300a33c73e2cc8c81185dec8e0b6540180e"
   },
   {
     "path": "UI/SVG/UI30_서비스_탈퇴(계정_삭제).svg",
-    "bytes": 1842,
-    "sha256": "7b7b24303703791d7cf68f24f7f119756050671bfd448771eb393b0ceb1c74bd"
+    "bytes": 1593,
+    "sha256": "ca56590ecafc5163305cd73d511936943b20c1f2f450488a6fdc35eb595b499f"
   },
   {
     "path": "UI/SVG/UI31_신고와_개인_차단.svg",
@@ -341,8 +356,8 @@
   },
   {
     "path": "UI/SVG/UI39_날짜_선택.svg",
-    "bytes": 126388,
-    "sha256": "e87b70b5b45ef57e6c69b4fe19d5767b5d942211eee2bc0a74683494bce941ff"
+    "bytes": 1386,
+    "sha256": "cc0e466bf6d581b9ff0dfe5416b1db017b393ec30c001c33f94de506856ea862"
   },
   {
     "path": "UI/SVG/UI40_날짜별_장소_선택.svg",
@@ -371,28 +386,28 @@
   },
   {
     "path": "UI/SVG/UI45_장면_순서·자막.svg",
-    "bytes": 274156,
-    "sha256": "ff35658105231783d9e593efc4a8ffb2fc7370134f521c6583f358860b81c794"
+    "bytes": 2018,
+    "sha256": "12dbc52fbf7b5c94287ec650f67aca9425a3f8f5b96b067850bd95b5e5a8e97a"
   },
   {
     "path": "UI/SVG/UI46_브이로그_전체_구성.svg",
-    "bytes": 88056,
-    "sha256": "260f2aa64b4bf10ce361934647ee0961a27bb2cb3ed996c8887b7bb6c6b7ab61"
+    "bytes": 1544,
+    "sha256": "4816954ec89337e9dfba0d0b2ba14983057bb221f0957a52ad66a2a84f365a57"
   },
   {
     "path": "UI/SVG/UI47_브이로그_전체_미리보기.svg",
-    "bytes": 341770,
-    "sha256": "523b7a54fa5fe4c4e52e1ee277f116878214fb1c83e38c9393f63d1dce221f16"
+    "bytes": 1704,
+    "sha256": "dc7af45c21828266bc3aaf0c080b8baaf01b5c7f102f6ce67276a6077039bc27"
   },
   {
     "path": "UI/SVG/UI48_브이로그_영상_생성.svg",
-    "bytes": 70619,
-    "sha256": "b45bce3a619a0905cf07c5af2a8c4d94b0cef92f5097327a9edc852c0564fadb"
+    "bytes": 1462,
+    "sha256": "65295304ab43be9898923189007960dda2ff46656346798730f3b2df51cbd5dc"
   },
   {
     "path": "UI/SVG/UI49_브이로그_완성·갤러리_저장.svg",
-    "bytes": 1697,
-    "sha256": "16724dc050dec4cb541635944839cf75c142769313cfc6424781e03e09dc9cdb"
+    "bytes": 1595,
+    "sha256": "86f3c94145889f9d8f258c5f0d29879a41e57e480ed2899f33ba04c89444ff14"
   },
   {
     "path": "UI/SVG/UI50_장소_수정.svg",
@@ -400,9 +415,14 @@
     "sha256": "4be29091161022d04ae505d4a9bea974031c42fb0628fa4c50270f022c9c81ac"
   },
   {
+    "path": "UI/SVG/UI51_모든_모임_일정.svg",
+    "bytes": 8357,
+    "sha256": "ae456d5e08a57febea39f9a13fc8974db3af8b223dd411ba52f5b8520ee7c3ed"
+  },
+  {
     "path": "UI/미리보기/UI01_시작과_로그인.png",
-    "bytes": 36635,
-    "sha256": "61b51de8fab763b5f82689e5afbffff6b78b741d28da775871e537f19b877e0c"
+    "bytes": 30348,
+    "sha256": "40a55f57778a9fa029ef24646beac54452a917bdf8fa9bc76e9ad93f33ffedcb"
   },
   {
     "path": "UI/미리보기/UI02_가입_동의와_표시명.png",
@@ -411,18 +431,18 @@
   },
   {
     "path": "UI/미리보기/UI03_내_모임.png",
-    "bytes": 92403,
-    "sha256": "ebb146d96e79870b7f7e095ac1d5e605d765ae0982228a6d0614118adb4a42ba"
+    "bytes": 28271,
+    "sha256": "9e2caf3b362c2c48026c8610f6c942dd1b389f1427cd951531c0c1d6a5b0ce4e"
   },
   {
     "path": "UI/미리보기/UI04_모임과_첫_일정_생성.png",
-    "bytes": 49484,
-    "sha256": "4166abf33da9a71f20fe75de01d0d6221de8d45af0a909b91247a4cf2e8d6901"
+    "bytes": 58902,
+    "sha256": "e3889e02ebc0fa200303443edee346d4dde1c31139358e39a917ba82b3c852c8"
   },
   {
     "path": "UI/미리보기/UI05_모임_달력.png",
-    "bytes": 36265,
-    "sha256": "137173411151d460585e1a43444beb5a870f0ed1ec5824b74124f2fd7101e935"
+    "bytes": 37286,
+    "sha256": "ec2b929331c36620a06e7f61dee37b9f99e47c9722f6e892dd5bf3689d26a0f8"
   },
   {
     "path": "UI/미리보기/UI06_일정_추가.png",
@@ -496,13 +516,13 @@
   },
   {
     "path": "UI/미리보기/UI22_내가_올린_기록.png",
-    "bytes": 33339,
-    "sha256": "2e097681b9056377865aac100bd9a957d302e21f739727d73d3cae9f9d01b882"
+    "bytes": 27665,
+    "sha256": "a20ea3a32b310dfa607c37a4e1b5b1f0919a21e3c38d4616aa0de920d2823630"
   },
   {
     "path": "UI/미리보기/UI23_초대·관리.png",
-    "bytes": 55322,
-    "sha256": "ec2edf1084250f03339e2ded361835186f083f5b9f88b673997ab48e68e6d740"
+    "bytes": 30387,
+    "sha256": "9565063d4eaf204bb82e0c7d6dca2f23f4e283737487a91fd43573876f2e638d"
   },
   {
     "path": "UI/미리보기/UI24_초대_확인과_참여.png",
@@ -516,8 +536,8 @@
   },
   {
     "path": "UI/미리보기/UI26_함께하는_친구.png",
-    "bytes": 35810,
-    "sha256": "7ae79cd3fef6b260b568e4329c4b42fb4bd926a6ab974591a1a149e4493d691f"
+    "bytes": 35795,
+    "sha256": "01667be596de2e1f5e9883fc2c7414567541ce5dc7eaa01f3ee728a946a2bf35"
   },
   {
     "path": "UI/미리보기/UI27_모임_나가기와_종료.png",
@@ -531,13 +551,13 @@
   },
   {
     "path": "UI/미리보기/UI29_로그인_수단_관리.png",
-    "bytes": 23283,
-    "sha256": "30e7ca1debc6a2f6d3f7e4613b1d5cb471c2d13b60ee574b5bedc75a13cb9b36"
+    "bytes": 17708,
+    "sha256": "2a2690b2f3ea14217e00c6491db6ccb40fb56d625a39d3d6525c4571582f4da5"
   },
   {
     "path": "UI/미리보기/UI30_서비스_탈퇴(계정_삭제).png",
-    "bytes": 35201,
-    "sha256": "0c9c570bb81619b67db5ae125dc1a745c1c9125bd61c2bb583dc9ec539a918da"
+    "bytes": 31201,
+    "sha256": "8884e5d9737bade0916cf91e48116e0db67c048ca7f4ff6b3c523626ca2d57b1"
   },
   {
     "path": "UI/미리보기/UI31_신고와_개인_차단.png",
@@ -581,8 +601,8 @@
   },
   {
     "path": "UI/미리보기/UI39_날짜_선택.png",
-    "bytes": 47837,
-    "sha256": "61eb01fa8ba9c1b07fcefd098423cecce52400f4c606b30e3260dd8c3c7a8c8a"
+    "bytes": 20773,
+    "sha256": "0234b59ec6efcb655e5fb2233afc1c919ce6f3d1804bfe9872dca8055be5154a"
   },
   {
     "path": "UI/미리보기/UI40_날짜별_장소_선택.png",
@@ -611,33 +631,38 @@
   },
   {
     "path": "UI/미리보기/UI45_장면_순서·자막.png",
-    "bytes": 80467,
-    "sha256": "849c7f27a0608834c8147808506e0a839402f79f7e3a536eaeb90e6e4acfa7f8"
+    "bytes": 27904,
+    "sha256": "e82adee736305b40d90bcfe06c8a7af280836b42e14024e5bc4a7e798e1b2871"
   },
   {
     "path": "UI/미리보기/UI46_브이로그_전체_구성.png",
-    "bytes": 33386,
-    "sha256": "374b8dac06e2bfdfcd469a340d6ed3d44e0a1f69ac03088fec31f2ac369cfd1d"
+    "bytes": 22675,
+    "sha256": "5ff07794f5abcc1fd4b851cbdf2bbbe55053c3f2a19ba73feaa3e56928c84cc1"
   },
   {
     "path": "UI/미리보기/UI47_브이로그_전체_미리보기.png",
-    "bytes": 93225,
-    "sha256": "46289d2f25c89ed012f2b5dc463a9b91a24e3d59ffc3739eb657c860cac34ee6"
+    "bytes": 24197,
+    "sha256": "9c003db9bb35479a2486f70639ec931ce7fd4e22673c8467c251ddbac49bc116"
   },
   {
     "path": "UI/미리보기/UI48_브이로그_영상_생성.png",
-    "bytes": 27677,
-    "sha256": "9d1eb73797a7bb9f4364686d77423d744e09fee98ffa834164a3554ac890032f"
+    "bytes": 21528,
+    "sha256": "b088021e032118d835d56f89fc41a3deeb5e4c753e600b180d96a90bab52d047"
   },
   {
     "path": "UI/미리보기/UI49_브이로그_완성·갤러리_저장.png",
-    "bytes": 26584,
-    "sha256": "82e82d1b4f96b0dc68b4abf6f152d3afdf7c89c30542eabdd89d518b3aeef795"
+    "bytes": 27076,
+    "sha256": "3c9754b8ce14c81965437ae74d09415c9256ce70dd64db7a6d2cef3f660296a1"
   },
   {
     "path": "UI/미리보기/UI50_장소_수정.png",
     "bytes": 29034,
     "sha256": "a8bc145a0087a9996f3109bc66007cdea8938146e4af16d937c8e0ce72680154"
+  },
+  {
+    "path": "UI/미리보기/UI51_모든_모임_일정.png",
+    "bytes": 38341,
+    "sha256": "543191d460d1030d779e3f0a0a038946af5af4b6b69e75b7540fedc5fead8c8d"
   },
   {
     "path": "UI/브이로그/VLOG-COMPOSE.png",
@@ -1201,8 +1226,8 @@
   },
   {
     "path": "UI/전체 화면 미리보기.jpg",
-    "bytes": 601911,
-    "sha256": "248317843fc391084b865cabbd364f6553624ec2fe49770552037a95b139f0e3"
+    "bytes": 597871,
+    "sha256": "54b4e28aecb80a1f67a64d7bb58cab2ffed7bfe128187f8173627150c3062cee"
   },
   {
     "path": "UI/전체화면정리/P03-1_로그인_로그인.png",
@@ -1700,14 +1725,19 @@
     "sha256": "a3312675595a046cb0cadfde9e91525dd2aa114340deb39a43625e32799338be"
   },
   {
+    "path": "UI/프로토타입 현행 결정 반영 요청.md",
+    "bytes": 5392,
+    "sha256": "ffafa9883a9f25692962954c42cb1ec75f24002417567ac226af8bebcc249efa"
+  },
+  {
     "path": "UI/화면 반영.json",
-    "bytes": 2892,
-    "sha256": "26bfcce8159dea8343fa32504b035ed2c2879945e730b27dadc77f605b7b9bcb"
+    "bytes": 2890,
+    "sha256": "897c698466b56d437c5e9b515ca96a45fa66bbdfa89b33065d7ca2b8f3f5d2ef"
   },
   {
     "path": "UI/화면데이터.json",
-    "bytes": 160317,
-    "sha256": "5915bae8d45d6cc767b642e5b5d7cca6d633b6017d656567adf736cf2746e17b"
+    "bytes": 124260,
+    "sha256": "d7bc97d94630d9423aacee7ac8af053755a3931192d053f6fbef1f797851d2eb"
   },
   {
     "path": "근거/08 APK 실행 검토.docx",
@@ -1717,7 +1747,7 @@
   {
     "path": "근거/08 APK 실행 검토.pdf",
     "bytes": 2934807,
-    "sha256": "1d7a664965075ba1606dee71bc32e11eaa688791a30f990c4802d7ff8aeeb9ea"
+    "sha256": "ae658fb75f1b1b621481915f42a323b1da75f526ade09445a505e8a4eb5a6439"
   },
   {
     "path": "근거/APK/01-entry.json",
@@ -1955,19 +1985,29 @@
     "sha256": "50a1f274a869226cf36f938c115c2a5cc1ef56545405f5733fb7f0315c3c44c2"
   },
   {
+    "path": "기준/Android15 검수 현황.json",
+    "bytes": 4511,
+    "sha256": "e488a1db624e59509d7dc9782d7c3061e5da3fe5b2dbb2ceddc2222e4fc33da9"
+  },
+  {
     "path": "기준/README.md",
     "bytes": 1111,
     "sha256": "023af216399a1c387031d0d1c3b05381593cf1582e5d8b5cda5a46686e90027e"
   },
   {
     "path": "기준/기능명세서.md",
-    "bytes": 1395628,
-    "sha256": "93c4be48e15184a758bc9b105e98d2d4372481b8b60a82c2d4551dbc11ccbe9f"
+    "bytes": 1487501,
+    "sha256": "36021df499c0804826796a82460df48bfcbda6a02732dea65dd7bcbec959ff5c"
   },
   {
     "path": "기준/기준선.json",
-    "bytes": 733,
-    "sha256": "742d81f2d46ff6ad020f8da3d34ac270f961ef8d923fa1a6ef4a67aba90d3f79"
+    "bytes": 725,
+    "sha256": "2cfd7bd5f360b26691ab06d7d0965e547c3829470db7ae111b7d86e2648e10ed"
+  },
+  {
+    "path": "기준/서버 확장 계약 622ee17.json",
+    "bytes": 47235,
+    "sha256": "cb284664300b4ebba1869860b83206dfab50ff57ad0b5a6a713c4b041fe12e52"
   },
   {
     "path": "기준/재사용후보.json",
@@ -1976,8 +2016,8 @@
   },
   {
     "path": "도구/api_contract.py",
-    "bytes": 40967,
-    "sha256": "61c5d9e27d6f41afb4d8182c5769c3da9c317fb70978bb297d2c1c9d857c9ad3"
+    "bytes": 42144,
+    "sha256": "b08def4f2b402b65528df5ade7245c737d5c73d99f7694da42265d4f24ac320c"
   },
   {
     "path": "도구/apply_db_baseline.py",
@@ -1986,8 +2026,8 @@
   },
   {
     "path": "도구/build_design.py",
-    "bytes": 53476,
-    "sha256": "72e74d55962c076038d3d2ca0b5c24361cc0109076b420b8a805f6f4c085ba2d"
+    "bytes": 56900,
+    "sha256": "e34419281ce63bb81b2c9c88ba746fd20a19c2c3d026770821d6369ba9847397"
   },
   {
     "path": "도구/build_evidence.py",
@@ -2036,13 +2076,13 @@
   },
   {
     "path": "도구/data_model.py",
-    "bytes": 24596,
-    "sha256": "566d3ff3a60232e36e5f5442ff8183194a75c75062190655ae882f418a0e9d8b"
+    "bytes": 25268,
+    "sha256": "0cdc0d7f948ec393ebd360a7ee70cb57b8cf95ea0301977cc402dd32e11b22e5"
   },
   {
     "path": "도구/design_model.py",
-    "bytes": 102807,
-    "sha256": "3778de723ca75f8664c5a5836ff3ec6b82d5f9e545a613c5f1ccad0637f3a212"
+    "bytes": 115156,
+    "sha256": "dca2adf3684ba43c9f07c9e4e59c6ec5a9676bdeda36120e8a3bc9324fe3c1ac"
   },
   {
     "path": "도구/diagram_sources.py",
@@ -2051,23 +2091,23 @@
   },
   {
     "path": "도구/document_content.py",
-    "bytes": 19063,
-    "sha256": "c2d09dd71db0a0cfa6b2c42f0d27f0573d2bb15a35ddfcd738f058c5d11b29ec"
+    "bytes": 19081,
+    "sha256": "905a7327b69abaaef3b7638a6ff7e78c65644ee734029d4d9fe73d3389031af7"
   },
   {
     "path": "도구/physical_model.py",
-    "bytes": 24154,
-    "sha256": "8b6bf1cad96f428e5f2ba0c64d588b8fea2d003d925ee885821e5a9265fe41b4"
+    "bytes": 25343,
+    "sha256": "dc0cc035691a97057daf80fad4b33176933491dc5b5538c977143b7d458f2026"
   },
   {
     "path": "도구/prototype_ui.py",
-    "bytes": 37221,
-    "sha256": "9c7db722e4c2fb7406200ee40b043f7087ce42346c1b6fd6b2c3358a45e55f0a"
+    "bytes": 37372,
+    "sha256": "0fc239b6f6ce6a893e023efb8e07d7c9eb28671b4fbe85f130901066298d8824"
   },
   {
     "path": "도구/qa_20261110.py",
-    "bytes": 18419,
-    "sha256": "a49c96bf94dd614290adca4b81626010b2eec517f2c44e927077390a0bc0f0e9"
+    "bytes": 18800,
+    "sha256": "c1cc0e3acce4911ba96554eb738698c459b35807a0622eb9929c13ac95efeb2d"
   },
   {
     "path": "도구/render_artifacts.py",
@@ -2081,8 +2121,8 @@
   },
   {
     "path": "도구/review_20261103.py",
-    "bytes": 17282,
-    "sha256": "6ea6cbd7b0faa1b81f70a0aa1de5df905b0ad58781fe14f7ee43eefe9bf7ad0e"
+    "bytes": 9087,
+    "sha256": "f160e9d5ab8c8199d7a52eecf86c738a473dd606b4f9c7344b168005e64c9812"
   },
   {
     "path": "도구/review_vlog_edit_feedback.py",
@@ -2096,33 +2136,33 @@
   },
   {
     "path": "도구/revision_content.py",
-    "bytes": 43796,
-    "sha256": "d2459f6bb5cf28c2e4b49f1061c3107b29453182cbd359ed750520c8bc48d1d1"
+    "bytes": 43977,
+    "sha256": "3e633615b3cfd420581033448136467f19e9e67c4e76056cb3dc07d5a055bad3"
   },
   {
     "path": "도구/schema_guards.sql",
     "bytes": 14347,
-    "sha256": "7fadfce44ccebbf0725e51cf3cd094a1a5b26152cc4ded8e641affd905c92b12"
+    "sha256": "9d08e283acf0654c083b4c831f087768c426be82c0e5bb7bdab704418ad3c198"
   },
   {
     "path": "도구/validate_artifacts.py",
-    "bytes": 14373,
-    "sha256": "de3af5d4496101b1777c735e56b501e62ab92bfbde64178eecb976d4d8679590"
+    "bytes": 16335,
+    "sha256": "d59692cd34c2de1f82582158b0c6df72d9c4c7574525c2b1c6dc728574f2072a"
   },
   {
     "path": "도구/validate_qa_revision.py",
-    "bytes": 4934,
-    "sha256": "665256b01bd232784c5ee9c5513cf328ee48b4d3a30f9863756a83ed028630cc"
+    "bytes": 5918,
+    "sha256": "b041a1169a925d986692d4932f0fc64aca9c6ec702f884a485fcb0ae9debc8d0"
   },
   {
     "path": "도구/verify_contracts.py",
-    "bytes": 12346,
-    "sha256": "68068155c57f8b29ac15875aec2f24c97c45ad12198104af745f59c8df6ee85b"
+    "bytes": 13366,
+    "sha256": "d6d65a9128aea8d1dfc57b2c1128fa26e00f3d882ca9211791ff8571156f017f"
   },
   {
     "path": "도구/verify_db.py",
-    "bytes": 5239,
-    "sha256": "92dadbdd1669163cb55a9a001bd04aefe439843cd8d5b1c6580ac0e003aae53a"
+    "bytes": 5243,
+    "sha256": "f0d4d8d699f86d131afc9aacf7f884f34f6e29f63728892775333db57a55122f"
   },
   {
     "path": "도구/verify_standalone.py",
@@ -2131,23 +2171,23 @@
   },
   {
     "path": "도구/vlog_revision.py",
-    "bytes": 37796,
-    "sha256": "12f2377dfa5b2b5e7ea0a759ea9c4a5ad9b00c3d7edb17bbaa12a781d61467e7"
+    "bytes": 22449,
+    "sha256": "4d03f8ab162d68692eb421643125c70ad528669a324c22d75ed436c71aa10d85"
   },
   {
     "path": "도구/workflow_readable.py",
-    "bytes": 16800,
-    "sha256": "ccef7336eac1087ac4def5843b407510f5d70457f2610d03f801d3afe529428a"
+    "bytes": 17619,
+    "sha256": "59db17f22c3ce4786b8c5a15641e6622ff1a19b855339e30ea28515eee1daae9"
   },
   {
     "path": "도구/사용법.txt",
-    "bytes": 10896,
-    "sha256": "607947670ce9e2f982950c72077139eac171b023987665168e27be265b90d2c6"
+    "bytes": 10670,
+    "sha256": "6368699a04933aa228375118be77aadf7ba151cdaf3725922e89e93008bd88d8"
   },
   {
     "path": "부록/DB/001_initial.sql",
-    "bytes": 56549,
-    "sha256": "0f67399af58f9812375878a4e0d7d265b0eeb8d9b6355b662a93e8225c17098a"
+    "bytes": 58620,
+    "sha256": "83bc3a1687a853fc15807a2e6398d04ad811a5ece1b79e727cfd317e1712f149"
   },
   {
     "path": "부록/DB/002_service_roles.sql",
@@ -2157,22 +2197,22 @@
   {
     "path": "부록/DB/003_contract_checks.sql",
     "bytes": 17781,
-    "sha256": "fb0e3c4738011c2c8a4380d1a734dc6692164f6170bd9c39b2aa04a877b455f6"
+    "sha256": "da8a6b5ebd9b7a7c4cf04a473cbb7d0926daf47e2d8c8e44a799236a8bcfd637"
   },
   {
     "path": "부록/DB/검증결과.json",
-    "bytes": 2624,
-    "sha256": "4a7488c11dcd7ab4c7cd1fc5392b80395766daf957c77f5880993c6f72243d73"
+    "bytes": 2627,
+    "sha256": "9ce4d82a86406984de36e22aea70657e8daa86c96014e4e2c7e64801dd425149"
   },
   {
     "path": "부록/DB/실제 컬럼 사전.json",
-    "bytes": 44956,
-    "sha256": "13e2d889f02ae44e4451522db48355bec79d55d5e85cbe5b9cb56f9efe623371"
+    "bytes": 47510,
+    "sha256": "e0a9afa403e9b74531325dc6be5fadcf29ec72e24f1774e13681c58cc6b68013"
   },
   {
     "path": "부록/DB/컬럼 및 제약.xlsx",
-    "bytes": 22407,
-    "sha256": "ba2640c9e1d2c359e2f3d29fe205b8e416d7cbe036942f1a4aeb96effb930c5a"
+    "bytes": 23178,
+    "sha256": "8ddebe380100e4a77492cb006e88076f66d35e59216eb56e93aa0c4f45607936"
   },
   {
     "path": "부록/ERD.png",
@@ -2191,18 +2231,18 @@
   },
   {
     "path": "부록/openapi.json",
-    "bytes": 473117,
-    "sha256": "0a7acbe338809186d13d98590ee62216234db6fbbc4ffc8bb64e0a30fb455f97"
+    "bytes": 524615,
+    "sha256": "38f24bef602cbac7e196b443d923096a5438837b025fee4dffe23110b98da863"
   },
   {
     "path": "부록/계약예제/examples.json",
-    "bytes": 57126,
-    "sha256": "73836bcf6b026a6d33947c0acd66b229325aebce934ea8f950b15c12b92ff05d"
+    "bytes": 58987,
+    "sha256": "8f96dcc35d685446d7ee8304969620b70f6abb3ab6a43d3b96623266a1b8e479"
   },
   {
     "path": "부록/계약예제/검증결과.json",
-    "bytes": 31023,
-    "sha256": "ab57ea0480e285e49ef1eb0cb2a21a1e062410c245a0041f6e9f500630af6107"
+    "bytes": 32425,
+    "sha256": "1a2f57ac272ea6f9aba9842f939820acd620c3dd9fc60e17b9aeb236c6e42e86"
   },
   {
     "path": "부록/계약예제/업로드.http",
@@ -2211,8 +2251,8 @@
   },
   {
     "path": "부록/다이어그램/01_업로드와보관.mmd",
-    "bytes": 728,
-    "sha256": "63f193844a6d7736b9c89af33ffbd29bc302333f3a03f0b65387630e8fc69207"
+    "bytes": 739,
+    "sha256": "5c42e4f7558a4a473eb2ed5e5253f853cbccc6e530ae0afde2e2129fea3aad3c"
   },
   {
     "path": "부록/다이어그램/02_초대참여종료.mmd",
@@ -2231,8 +2271,8 @@
   },
   {
     "path": "부록/독립 패키지 검증.json",
-    "bytes": 2029,
-    "sha256": "d76c45f711f9bce69d3cb56c7245fbc9b60bb99e3341f28500792cd3b734afd1"
+    "bytes": 2025,
+    "sha256": "937724a6ac0a6214cb0f240e3bd64a590861b48f04594faa627afc03ebb49dad"
   },
   {
     "path": "부록/브이로그서버계약_59aca32.json",
@@ -2241,13 +2281,13 @@
   },
   {
     "path": "부록/산출물 검증.json",
-    "bytes": 19364,
-    "sha256": "08673beef1e472e33261ece90a4a56ab614b730cc4b5f518dfbe5cd7f347144d"
+    "bytes": 20306,
+    "sha256": "60e36b1ba4d067068980b7e56e544c70f0169bf8eb18dcf9d1b29f2d1de29130"
   },
   {
     "path": "부록/설계서 표지 미리보기.png",
-    "bytes": 395730,
-    "sha256": "4e56e517aa3934b9a9f095ae7787405e269d9509753b5c73917eb345997a4ee7"
+    "bytes": 425729,
+    "sha256": "2fc4cae4bd94243cd3a6f7ab2822c050f28b5843d9eafbedfddb1f1ebade8a98"
   },
   {
     "path": "부록/아키텍처.png",
@@ -2261,23 +2301,23 @@
   },
   {
     "path": "부록/열람용HTML/01 시스템 설계.html",
-    "bytes": 21430,
-    "sha256": "f74173ecd7c18f8fee98f92edf7c5cf6f2dfb39ab68c14ff6f45ea3d290d50e3"
+    "bytes": 19390,
+    "sha256": "2fa71352f9e131e05051a79bc203e7d57749ee8f1b4efc01e77114a649aaa224"
   },
   {
     "path": "부록/열람용HTML/02 데이터베이스 설계.html",
-    "bytes": 65731,
-    "sha256": "df1f9d495a2ca0a58442ce36f8e44d9e6bfce87a636a7de8fe3074951cf77a8a"
+    "bytes": 64979,
+    "sha256": "d4673fe1fee30c1475918de82160f8afafcecabf64c29bb0efd91e120ca1fc81"
   },
   {
     "path": "부록/열람용HTML/03 API 연동 설계.html",
-    "bytes": 42315,
-    "sha256": "e97de5fdbea9f55bf0774757d44bfdf2719fcf754529884a3705c76511ef9844"
+    "bytes": 45717,
+    "sha256": "52704fcb7c5cdeffd9bfcc9f39d4847fd9745e00be74aab527fa44ffe4b85cc5"
   },
   {
     "path": "부록/열람용HTML/04 업무 흐름 상태 설계.html",
-    "bytes": 25237,
-    "sha256": "926ad08de6465752c5f3ae38900c1b02f577ac78bd3c9c15313a4d046067504d"
+    "bytes": 24368,
+    "sha256": "52f89018356f36fa3306ebe217c95148ff4756609e08448902f6b89b63579e1c"
   },
   {
     "path": "부록/열람용HTML/08 APK 실행 검토.html",
@@ -2286,23 +2326,28 @@
   },
   {
     "path": "부록/열람용HTML/09 구현 계약 보완.html",
-    "bytes": 34691,
-    "sha256": "357c658c1d8835525279cd608e075c4e879fc0ff9ef618d7e0c859f7762485f6"
+    "bytes": 34696,
+    "sha256": "28b8f9124af1bac1b6173acc174d23364c5ce70e9aecef60677f188617e7b569"
   },
   {
     "path": "부록/열람용HTML/10 프로토타입 대조 보완.html",
-    "bytes": 20911,
-    "sha256": "8889de864d535663ea3d9aef57a00eaeb620913c66b7a9e3b6118925ab1af8ae"
+    "bytes": 12617,
+    "sha256": "acf797a911921117f989d42ac470713b612fd3bcc1618f67e25eab28a316c1dc"
   },
   {
     "path": "부록/열람용HTML/11 브이로그 제작 설계.html",
-    "bytes": 21912,
-    "sha256": "d6a35ecf31bc85e96f90dd6fd11d68ac6d5c56617dffb5918b4b5ae8dc8aa9af"
+    "bytes": 6707,
+    "sha256": "5eae92fff378f8e797496c4a1f57e73b2b38fa87d3cdbb9708ab49dc3d8b8e38"
   },
   {
     "path": "부록/열람용HTML/12 장소 수정과 QA 반영.html",
-    "bytes": 24322,
-    "sha256": "379ce7b3577a6d38e9414abe3f62a90e4b1e9fa0b6730ea51ac833824039b974"
+    "bytes": 22122,
+    "sha256": "6f4154972e37863fd67531acfd25c3cee5e896bac4d085397df63557f4294452"
+  },
+  {
+    "path": "부록/열람용HTML/13 브이로그 편집 기능 정리.html",
+    "bytes": 10845,
+    "sha256": "4c0cbe5cbadc58323ad4cb26f9159bf8209f46f679b2bf575ea82869e4c8653a"
   },
   {
     "path": "참고 자료/지도_API_연동_설계안.md",

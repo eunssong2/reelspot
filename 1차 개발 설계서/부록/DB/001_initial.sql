@@ -1,4 +1,4 @@
--- At that place v0.4.1(기능명세서 v3.1) / PostgreSQL 16. Empty database baseline, not application implementation.
+-- At that place v0.7(기능명세서 v3.5) / PostgreSQL 16. Empty database baseline, not application implementation.
 -- Run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f 001_initial.sql
 BEGIN;
 SELECT pg_advisory_xact_lock(74103102);
@@ -191,6 +191,7 @@ CREATE TABLE groups (
   owner_user_id uuid NOT NULL REFERENCES users(id) ON DELETE NO ACTION,
   status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','closed')),
   cover_asset_id uuid,
+  invite_rotation_paused boolean NOT NULL DEFAULT false,
   activity_at timestamptz NOT NULL DEFAULT now(),
   completed_bytes bigint NOT NULL DEFAULT 0 CHECK (completed_bytes >= 0),
   reserved_bytes bigint NOT NULL DEFAULT 0 CHECK (reserved_bytes >= 0),
@@ -210,6 +211,8 @@ COMMENT ON COLUMN groups.owner_user_id IS '참조 대상';
 COMMENT ON COLUMN groups.status IS '종료 후 재개 불가';
 
 COMMENT ON COLUMN groups.cover_asset_id IS 'assets 생성 후 지연 FK 연결';
+
+COMMENT ON COLUMN groups.invite_rotation_paused IS '마지막 코드 수동 취소 후 자동 교체 일시 중지';
 
 COMMENT ON COLUMN groups.activity_at IS '공동 활동만 갱신';
 
@@ -1043,6 +1046,58 @@ COMMENT ON COLUMN export_jobs.expires_at IS '준비결과24h, 실제 GET은 재�
 
 CREATE INDEX export_jobs_user_idx ON export_jobs(user_id,created_at DESC);
 
+CREATE TABLE vlog_jobs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE NO ACTION,
+  group_id uuid NOT NULL REFERENCES groups(id) ON DELETE NO ACTION,
+  title text NOT NULL,
+  timeline jsonb NOT NULL,
+  state text NOT NULL DEFAULT 'queued' CHECK (state IN ('queued','rendering','complete','failed','cancelled','expired')),
+  progress double precision NOT NULL DEFAULT 0 CHECK(progress>=0 AND progress<=1),
+  error_code text,
+  cleaned_at timestamptz,
+  object_key text,
+  duration_sec double precision NOT NULL,
+  lease uuid,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL DEFAULT now()+interval '24 hours'
+);
+
+COMMENT ON COLUMN vlog_jobs.id IS '내부 불변 식별자';
+
+COMMENT ON COLUMN vlog_jobs.user_id IS '참조 대상';
+
+COMMENT ON COLUMN vlog_jobs.group_id IS '참조 대상';
+
+COMMENT ON COLUMN vlog_jobs.title IS '브이로그 제목';
+
+COMMENT ON COLUMN vlog_jobs.timeline IS '생성 당시 원본과 편집 타임라인';
+
+COMMENT ON COLUMN vlog_jobs.state IS '서버 렌더 수명 주기';
+
+COMMENT ON COLUMN vlog_jobs.progress IS '실제 처리 진행률';
+
+COMMENT ON COLUMN vlog_jobs.error_code IS '실패 코드';
+
+COMMENT ON COLUMN vlog_jobs.cleaned_at IS '임시 파일 정리 시각';
+
+COMMENT ON COLUMN vlog_jobs.object_key IS '비공개 결과 위치';
+
+COMMENT ON COLUMN vlog_jobs.duration_sec IS '출력 길이(초)';
+
+COMMENT ON COLUMN vlog_jobs.lease IS '워커 처리권';
+
+COMMENT ON COLUMN vlog_jobs.created_at IS '서버 생성 시각';
+
+COMMENT ON COLUMN vlog_jobs.updated_at IS '마지막 상태 변경';
+
+COMMENT ON COLUMN vlog_jobs.expires_at IS '임시 결과 보관 기한';
+
+CREATE INDEX vlog_jobs_pending ON vlog_jobs(created_at) WHERE state='queued';
+
+CREATE INDEX vlog_jobs_user ON vlog_jobs(user_id,created_at);
+
 ALTER TABLE groups ADD CONSTRAINT groups_cover_asset_fk FOREIGN KEY(cover_asset_id) REFERENCES assets(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED;
 
 ALTER TABLE users ADD CONSTRAINT users_avatar_asset_fk FOREIGN KEY(avatar_asset_id) REFERENCES assets(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED;
@@ -1094,7 +1149,7 @@ BEGIN
    RAISE EXCEPTION 'MEMBERSHIP_NOT_ACTIVE' USING ERRCODE='23514';
  END IF;
  SELECT count(*) INTO active_count FROM memberships WHERE group_id=NEW.group_id AND ended_at IS NULL AND id<>NEW.id;
- IF active_count>=10 THEN RAISE EXCEPTION 'CAPACITY_FULL' USING ERRCODE='23514'; END IF;
+ IF active_count>=15 THEN RAISE EXCEPTION 'CAPACITY_FULL' USING ERRCODE='23514'; END IF;
  SELECT count(*) INTO active_count FROM memberships WHERE user_id=NEW.user_id AND ended_at IS NULL AND id<>NEW.id;
  IF active_count>=100 THEN RAISE EXCEPTION 'GROUP_LIMIT' USING ERRCODE='23514'; END IF;
  RETURN NEW;
