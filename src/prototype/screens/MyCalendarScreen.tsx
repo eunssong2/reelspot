@@ -32,6 +32,10 @@ const GROUP_COLORS = ['#F1706B', '#5B8DEF', '#3FB984', '#F2A33C', '#9B7BEF', '#E
 interface Row {
   key: string;
   groupId: string;
+  tripId: string;
+  scheduleId: string;
+  itineraryId?: string;
+  dayId: string;
   groupName: string;
   color: string;
   title: string;
@@ -46,7 +50,7 @@ interface Row {
  * 일정을 고치는 기능은 두지 않는다(확인 전용). 누르면 그 모임의 그날 화면으로 간다.
  */
 export function MyCalendarScreen({ nav }: { nav: Nav }) {
-  const { groups, schedulesOf, loadCalendar } = useGroups();
+  const { groups, schedulesOf, loadCalendar, ensureItinerary } = useGroups();
   const { itineraries } = usePrototype();
   const toast = useToast();
   const today = todayKst();
@@ -55,6 +59,8 @@ export function MyCalendarScreen({ nav }: { nav: Nav }) {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const requestId = useRef(0);
+  // 모임별로 보기: 'all' 이면 모든 모임, 아니면 그 모임의 일정만 보여 준다.
+  const [filter, setFilter] = useState<string>('all');
 
   // 모임마다 그 달을 조회한다. 하나라도 실패하면 안내만 띄우고, 받아 둔 모임은 그대로 보여 준다.
   const fetchMonth = useCallback(
@@ -76,12 +82,16 @@ export function MyCalendarScreen({ nav }: { nav: Nav }) {
   );
 
   // 모든 모임의 일정을 하루 단위로 풀어 한 배열에 모은다.
-  const rows: Row[] = groups.flatMap((g: Group, gi) =>
+  const allRows: Row[] = groups.flatMap((g: Group, gi) =>
     schedulesOf(g.id).flatMap((sc) => {
       const itinerary = sc.itineraryId ? itineraries.find((it) => it.id === sc.itineraryId) : undefined;
       return dayEntriesOf(sc, itinerary).map((en) => ({
         key: `${sc.id}::${en.dayId}`,
         groupId: g.id,
+        tripId: g.tripId,
+        scheduleId: sc.id,
+        itineraryId: sc.itineraryId,
+        dayId: en.dayId,
         groupName: g.name,
         color: GROUP_COLORS[gi % GROUP_COLORS.length],
         title: en.title,
@@ -92,6 +102,21 @@ export function MyCalendarScreen({ nav }: { nav: Nav }) {
     }),
   );
 
+  const rows = allRows.filter((r) => filter === 'all' || r.groupId === filter);
+  /**
+   * 모임을 고르면 그 모임의 일정이 있는 달로 달력을 옮긴다.
+   * 오늘 이후에 가장 가까운 일정이 있으면 그 날짜로, 없으면 가장 최근 지난 일정으로 간다.
+   * 일정이 하나도 없으면 지금 보던 달에 그대로 둔다.
+   */
+  const pickFilter = (id: string) => {
+    setFilter(id);
+    if (id === 'all') return;
+    const dates = allRows.filter((r) => r.groupId === id).map((r) => r.date).sort();
+    const target = dates.find((d) => d >= today) ?? dates[dates.length - 1];
+    if (!target) return;
+    setMonth(monthKey(target));
+    setSelected(target);
+  };
   const rowsOn = (date: DateStr) => rows.filter((r) => isWithin(date, r.date, r.date));
   const dayList = rowsOn(selected);
   const monthRows = rows.filter((r) => monthKey(r.date) === month);
@@ -105,16 +130,31 @@ export function MyCalendarScreen({ nav }: { nav: Nav }) {
       <View style={styles.topBar}>
         <View style={styles.flex}>
           <Text style={styles.topTitle}>달력</Text>
-          <Text style={styles.topSub}>
-            {groups.length ? '모든 모임의 일정을 한눈에' : '참여 중인 모임이 없어요'}
-          </Text>
+          {groups.length === 0 ? <Text style={styles.topSub}>참여 중인 모임이 없어요</Text> : null}
         </View>
-        {monthRows.length ? (
-          <View style={styles.monthCount}>
-            <Text style={styles.monthCountText}>이 달 {monthRows.length}개</Text>
-          </View>
-        ) : null}
       </View>
+
+      {groups.length > 1 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterRow}>
+          {[{ id: 'all', name: '모든 모임', color: undefined as string | undefined }, ...groups.map((g, gi) => ({ id: g.id, name: g.name, color: GROUP_COLORS[gi % GROUP_COLORS.length] as string | undefined }))].map((g) => {
+            const on = filter === g.id;
+            return (
+              <Pressable
+                key={g.id}
+                onPress={() => pickFilter(g.id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: on }}
+                style={[styles.filterChip, on && styles.filterChipOn]}
+              >
+                {g.color ? <View style={[styles.filterDot, { backgroundColor: g.color }]} /> : null}
+                <Text style={[styles.filterText, on && styles.filterTextOn]} numberOfLines={1}>
+                  {g.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      ) : null}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.calendarCard}>
@@ -192,7 +232,7 @@ export function MyCalendarScreen({ nav }: { nav: Nav }) {
             }}
           />
 
-          {legend.length > 1 ? (
+          {filter === 'all' && legend.length > 1 ? (
             <View style={styles.legend}>
               {legend.map((g) => (
                 <View key={g.id} style={styles.legendItem}>
@@ -236,7 +276,16 @@ export function MyCalendarScreen({ nav }: { nav: Nav }) {
           dayList.map((row) => (
             <Pressable
               key={row.key}
-              onPress={() => nav.push({ name: 'groupCalendar', groupId: row.groupId, focusDate: row.date })}
+              onPress={() =>
+                // 모임방이 아니라 그 일정(그날의 장소 목록)으로 간다. 아직 장소 계획이 없는 일정은 빈 계획을 만들어 연다.
+                nav.push({
+                  name: 'itineraryDay',
+                  tripId: row.tripId,
+                  itineraryId: row.itineraryId ?? ensureItinerary(row.scheduleId),
+                  dayId: row.dayId,
+                  groupId: row.groupId,
+                })
+              }
               accessibilityRole="button"
               accessibilityLabel={`${row.groupName} ${row.title} 열기`}
               style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
@@ -287,8 +336,6 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 8 },
   topTitle: { fontSize: 20, fontWeight: '800', color: colors.text, letterSpacing: -0.4 },
   topSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  monthCount: { backgroundColor: colors.primarySoft, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 7 },
-  monthCountText: { fontSize: 12, fontWeight: '800', color: colors.primary },
 
   content: { paddingHorizontal: GUTTER, paddingBottom: 24, gap: 14 },
 
@@ -316,6 +363,13 @@ const styles = StyleSheet.create({
   dotOff: { opacity: 0.3 },
   more: { fontSize: 9, fontWeight: '700', color: colors.textMuted, marginLeft: 1 },
 
+  filterScroll: { flexGrow: 0, marginBottom: 12 },
+  filterRow: { gap: 8, paddingHorizontal: GUTTER, paddingVertical: 2, alignItems: 'center' },
+  filterChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 14, borderRadius: 17, backgroundColor: colors.surface },
+  filterChipOn: { backgroundColor: colors.primary },
+  filterDot: { width: 7, height: 7, borderRadius: 3.5 },
+  filterText: { fontSize: 13, fontWeight: '700', color: colors.textSub, maxWidth: 120 },
+  filterTextOn: { color: colors.onPrimary },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingHorizontal: 6, paddingTop: 10 },
   legendItem: {
     flexDirection: 'row',

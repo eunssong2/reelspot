@@ -120,7 +120,7 @@ export function VlogFlowScreen({ nav, group }: Props) {
       body = <MediaStep ctx={ctx} placeKey={cursor.placeKey} />;
       break;
     case 'template':
-      body = <TemplateStep key={cursor.placeKey} ctx={ctx} placeKey={cursor.placeKey} />;
+      body = <TemplateStep key={cursor.placeKey} ctx={ctx} placeKey={cursor.placeKey} returnTo={cursor.returnTo} />;
       break;
     case 'length':
       body = <LengthStep ctx={ctx} placeKey={cursor.placeKey} />;

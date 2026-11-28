@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { useEffect, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SafeImage } from '../../demo/SafeImage';
@@ -31,6 +32,8 @@ import {
   motionAt,
   placeLabelOpacity,
   stickerXY,
+  titleStyleOf,
+  type TitleStylePreset,
   stickerPx,
   type AnimFrame,
   type CaptionStyle,
@@ -157,6 +160,8 @@ interface CanvasProps {
    * 끄면(기본) 멈춘 그림을 보여 준다 — 편집 화면·완성본 카드가 그렇다.
    */
   animate?: boolean;
+  /** 동영상 칸을 재생할지(기본 재생). 미리보기를 멈추면 영상도 멈춘다. */
+  videoPlaying?: boolean;
   /** 분할 장면에서 고른 칸(편집 화면). 테두리로 표시한다. */
   selectedCell?: number;
   /** 분할 장면의 칸을 눌렀을 때(편집 화면) */
@@ -167,13 +172,38 @@ interface CanvasProps {
  * 한 칸(또는 이어 재생 장면)의 사진·동영상 커버를 화면 틀에 놓는다: 직접 자른 영역, 채우기/맞춤, 여백, 색감 효과.
  * 장면 미리보기와 편집 화면이 같은 그림을 쓴다.
  */
-export function ClipLayer({ clip, width, height, motion }: { clip: TimelineClip; width: number; height: number; motion?: MotionFrame }) {
+/**
+ * 실제 동영상 파일이 있는 칸의 재생 화면. 소리 없이 반복해서 재생한다(미리보기).
+ * 쓰는 구간의 시작 위치와 재생 속도를 따른다. playing 이 false 면 멈춘다.
+ */
+function ClipVideo({ clip, playing, fit }: { clip: TimelineClip; playing: boolean; fit: 'fill' | 'contain' }) {
+  const player = useVideoPlayer(clip.videoSource as number, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.playbackRate = clip.speed || 1;
+    if (clip.startSec > 0) p.currentTime = clip.startSec;
+  });
+  useEffect(() => {
+    try {
+      if (playing) player.play();
+      else player.pause();
+    } catch {
+      // 재생기가 정리된 뒤에는 무시한다.
+    }
+  }, [player, playing]);
+  return <VideoView player={player} nativeControls={false} contentFit={fit === 'contain' ? 'contain' : 'cover'} style={StyleSheet.absoluteFill} pointerEvents="none" />;
+}
+
+export function ClipLayer({ clip, width, height, motion, videoPlaying = true }: { clip: TimelineClip; width: number; height: number; motion?: MotionFrame; videoPlaying?: boolean }) {
   const f = clip.frame;
   const css = filterOf(clip.filter).css;
   const contain = f.fit === 'contain';
   const nat = useNaturalSize(f.crop ? clip.image : undefined);
   let photo;
-  if (f.crop && nat.known) {
+  if (clip.kind === 'video' && clip.videoSource !== undefined) {
+    // 실제 동영상 파일이 있으면 표지 사진 대신 영상을 재생한다.
+    photo = <ClipVideo clip={clip} playing={videoPlaying} fit={f.fit} />;
+  } else if (f.crop && nat.known) {
     // 자른 영역(rw×rh 화소)이 틀에 채우기/맞춤으로 들어가도록 사진 전체를 키우고 영역 중심을 틀 가운데에 둔다.
     const rw = f.crop.w * nat.w;
     const rh = f.crop.h * nat.h;
@@ -225,24 +255,256 @@ export const sceneClipAt = (scene: TimelineScene, localSec: number): number => {
 };
 
 /**
+ * 제목 화면(날짜 제목·끝 화면) 한 장. 모양(preset.id)마다 배치와 장식이 다르다.
+ * 크기는 출력 화면(가로 1080 기준 px)으로 정한 뒤 shrink 만큼 줄여 그린다.
+ * 장면 미리보기와 스타일 고르기의 작은 그림이 같은 코드를 쓴다.
+ */
+export function TitleCard({
+  preset,
+  date,
+  name,
+  image,
+  day,
+  weekday,
+  width,
+  height,
+  shrink,
+  minFont = 0,
+}: {
+  preset: TitleStylePreset;
+  date?: string;
+  name: string;
+  image?: string | number;
+  day?: number;
+  weekday?: string;
+  width: number;
+  height: number;
+  /** 출력 화면 대비 줄인 비율 */
+  shrink: number;
+  /** 작은 그림에서 글자가 사라지지 않게 하는 최소 글자 크기 */
+  minFont?: number;
+}) {
+  const fs = (px: number) => Math.max(minFont, px * shrink);
+  const { bg, accent, text, sub } = preset;
+  const dayLabel = day ? `DAY ${day}` : undefined;
+  const dayNo = day ? String(day).padStart(2, '0') : undefined;
+  const root = [styles.canvas, { width, height, backgroundColor: bg }];
+  const T = (style: object, children: ReactNode, lines = 3) => (
+    <Text allowFontScaling={false} numberOfLines={lines} style={[{ position: 'absolute', left: '6%', right: '6%', textAlign: 'center' as const }, style]}>
+      {children}
+    </Text>
+  );
+  const Photo = ({ dim }: { dim?: number }) =>
+    image !== undefined ? (
+      <>
+        <SafeImage source={image} style={StyleSheet.absoluteFill} compact />
+        {dim ? <View style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(0,0,0,${dim})` }]} /> : null}
+      </>
+    ) : null;
+
+  switch (preset.id) {
+    case 'frame':
+      // 겹 테두리 액자: 위에 DAY, 가운데 제목, 아래에 날짜
+      return (
+        <View style={root}>
+          <View style={{ position: 'absolute', left: '6%', right: '6%', top: '4.5%', bottom: '4.5%', borderWidth: Math.max(1, 5 * shrink), borderColor: accent }} />
+          <View style={{ position: 'absolute', left: '8%', right: '8%', top: '6%', bottom: '6%', borderWidth: Math.max(0.5, 1.5 * shrink), borderColor: accent }} />
+          {dayLabel ? T({ top: '24%', fontSize: fs(40), letterSpacing: fs(8), fontWeight: '700', color: accent }, dayLabel, 1) : null}
+          {T({ top: '42%', fontSize: fs(70), fontWeight: '800', color: text, left: '12%', right: '12%' }, name)}
+          {date ? (
+            <>
+              <View style={{ position: 'absolute', top: '68%', left: '44%', width: '12%', height: Math.max(1, 3 * shrink), backgroundColor: accent }} />
+              {T({ top: '71%', fontSize: fs(38), letterSpacing: fs(4), color: sub, fontWeight: '600' }, `${date}${weekday ? ` ${weekday}` : ''}`, 1)}
+            </>
+          ) : null}
+        </View>
+      );
+    case 'daynum':
+      // 아주 큰 날짜 번호를 바탕 장식으로
+      return (
+        <View style={root}>
+          {dayNo ? (
+            <Text allowFontScaling={false} style={{ position: 'absolute', left: 0, right: 0, top: '12%', textAlign: 'center', fontSize: fs(560), fontWeight: '900', color: accent, opacity: 0.2, lineHeight: fs(600) }}>
+              {dayNo}
+            </Text>
+          ) : null}
+          {dayLabel ? T({ top: '46%', fontSize: fs(42), letterSpacing: fs(10), fontWeight: '800', color: accent }, dayLabel, 1) : null}
+          {T({ top: '52%', fontSize: fs(72), fontWeight: '800', color: text, left: '10%', right: '10%' }, name)}
+          {date ? T({ top: '70%', fontSize: fs(38), color: sub, fontWeight: '600' }, `${date}${weekday ? ` · ${weekday}` : ''}`, 1) : null}
+        </View>
+      );
+    case 'polaroid': {
+      // 어두운 바탕에 살짝 기운 폴라로이드: 그날의 사진 + 아래 흰 칸에 제목과 날짜
+      const pad = width * 0.045;
+      return (
+        <View style={root}>
+          <View style={{ position: 'absolute', left: '12%', right: '12%', top: '12%', bottom: '14%', backgroundColor: '#FFFFFF', transform: [{ rotate: '-3deg' }], boxShadow: '0 6px 16px rgba(0,0,0,0.5)' }}>
+            <View style={{ position: 'absolute', left: pad, right: pad, top: pad, bottom: '26%', backgroundColor: '#D9D9D9', overflow: 'hidden' }}>
+              <Photo />
+            </View>
+            <Text allowFontScaling={false} numberOfLines={2} style={{ position: 'absolute', left: pad, right: pad, bottom: '11%', textAlign: 'center', fontSize: fs(52), fontWeight: '800', color: text }}>
+              {name}
+            </Text>
+            {date ? (
+              <Text allowFontScaling={false} numberOfLines={1} style={{ position: 'absolute', left: pad, right: pad, bottom: '4%', textAlign: 'center', fontSize: fs(30), color: sub, fontWeight: '600' }}>
+                {date}
+              </Text>
+            ) : null}
+          </View>
+        </View>
+      );
+    }
+    case 'ticket': {
+      // 티켓 모양 카드: 위 DAY, 점선, 아래 제목·날짜, 양옆 홈
+      const notch = width * 0.07;
+      const top = height * 0.3;
+      const h = height * 0.4;
+      return (
+        <View style={root}>
+          <View style={{ position: 'absolute', left: '9%', right: '9%', top, height: h, backgroundColor: '#FFFFFF', borderRadius: width * 0.04, overflow: 'hidden' }}>
+            {dayLabel ? (
+              <Text allowFontScaling={false} style={{ position: 'absolute', left: 0, right: 0, top: '14%', textAlign: 'center', fontSize: fs(46), letterSpacing: fs(10), fontWeight: '800', color: accent }}>
+                {dayLabel}
+              </Text>
+            ) : null}
+            <View style={{ position: 'absolute', left: '6%', right: '6%', top: '40%', borderTopWidth: Math.max(1, 3 * shrink), borderStyle: 'dashed', borderColor: sub }} />
+            <Text allowFontScaling={false} numberOfLines={2} style={{ position: 'absolute', left: '8%', right: '8%', top: '47%', textAlign: 'center', fontSize: fs(58), fontWeight: '800', color: text }}>
+              {name}
+            </Text>
+            {date ? (
+              <Text allowFontScaling={false} numberOfLines={1} style={{ position: 'absolute', left: 0, right: 0, bottom: '8%', textAlign: 'center', fontSize: fs(34), color: sub, fontWeight: '600' }}>
+                {date}{weekday ? ` ${weekday}` : ''}
+              </Text>
+            ) : null}
+          </View>
+          <View style={{ position: 'absolute', left: width * 0.09 - notch / 2, top: top + h * 0.4 - notch / 2, width: notch, height: notch, borderRadius: notch / 2, backgroundColor: bg }} />
+          <View style={{ position: 'absolute', right: width * 0.09 - notch / 2, top: top + h * 0.4 - notch / 2, width: notch, height: notch, borderRadius: notch / 2, backgroundColor: bg }} />
+        </View>
+      );
+    }
+    case 'split':
+      // 위쪽은 색 블록에 DAY 번호, 아래쪽에 제목과 날짜
+      return (
+        <View style={root}>
+          <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '46%', backgroundColor: accent }} />
+          {dayLabel ? T({ top: '12%', fontSize: fs(44), letterSpacing: fs(12), fontWeight: '800', color: 'rgba(255,255,255,0.8)' }, 'DAY', 1) : null}
+          {dayNo ? T({ top: '17%', fontSize: fs(230), fontWeight: '900', color: '#FFFFFF', lineHeight: fs(250) }, String(day), 1) : null}
+          {T({ top: '56%', fontSize: fs(66), fontWeight: '800', color: text, left: '10%', right: '10%' }, name)}
+          {date ? T({ top: '75%', fontSize: fs(38), color: sub, fontWeight: '600' }, `${date}${weekday ? ` ${weekday}` : ''}`, 1) : null}
+        </View>
+      );
+    case 'film': {
+      // 필름 띠: 양옆 구멍과 위아래 선
+      const holes = 11;
+      const hole = (side: 'left' | 'right', i: number) => (
+        <View key={`${side}${i}`} style={{ position: 'absolute', [side]: width * 0.035, top: height * (0.06 + (i * 0.88) / holes), width: width * 0.04, height: height * 0.03, borderRadius: 2, backgroundColor: '#2A2A2A' }} />
+      );
+      return (
+        <View style={root}>
+          {Array.from({ length: holes }, (_, i) => hole('left', i))}
+          {Array.from({ length: holes }, (_, i) => hole('right', i))}
+          <View style={{ position: 'absolute', left: '12%', right: '12%', top: '8%', height: Math.max(1, 3 * shrink), backgroundColor: accent }} />
+          <View style={{ position: 'absolute', left: '12%', right: '12%', bottom: '8%', height: Math.max(1, 3 * shrink), backgroundColor: accent }} />
+          {dayLabel ? T({ top: '38%', fontSize: fs(34), letterSpacing: fs(8), color: sub, fontWeight: '700' }, dayLabel, 1) : null}
+          {T({ top: '44%', fontSize: fs(62), fontWeight: '800', color: text, left: '14%', right: '14%' }, name)}
+          {date ? T({ top: '62%', fontSize: fs(32), color: sub, fontWeight: '600' }, date, 1) : null}
+        </View>
+      );
+    }
+    case 'poster':
+      // 사진을 깔고 왼쪽 아래에 큼직한 제목: 잡지 표지 느낌
+      return (
+        <View style={root}>
+          <Photo />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.28)' }]} />
+          <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '48%', backgroundColor: 'rgba(0,0,0,0.38)' }} />
+          {date ? T({ top: '8%', left: '8%', textAlign: 'left', fontSize: fs(34), letterSpacing: fs(6), fontWeight: '700', color: '#FFFFFF' }, `${dayLabel ? `${dayLabel}  ·  ` : ''}${date}`, 1) : null}
+          <View style={{ position: 'absolute', left: '8%', bottom: '24%', width: '14%', height: Math.max(2, 6 * shrink), backgroundColor: '#FFFFFF' }} />
+          {T({ bottom: '10%', left: '8%', right: '8%', textAlign: 'left', fontSize: fs(80), fontWeight: '900', color: '#FFFFFF', lineHeight: fs(92) }, name)}
+        </View>
+      );
+    case 'neon': {
+      // 어두운 보라 바탕에 빛나는 글씨와 테두리
+      const glow = { textShadowColor: text, textShadowRadius: fs(24), textShadowOffset: { width: 0, height: 0 } };
+      return (
+        <View style={root}>
+          <View style={{ position: 'absolute', left: '8%', right: '8%', top: '16%', bottom: '16%', borderWidth: Math.max(1, 5 * shrink), borderColor: accent, borderRadius: width * 0.05, boxShadow: `0 0 ${fs(30)}px ${accent}` }} />
+          {dayLabel ? T({ top: '34%', fontSize: fs(40), letterSpacing: fs(10), fontWeight: '800', color: accent, textShadowColor: accent, textShadowRadius: fs(18), textShadowOffset: { width: 0, height: 0 } }, dayLabel, 1) : null}
+          {T({ top: '44%', fontSize: fs(74), fontWeight: '900', color: text, left: '14%', right: '14%', ...glow }, name)}
+          {date ? T({ top: '64%', fontSize: fs(34), color: sub, fontWeight: '600' }, date, 1) : null}
+        </View>
+      );
+    }
+    case 'stamp': {
+      // 동그란 도장: 안에 DAY·번호·날짜, 아래에 제목
+      const d = width * 0.56;
+      return (
+        <View style={root}>
+          <View style={{ position: 'absolute', left: (width - d) / 2, top: height * 0.2, width: d, height: d, borderRadius: d / 2, borderWidth: Math.max(2, 9 * shrink), borderColor: accent, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-8deg' }] }}>
+            <View style={{ position: 'absolute', left: d * 0.06, right: d * 0.06, top: d * 0.06, bottom: d * 0.06, borderRadius: d / 2, borderWidth: Math.max(1, 3 * shrink), borderColor: accent }} />
+            {dayLabel ? <Text allowFontScaling={false} style={{ fontSize: fs(38), letterSpacing: fs(10), fontWeight: '800', color: accent }}>DAY</Text> : null}
+            {day ? <Text allowFontScaling={false} style={{ fontSize: fs(190), fontWeight: '900', color: accent, lineHeight: fs(210) }}>{day}</Text> : null}
+            {date ? <Text allowFontScaling={false} style={{ fontSize: fs(30), fontWeight: '700', color: accent }}>{date}</Text> : null}
+          </View>
+          {T({ top: '66%', fontSize: fs(64), fontWeight: '800', color: text, left: '10%', right: '10%' }, name)}
+        </View>
+      );
+    }
+    case 'pastel': {
+      // 파스텔 바탕에 큰 동그라미 장식
+      const big = width * 0.8;
+      const small = width * 0.42;
+      return (
+        <View style={root}>
+          <View style={{ position: 'absolute', right: -big * 0.28, top: -big * 0.2, width: big, height: big, borderRadius: big / 2, backgroundColor: '#FFC9DC' }} />
+          <View style={{ position: 'absolute', left: -small * 0.25, bottom: height * 0.06, width: small, height: small, borderRadius: small / 2, backgroundColor: '#FFE0B8' }} />
+          {dayLabel ? T({ top: '38%', fontSize: fs(40), letterSpacing: fs(10), fontWeight: '800', color: accent }, dayLabel, 1) : null}
+          {T({ top: '45%', fontSize: fs(72), fontWeight: '900', color: text, left: '10%', right: '10%' }, name)}
+          {date ? T({ top: '64%', fontSize: fs(36), color: sub, fontWeight: '600' }, `${date}${weekday ? ` ${weekday}` : ''}`, 1) : null}
+        </View>
+      );
+    }
+    case 'paper':
+      // 왼쪽 정렬 심플: 위에 짧은 선, 제목, 날짜
+      return (
+        <View style={root}>
+          <View style={{ position: 'absolute', left: '9%', top: '38%', width: '14%', height: Math.max(2, 6 * shrink), backgroundColor: text }} />
+          {T({ top: '41%', left: '9%', right: '9%', textAlign: 'left', fontSize: fs(70), fontWeight: '900', color: text }, name)}
+          {date ? T({ top: '60%', left: '9%', right: '9%', textAlign: 'left', fontSize: fs(34), color: sub, fontWeight: '600' }, `${date}${weekday ? `  ${weekday}` : ''}`, 1) : null}
+        </View>
+      );
+    default:
+      // 기본: 가운데 작은 날짜와 제목
+      return (
+        <View style={root}>
+          {date ? T({ top: `${TITLE_DATE_Y * 100}%`, fontSize: fs(TITLE_DATE_PX), fontWeight: '800', color: accent }, date, 1) : null}
+          {T({ top: `${TITLE_NAME_Y * 100}%`, fontSize: fs(TITLE_NAME_PX), fontWeight: '800', color: text, left: '5%', right: '5%' }, name)}
+        </View>
+      );
+  }
+}
+
+/**
  * 한 장면을 세로 9:16 화면으로 그린다. 미리보기·장면 편집·완성본 카드가 같은 그림을 쓴다.
  * 동영상은 커버 프레임으로 보여 준다(실제 재생은 최종 렌더링의 몫).
  */
-export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = false, selectedCell, onSelectCell }: CanvasProps) {
+export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = false, videoPlaying = true, selectedCell, onSelectCell }: CanvasProps) {
   const height = width / aspectOf(scene.aspect).ratio;
   if (scene.kind === 'title') {
     // 출력 화면을 이 크기로 줄여 그린다. 글자 크기·높이를 서버 렌더러와 같은 값으로 둔다.
     // 고른 글씨체를 쓰지 않는 것은 서버가 제목 화면을 늘 기본 고딕으로 그리기 때문이다.
-    const shrink = width / aspectOf(scene.aspect).width;
     return (
-      <View style={[styles.canvas, styles.titleCanvas, { width, height }]}>
-        <Text allowFontScaling={false} style={[styles.titleDate, { top: height * TITLE_DATE_Y, fontSize: TITLE_DATE_PX * shrink }]}>
-          {scene.titleDate}
-        </Text>
-        <Text allowFontScaling={false} numberOfLines={3} style={[styles.titleName, { top: height * TITLE_NAME_Y, fontSize: TITLE_NAME_PX * shrink }]}>
-          {scene.titleText}
-        </Text>
-      </View>
+      <TitleCard
+        preset={titleStyleOf(scene.titleStyle)}
+        date={scene.titleDate}
+        name={scene.titleText ?? ''}
+        image={scene.titleImage}
+        day={scene.titleDay}
+        weekday={scene.titleWeekday}
+        width={width}
+        height={height}
+        shrink={width / aspectOf(scene.aspect).width}
+      />
     );
   }
   const index = clipIndex ?? sceneClipAt(scene, localSec);
@@ -306,9 +568,8 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
                   selected && styles.cellSelected,
                 ]}
               >
-                {c ? <ClipLayer clip={c} width={cellW - inset.l - inset.r} height={cellH - inset.t - inset.b} motion={motionFor(c)} /> : null}
+                {c ? <ClipLayer clip={c} width={cellW - inset.l - inset.r} height={cellH - inset.t - inset.b} motion={motionFor(c)} videoPlaying={videoPlaying} /> : null}
               </View>
-              {c?.kind === 'video' ? <Text style={styles.videoMark}>▶</Text> : null}
             </>
           );
           // 칸 선택을 쓰지 않는 곳(미리보기)에서는 button 이 아닌 View 로 그린다.
@@ -331,8 +592,7 @@ export function SceneCanvas({ scene, width, localSec = 0, clipIndex, animate = f
         })
       ) : clip ? (
         <>
-          <ClipLayer clip={clip} width={width} height={height} motion={motionFor(clip)} />
-          {clip.kind === 'video' ? <Text style={styles.videoMark}>▶</Text> : null}
+          <ClipLayer clip={clip} width={width} height={height} motion={motionFor(clip)} videoPlaying={videoPlaying} />
         </>
       ) : null}
       {stickers.map((st, i) => (
@@ -487,17 +747,19 @@ interface StageProps {
   progress?: number;
   /** 재생 중일 때만 사진 움직임·자막 등장을 보여 준다. */
   animate?: boolean;
+  /** 동영상 칸을 재생할지(기본 재생) */
+  videoPlaying?: boolean;
 }
 
 /**
  * 미리보기 무대: 장면을 그리고, 장면이 바뀌는 순간에는 전환 효과를 보여 준다.
  * 들어오는 장면이 앞 장면 위에 얹히며 페이드(투명도)·슬라이드(옆에서 밀기)·확대(커지며 나타남)로 바뀐다.
  */
-export function TransitionStage({ scene, prev, width, localSec, transition, progress, animate = false }: StageProps) {
+export function TransitionStage({ scene, prev, width, localSec, transition, progress, animate = false, videoPlaying = true }: StageProps) {
   const height = width / aspectOf(scene.aspect).ratio;
   // prev 가 없으면(첫 장면 예시) 어두운 바탕 위로 장면이 들어온다.
   const active = transition !== 'none' && progress !== undefined && progress < 1;
-  if (!active || progress === undefined) return <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} />;
+  if (!active || progress === undefined) return <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} videoPlaying={videoPlaying} />;
   const p = progress;
   // 와이프·원형은 다음 장면을 일부 영역만 보이게 잘라 낸다(안쪽 그림은 제자리에 고정).
   if ((transition === 'wipe' || transition === 'iris') && p > 0) {
@@ -510,12 +772,12 @@ export function TransitionStage({ scene, prev, width, localSec, transition, prog
       <View style={{ width, height, overflow: 'hidden', borderRadius: 10, backgroundColor: colors.ink }}>
         {prev ? (
           <View style={StyleSheet.absoluteFill}>
-            <SceneCanvas scene={prev} width={width} localSec={prev.seconds} animate={animate} />
+            <SceneCanvas scene={prev} width={width} localSec={prev.seconds} animate={animate} videoPlaying={videoPlaying} />
           </View>
         ) : null}
         <View style={[{ position: 'absolute', overflow: 'hidden' }, box]}>
           <View style={{ position: 'absolute', left: -box.left, top: -box.top, width, height }}>
-            <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} />
+            <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} videoPlaying={videoPlaying} />
           </View>
         </View>
       </View>
@@ -551,11 +813,11 @@ export function TransitionStage({ scene, prev, width, localSec, transition, prog
     <View style={{ width, height, overflow: 'hidden', borderRadius: 10, backgroundColor: colors.ink }}>
       {prev ? (
         <View style={[StyleSheet.absoluteFill, outgoing]}>
-          <SceneCanvas scene={prev} width={width} localSec={prev.seconds} animate={animate} />
+          <SceneCanvas scene={prev} width={width} localSec={prev.seconds} animate={animate} videoPlaying={videoPlaying} />
         </View>
       ) : null}
       <View style={[StyleSheet.absoluteFill, incoming]}>
-        <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} />
+        <SceneCanvas scene={scene} width={width} localSec={localSec} animate={animate} videoPlaying={videoPlaying} />
       </View>
       {veil ? <View style={[StyleSheet.absoluteFill, { backgroundColor: veil, opacity: 1 - Math.abs(p - 0.5) * 2 }]} pointerEvents="none" /> : null}
     </View>
@@ -684,7 +946,6 @@ const styles = StyleSheet.create({
   // 날짜·제목은 서버와 같은 높이에 놓는다(가운데 정렬로 두면 글자 수에 따라 자리가 밀린다).
   titleDate: { position: 'absolute', left: '5%', right: '5%', fontWeight: '800', color: colors.primary, textAlign: 'center' },
   titleName: { position: 'absolute', left: '5%', right: '5%', fontWeight: '800', color: '#191F28', textAlign: 'center' },
-  videoMark: { position: 'absolute', right: 6, top: 6, fontSize: 10, color: colors.onPrimary, backgroundColor: 'rgba(25,31,40,0.55)', paddingHorizontal: 5, borderRadius: 8, overflow: 'hidden' },
   // 자막 위치: 위 / 화면 가운데 / 아래(날짜 줄 위)
   // 자막·라벨 자리. 세로 위치는 그리는 쪽에서 비율로 넣고, 좌우 여백도 폭에 대한 비율이다.
   capZone: { position: 'absolute', left: `${OVERLAY_SIDE * 100}%`, right: `${OVERLAY_SIDE * 100}%`, alignItems: 'center' },

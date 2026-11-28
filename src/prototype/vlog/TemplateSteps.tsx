@@ -6,7 +6,7 @@ import { CheckCircle } from '../components/FormParts';
 import { colors, GUTTER, radius } from '../styles/tokens';
 import { shortDotDateLabel } from '../utils/date';
 import { TEMPLATE_GROUPS, templateGroup, type Template, type TemplateGroupId } from '../mock/tripData';
-import { locate, type StepCtx } from './ctx';
+import { locate, type StepCtx, type StepName } from './ctx';
 import {
   PHOTO_SPLIT_SEC,
   aspectOf,
@@ -39,7 +39,7 @@ export function needsLengthStep(lengths: number[]): boolean {
 }
 
 /** 4단계: 고른 개수에 맞는 재생 방식(이어 재생 또는 같은 개수의 분할)을 고른다. */
-export function TemplateStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string }) {
+export function TemplateStep({ ctx, placeKey, returnTo }: { ctx: StepCtx; placeKey?: string; returnTo?: StepName }) {
   const { width } = useWindowDimensions();
   const found = locate(ctx.days, placeKey);
   const setting = (placeKey ? ctx.draft.settings[placeKey] : undefined) ?? defaultSetting();
@@ -72,6 +72,9 @@ export function TemplateStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: strin
     patchSetting(ctx, found.place.key, split ? { mode: 'split', templateId: choice } : { mode: 'sequence', templateId: undefined, lengthSec: undefined, photoSec: undefined });
     if (split && needsLengthStep(media.filter((m) => m.item.kind === 'video').map((m) => m.seconds ?? 0))) {
       ctx.go({ step: 'length', placeKey: found.place.key });
+    } else if (returnTo === 'edit') {
+      // 편집 화면에서 템플릿만 바꾸러 온 경우: 새 편집 화면을 쌓지 않고 원래 편집 화면으로 돌아간다.
+      ctx.back();
     } else {
       ctx.go({ step: 'edit', placeKey: found.place.key });
     }
@@ -270,7 +273,6 @@ export function LengthStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string 
           </Pressable>
         </View>
       </View>
-      <Text style={styles.hint}>반복·정지 화면·속도 조절로 늘리기는 후속 기능입니다.</Text>
     </StepFrame>
   );
 }

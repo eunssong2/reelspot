@@ -272,6 +272,17 @@ export const SEED_GROUPS: Group[] = [
     activityAt: now - 96 * HOUR,
     createdAt: now - 30 * 24 * HOUR,
   },
+  {
+    // 나 혼자 있는 모임 예시(내 모임 목록의 "혼자일 때" 문구 확인용)
+    id: 'g-solo',
+    name: '나만의 기록',
+    tripId: 'trip1',
+    cover: null,
+    members: ['지민'],
+    myRole: 'owner',
+    activityAt: now - 2 * HOUR,
+    createdAt: now - 3 * 24 * HOUR,
+  },
 ];
 
 const s = (

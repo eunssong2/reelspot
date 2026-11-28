@@ -208,7 +208,7 @@ export function MediaStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string }
           );
         })}
       </View>
-      <Text style={styles.hint}>⤢ 버튼을 누르면 원본을 크게 보고 자를 수 있어요. 길게 눌러도 열려요.</Text>
+      <Text style={styles.hint}>⤢ 를 누르면 크게 보고 자를 수 있어요</Text>
 
       <Heading title="선택한 순서" />
       {n === 0 ? (

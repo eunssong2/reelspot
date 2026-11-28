@@ -52,6 +52,7 @@ import {
   videoSpeed,
   moveItem,
   resolveMedia,
+  splitTemplatesFor,
   type CaptionLine,
   type CaptionStyle,
   type FilterId,
@@ -67,7 +68,7 @@ import {
   STICKER_SCALE_MIN,
   type PlaceSetting,
 } from './model';
-import { FooterButtons, SceneCanvas, StateCard, StepFrame, TransitionStage } from './parts';
+import { SceneCanvas, StateCard, StepFrame, TransitionStage } from './parts';
 
 /** 스티커를 새로 붙일 때 자리를 고르는 차례. 서로 멀리 떨어진 모서리부터 쓴다. */
 const STICKER_SPOT_ORDER: StickerSpot[] = ['tr', 'bl', 'tl', 'br', 'tc', 'bc', 'mr', 'ml', 'mc'];
@@ -401,20 +402,40 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
       footer={
         !split && scene.clips.length > 1 && idx < scene.clips.length - 1 ? (
           // 장면이 더 남았으면 큰 버튼이 "다음 장면"이라, 하나 고치고 다음으로 넘어가는 걸 잊지 않는다.
-          <FooterButtons
-            label={`다음 장면으로 (${idx + 2}/${scene.clips.length})`}
-            onPress={() => setClipIndex(idx + 1)}
-            secondaryLabel="여기서 이 장소 완료"
-            onSecondary={complete}
-          />
+          // 두 버튼을 한 줄에 놓아 자리를 적게 차지한다.
+          <View style={styles.footRow}>
+            <Pressable onPress={complete} accessibilityRole="button" accessibilityLabel="여기서 이 장소 완료" style={[styles.footBtn, styles.footGhost]}>
+              <Text style={styles.footGhostText}>완료</Text>
+            </Pressable>
+            <Pressable onPress={() => setClipIndex(idx + 1)} accessibilityRole="button" style={[styles.footBtn, styles.footMain]}>
+              <Text style={styles.footMainText}>다음 장면 ({idx + 2}/{scene.clips.length})</Text>
+            </Pressable>
+          </View>
         ) : (
-          <FooterButtons label="이 장소 완료" onPress={complete} />
+          <View style={styles.footRow}>
+            <Pressable onPress={complete} accessibilityRole="button" style={[styles.footBtn, styles.footMain]}>
+              <Text style={styles.footMainText}>이 장소 완료</Text>
+            </Pressable>
+          </View>
         )
       }
     >
-      <Pressable onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={10} disabled={media.length < 2} style={styles.sceneLabelBtn}>
-        <Text style={styles.sceneLabel}>{media.length < 2 ? '단일 재생' : modeLabel}</Text>
-      </Pressable>
+      <View style={styles.sceneHead}>
+        <Pressable onPress={() => setOrderOpen(true)} accessibilityRole="button" hitSlop={10} disabled={media.length < 2} style={styles.sceneLabelBtn}>
+          <Text style={styles.sceneLabel}>{media.length < 2 ? '단일 재생' : modeLabel}</Text>
+        </Pressable>
+        {media.length >= 2 && splitTemplatesFor(media.length).length > 0 ? (
+          <Pressable
+            onPress={() => ctx.go({ step: 'template', placeKey: key, returnTo: 'edit' })}
+            accessibilityRole="button"
+            accessibilityLabel="템플릿 바꾸기"
+            hitSlop={10}
+            style={styles.templateBtn}
+          >
+            <Text style={styles.templateBtnText}>▦ 템플릿 바꾸기</Text>
+          </Pressable>
+        ) : null}
+      </View>
 
       <View
         style={styles.center}
@@ -548,7 +569,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         open={openSec === 'capStyle'}
         onToggle={toggleSec}
         title="자막 모양"
-        sub="글씨체·위치·크기·배경은 영상 전체에 함께 적용돼요."
+        sub="영상 전체에 적용돼요"
         summary={capSummary}
       >
         <Pressable onPress={() => setFontOpen(true)} accessibilityRole="button" style={styles.fontRow}>
@@ -613,7 +634,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
 
         {capWarning ? <Text style={styles.warn}>{capWarning}</Text> : null}
         {!lines.some((l) => l.text.trim()) ? (
-          <Text style={styles.value}>자막을 적으면 위 미리보기에서 바로 확인할 수 있어요.</Text>
+          <Text style={styles.value}>자막은 위 미리보기에서 바로 보여요</Text>
         ) : null}
       </Accordion>
 
@@ -749,7 +770,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         open={openSec === 'sticker'}
         onToggle={toggleSec}
         title="스티커"
-        sub={split ? '분할 화면 전체에 붙어요.' : '지금 보고 있는 사진·동영상에 붙어요. 장면마다 따로 고를 수 있어요.'}
+        sub={split ? '분할 화면 전체에 붙어요.' : '이 장면에 붙어요'}
         summary={stickers.length ? stickers.map((s) => s.emoji).join(' ') : '없음'}
       >
         <View style={styles.emojiGrid}>
@@ -800,7 +821,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         open={openSec === 'motion'}
         onToggle={toggleSec}
         title="사진 움직임"
-        sub={hasPhoto ? '사진이 보이는 동안 아주 천천히 움직여요. 동영상은 그대로예요.' : '이 장면에는 사진이 없어 움직임이 보이지 않아요.'}
+        sub={hasPhoto ? '사진이 천천히 움직여요' : '사진이 없어 움직임이 없어요'}
         summary={motionOf(motion).label}
       >
         <OptionStrip
@@ -823,7 +844,7 @@ export function EditStep({ ctx, placeKey }: { ctx: StepCtx; placeKey?: string })
         open={openSec === 'show'}
         onToggle={toggleSec}
         title="장소·날짜 라벨"
-        sub="켜고 끄기는 장면마다, 라벨 모양은 영상 전체에 함께 적용돼요."
+        sub="모양은 영상 전체에 적용돼요"
         summary={`${setting.showPlace ? '장소명 켬' : '장소명 끔'} · ${setting.showDate ? '날짜 켬' : '날짜 끔'} · ${PLACE_LABEL_POSITIONS.find((x) => x.id === plabel.pos)?.label}`}
       >
       <Row label="장소명 표시" value={found.place.place.name}>
@@ -1271,8 +1292,17 @@ const styles = StyleSheet.create({
   undoGlyph: { fontSize: 16, color: colors.textMuted },
   // 제목은 작은 글씨로 두어 사진이 화면의 주인공이 되게 한다.
   // 제목 줄이 터치 최소 높이(44)만큼 차지하지 않게 줄이고, 누르는 범위는 hitSlop 으로 넓힌다.
+  sceneHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  templateBtn: { minHeight: 28, paddingHorizontal: 12, borderRadius: 14, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  templateBtnText: { fontSize: 12, fontWeight: '800', color: colors.primary },
   sceneLabelBtn: { minHeight: 20, justifyContent: 'center', marginBottom: -4 },
   sceneLabel: { fontSize: 13, fontWeight: '700', color: colors.textSub },
+  footRow: { flexDirection: 'row', gap: 8 },
+  footBtn: { minHeight: 46, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center' },
+  footGhost: { flex: 1, backgroundColor: colors.surface },
+  footMain: { flex: 2.4, backgroundColor: colors.primary },
+  footGhostText: { fontSize: 15, fontWeight: '700', color: colors.textSub },
+  footMainText: { fontSize: 15, fontWeight: '800', color: colors.onPrimary },
   touch: { minWidth: MIN_TOUCH, minHeight: MIN_TOUCH, justifyContent: 'center' },
   center: { alignItems: 'center' },
   settings: { flex: 1 },

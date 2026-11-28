@@ -1,6 +1,6 @@
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { ActionButton } from '../components/FormParts';
 import { Toggle } from '../components/Toggle';
@@ -14,6 +14,9 @@ import {
   END_TEXT_DEFAULT,
   MUSIC_VOLUMES,
   TITLE_CARD_SEC,
+  TITLE_SEC_OPTIONS,
+  TITLE_STYLES,
+  titleStyleOf,
   TRANSITION_SEC,
   daySeconds,
   defaultTitle,
@@ -28,8 +31,8 @@ import {
   type VlogDay,
 } from './model';
 import { useBgm } from './bgm';
-import { MUSIC_MOODS, MUSIC_TRACKS } from './musicTracks';
-import { FooterButtons, Heading, StateCard, StepFrame, TransitionStage } from './parts';
+import { MUSIC_MOODS, MUSIC_TRACKS, musicLabel } from './musicTracks';
+import { FooterButtons, Heading, StateCard, StepFrame, TitleCard, TransitionStage } from './parts';
 import { renderVlog, saveToGallery } from './vlogBridge';
 
 const titleOf = (ctx: StepCtx) => ctx.draft.title.trim() || defaultTitle(ctx.group);
@@ -41,6 +44,7 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
   const picked = draft.dayKeys.map((k) => days.find((d) => d.key === k)).filter((d): d is VlogDay => Boolean(d));
   const places = selectedPlaces(draft, days);
   const undone = places.filter((x) => !draft.settings[x.place.key]?.done);
+  const [sheet, setSheet] = useState<'title' | 'sound' | null>(null);
 
   const moveDay = (from: number, to: number) => ctx.update((d) => ({ ...d, dayKeys: moveItem(d.dayKeys, from, to) }));
   const movePlace = (dayKey: string, from: number, to: number) =>
@@ -76,6 +80,19 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
         {picked.length}일 · {places.length}곳 · 예상 {timeline.totalSec}초
       </Text>
 
+      {/* 제목 화면 모양·소리·음악은 화면이 길어지지 않게 따로 열어서 정한다. */}
+      <View style={styles.styleRows}>
+        <SettingRow
+          label="제목 화면"
+          value={`${titleStyleOf(draft.titleStyle).label} · ${draft.titleCardSec ?? TITLE_CARD_SEC}초 · ${picked.filter((d) => draft.dayTitleCard?.[d.key]).length}/${picked.length}일 넣음`}
+          onPress={() => setSheet('title')}
+        />
+        <SettingRow
+          label="소리·배경 음악"
+          value={`${musicLabel(draft.music?.id)} · 원본 소리 ${draft.originalSound === 'mute' ? '없앰' : '그대로'}`}
+          onPress={() => setSheet('sound')}
+        />
+      </View>
       {picked.map((day, di) => {
         const keys = draft.placeKeys[day.key] ?? [];
         return (
@@ -85,31 +102,6 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
                 {weekday(day.date)}  {daySeconds(draft, day)}초
               </Text>
               <Arrows onUp={di > 0 ? () => moveDay(di, di - 1) : undefined} onDown={di < picked.length - 1 ? () => moveDay(di, di + 1) : undefined} label="날짜" />
-            </View>
-            <View style={styles.dayTitleBox}>
-              <View style={styles.dayTitleTop}>
-                <Text style={styles.cardSub}>날짜 제목 화면 {TITLE_CARD_SEC}초</Text>
-                <Toggle
-                  style={styles.touch}
-                  value={Boolean(draft.dayTitleCard?.[day.key])}
-                  onValueChange={(v) => ctx.update((d) => ({ ...d, dayTitleCard: { ...(d.dayTitleCard ?? {}), [day.key]: v } }))}
-                  accessibilityLabel={`${weekday(day.date)} 제목 화면 넣기`}
-                />
-              </View>
-              <TextInput
-                value={draft.dayTitles?.[day.key] ?? day.title}
-                onChangeText={(text) => ctx.update((d) => ({ ...d, dayTitles: { ...(d.dayTitles ?? {}), [day.key]: text } }))}
-                onBlur={() => {
-                  // 비워 두면 일정의 날짜 제목으로 돌아간다.
-                  if (!(draft.dayTitles?.[day.key] ?? '').trim()) ctx.update((d) => ({ ...d, dayTitles: { ...(d.dayTitles ?? {}), [day.key]: '' } }));
-                }}
-                placeholder={day.title}
-                placeholderTextColor={colors.textMuted}
-                maxLength={30}
-                accessibilityLabel={`${weekday(day.date)} 날짜 제목`}
-                style={styles.dayTitleInput}
-              />
-              <Text style={styles.hint}>제목은 이 브이로그에만 적용돼요. 일정의 원래 제목은 바뀌지 않아요.</Text>
             </View>
             {keys.map((key, pi) => {
               const place = day.places.find((p) => p.key === key);
@@ -154,9 +146,7 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
       <View style={styles.card}>
         <View style={styles.cardMain}>
           <Text style={styles.cardTitle}>끝 화면</Text>
-          <Text style={styles.cardSub}>
-            마지막에 문구 한 장을 {END_CARD_SEC}초 넣어요. 영상이 뚝 끊기지 않아요.
-          </Text>
+          <Text style={styles.cardSub}>마지막에 문구 한 장을 넣어요</Text>
         </View>
         <Toggle
           value={Boolean(draft.endCard)}
@@ -164,7 +154,6 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
           accessibilityLabel="끝 화면"
         />
       </View>
-      <MusicPicker ctx={ctx} />
       {draft.endCard ? (
         <View style={styles.dayTitleBox}>
           <TextInput
@@ -176,10 +165,103 @@ export function ComposeStep({ ctx }: { ctx: StepCtx }) {
             accessibilityLabel="끝 화면 문구"
             style={styles.dayTitleInput}
           />
-          <Text style={styles.hint}>비워 두면 &apos;{END_TEXT_DEFAULT}&apos;이 들어가요.</Text>
         </View>
       ) : null}
+      <SettingSheet visible={sheet !== null} title={sheet === 'title' ? '제목 화면' : '소리·배경 음악'} onClose={() => setSheet(null)}>
+        {sheet === 'title' ? <TitleSettings ctx={ctx} /> : null}
+        {sheet === 'sound' ? <MusicPicker ctx={ctx} /> : null}
+      </SettingSheet>
     </StepFrame>
+  );
+}
+
+/**
+ * 제목 화면 설정(한 곳에 모음): 날짜마다 넣을지·제목, 모양, 머무는 시간.
+ * 모양과 시간은 영상 전체에 하나이고, 모양은 끝 화면에도 같이 적용된다.
+ */
+function TitleSettings({ ctx }: { ctx: StepCtx }) {
+  const { draft, days } = ctx;
+  const picked = draft.dayKeys.map((k) => days.find((d) => d.key === k)).filter((d): d is VlogDay => Boolean(d));
+  const current = draft.titleStyle ?? 'soft';
+  const sec = draft.titleCardSec ?? TITLE_CARD_SEC;
+  // 사진을 쓰는 모양을 미리 볼 사진: 영상의 첫 사진
+  const sample = ctx.timeline.scenes.find((s) => s.clips.length > 0)?.clips[0]?.image;
+  const W = 52;
+  const H = W / aspectOf(ctx.timeline.aspect).ratio;
+  return (
+    <View style={styles.titlePick}>
+      {/* 날짜마다: 한 줄에 날짜·제목·켜기 */}
+      {picked.map((day) => {
+        const on = Boolean(draft.dayTitleCard?.[day.key]);
+        return (
+          <View key={day.key} style={styles.titleDayRow}>
+            <Text style={styles.titleDayLabel}>{shortDotDateLabel(day.date)}</Text>
+            {on ? (
+              <TextInput
+                value={draft.dayTitles?.[day.key] ?? day.title}
+                onChangeText={(text) => ctx.update((d) => ({ ...d, dayTitles: { ...(d.dayTitles ?? {}), [day.key]: text } }))}
+                onBlur={() => {
+                  // 비워 두면 일정의 날짜 제목으로 돌아간다.
+                  if (!(draft.dayTitles?.[day.key] ?? '').trim()) ctx.update((d) => ({ ...d, dayTitles: { ...(d.dayTitles ?? {}), [day.key]: '' } }));
+                }}
+                placeholder={day.title}
+                placeholderTextColor={colors.textMuted}
+                maxLength={30}
+                accessibilityLabel={`${weekday(day.date)} 날짜 제목`}
+                style={[styles.dayTitleInput, styles.titleDayInput]}
+              />
+            ) : (
+              <Text style={[styles.cardSub, styles.titleDayInput]}>제목 화면 없음</Text>
+            )}
+            <Toggle
+              style={styles.touch}
+              value={on}
+              onValueChange={(v) => ctx.update((d) => ({ ...d, dayTitleCard: { ...(d.dayTitleCard ?? {}), [day.key]: v } }))}
+              accessibilityLabel={`${weekday(day.date)} 제목 화면 넣기`}
+            />
+          </View>
+        );
+      })}
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.titleStrip}>
+        {TITLE_STYLES.map((st) => {
+          const sel = st.id === current;
+          return (
+            <Pressable
+              key={st.id}
+              onPress={() => ctx.update((d) => ({ ...d, titleStyle: st.id }))}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: sel }}
+              accessibilityLabel={`제목 화면 모양 ${st.label}`}
+              style={styles.titleItem}
+            >
+              <View style={[styles.titleThumb, sel && styles.titleThumbOn]}>
+                <TitleCard preset={st} date="10.22" name="제목" image={sample} day={2} weekday="목요일" width={W} height={H} shrink={W / aspectOf(ctx.timeline.aspect).width} minFont={5} />
+              </View>
+              <Text style={[styles.titleLabel, sel && styles.titleLabelOn]}>{st.label}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      <View style={styles.titleSecRow}>
+        <Text style={styles.cardSub}>머무는 시간</Text>
+        {TITLE_SEC_OPTIONS.map((n) => {
+          const on = n === sec;
+          return (
+            <Pressable
+              key={n}
+              onPress={() => ctx.update((d) => ({ ...d, titleCardSec: n }))}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              style={[styles.musicVolChip, on && styles.musicVolChipOn, styles.titleSecChip]}
+            >
+              <Text style={[styles.musicVolText, on && styles.musicVolTextOn]}>{n}초</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -217,7 +299,7 @@ function MusicPicker({ ctx }: { ctx: StepCtx }) {
         })}
       </View>
       <Text style={styles.cardSub}>
-        {(ctx.draft.originalSound ?? 'keep') === 'keep' ? '동영상에 담긴 소리(말소리·주변 소리)를 그대로 두고, 배경 음악이 있으면 그 위에 더해져요.' : '동영상의 원래 소리를 모두 없애요. 배경 음악만 나와요(음악이 없으면 무음).'}
+        {(ctx.draft.originalSound ?? 'keep') === 'keep' ? '동영상의 원래 소리를 그대로 둬요' : '동영상의 원래 소리를 없애요'}
       </Text>
       <Text style={[styles.cardTitle, styles.musicTitle]}>배경 음악</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.musicTabs}>
@@ -289,8 +371,46 @@ function MusicPicker({ ctx }: { ctx: StepCtx }) {
           })}
         </View>
       ) : null}
-      <Text style={styles.hint}>예시 곡은 직접 합성한 시연용 음원이에요(저작권 걱정 없음). 영상으로 만들 때 서버가 이 곡을 입혀야 반영돼요.</Text>
+      <Text style={styles.hint}>시연용 예시 곡이에요</Text>
     </View>
+  );
+}
+
+/** 한 줄 설정 버튼: 이름과 지금 값을 보여 주고, 누르면 따로 열어서 고른다. */
+function SettingRow({ label, value, onPress }: { label: string; value: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${label} 설정`} style={styles.settingRow}>
+      <View style={styles.settingText}>
+        <Text style={styles.cardTitle}>{label}</Text>
+        <Text style={styles.cardSub} numberOfLines={1}>
+          {value}
+        </Text>
+      </View>
+      <Text style={styles.settingChevron}>›</Text>
+    </Pressable>
+  );
+}
+
+/** 아래에서 올라오는 설정 창. 안의 내용은 열려 있을 때만 그려서(음악 미리 듣기 등) 닫으면 함께 멈춘다. */
+function SettingSheet({ visible, title, onClose, children }: { visible: boolean; title: string; onClose: () => void; children: ReactNode }) {
+  const { height } = useWindowDimensions();
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.sheetBackdrop} onPress={onClose} accessibilityLabel="닫기" />
+      <View style={styles.sheetWrap} pointerEvents="box-none">
+        <View style={[styles.sheet, { maxHeight: height * 0.85 }]}>
+          <View style={styles.sheetHead}>
+            <Text style={styles.sheetTitle}>{title}</Text>
+            <Pressable onPress={onClose} accessibilityRole="button" hitSlop={8}>
+              <Text style={styles.link}>완료</Text>
+            </Pressable>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.sheetBody}>
+            {children}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -361,6 +481,17 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
     setPlaying((p) => !p);
   };
   const seek = (sec: number) => setT(Math.max(0, Math.min(total, sec)));
+  /**
+   * 지금 보고 있는 장면을 고치러 간다: 그 장면의 장소 편집 화면으로.
+   * 제목·끝 화면을 보고 있으면 그날(마지막 화면이면 마지막 날)의 첫 장소로 가고, 갈 곳이 없으면 전체 구성으로 간다.
+   * 바로 만들기로 들어온 경우에도 뒤로 가기에 기대지 않고 직접 그 화면으로 보낸다.
+   */
+  const editHere = () => {
+    setPlaying(false);
+    const key = scene.placeKey ?? draft.placeKeys[scene.dayKey]?.[0];
+    if (key) ctx.go({ step: 'edit', placeKey: key });
+    else ctx.go({ step: 'compose' });
+  };
   const marks = ctx.draft.dayKeys
     .map((k) => timeline.scenes.find((s) => s.dayKey === k))
     .filter((s): s is NonNullable<typeof s> => Boolean(s))
@@ -389,7 +520,7 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
         />
       }
     >
-      <Pressable onPress={ctx.back} accessibilityRole="button" hitSlop={8} style={styles.touch}>
+      <Pressable onPress={editHere} accessibilityRole="button" hitSlop={8} style={styles.touch}>
         <Text style={styles.previewTitle}>{titleOf(ctx)}  <Text style={styles.link}>수정</Text></Text>
       </Pressable>
 
@@ -403,6 +534,7 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
             transition={scene.transition}
             progress={transProgress}
             animate
+            videoPlaying={playing}
           />
           {!playing ? (
             <View style={styles.playWrap} pointerEvents="none">
@@ -448,7 +580,7 @@ export function PreviewStep({ ctx }: { ctx: StepCtx }) {
         </View>
       ) : null}
       {problem ? <Text style={styles.problem}>{problem}</Text> : null}
-      <Pressable onPress={() => ctx.go({ step: 'compose' })} accessibilityRole="button" hitSlop={8}>
+      <Pressable onPress={editHere} accessibilityRole="button" hitSlop={8}>
         <Text style={[styles.link, styles.centerText]}>자막·장면 수정</Text>
       </Pressable>
     </StepFrame>
@@ -649,6 +781,28 @@ const styles = StyleSheet.create({
   dayTitleTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   dayTitleInput: { backgroundColor: colors.bg, borderRadius: 12, paddingHorizontal: 12, minHeight: 44, fontSize: 15, fontWeight: '700', color: colors.text },
   hint: { fontSize: 11, color: colors.textMuted },
+  styleRows: { gap: 8 },
+  settingRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.item, paddingHorizontal: 14, minHeight: 56 },
+  settingText: { flex: 1, gap: 2, paddingVertical: 8 },
+  settingChevron: { fontSize: 22, color: colors.textMuted, paddingLeft: 8 },
+  sheetBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(25,31,40,0.4)' },
+  sheetWrap: { flex: 1, justifyContent: 'flex-end', alignItems: 'center' },
+  sheet: { width: '100%', maxWidth: 430, backgroundColor: colors.bg, borderTopLeftRadius: radius.card, borderTopRightRadius: radius.card, paddingTop: 16, paddingHorizontal: GUTTER },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 8 },
+  sheetTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+  sheetBody: { paddingBottom: 24, gap: 10 },
+  titlePick: { gap: 8 },
+  titleDayRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: radius.item, paddingLeft: 12, paddingRight: 4, minHeight: 48 },
+  titleDayLabel: { fontSize: 13, fontWeight: '700', color: colors.textSub, width: 40 },
+  titleDayInput: { flex: 1, minHeight: 36, paddingVertical: 4, fontSize: 14 },
+  titleSecRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  titleSecChip: { flex: 1, paddingHorizontal: 0, minHeight: 34 },
+  titleStrip: { gap: 8, paddingVertical: 2, paddingRight: 8 },
+  titleItem: { alignItems: 'center', gap: 5 },
+  titleThumb: { borderRadius: 12, overflow: 'hidden', borderWidth: 2.5, borderColor: 'transparent' },
+  titleThumbOn: { borderColor: colors.primary },
+  titleLabel: { fontSize: 12, fontWeight: '600', color: colors.textSub },
+  titleLabelOn: { fontWeight: '800', color: colors.primary },
   musicBox: { gap: 8, marginTop: 6 },
   musicRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.item, borderWidth: 1.5, borderColor: 'transparent' },
   musicRowOn: { backgroundColor: colors.primarySoft, borderColor: colors.primary },

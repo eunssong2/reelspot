@@ -1,5 +1,5 @@
 import { IS_DEMO_BUILD } from '../../demo/config';
-import { DEMO_AVATARS } from '../../demo/demoAssets';
+import { DEMO_AVATARS, DEMO_IMAGES, DEMO_VIDEOS } from '../../demo/demoAssets';
 
 /**
  * 프로토타입 전용 mock 데이터(모임·초기 일정·템플릿). 서버·DB 없이 화면만 보여 준다.
@@ -246,8 +246,8 @@ export const PLACE_RECORDS: Record<string, PlaceRecord[]> = {
       items: [
         { id: 'vc1', kind: 'photo', imageUrl: thumb('vlog-cafe-1'), caption: '라떼 한 잔' },
         { id: 'vc2', kind: 'photo', imageUrl: thumb('vlog-cafe-2') },
-        { id: 'vc3', kind: 'video', imageUrl: thumb('vlog-cafe-v1'), durationLabel: '0:08' },
-        { id: 'vc4', kind: 'video', imageUrl: thumb('vlog-cafe-v2'), durationLabel: '0:12' },
+        { id: 'vc3', kind: 'video', imageUrl: DEMO_IMAGES.videoCafePoster, videoSource: DEMO_VIDEOS.cafe.source, durationLabel: `0:0${DEMO_VIDEOS.cafe.seconds}` },
+        { id: 'vc4', kind: 'video', imageUrl: DEMO_IMAGES.videoForestPoster, videoSource: DEMO_VIDEOS.forest.source, durationLabel: `0:0${DEMO_VIDEOS.forest.seconds}` },
       ],
     },
   ],
@@ -258,7 +258,7 @@ export const PLACE_RECORDS: Record<string, PlaceRecord[]> = {
       time: '10.20 19:51',
       items: [
         { id: 'vp1', kind: 'photo', imageUrl: thumb('vlog-park-1'), caption: '노을이 예뻐요' },
-        { id: 'vp2', kind: 'video', imageUrl: thumb('vlog-park-v1'), durationLabel: '0:06' },
+        { id: 'vp2', kind: 'video', imageUrl: DEMO_IMAGES.videoForestPoster, videoSource: DEMO_VIDEOS.forest.source, durationLabel: `0:0${DEMO_VIDEOS.forest.seconds}` },
       ],
     },
   ],
@@ -281,8 +281,8 @@ export const PLACE_RECORDS: Record<string, PlaceRecord[]> = {
       memberId: 'm-doyun',
       time: '10.21 14:44',
       items: [
-        { id: 'vb1', kind: 'video', imageUrl: thumb('vlog-book-v1'), durationLabel: '0:08' },
-        { id: 'vb2', kind: 'video', imageUrl: thumb('vlog-book-v2'), durationLabel: '0:15' },
+        { id: 'vb1', kind: 'video', imageUrl: DEMO_IMAGES.videoCafePoster, videoSource: DEMO_VIDEOS.cafe.source, durationLabel: `0:0${DEMO_VIDEOS.cafe.seconds}` },
+        { id: 'vb2', kind: 'video', imageUrl: DEMO_IMAGES.videoForestPoster, videoSource: DEMO_VIDEOS.forest.source, durationLabel: `0:0${DEMO_VIDEOS.forest.seconds}` },
       ],
     },
   ],
@@ -295,7 +295,7 @@ export const PLACE_RECORDS: Record<string, PlaceRecord[]> = {
         { id: 'vg1', kind: 'photo', imageUrl: thumb('vlog-bridge-1') },
         { id: 'vg2', kind: 'photo', imageUrl: thumb('vlog-bridge-2') },
         { id: 'vg3', kind: 'photo', imageUrl: thumb('vlog-bridge-3') },
-        { id: 'vg4', kind: 'video', imageUrl: thumb('vlog-bridge-v1'), durationLabel: '0:10' },
+        { id: 'vg4', kind: 'video', imageUrl: DEMO_IMAGES.videoCafePoster, videoSource: DEMO_VIDEOS.cafe.source, durationLabel: `0:0${DEMO_VIDEOS.cafe.seconds}` },
       ],
     },
   ],

@@ -10,7 +10,7 @@ import {
   type PlaceRecordItem,
   type Template,
 } from '../mock/tripData';
-import { defaultDayTitle } from '../utils/date';
+import { dayOfWeekLabel, defaultDayTitle } from '../utils/date';
 
 /**
  * 브이로그 제작의 데이터 모델과 순수 계산(화면 없음).
@@ -42,6 +42,8 @@ export const MIN_PHOTO_SEC = 1;
 export const MAX_PHOTO_SEC = 10;
 /** 날짜가 바뀔 때 넣는 제목 화면 길이(초) */
 export const TITLE_CARD_SEC = 2;
+/** 날짜 제목 화면이 머무는 시간을 고를 수 있는 범위(초) */
+export const TITLE_SEC_OPTIONS = [1, 2, 3, 4, 5];
 /** 마지막 끝 화면 길이(초) */
 export const END_CARD_SEC = 2;
 /** 끝 화면에 아무것도 적지 않았을 때 쓰는 문구 */
@@ -655,6 +657,48 @@ export const TITLE_NAME_Y = 0.52;
 export const TITLE_DATE_PX = 48;
 export const TITLE_NAME_PX = 56;
 
+// ---------- 제목 화면 스타일 ----------
+
+export type TitleStyleId = 'soft' | 'frame' | 'daynum' | 'polaroid' | 'ticket' | 'split' | 'film' | 'poster' | 'neon' | 'stamp' | 'pastel' | 'paper';
+
+/** 제목 화면의 큰 구성. 같은 구성이라도 색(bg·accent·text·sub)은 모양마다 다르다. */
+export type TitleDesign = TitleStyleId;
+
+export interface TitleStylePreset {
+  id: TitleStyleId;
+  label: string;
+  /** 바탕색 */
+  bg: string;
+  /** 포인트 색(날짜·장식) */
+  accent: string;
+  /** 제목 글자색 */
+  text: string;
+  /** 보조 글자색(요일·부제) */
+  sub: string;
+  /** 그날의 첫 사진을 쓰는 모양인지(사진이 없으면 바탕색으로 대신한다) */
+  photo?: boolean;
+}
+
+/**
+ * 날짜 제목 화면(과 끝 화면)의 모양 목록. 영상 전체에 하나를 고른다.
+ * 구성(배치·장식)은 TitleCard 가 id 별로 그린다.
+ */
+export const TITLE_STYLES: TitleStylePreset[] = [
+  { id: 'soft', label: '기본', bg: '#FDECEA', accent: '#F1706B', text: '#191F28', sub: '#8B95A1' },
+  { id: 'frame', label: '액자', bg: '#FFF6E6', accent: '#B8793A', text: '#4A3420', sub: '#A88B6A' },
+  { id: 'daynum', label: '큰 숫자', bg: '#FFF1EE', accent: '#F1706B', text: '#3A2420', sub: '#B07A74' },
+  { id: 'polaroid', label: '폴라로이드', bg: '#161616', accent: '#F1706B', text: '#222222', sub: '#8B8B8B', photo: true },
+  { id: 'ticket', label: '티켓', bg: '#CFEDE3', accent: '#2E8B73', text: '#143D33', sub: '#5E9B8B' },
+  { id: 'split', label: '반반', bg: '#FFF6E6', accent: '#F1706B', text: '#3A2420', sub: '#B07A74' },
+  { id: 'film', label: '필름', bg: '#0B0B0B', accent: '#BDBDBD', text: '#FFFFFF', sub: '#8A8A8A' },
+  { id: 'poster', label: '포스터', bg: '#222222', accent: '#FFFFFF', text: '#FFFFFF', sub: '#E3E3E3', photo: true },
+  { id: 'neon', label: '네온', bg: '#1B1038', accent: '#5CF2FF', text: '#FF7AD9', sub: '#A99BD6' },
+  { id: 'stamp', label: '스탬프', bg: '#F5EEE0', accent: '#C0504D', text: '#3B2B26', sub: '#9A8B7E' },
+  { id: 'pastel', label: '파스텔', bg: '#FFE8F0', accent: '#F27AA5', text: '#5A2A3C', sub: '#B07990' },
+  { id: 'paper', label: '심플', bg: '#FFFFFF', accent: '#9AA3AD', text: '#191F28', sub: '#9AA3AD' },
+];
+export const titleStyleOf = (id?: TitleStyleId): TitleStylePreset => TITLE_STYLES.find((t) => t.id === id) ?? TITLE_STYLES[0];
+
 export const CAPTION_BGS: { id: CaptionBg; label: string; desc: string }[] = [
   { id: 'none', label: '없음', desc: '글자에 그림자만 넣어 읽히게 해요' },
   { id: 'dim', label: '반투명', desc: '사진이 비치는 어두운 띠' },
@@ -953,6 +997,10 @@ export interface VlogDraft {
   motion?: MotionId;
   /** 장소 라벨 모양. 영상 전체에 하나. 없으면 기본값 */
   placeLabel?: PlaceLabel;
+  /** 날짜 제목 화면·끝 화면의 모양. 영상 전체에 하나. 없으면 기본 */
+  titleStyle?: TitleStyleId;
+  /** 날짜 제목 화면이 머무는 시간(초). 없으면 TITLE_CARD_SEC */
+  titleCardSec?: number;
   /** 배경 음악. 영상 전체에 하나. 없으면 음악 없음 */
   music?: { id: MusicId; volume: MusicVolume };
   /** 동영상 원본 소리를 그대로 둘지 없앨지. 없으면 그대로 둔다 */
@@ -1122,6 +1170,12 @@ export interface TimelineScene {
   /** title 장면: 날짜·제목 */
   titleDate?: string;
   titleText?: string;
+  /** title 장면: 몇 번째 날짜인지(1부터)와 요일("수요일"). 끝 화면은 없다. */
+  titleDay?: number;
+  titleWeekday?: string;
+  /** title 장면: 모양과(사진 배경 모양일 때) 바탕으로 깔 사진 */
+  titleStyle?: TitleStyleId;
+  titleImage?: string | number;
   /** place 장면 */
   mode?: PlayMode;
   template?: Template;
@@ -1214,10 +1268,14 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
         kind: 'title',
         dayKey,
         startSec: t,
-        seconds: TITLE_CARD_SEC,
+        seconds: draft.titleCardSec ?? TITLE_CARD_SEC,
         transition: draft.transition ?? 'none',
         titleDate: day.date.replace(/-/g, '.'),
+        titleDay: draft.dayKeys.indexOf(dayKey) + 1,
+        titleWeekday: `${dayOfWeekLabel(day.date)}요일`,
         titleText: draft.dayTitles?.[dayKey]?.trim() || day.title,
+        titleStyle: draft.titleStyle,
+        titleImage: placeScenes[0]?.clips[0]?.image,
         clips: [],
         captions: [],
         captionStyle: caption,
@@ -1225,7 +1283,7 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
         placeLabel: label,
         stickers: [],
       });
-      t += TITLE_CARD_SEC;
+      t += draft.titleCardSec ?? TITLE_CARD_SEC;
     }
     for (const s of placeScenes) {
       scenes.push({ ...s, startSec: t });
@@ -1245,6 +1303,8 @@ export function buildTimeline(draft: VlogDraft, ctx: BuildContext): Timeline {
       seconds: END_CARD_SEC,
       transition: draft.transition ?? 'none',
       titleText: draft.endText?.trim() || END_TEXT_DEFAULT,
+      titleStyle: draft.titleStyle,
+      titleImage: [...scenes].reverse().find((x) => x.clips.length > 0)?.clips[0]?.image,
       clips: [],
       captions: [],
       captionStyle: caption,
@@ -1319,6 +1379,8 @@ export function draftSignature(draft: VlogDraft, timeline: Timeline): string {
     c: captionStyleOf(draft.captionStyle),
     l: placeLabelOf(draft.placeLabel),
     m: draft.music ?? null,
+    ts: draft.titleStyle ?? null,
+    tc: draft.titleCardSec ?? null,
     o: draft.originalSound ?? 'keep',
     s: timeline.scenes.map((s) => [s.id, s.titleText, s.seconds, s.mode, s.template?.id, s.transition, s.motion, s.dateText, s.placeText, s.captions, s.stickers, s.clips.map((c) => [c.itemId, c.startSec, c.seconds, c.speed, c.captions, c.filter, c.frame, c.stickers])]),
   });

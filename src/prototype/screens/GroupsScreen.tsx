@@ -5,20 +5,18 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View
 import { ActionButton, Pill } from '../components/FormParts';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { Toast, useToast } from '../components/Toast';
-import { type Group, type Schedule } from '../mock/groupData';
+import { type Group } from '../mock/groupData';
 import type { Nav } from '../navigation/routes';
-import { commonErrorText, representativeSchedule, useFlash, useGroups } from '../state/GroupsProvider';
+import { commonErrorText, useFlash, useGroups } from '../state/GroupsProvider';
 import { colors, GUTTER, MIN_TOUCH, radius } from '../styles/tokens';
-import { diffDays, todayKst } from '../utils/calendar';
 
-const SUMMARY_PREFIX = { ongoing: '진행 중', next: '다음 일정', recent: '최근 일정' } as const;
 
 /**
  * UI03 내 모임. 디자인: docs/stitch/UI03_내_모임_목록.html
  * 서버가 준 순서(최근 공동 활동순)를 그대로 쓰고, 열람만으로 순서가 바뀌지 않는다.
  */
 export function GroupsScreen({ nav }: { nav: Nav }) {
-  const { groups, schedulesOf, logout, loadGroups } = useGroups();
+  const { groups, logout, loadGroups } = useGroups();
   const toast = useToast();
   useFlash(toast.show);
   /** 조회가 끝나기 전에는 "모임 없음"으로 단정하지 않는다. 실패는 빈 목록과 다른 문구로 보여 준다. */
@@ -92,7 +90,6 @@ export function GroupsScreen({ nav }: { nav: Nav }) {
             <GroupCard
               key={g.id}
               group={g}
-              schedules={schedulesOf(g.id)}
               onOpen={() => nav.push({ name: 'groupCalendar', groupId: g.id })}
             />
           ))
@@ -133,16 +130,7 @@ export function GroupsScreen({ nav }: { nav: Nav }) {
   );
 }
 
-function GroupCard({ group, schedules: list, onOpen }: { group: Group; schedules: Schedule[]; onOpen: () => void }) {
-  const rep = representativeSchedule(list);
-  const today = todayKst();
-  // 보관 만료 7일 전·1일 전 안내(앱 안 안내만, 푸시 없음)
-  const expiring = list
-    .filter((sc) => sc.retentionLastDate)
-    .map((sc) => diffDays(today, sc.retentionLastDate!))
-    .filter((d) => d >= 0 && d <= 7)
-    .sort((a, b) => a - b)[0];
-
+function GroupCard({ group, onOpen }: { group: Group; onOpen: () => void }) {
   return (
     <Pressable
       onPress={onOpen}
@@ -165,29 +153,13 @@ function GroupCard({ group, schedules: list, onOpen }: { group: Group; schedules
               {group.name}
             </Text>
           </View>
+          {/* 일정 요약·보관 안내는 목록을 복잡하게 해서 뺐다. 정원(n/15)도 "채워야 할 것"처럼 보여 적지 않는다. */}
           <Text style={styles.meta} numberOfLines={1}>
-            {/* 정원(n/10)은 "다 채워야 할 것" 처럼 보여서 참여 인원만 적는다. 남은 자리는 초대 화면에서만 다룬다. */}
-            <Text style={styles.metaStrong}>
-              {group.members.length === 1 ? '나 혼자' : `${group.members.length}명`}
-            </Text>
-            {'  ·  '}
-            {rep ? (
-              `${SUMMARY_PREFIX[rep.kind]}: ${rep.schedule.title}`
-            ) : (
-              <Text style={styles.metaEmpty}>아직 일정이 없어요</Text>
-            )}
+            {group.members.length === 1 ? '추억을 차곡차곡 모으고 있어요' : `${group.members.length}명이 함께 기록하고 있어요`}
           </Text>
         </View>
         <Text style={styles.chevron}>›</Text>
       </View>
-      {expiring !== undefined ? (
-        <View style={styles.retention}>
-          <Text style={styles.retentionText} numberOfLines={1}>
-            ⏱ {expiring <= 1 ? '내일 보관이 끝나는 기록이 있어요' : '보관 안내 · 만료 7일 전 기록이 있어요'}
-          </Text>
-          <Text style={styles.retentionLink}>확인</Text>
-        </View>
-      ) : null}
     </Pressable>
   );
 }
@@ -228,23 +200,7 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   name: { flexShrink: 1, fontSize: 17, fontWeight: '700', color: colors.text },
   meta: { fontSize: 13, color: colors.textSub },
-  metaStrong: { fontWeight: '700', color: colors.text },
-  metaEmpty: { color: colors.textMuted },
   chevron: { fontSize: 24, color: colors.textMuted },
-  retention: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginHorizontal: 12,
-    marginBottom: 12,
-    marginTop: -4,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 12,
-    backgroundColor: colors.primarySoft,
-  },
-  retentionText: { flex: 1, fontSize: 12, fontWeight: '700', color: colors.primaryPressed },
-  retentionLink: { fontSize: 11, fontWeight: '700', color: colors.primary, textDecorationLine: 'underline', marginLeft: 8 },
   failBox: { backgroundColor: colors.surface, borderRadius: radius.card, padding: 20, gap: 8, alignItems: 'center' },
   failTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
   failBody: { fontSize: 13, lineHeight: 19, color: colors.textSub, textAlign: 'center' },

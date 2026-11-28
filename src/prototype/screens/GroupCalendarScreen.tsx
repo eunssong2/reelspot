@@ -166,7 +166,7 @@ export function GroupCalendarScreen({ nav, group, focusDate }: Props) {
           <View style={styles.bannerLeft}>
             <View style={styles.dot} />
             <Text style={styles.bannerName} numberOfLines={1}>
-              {group.members.length === 1 ? '나 혼자' : `${group.members.length}명`}
+              {`${group.members.length}명`}
             </Text>
             <Pill label={`방장 ${group.members[0]}`} tone="coral" />
             {!isOwner ? <Pill label="나는 참여자" /> : null}

@@ -19,6 +19,8 @@ export interface Cursor {
   step: StepName;
   placeKey?: string;
   clipId?: string;
+  /** 이 단계를 마치면 새 단계로 가지 않고 이 단계로 되돌아간다(편집 화면에서 템플릿을 바꾼 뒤 등) */
+  returnTo?: StepName;
 }
 
 /** 모든 단계 화면이 받는 공통 값. */
