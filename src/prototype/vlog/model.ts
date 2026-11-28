@@ -611,12 +611,26 @@ export interface CaptionStyle {
   pos: CaptionPos;
   /** 직접 끌어 옮긴 자리(화면 폭·높이에 대한 비율, 자막 가운데 기준). 없으면 pos 를 따른다. */
   xy?: { x: number; y: number };
+  /** 크기 단계. 숫자로 정한 크기(px)가 있어도 가장 가까운 단계를 함께 적는다(단계만 아는 렌더러용). */
   size: CaptionSize;
+  /** 숫자로 직접 정한 글자 크기(pt, 출력 화면 가로 1080 기준). 있으면 size 보다 우선한다. */
+  px?: number;
   bg: CaptionBg;
   color: CaptionColor;
   /** 장면이 시작될 때 자막이 어떻게 나타날지 */
   anim: AnimId;
 }
+
+/** 자막 글자 크기를 숫자로 고를 때의 범위·간격(pt) */
+export const CAPTION_PX_MIN = 24;
+export const CAPTION_PX_MAX = 120;
+export const CAPTION_PX_STEP = 2;
+
+/** 지금 자막의 글자 크기(pt). 숫자로 정한 값이 있으면 그것, 없으면 단계의 값 */
+export const captionPx = (style: Pick<CaptionStyle, 'size' | 'px'>): number => style.px ?? CAPTION_SIZES.find((s) => s.id === style.size)?.px ?? 48;
+
+/** 숫자 크기에서 가장 가까운 단계 */
+export const nearestCaptionSize = (px: number): CaptionSize => (px < 42 ? 'sm' : px < 56 ? 'md' : 'lg');
 
 export const CAPTION_POSITIONS: { id: CaptionPos; label: string }[] = [
   { id: 'top', label: '위' },
@@ -786,7 +800,7 @@ const CAPTION_BG_COLORS: Record<CaptionBg, string | undefined> = {
  * 둘의 비율로 줄이므로, 작은 미리보기와 완성 영상이 같은 크기로 보인다.
  */
 export function captionLayout(style: CaptionStyle, width: number, outWidth: number): CaptionLayout {
-  const px = CAPTION_SIZES.find((s) => s.id === style.size)?.px ?? 48;
+  const px = captionPx(style);
   // 하한은 글자가 사라지지 않을 만큼만 둔다. 더 올리면 작은 미리보기에서 '작게'와 '보통'이
   // 같은 크기로 보여, 미리보기와 완성 영상이 어긋나는 것을 눈치채지 못한다.
   const fontSize = Math.max(5, px * (width / outWidth) * fontOf(style.fontId).scale);
